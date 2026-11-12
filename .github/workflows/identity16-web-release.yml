@@ -15,7 +15,7 @@ jobs:
   build:
     if: github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main'
     environment: release-signing
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 75
     permissions:
       contents: write
