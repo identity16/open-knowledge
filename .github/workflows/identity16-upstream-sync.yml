@@ -1,0 +1,30 @@
+name: identity16 Upstream Sync
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: identity16-upstream-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    if: github.repository == 'identity16/open-knowledge'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/identity16
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Test synchronization decisions
+        run: node --test scripts/identity16/sync-upstream.test.mjs
+      - name: Open or update upstream PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/identity16/sync-upstream.mjs "$GITHUB_STEP_SUMMARY"

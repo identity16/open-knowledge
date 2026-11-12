@@ -154,3 +154,25 @@ Inkeep의 npm namespace에는 publish하지 않습니다. 일반 사용자 설�
 필요하지 않습니다. 포크 소스를 수정해 배포할 때 GPL-3.0-or-later 의무와 제3자 고지를
 유지해야 합니다. Apache-2.0 프로젝트인 `openknowledge-sh/openknowledge`의 조건과
 혼동하지 마세요.
+
+## 유지관리자: upstream 동기화 PR
+
+**identity16 Upstream Sync** workflow가 매주 월요일 오전 9시(KST, UTC 월요일 00:00)에
+`inkeep/open-knowledge/main`을 확인합니다. GitHub의 예약 실행은 부하에 따라 지연될 수
+있으며, Actions 화면에서 수동 실행할 수도 있습니다.
+
+원본에 새 commit이 있으면 **원본 `inkeep:main` → fork `main`** PR을 열고, 이미 열린
+PR이 있으면 그 PR의 설명을 갱신합니다. PR의 head가 원본 main이므로 열린 동안에는
+upstream의 새 commit이 PR에 바로 반영됩니다. 변경이 없으면 PR을 만들지 않습니다.
+같은 upstream commit의 PR을 닫아 거절했다면 원본이 움직일 때까지 다시 열지 않습니다.
+
+자동화는 원본이나 fork의 브랜치를 수정하지 않으며, 충돌 해결·자동 머지·Release 배포도
+수행하지 않습니다. 필요한 GitHub 권한은 저장소 읽기와 PR 쓰기이며, 별도 PAT나
+장기 유효 토큰은 사용하지 않습니다. 저장소의 Actions PR 생성 설정은 활성화합니다.
+
+PR은 검증 결과를 보증하지 않습니다. 변경을 검토하고 빌드·타입체크·테스트를 확인한 뒤
+**Create a merge commit**으로 머지하세요. Squash/rebase merge를 사용하면 upstream
+commit의 ancestry가 사라져 다음 동기화에서 같은 변경이 다시 제안될 수 있습니다.
+충돌이 있으면 fork의 새 브랜치에서 upstream을 merge해 해결하고 대체 PR을 여세요.
+새 Release는 앞 절차에 따라 별도로 배포하며, PR 생성이나 머지만으로 로컬 앱이
+업데이트되지는 않습니다.
