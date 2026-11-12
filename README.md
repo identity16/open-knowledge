@@ -43,6 +43,9 @@ Highlights:
 
 ## Install
 
+**identity16 fork users:** see [the migration and rollback guide](MIGRATION_IDENTITY16.md)
+for the macOS Apple Silicon web GUI, `com.identity16.openknowledge`, and fork-only GitHub Release updates.
+
 **Desktop app** — download it from [openknowledge.ai/download](https://openknowledge.ai/download) (or grab an installer from the [latest release](https://github.com/inkeep/open-knowledge/releases/latest)):
 
 - **macOS** (Apple Silicon): open the DMG and drag **OpenKnowledge** to **Applications**.
