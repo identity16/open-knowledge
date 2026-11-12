@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "cacheDir": ".turbo/cache",
   "agentGuidance": false,
-  "globalPassThroughEnv": ["RUSTUP_HOME", "CARGO_HOME"],
+  "globalPassThroughEnv": ["RUSTUP_HOME", "CARGO_HOME", "IDENTITY16_OPENKNOWLEDGE_HOME"],
   "futureFlags": {
     "experimentalTaskCommand": true
   },

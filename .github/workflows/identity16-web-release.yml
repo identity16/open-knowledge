@@ -1,0 +1,57 @@
+name: identity16 Web Release
+on:
+  push:
+    tags: ['identity16-v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Fork version, for example 0.76.0-identity16.2'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: identity16-web-release
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.repository == 'identity16/open-knowledge'
+    runs-on: macos-15
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+      TURBO_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+      - name: Install build tools
+        run: |
+          npm install --global pnpm@12.8.1
+          rustup toolchain install --profile minimal
+      - name: Install dependencies
+        run: pnpm --filter '@inkeep/open-knowledge...' install --frozen-lockfile
+      - name: Test update channel
+        run: node --test scripts/identity16/channel.test.mjs
+      - name: Build release
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          VERSION="${INPUT_VERSION:-${GITHUB_REF_NAME#identity16-v}}"
+          node scripts/identity16/build-release.mjs "$VERSION"
+          printf 'FORK_TAG=identity16-v%s\n' "$VERSION" >> "$GITHUB_ENV"
+      - name: Publish fork release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$FORK_TAG" \
+            .identity16-release/openknowledge-darwin-arm64.tgz \
+            .identity16-release/checksums.txt \
+            scripts/identity16/channel.mjs \
+            --target "$GITHUB_SHA" --title "$FORK_TAG" \
+            --notes 'identity16 web GUI and CLI. See MIGRATION_IDENTITY16.md for installation and rollback.' \
+            --prerelease=false --latest

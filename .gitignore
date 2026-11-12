@@ -29,6 +29,7 @@ blob-report/
 .codex/
 .open-knowledge/
 .mirror-output/
+.identity16-release/
 /test-doc.md
 
 # Env files (keep .env.example committed)
