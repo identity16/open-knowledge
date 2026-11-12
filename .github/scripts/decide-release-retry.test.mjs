@@ -294,11 +294,12 @@ describe('finalize refuses to promote a superseded stable on a re-run', () => {
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
   writeFileSync(
     join(dir, 'gh'),
-    '#!/usr/bin/env bash\nif [[ -n "$STUB_ERR" ]]; then echo "$STUB_ERR" >&2; exit 1; fi\necho "$STUB_LATEST"\n',
+    '#!/bin/sh\nprintf "%s\\n" "$*" > "$RUNNER_TEMP/gh-invoked"\nif [ -n "$STUB_ERR" ]; then echo "$STUB_ERR" >&2; exit 1; fi\necho "$STUB_LATEST"\n',
     { mode: 0o755 },
   );
-  const run = (env) =>
-    spawnSync('bash', ['-c', step.run], {
+  const run = (env) => {
+    rmSync(join(dir, 'gh-invoked'), { force: true });
+    return spawnSync('bash', ['-c', `export PATH="$RUNNER_TEMP:$PATH"\n${step.run}`], {
       env: {
         PATH: `${dir}:${process.env.PATH}`,
         RUNNER_TEMP: dir,
@@ -311,6 +312,7 @@ describe('finalize refuses to promote a superseded stable on a re-run', () => {
       },
       encoding: 'utf8',
     });
+  };
 
   test('only guards re-runs that can stamp Latest', () => {
     expect(step.if).toContain("github.run_attempt != '1'");
@@ -326,5 +328,8 @@ describe('finalize refuses to promote a superseded stable on a re-run', () => {
     ['the lookup failed', { STUB_ERR: 'gh: Server Error (HTTP 502)' }, 1],
   ])('exits %#: %s', (_label, env, status) => {
     expect(run(env).status).toBe(status);
+    expect(readFileSync(join(dir, 'gh-invoked'), 'utf8')).toBe(
+      'api repos/inkeep/open-knowledge/releases/latest --jq .tag_name\n',
+    );
   });
 });
