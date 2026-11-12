@@ -13,7 +13,7 @@ import {
 } from '@inkeep/open-knowledge-core';
 
 const APP_BUNDLE_FROM_EXEC_RE = /^(.*\.app)\/Contents\/MacOS\/[^/]+$/;
-const SUPPORTED_APP_BUNDLE_NAME = 'OpenKnowledge.app';
+const SUPPORTED_APP_BUNDLE_NAMES = ['OpenKnowledge.app', 'OpenKnowledge16.app'];
 
 export interface DesktopUninstallProjectCandidate {
   path: string;
@@ -75,9 +75,9 @@ export function isSupportedApplicationsBundle(
   home: string = homedir(),
 ): boolean {
   const app = resolve(bundlePath);
-  return (
-    app === join('/Applications', SUPPORTED_APP_BUNDLE_NAME) ||
-    app === join(resolve(home), 'Applications', SUPPORTED_APP_BUNDLE_NAME)
+  return SUPPORTED_APP_BUNDLE_NAMES.some(
+    (name) =>
+      app === join('/Applications', name) || app === join(resolve(home), 'Applications', name),
   );
 }
 

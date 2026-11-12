@@ -1,5 +1,9 @@
 import { parse as parseYaml } from 'yaml';
-import { DESKTOP_VARIANTS, type DesktopVariantName } from '../src/shared/desktop-variant.ts';
+import {
+  DESKTOP_VARIANTS,
+  type DesktopVariantName,
+  IDENTITY16_UPDATE_FEED_URL,
+} from '../src/shared/desktop-variant.ts';
 
 interface ResourceEntry {
   from: string;
@@ -22,8 +26,9 @@ interface BuilderConfig {
   protocols: Array<{ name: string; schemes: string[]; role?: string }>;
   publish: Array<{
     provider: string;
-    owner: string;
-    repo: string;
+    owner?: string;
+    repo?: string;
+    url?: string;
     channel: string;
     private?: boolean;
   }>;
@@ -109,6 +114,9 @@ export function createVariantBuilderConfig(
     ...entry,
     channel: variant.feedChannel,
   }));
+  if (variantName === 'identity16') {
+    config.publish = [{ provider: 'generic', url: IDENTITY16_UPDATE_FEED_URL, channel: 'latest' }];
+  }
   config.mac.icon = variant.name === 'stable' ? config.mac.icon : variant.iconPath;
   config.mac.artifactName = `${variant.artifactName}-\${version}-\${arch}-mac.\${ext}`;
   config.win.icon = variant.windowsIconPath;
@@ -156,7 +164,7 @@ export function createVariantBuilderConfig(
       to: `Frameworks/${variant.productName} Server.app/Contents/Info.plist`,
     },
   ];
-  if (variant.name === 'stable' || paths.profileAvailable) {
+  if (variantName !== 'identity16' && (variant.name === 'stable' || paths.profileAvailable)) {
     config.mac.provisioningProfile =
       variant.name === 'stable'
         ? 'build/embedded.provisionprofile'

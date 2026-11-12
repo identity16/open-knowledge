@@ -150,7 +150,7 @@ import type {
   OkMenuAction,
   OkMenuActionOrigin,
 } from '../shared/bridge-contract.ts';
-import { DESKTOP_VARIANT } from '../shared/desktop-variant.ts';
+import { DESKTOP_VARIANT, IDENTITY16_UPDATE_FEED_URL } from '../shared/desktop-variant.ts';
 import { type EntryPoint, isEntryPoint } from '../shared/entry-point.ts';
 import type {
   EditorActiveTargetSnapshot,
@@ -6876,7 +6876,9 @@ function bootPrimaryInstance(): void {
         buildChannel: DESKTOP_VARIANT.updateChannel,
         isPackaged: app.isPackaged,
         forceDevBypass: process.env.OK_UPDATER_FORCE_DEV === '1',
-        feedUrl: process.env.OK_UPDATER_FEED_URL || undefined,
+        feedUrl:
+          process.env.OK_UPDATER_FEED_URL ||
+          (DESKTOP_VARIANT.name === 'identity16' ? IDENTITY16_UPDATE_FEED_URL : undefined),
         proxyFeed: {
           base: 'https://openknowledge.ai/updates',
           channels: new Set<UpdateChannel>(['beta', 'latest']),

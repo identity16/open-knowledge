@@ -1,6 +1,9 @@
 import { DESKTOP_PRODUCTS, type PackagedDesktopProductName } from '@inkeep/open-knowledge-core';
 
-const DESKTOP_VARIANT_NAMES = ['stable', 'beta', 'legacy-beta'] as const;
+const DESKTOP_VARIANT_NAMES = ['stable', 'beta', 'legacy-beta', 'identity16'] as const;
+
+export const IDENTITY16_RELEASES_URL = 'https://github.com/identity16/open-knowledge/releases';
+export const IDENTITY16_UPDATE_FEED_URL = `${IDENTITY16_RELEASES_URL}/latest/download`;
 
 export type DesktopVariantName = (typeof DESKTOP_VARIANT_NAMES)[number];
 
@@ -48,6 +51,24 @@ const DESKTOP_PRODUCT_VARIANTS = {
     cliCommandNames: DESKTOP_PRODUCTS.stable.cliCommandNames,
     cliHomeSegment: null,
   },
+  identity16: {
+    name: 'identity16',
+    appId: DESKTOP_PRODUCTS.identity16.appId,
+    productName: DESKTOP_PRODUCTS.identity16.productName,
+    artifactName: 'OpenKnowledge16',
+    packageName: DESKTOP_PRODUCTS.identity16.packageName,
+    protocolScheme: DESKTOP_PRODUCTS.identity16.protocolScheme,
+    updateChannel: 'latest',
+    feedChannel: 'latest',
+    instanceLabel: null,
+    iconPath: 'build/icon.png',
+    windowsIconPath: 'build/icon.ico',
+    linuxExecutableName: DESKTOP_PRODUCTS.identity16.linuxExecutableName,
+    linuxPackageNames: DESKTOP_PRODUCTS.identity16.linuxPackageNames,
+    retiredLinuxPackageNames: DESKTOP_PRODUCTS.identity16.retiredLinuxPackageNames,
+    cliCommandNames: DESKTOP_PRODUCTS.identity16.cliCommandNames,
+    cliHomeSegment: null,
+  },
   beta: {
     name: 'beta',
     appId: DESKTOP_PRODUCTS.beta.appId,
@@ -83,7 +104,7 @@ export function parseDesktopVariantName(raw: string | undefined): DesktopVariant
     return normalized as DesktopVariantName;
   }
   throw new Error(
-    `Unsupported OK_DESKTOP_VARIANT=${JSON.stringify(raw)}. Expected stable or beta or legacy-beta.`,
+    `Unsupported OK_DESKTOP_VARIANT=${JSON.stringify(raw)}. Expected stable or beta or legacy-beta or identity16.`,
   );
 }
 

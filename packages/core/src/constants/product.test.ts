@@ -29,10 +29,25 @@ describe('resolveDesktopProductName', () => {
     ['C:\\Users\\me\\AppData\\Local\\Programs\\OpenKnowledge Beta\\OpenKnowledge Beta.exe', 'beta'],
     ['/opt/OpenKnowledge Beta/openknowledge-beta', 'beta'],
     ['/opt/OpenKnowledge/openknowledge', 'stable'],
+    ['/Applications/OpenKnowledge16.app/Contents/MacOS/OpenKnowledge16', 'identity16'],
+    [
+      '/Applications/OpenKnowledge16.app/Contents/Frameworks/OpenKnowledge16 Server.app/Contents/MacOS/OpenKnowledge16 Helper',
+      'identity16',
+    ],
     ['/usr/local/bin/node', 'stable'],
     ['/repo/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron', 'stable'],
   ] as const)('%s resolves to %s', (execPath, expected) => {
     expect(resolveDesktopProductName({}, execPath)).toBe(expected);
+  });
+
+  it('isolates fork settings and credentials from both upstream channels', () => {
+    expect(DESKTOP_PRODUCTS.identity16).toMatchObject({
+      userHomeDirName: '.ok16',
+      keyringService: 'open-knowledge-16',
+      cliCommandNames: ['ok16', 'openknowledge16'],
+      appId: 'com.identity16.openknowledge',
+      protocolScheme: 'openknowledge16',
+    });
   });
 
   it('lets OK_CHANNEL override the executable', () => {
@@ -71,6 +86,7 @@ describe('resolveDesktopProductName', () => {
     ).toEqual({
       stable: { deb: 'openknowledge', rpm: 'openknowledge' },
       beta: { deb: 'openknowledge-beta', rpm: 'openknowledge-beta' },
+      identity16: { deb: 'openknowledge16', rpm: 'openknowledge16' },
       dev: { deb: 'openknowledge-dev', rpm: 'openknowledge-dev' },
     });
     for (const product of Object.values(DESKTOP_PRODUCTS)) {
@@ -111,6 +127,7 @@ describe('resolveDesktopProductName', () => {
     ).toEqual({
       stable: 'openknowledge',
       beta: 'openknowledge-beta',
+      identity16: 'openknowledge16',
       dev: 'openknowledge-dev',
     });
   });
@@ -135,7 +152,7 @@ describe('resolveDesktopProductName', () => {
     ]) {
       expect(resolveDesktopProductName({}, execPath)).toBe('stable');
     }
-    expect(PACKAGED_DESKTOP_PRODUCT_NAMES).toEqual(['stable', 'beta']);
+    expect(PACKAGED_DESKTOP_PRODUCT_NAMES).toEqual(['stable', 'beta', 'identity16']);
   });
 });
 

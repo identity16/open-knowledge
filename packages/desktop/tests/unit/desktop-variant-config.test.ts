@@ -228,6 +228,38 @@ const platformArtifact = (name: string): string => `${name}-${token('arch')}.${t
 const nsisArtifact = (name: string): string => `${name}-Setup-${token('arch')}.${token('ext')}`;
 
 describe('desktop variant builder config', () => {
+  test('fork packaging uses its own identity and feed without upstream domain entitlements', () => {
+    const config = createVariantBuilderConfig(
+      parseBuilderConfig(configSource),
+      'identity16',
+      paths,
+      '0.76.0-identity16.3',
+    );
+    expect(config).toMatchObject({
+      appId: 'com.identity16.openknowledge',
+      productName: 'OpenKnowledge16',
+      extraMetadata: { name: 'openknowledge16-desktop', okDesktopVariant: 'identity16' },
+      publish: [
+        {
+          provider: 'generic',
+          url: 'https://github.com/identity16/open-knowledge/releases/latest/download',
+          channel: 'latest',
+        },
+      ],
+      protocols: [{ schemes: ['openknowledge16'] }],
+      mac: { entitlements: paths.localEntitlementsPath },
+    });
+    expect(config.mac.provisioningProfile).toBeUndefined();
+    expect(config.extraMetadata?.version).toBeUndefined();
+    expect(config.mac.artifactName).toBe(macArtifact('OpenKnowledge16'));
+    expect(
+      createVariantHelperInfo(
+        'com.inkeep.open-knowledge.server OpenKnowledge Server OpenKnowledge Helper',
+        'identity16',
+      ),
+    ).toBe('com.identity16.openknowledge.server OpenKnowledge16 Server OpenKnowledge16 Helper');
+  });
+
   test('legacy Beta preserves the installed identity, CLI wrappers and old manifest names', () => {
     const stable = createVariantBuilderConfig(
       parseBuilderConfig(configSource),

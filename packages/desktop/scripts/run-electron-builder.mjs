@@ -30,7 +30,7 @@ const profileAvailable = variant.name === 'stable' || existsSync(profilePath);
 const packagingMac = args.includes('--mac') || args.includes('--dir');
 const signingRequested = Boolean(process.env.CSC_LINK || process.env.CSC_KEYCHAIN);
 
-if (packagingMac && signingRequested && !profileAvailable) {
+if (packagingMac && signingRequested && !profileAvailable && variantName !== 'identity16') {
   throw new Error(
     `${variant.productName} cannot be signed with associated domains until ${profilePath} exists.`,
   );

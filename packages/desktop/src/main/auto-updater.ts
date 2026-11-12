@@ -1,6 +1,7 @@
 import type { OutgoingHttpHeaders } from 'node:http';
 import { MANUAL_CHECK_WATCHDOG_MS } from '@inkeep/open-knowledge-core';
 import type { IpcMain, IpcMainInvokeEvent } from 'electron';
+import { DESKTOP_VARIANT } from '../shared/desktop-variant.ts';
 import type {
   OkUpdateDispatchRequest,
   OkUpdateDispatchResult,
@@ -23,7 +24,7 @@ import {
 } from './state-store.ts';
 import type { WindowsUpdateSurvivorSweepResult } from './windows-update-survivor-sweep.ts';
 
-const GITHUB_OWNER = 'inkeep';
+const GITHUB_OWNER = DESKTOP_VARIANT.name === 'identity16' ? 'identity16' : 'inkeep';
 const GITHUB_REPO = 'open-knowledge';
 
 export interface UpdaterLike {
@@ -277,6 +278,7 @@ export function applyChannelSettings(
 export function channelFromVersion(version: string): UpdateChannel {
   if (typeof version !== 'string' || version === '') return 'latest';
   const stripped = version.split('+', 1)[0] ?? version;
+  if (/^\d+\.\d+\.\d+-identity16\.\d+$/.test(stripped)) return 'latest';
   const match = /^\d+\.\d+\.\d+(?:-([\w.-]+))?$/.exec(stripped);
   if (!match) return 'latest';
   return match[1] ? 'beta' : 'latest';

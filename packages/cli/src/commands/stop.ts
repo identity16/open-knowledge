@@ -120,7 +120,7 @@ interface RunStopDeps {
   error?: (msg: string) => void;
   probeClients?: (lockDir: string, logger?: PinoLoggerInstance) => Promise<number | null>;
   logger?: PinoLoggerInstance;
-  selfChannel?: 'stable' | 'beta' | 'dev';
+  selfChannel?: ReturnType<typeof resolveDesktopProductName>;
   platform?: NodeJS.Platform;
   readBootInstant?: () => number | null;
   refuseHolderStartedAfterLock?: boolean;

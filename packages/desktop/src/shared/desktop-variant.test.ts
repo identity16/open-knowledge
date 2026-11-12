@@ -55,6 +55,7 @@ describe('desktop variant identities', () => {
     ['', 'stable'],
     [' BETA ', 'beta'],
     ['legacy-beta', 'legacy-beta'],
+    ['identity16', 'identity16'],
   ])('parses %j as %s', (raw, expected) => {
     expect(parseDesktopVariantName(raw)).toBe(expected);
   });

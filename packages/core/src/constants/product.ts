@@ -41,6 +41,21 @@ export const DESKTOP_PRODUCTS = {
     userHomeDirName: '.ok-beta',
     keyringService: 'open-knowledge-beta',
   },
+  identity16: {
+    appId: 'com.identity16.openknowledge',
+    productName: 'OpenKnowledge16',
+    packageName: 'openknowledge16-desktop',
+    linuxExecutableName: 'openknowledge16',
+    protocolScheme: 'openknowledge16',
+    linuxPackageNames: { deb: 'openknowledge16', rpm: 'openknowledge16' },
+    retiredLinuxPackageNames: { deb: [], rpm: [] },
+    cliCommandNames: ['ok16', 'openknowledge16'],
+    mcpServerName: 'open-knowledge-16',
+    mcpChainTag: '-16',
+    npmDistTag: 'latest',
+    userHomeDirName: '.ok16',
+    keyringService: 'open-knowledge-16',
+  },
   dev: {
     appId: 'com.inkeep.open-knowledge.dev',
     productName: 'OpenKnowledge Dev',
@@ -70,6 +85,7 @@ export type DesktopProduct = (typeof DESKTOP_PRODUCTS)[DesktopProductName];
 export const PACKAGED_DESKTOP_PRODUCT_NAMES = [
   'stable',
   'beta',
+  'identity16',
 ] as const satisfies readonly DesktopProductName[];
 
 export type PackagedDesktopProductName = (typeof PACKAGED_DESKTOP_PRODUCT_NAMES)[number];

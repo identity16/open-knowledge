@@ -54,6 +54,16 @@ function winChainSentinel(product: DesktopProduct): string {
 
 function buildUnixChain(name: PackagedDesktopProductName): string {
   const product = DESKTOP_PRODUCTS[name];
+  if (name === 'identity16') {
+    return `${unixChainSentinel(product)}
+export ${OK_CHANNEL_ENV}=identity16
+for bundle in "$HOME/Applications/${product.productName}.app" "/Applications/${product.productName}.app"; do
+  wrapper="$bundle/Contents/Resources/cli/bin/ok.sh"
+  [ -f "$wrapper" ] && [ -x "$wrapper" ] && exec "$wrapper" mcp
+done
+echo "Install OpenKnowledge16 from https://github.com/identity16/open-knowledge/releases, then restart your editor" >&2
+exit 127`;
+  }
   const npxSpec = `${OK_PACKAGE_SPEC}@${product.npmDistTag}`;
   const channelLine = name === 'stable' ? '' : `\nexport ${OK_CHANNEL_ENV}=${name}`;
   return `${unixChainSentinel(product)}${channelLine}
@@ -73,6 +83,11 @@ exit 127`;
 
 function buildWinChain(name: PackagedDesktopProductName): string {
   const product = DESKTOP_PRODUCTS[name];
+  if (name === 'identity16') {
+    return `${winChainSentinel(product)}
+[Console]::Error.WriteLine('OpenKnowledge16 currently supports macOS Apple Silicon only')
+exit 127`;
+  }
   const npxSpec = `${OK_PACKAGE_SPEC}@${product.npmDistTag}`;
   const cmd = `${product.cliCommandNames[0]}.cmd`;
   const installSpec = product.npmDistTag === 'latest' ? OK_PACKAGE_SPEC : npxSpec;

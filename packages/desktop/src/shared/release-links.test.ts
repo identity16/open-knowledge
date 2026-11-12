@@ -11,6 +11,14 @@ describe('release links', () => {
     expect(releasesPageUrl(DESKTOP_VARIANTS['legacy-beta'])).toBe(PUBLIC_RELEASES_URL);
   });
 
+  test('fork release links keep their repository and tag prefix', () => {
+    const url = releasesPageUrl(DESKTOP_VARIANTS.identity16);
+    expect(url).toBe('https://github.com/identity16/open-knowledge/releases');
+    expect(releaseUrlFor('0.76.0-identity16.2', url)).toBe(
+      `${url}/tag/identity16-v0.76.0-identity16.2`,
+    );
+  });
+
   test('a release tag URL defaults to the public releases page', () => {
     expect(releaseUrlFor('0.83.0-beta.8')).toBe(
       'https://github.com/inkeep/open-knowledge/releases/tag/v0.83.0-beta.8',

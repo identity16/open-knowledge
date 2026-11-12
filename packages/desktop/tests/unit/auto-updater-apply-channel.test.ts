@@ -51,6 +51,12 @@ describe('channelFromVersion', () => {
     expect(channelFromVersion('1.2.3-alpha')).toBe('beta');
   });
 
+  test('fork releases stay on the stable manifest channel', () => {
+    expect(channelFromVersion('0.76.0-identity16.2')).toBe('latest');
+    expect(channelFromVersion('0.76.0-identity16.3+sha.abc')).toBe('latest');
+    expect(channelFromVersion('0.76.0-identity16')).toBe('beta');
+  });
+
   test('build metadata is ignored', () => {
     expect(channelFromVersion('0.4.0+sha.abc')).toBe('latest');
     expect(channelFromVersion('0.4.0-beta.1+sha.abc')).toBe('beta');

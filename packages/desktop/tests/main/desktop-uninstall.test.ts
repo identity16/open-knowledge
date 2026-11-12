@@ -14,6 +14,15 @@ import {
 } from '../../src/main/desktop-uninstall.ts';
 
 describe('desktop self-uninstall helpers', () => {
+  test('recognizes the fork only inside an Applications directory', () => {
+    expect(isSupportedApplicationsBundle('/Applications/OpenKnowledge16.app', '/Users/alice')).toBe(
+      true,
+    );
+    expect(
+      isSupportedApplicationsBundle('/Volumes/OpenKnowledge16/OpenKnowledge16.app', '/Users/alice'),
+    ).toBe(false);
+  });
+
   test('resolves only packaged macOS .app exec paths', () => {
     expect(
       resolveAppBundleFromExecPath(

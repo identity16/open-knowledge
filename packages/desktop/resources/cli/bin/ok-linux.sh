@@ -10,7 +10,7 @@ BIN_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
 ROOT_DIR="$(cd -P "$BIN_DIR/../../.." >/dev/null 2>&1 && pwd)"
 ELECTRON=""
-for NAME in openknowledge openknowledge-beta; do
+for NAME in openknowledge openknowledge-beta openknowledge16; do
   if [ -x "$ROOT_DIR/$NAME" ]; then
     ELECTRON="$ROOT_DIR/$NAME"
     break
