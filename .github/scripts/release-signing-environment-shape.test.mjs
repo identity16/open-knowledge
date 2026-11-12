@@ -41,6 +41,7 @@ const SIGNING_ENVIRONMENT = 'release-signing';
 const OTHER_ENVIRONMENTS = [];
 const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' && 'release-signing' || '' }}";
 const EXPECTED = {
+  'identity16-web-release.yml#build': SIGNING_ENVIRONMENT,
   'desktop-build-win-linux.yml#build-windows': MAIN_ONLY,
   'desktop-build.yml#build-macos-dmg': MAIN_ONLY,
   'desktop-release.yml#build-macos': SIGNING_ENVIRONMENT,

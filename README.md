@@ -43,16 +43,17 @@ Highlights:
 
 ## Install
 
-**identity16 fork users:** see [the migration and rollback guide](MIGRATION_IDENTITY16.md)
-for the macOS Apple Silicon web GUI, `com.identity16.openknowledge`, and fork-only GitHub Release updates.
+**OpenKnowledge16 (this fork, macOS Apple Silicon)** — download the signed desktop app from the
+[fork releases](https://github.com/identity16/open-knowledge/releases/latest).
+See [installation, updates, and rollback](MIGRATION_IDENTITY16.md) for the desktop app and the existing fork web GUI + CLI channel.
 
-**Desktop app** — download it from [openknowledge.ai/download](https://openknowledge.ai/download) (or grab an installer from the [latest release](https://github.com/inkeep/open-knowledge/releases/latest)):
+**Upstream desktop app** — download it from [openknowledge.ai/download](https://openknowledge.ai/download) (or grab an installer from the [latest release](https://github.com/inkeep/open-knowledge/releases/latest)):
 
 - **macOS** (Apple Silicon): open the DMG and drag **OpenKnowledge** to **Applications**.
 - **Windows 10+** (x64 / Arm64): run the Setup installer — per-user, no admin prompt.
 - **Linux** (x64 / arm64): install the deb (Debian/Ubuntu) or rpm (Fedora/RHEL) package.
 
-**Web app** — on any platform (including Intel Macs and servers), run the same editor as a local web app via the CLI ([Node.js 24+](https://nodejs.org) and git required):
+**Upstream web app** — on any platform (including Intel Macs and servers), run the same editor as a local web app via the CLI ([Node.js 24+](https://nodejs.org) and git required):
 
 ```bash
 npm install -g @inkeep/open-knowledge

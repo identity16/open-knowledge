@@ -1,12 +1,16 @@
-# 기존 OpenKnowledge에서 identity16 버전으로 이전하기
+# 기존 OpenKnowledge에서 OpenKnowledge16으로 이전하기
 
 이 가이드는 **Inkeep의 `@inkeep/open-knowledge`**를 사용하던 사람을 위한 것입니다.
 `openknowledge-sh/openknowledge`는 이름이 비슷한 별도 프로젝트이며 이 가이드의 대상이 아닙니다.
 
-현재 제공하는 fork 설치 채널은 **macOS Apple Silicon의 웹 GUI + CLI**입니다.
-Electron `.app`, Intel Mac, Windows, Linux 설치와 자동 업데이트는 아직 제공하지 않습니다.
-문서는 기존 폴더에서 계속 사용하고, 사용자 설정 위치도 기존 `~/.ok`를 유지합니다.
-서비스와 설치본의 식별자는 `com.identity16.openknowledge`입니다.
+이 fork는 **macOS 13 이상, Apple Silicon의 OpenKnowledge16 데스크톱 앱**과 기존 **웹 GUI + CLI**를 제공합니다.
+Intel Mac, Windows, Linux 데스크톱 설치본은 제공하지 않습니다. 문서는 기존 폴더에서 그대로 엽니다.
+
+데스크톱 앱의 이름은 `OpenKnowledge16`, bundle ID는 `com.identity16.openknowledge`입니다.
+전역 설정은 `~/.ok16`, 앱 상태는 `~/Library/Application Support/OpenKnowledge16`,
+키체인 서비스와 MCP 항목은 `open-knowledge-16`으로 원본과 분리합니다.
+기존 전역 설정·로그인은 자동 이전하지 않습니다. 프로젝트 안의 `.ok`와 문서 파일은 그대로 사용합니다.
+기존 웹 GUI + CLI 서비스는 `~/.ok`와 `com.identity16.openknowledge` LaunchAgent를 계속 사용합니다.
 
 ## 1. 설치 전 확인
 
@@ -16,7 +20,8 @@ Electron `.app`, Intel Mac, Windows, Linux 설치와 자동 업데이트는 아�
 원본을 별도 LaunchAgent나 다른 프로세스 관리자로 자동 실행 중이라면 그 자동 실행을
 먼저 꺼야 합니다. 자동으로 전환하는 기존 LaunchAgent 이름은 `com.joon.openknowledge`뿐입니다.
 
-필요한 도구는 Node.js 24 이상, npm, git입니다. 설치본은 GitHub에서, 런타임 의존성은
+다음 도구 확인은 웹 GUI + CLI 설치용입니다. 데스크톱 앱만 설치한다면 2절로 넘어갑니다.
+웹 설치에 필요한 도구는 Node.js 24 이상, npm, git입니다. 설치본은 GitHub에서, 런타임 의존성은
 npm에서 받습니다. Node.js와 npm 경로는 서비스 설정에 기록되므로 나중에 Node.js를
 다른 위치로 옮기면 설치 명령을 다시 실행합니다.
 
@@ -32,7 +37,19 @@ ok ps
 소스라는 의미는 아닙니다. Release의 태그와 연결된 commit이 실제 소스 기준입니다.
 백업을 건너뛰지 마세요. 새 버전이 설정이나 내부 데이터를 변경할 수 있습니다.
 
-## 2. fork 설치
+## 2. OpenKnowledge16 데스크톱 설치
+
+[최신 fork Release](https://github.com/identity16/open-knowledge/releases/latest)에서
+`OpenKnowledge16-arm64.dmg`를 받아 앱을 **Applications**로 옮깁니다.
+Apple Developer ID로 서명하고 공증한 앱이며, Node.js나 Rust를 따로 설치할 필요가 없습니다.
+원본 `OpenKnowledge.app`을 덮어쓰지 않습니다. 원본 앱의 자동 업데이트로 이 fork로 전환하지도 않습니다.
+
+앱을 열고 기존 문서 폴더를 선택합니다. 필요한 계정은 새로 로그인하고, 온보딩에서 선택하면
+`ok16`·`openknowledge16` 명령과 fork용 MCP 항목을 설치합니다.
+CLI shim은 `~/.ok16/bin`에 생성되며 원본 `ok`·`open-knowledge`와 구분됩니다.
+앱 전용 URL scheme은 `openknowledge16://`입니다. 원본 도메인의 Universal Links는 등록하지 않습니다.
+
+## 3. 웹 GUI + CLI 설치
 
 ```sh
 git clone https://github.com/identity16/open-knowledge.git
@@ -74,7 +91,7 @@ ok --version
 `/Users/사용자명/.local/bin/ok mcp`에 해당하는 실행 경로·인자로 바꾸세요.
 설치 스크립트는 모든 에디터 설정을 일괄 수정하지 않습니다.
 
-## 3. 이전 결과 확인
+## 4. 웹 GUI + CLI 이전 결과 확인
 
 ```sh
 node "$HOME/.local/share/com.identity16.openknowledge/channel.mjs" status
@@ -97,7 +114,17 @@ ok ps
 tail -n 80 "$HOME/.local/share/com.identity16.openknowledge/service.log"
 ```
 
-## 4. 업데이트
+## 5. 업데이트
+
+### OpenKnowledge16 데스크톱
+
+앱의 업데이트 확인 메뉴에서 새 버전을 확인합니다. 업데이트는 이 fork의 정식 GitHub Release에서만
+받으며 Inkeep의 업데이트 서버나 npm 배포를 사용하지 않습니다.
+업데이트용 ZIP과 `latest-mac.yml`은 DMG·웹 설치 파일과 같은 Release에 게시됩니다.
+manifest는 버전별 고정 다운로드 주소와 checksum을 담아 배포 중 파일이 섞이지 않게 합니다.
+수동 설치도 같은 Release의 DMG를 사용합니다.
+
+### 웹 GUI + CLI
 
 서비스가 시작될 때 내 레포의 최신 **정식 GitHub Release**를 확인합니다.
 `main`의 새 commit, upstream npm의 `latest`, prerelease는 자동 설치하지 않습니다.
@@ -112,7 +139,10 @@ openknowledge-update
 처음 설치하거나 새 버전의 런타임 의존성을 설치할 때는 npm 접근도 필요합니다.
 checksum은 파일 손상을 검사하며 독립적인 서명 검증을 대신하지 않습니다.
 
-## 5. 직전 fork 버전으로 되돌리기
+## 6. 직전 fork 버전으로 되돌리기
+
+데스크톱은 설치본이 있는 이전 Release의 DMG로 교체합니다. 앱·문서·설정을 먼저 백업하세요.
+버전 교체는 설정·문서를 과거 상태로 되돌리지 않습니다. 아래 명령은 웹 GUI + CLI용입니다.
 
 fork 업데이트를 한 번 이상 적용한 경우에 사용할 수 있습니다.
 최초 이전 직후에는 아래의 원본 복구 절차를 사용합니다.
@@ -126,7 +156,10 @@ rollback한 버전은 고정되어 서비스 재시작 시 최신 버전으로 �
 고정을 해제하고 최신 Release를 적용할 때 `openknowledge-update`를 실행합니다.
 버전 rollback은 설정·문서·내부 데이터까지 과거로 되돌리지는 않습니다.
 
-## 6. 원본 Inkeep 버전으로 복구하기
+## 7. 원본 Inkeep 버전으로 복구하기
+
+데스크톱은 OpenKnowledge16을 종료하고 원본 OpenKnowledge 앱을 다시 실행합니다.
+OpenKnowledge16의 별도 설정은 보존됩니다. 아래 명령은 기존 웹 GUI + CLI 서비스 복구용입니다.
 
 ```sh
 node scripts/fork/restore-original.mjs
@@ -144,16 +177,33 @@ node scripts/fork/restore-original.mjs
 
 ## 유지관리자: 다음 Release 만들기
 
-소스 변경을 내 레포에 push한 뒤 GitHub Actions의 **identity16 Web Release**를 수동
-실행하고 `0.76.0-identity16.2`처럼 새로운 fork 버전을 지정합니다.
-또는 `identity16-v0.76.0-identity16.2` 형식의 태그를 push합니다.
-두 경우 모두 빌드가 끝나야 정식 Release와 설치 파일이 공개됩니다.
+소스 변경을 fork의 `main`에 반영한 뒤 GitHub Actions의 **OpenKnowledge16 Release**를 수동 실행합니다.
+브랜치는 `main`, 버전은 `0.76.0-identity16.4`처럼 기존 Release보다 큰 새 버전을 지정합니다.
+태그 push로 서명 작업을 시작하지 않습니다. 서명 자격증명은 `main`에서만 사용할 수 있습니다.
 
-이 workflow는 macOS arm64 빌드와 checksum, CLI 패키지를 내 GitHub Release에 올리며
-Inkeep의 npm namespace에는 publish하지 않습니다. 일반 사용자 설치에는 GitHub 인증이
-필요하지 않습니다. 포크 소스를 수정해 배포할 때 GPL-3.0-or-later 의무와 제3자 고지를
-유지해야 합니다. Apache-2.0 프로젝트인 `openknowledge-sh/openknowledge`의 조건과
-혼동하지 마세요.
+workflow는 웹 GUI + CLI를 빌드한 뒤 macOS arm64 앱을 서명·공증합니다.
+앱 식별자·아키텍처·서명·공증 ticket·Gatekeeper·번들 CLI 버전을 검증하고,
+DMG·업데이트 ZIP·manifest·웹 설치 파일·checksum을 같은 draft Release에 올립니다.
+GitHub에 올라간 파일의 크기와 SHA-256이 로컬 산출물과 모두 같아야 정식 Release로 공개합니다.
+태그는 `identity16-v<버전>`이며 workflow의 소스 commit을 가리킵니다.
+이 workflow는 Inkeep의 npm namespace에 publish하지 않습니다.
+
+GitHub environment `release-signing`을 `main` 전용으로 설정하고 다음 secrets를 등록합니다.
+
+- `CSC_LINK`: Developer ID Application 인증서와 개인키를 담은 `.p12`의 base64 값
+- `CSC_KEY_PASSWORD`: `.p12` 암호
+- `APPLE_API_KEY`: 전용 App Store Connect Team API key의 PEM 내용
+- `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`: 해당 키의 식별자
+
+공증 키에는 Developer 역할이 필요합니다. 키가 별도여도 Apple Team API key의 권한은 특정 앱 하나로
+제한되지 않습니다. Developer Program 멤버십·약관 동의·인증서 유효 상태를 유지해야 합니다.
+서명 키는 임시 키체인에 넣고 빌드 종료 시 정리합니다. 비밀값은 저장소에 커밋하지 않습니다.
+
+실패한 draft는 최신 정식 Release를 바꾸지 않습니다. 같은 소스 commit의 미공개 draft는 같은 버전으로
+다시 실행할 수 있습니다. 이미 공개한 Release는 덮어쓰지 않고 새 버전을 사용합니다.
+
+일반 사용자 설치에는 GitHub 인증이 필요하지 않습니다. 포크를 수정해 배포할 때
+GPL-3.0-or-later 의무와 제3자 고지를 유지해야 합니다.
 
 ## 유지관리자: upstream 동기화 PR
 
