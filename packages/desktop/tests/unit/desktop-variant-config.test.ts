@@ -228,6 +228,28 @@ const platformArtifact = (name: string): string => `${name}-${token('arch')}.${t
 const nsisArtifact = (name: string): string => `${name}-Setup-${token('arch')}.${token('ext')}`;
 
 describe('desktop variant builder config', () => {
+  test('fork signing skips fonts and locale data while retaining every executable signature', () => {
+    const config = createVariantBuilderConfig(
+      parseBuilderConfig(configSource),
+      'identity16',
+      paths,
+      '0.76.0-identity16.4',
+    );
+    const ignored = (path: string) =>
+      config.mac.signIgnore?.some((pattern) => new RegExp(pattern).test(path));
+    const app = '/Applications/OpenKnowledge16.app/Contents';
+    expect(ignored(`${app}/Resources/app/assets/font.woff2`)).toBe(true);
+    expect(
+      ignored(
+        `${app}/Frameworks/Electron Framework.framework/Versions/A/Resources/ko.lproj/locale.pak`,
+      ),
+    ).toBe(true);
+    expect(ignored(`${app}/MacOS/OpenKnowledge16`)).toBe(false);
+    expect(
+      ignored(`${app}/Frameworks/Electron Framework.framework/Versions/A/Electron Framework`),
+    ).toBe(false);
+    expect(ignored(`${app}/Resources/app/native.node`)).toBe(false);
+  });
   test('fork packaging uses its own identity and feed without upstream domain entitlements', () => {
     const config = createVariantBuilderConfig(
       parseBuilderConfig(configSource),

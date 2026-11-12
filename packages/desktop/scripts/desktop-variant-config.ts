@@ -34,6 +34,7 @@ interface BuilderConfig {
   }>;
   mac: {
     icon: string;
+    signIgnore?: string[];
     artifactName?: string;
     entitlements: string;
     provisioningProfile?: string;
@@ -116,6 +117,11 @@ export function createVariantBuilderConfig(
   }));
   if (variantName === 'identity16') {
     config.publish = [{ provider: 'generic', url: IDENTITY16_UPDATE_FEED_URL, channel: 'latest' }];
+    config.mac.signIgnore = [
+      ...(config.mac.signIgnore ?? []),
+      '/Contents/Resources/app/.*\\.(?:woff2?|ttf|otf)$',
+      '/Electron Framework\\.framework/(?:Versions/[^/]+/)?Resources/[^/]+\\.lproj/(?:locale\\.pak|MainMenu\\.nib(?:/.*)?)$',
+    ];
   }
   config.mac.icon = variant.name === 'stable' ? config.mac.icon : variant.iconPath;
   config.mac.artifactName = `${variant.artifactName}-\${version}-\${arch}-mac.\${ext}`;
