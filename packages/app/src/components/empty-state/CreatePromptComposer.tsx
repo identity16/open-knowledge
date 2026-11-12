@@ -457,7 +457,7 @@ export function CreatePromptComposer({ scenario, className }: CreatePromptCompos
           onContentChange={setComposerDraftDoc}
           onSubmit={handleSubmit}
           initialDoc={initialDraftDoc}
-          className="max-h-96 overflow-y-auto px-4 py-3 text-sm leading-relaxed subtle-scrollbar [&_.ProseMirror]:min-h-16"
+          className="max-h-96 overflow-y-auto px-4 py-3 text-base md:text-sm leading-relaxed subtle-scrollbar [&_.ProseMirror]:min-h-16"
         />
         {pendingAttachments.length > 0 || pendingUploads.length > 0 ? (
           <PendingImageStrip

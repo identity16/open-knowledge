@@ -2562,6 +2562,15 @@ section[data-editor-pane-id] {
   content: attr(data-empty-placeholder);
 }
 
+.ProseMirror.composer-prosemirror p.is-empty::before {
+  width: 100%;
+  height: auto;
+  margin-bottom: -1lh;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* When any JSX prop panel is open in this editor, suppress the slash-command
  * placeholder on empty paragraphs — the placeholder competes for attention
  * with the focused panel. Scope is narrow on purpose: the trigger must live
