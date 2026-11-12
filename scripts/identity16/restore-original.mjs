@@ -15,7 +15,7 @@ execFileSync(process.execPath, [join(base, 'channel.mjs'), 'run', 'stop', migrat
 execFileSync('launchctl', ['disable', `${domain}/${service}`]);
 for (const name of ['ok', 'open-knowledge', 'openknowledge-update']) {
   const installed = join(homedir(), '.local/bin', name);
-  const saved = join(migration.backup, name);
+  const saved = join(migration.originalBackup ?? migration.backup, name);
   if (
     !existsSync(installed) ||
     !readFileSync(installed, 'utf8').includes(join(base, 'channel.mjs'))

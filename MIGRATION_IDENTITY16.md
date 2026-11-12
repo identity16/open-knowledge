@@ -13,6 +13,8 @@ Electron `.app`, Intel Mac, Windows, Linux 설치와 자동 업데이트는 아�
 편집 중인 문서를 저장하고 기존 앱의 동기화가 끝났는지 확인합니다.
 여러 프로젝트 서버를 사용 중이면 `ok ps`로 확인합니다. 자동 설치가 교체하는 서버는
 지정한 프로젝트 하나이며, 다른 서버나 별도로 설치한 Electron 앱은 종료하지 않습니다.
+원본을 별도 LaunchAgent나 다른 프로세스 관리자로 자동 실행 중이라면 그 자동 실행을
+먼저 꺼야 합니다. 자동으로 전환하는 기존 LaunchAgent 이름은 `com.joon.openknowledge`뿐입니다.
 
 필요한 도구는 Node.js 24 이상, npm, git입니다. 설치본은 GitHub에서, 런타임 의존성은
 npm에서 받습니다. Node.js와 npm 경로는 서비스 설정에 기록되므로 나중에 Node.js를

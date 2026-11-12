@@ -6,6 +6,7 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   renameSync,
   rmSync,
   writeFileSync,
@@ -23,6 +24,11 @@ const base = join(home, '.local/share', service);
 const bin = join(home, '.local/bin');
 const agents = join(home, 'Library/LaunchAgents');
 const backup = join(base, 'backups', new Date().toISOString().replaceAll(':', '-'));
+const migrationPath = join(base, 'migration.json');
+const priorMigration = existsSync(migrationPath)
+  ? JSON.parse(readFileSync(migrationPath, 'utf8'))
+  : null;
+const originalBackup = priorMigration?.originalBackup ?? priorMigration?.backup ?? backup;
 const domain = `gui/${process.getuid()}`;
 const oldLabel = 'com.joon.openknowledge';
 const oldPlist = join(agents, `${oldLabel}.plist`);
@@ -114,9 +120,8 @@ writeFileSync(
 execFileSync('plutil', ['-lint', plist], { stdio: 'inherit' });
 spawnSync('launchctl', ['bootout', `${domain}/${oldLabel}`], { stdio: 'ignore' });
 spawnSync('launchctl', ['bootout', `${domain}/${service}`], { stdio: 'ignore' });
-const oldCli = '/opt/homebrew/lib/node_modules/@inkeep/open-knowledge/dist/cli.mjs';
-if (existsSync(oldCli))
-  execFileSync(process.execPath, [oldCli, 'stop', project], { stdio: 'inherit' });
+const installedCli = join(base, 'current/node_modules/@inkeep/open-knowledge/dist/cli.mjs');
+execFileSync(process.execPath, [installedCli, 'stop', project], { stdio: 'inherit' });
 if (existsSync(oldPlist)) {
   copyFileSync(oldPlist, join(backup, `${oldLabel}.plist`));
   execFileSync('launchctl', ['disable', `${domain}/${oldLabel}`]);
@@ -124,8 +129,8 @@ if (existsSync(oldPlist)) {
 execFileSync('launchctl', ['enable', `${domain}/${service}`]);
 execFileSync('launchctl', ['bootstrap', domain, plist], { stdio: 'inherit' });
 writeFileSync(
-  join(base, 'migration.json'),
-  `${JSON.stringify({ project, backup, oldPlist, plist, node: process.execPath }, null, 2)}\n`,
+  migrationPath,
+  `${JSON.stringify({ project, backup, originalBackup, oldPlist, plist, node: process.execPath }, null, 2)}\n`,
 );
 console.log(
   `Service installed: ${service}\nBackup: ${backup}\nCommands: ${bin}/ok, ${bin}/openknowledge-update`,
