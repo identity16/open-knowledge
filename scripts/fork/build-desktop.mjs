@@ -207,7 +207,10 @@ export function buildDesktop(version, output, input = process.env) {
     for (const [path, contents] of originals) {
       writeFileSync(path, `${JSON.stringify({ ...JSON.parse(contents), version }, null, 2)}\n`);
     }
-    run('pnpm', ['run', 'build:desktop'], { cwd: desktop, env });
+    run('pnpm', ['run', 'build:desktop', '--config', 'electron.vite.release.config.ts'], {
+      cwd: desktop,
+      env,
+    });
     run('pnpm', ['exec', 'node', 'scripts/prepare-universal.mjs'], { cwd: desktop, env });
     run('pnpm', ['exec', 'node', 'scripts/stage-parcel-watcher.mjs'], { cwd: desktop, env });
     run(
