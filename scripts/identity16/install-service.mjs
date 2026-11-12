@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { service, update } from './channel.mjs';
@@ -28,8 +37,27 @@ const xml = (value) =>
 mkdirSync(backup, { recursive: true, mode: 0o700 });
 mkdirSync(bin, { recursive: true });
 mkdirSync(agents, { recursive: true });
+function snapshotDatabases(source, destination) {
+  if (!existsSync(source)) return;
+  for (const entry of readdirSync(source, { withFileTypes: true })) {
+    const input = join(source, entry.name);
+    const output = join(destination, entry.name);
+    if (entry.isDirectory()) snapshotDatabases(input, output);
+    else if (entry.isFile() && entry.name.endsWith('.sqlite')) {
+      const pending = `${output}.snapshot`;
+      execFileSync('/usr/bin/sqlite3', [
+        input,
+        '.timeout 5000',
+        `.backup '${pending.replaceAll("'", "''")}'`,
+      ]);
+      renameSync(pending, output);
+      for (const suffix of ['-wal', '-shm']) rmSync(`${output}${suffix}`, { force: true });
+    }
+  }
+}
 if (existsSync(join(home, '.ok')))
   cpSync(join(home, '.ok'), join(backup, 'user-ok'), { recursive: true });
+snapshotDatabases(join(home, '.ok/local'), join(backup, 'user-ok/local'));
 cpSync(project, join(backup, 'project'), { recursive: true });
 for (const file of [oldPlist, plist])
   if (existsSync(file)) copyFileSync(file, join(backup, file.split('/').at(-1)));
