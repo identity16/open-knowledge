@@ -3,27 +3,35 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'New fork version, for example 0.76.0-identity16.4'
+        description: 'Fork version, for example 0.76.0-identity16.5'
         required: true
         type: string
+      resume_run_id:
+        description: 'Original signed build run ID; leave empty for a new release or automatic rerun recovery'
+        required: false
+        type: string
+cache-mode: none
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: fork-release
   cancel-in-progress: false
+env:
+  FORK_VERSION: ${{ inputs.version }}
+  GH_TOKEN: ${{ github.token }}
+  ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+  PUPPETEER_SKIP_DOWNLOAD: '1'
+  TURBO_TELEMETRY_DISABLED: '1'
 jobs:
   build:
     if: github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main'
     environment: release-signing
     runs-on: macos-26
-    timeout-minutes: 75
-    permissions:
-      contents: write
-    env:
-      FORK_VERSION: ${{ inputs.version }}
-      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-      PUPPETEER_SKIP_DOWNLOAD: '1'
-      TURBO_TELEMETRY_DISABLED: '1'
+    timeout-minutes: 45
+    outputs:
+      candidate_run_id: ${{ steps.restore.outputs.candidate_run_id }}
+      ready_run_id: ${{ steps.restore.outputs.ready_run_id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -31,35 +39,152 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: '.node-version'
+          package-manager-cache: false
+      - name: Restore original signed build or validate a new release
+        id: restore
+        env:
+          RESUME_RUN_ID: ${{ inputs.resume_run_id }}
+        run: node scripts/fork/release-workflow.mjs restore
       - name: Install build tools
+        if: steps.restore.outputs.reused != 'true'
         run: |
           npm install --global pnpm@12.8.1
           rustup toolchain install --no-self-update
       - name: Install dependencies
+        if: steps.restore.outputs.reused != 'true'
         run: pnpm install --frozen-lockfile
-      - name: Validate release version
-        run: pnpm exec node --input-type=module -e 'import { forkReleasePlan } from "./scripts/fork/release-plan.mjs"; console.log(forkReleasePlan(process.env.FORK_VERSION).tag)'
-      - name: Test update and publication contracts
+      - name: Test release recovery contracts
+        if: steps.restore.outputs.reused != 'true'
         run: |
           pnpm exec node --test scripts/fork/channel.test.mjs
-          pnpm exec vitest run --config vitest.scripts.config.ts scripts/fork/release-plan.test.mjs scripts/fork/publish-release.test.mjs .github/scripts/release-signing-environment-shape.test.mjs .github/scripts/fork-release-shape.test.mjs --maxWorkers=2
+          pnpm exec vitest run --config vitest.scripts.config.ts scripts/fork/release-plan.test.mjs scripts/fork/publish-release.test.mjs scripts/fork/release-checkpoint.test.mjs scripts/fork/notarize-release.test.mjs scripts/fork/release-workflow.test.mjs .github/scripts/release-signing-environment-shape.test.mjs .github/scripts/fork-release-shape.test.mjs --maxWorkers=2
       - name: Build web GUI and CLI
-        run: pnpm exec node scripts/fork/build-release.mjs "$FORK_VERSION"
+        if: steps.restore.outputs.reused != 'true'
+        run: pnpm exec node scripts/fork/build-release.mjs "$FORK_VERSION" "$PWD/.fork-release/web"
       - name: Test fork product boundaries
+        if: steps.restore.outputs.reused != 'true'
         run: |
           pnpm --dir packages/core exec vitest run src/constants/product.test.ts src/constants/path-shim-layout.test.ts --maxWorkers=2
           pnpm --dir packages/cli exec vitest run src/commands/desktop-dispatch.test.ts src/commands/identity16-mcp-launcher.test.ts src/commands/stop.test.ts --maxWorkers=2
-          pnpm --dir packages/desktop exec vitest run src/shared/desktop-variant.test.ts src/shared/release-links.test.ts tests/unit/desktop-variant-config.test.ts tests/unit/auto-updater-apply-channel.test.ts --maxWorkers=2
-      - name: Build and verify signed desktop installers
-        id: desktop
+          pnpm --dir packages/desktop exec vitest run src/shared/desktop-variant.test.ts src/shared/release-links.test.ts tests/unit/desktop-variant-config.test.ts tests/unit/auto-updater-apply-channel.test.ts tests/unit/electron-vite-release-config.test.ts --maxWorkers=2
+      - name: Build and verify signed application
+        if: steps.restore.outputs.reused != 'true'
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: pnpm exec node scripts/fork/release-workflow.mjs sign
+      - name: Preserve signed application before notarization
+        if: steps.restore.outputs.reused != 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ steps.restore.outputs.signed_name }}
+          path: .fork-release/signed/
+          if-no-files-found: error
+          include-hidden-files: true
+          compression-level: 0
+          retention-days: 3
+  notarize:
+    needs: build
+    if: github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.outputs.ready_run_id == ''
+    environment: release-signing
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      CANDIDATE_RUN_ID: ${{ needs.build.outputs.candidate_run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: '.node-version'
+          package-manager-cache: false
+      - name: Restore or submit the identical signed application
+        id: submit
+        env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-        run: pnpm exec node scripts/fork/build-desktop.mjs "$FORK_VERSION"
-      - name: Publish complete fork release
+        run: node scripts/fork/release-workflow.mjs submit
+      - name: Preserve submission ID before waiting
+        if: steps.submit.outputs.new_notary == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ steps.submit.outputs.notary_name }}
+          path: .fork-release/notary/notary.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 3
+      - name: Wait for the saved submission
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: pnpm exec node scripts/fork/publish-release.mjs "$FORK_VERSION"
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: node scripts/fork/release-workflow.mjs wait
+  package:
+    needs: [build, notarize]
+    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && (needs.notarize.result == 'success' || needs.notarize.result == 'skipped')
+    environment: release-signing
+    runs-on: macos-26
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    outputs:
+      ready_run_id: ${{ steps.restore.outputs.ready_run_id || steps.package.outputs.ready_run_id }}
+    env:
+      CANDIDATE_RUN_ID: ${{ needs.build.outputs.candidate_run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: '.node-version'
+          package-manager-cache: false
+      - name: Restore signed application and check for a verified draft
+        id: restore
+        run: node scripts/fork/release-workflow.mjs prepare-package
+      - name: Install packaging tools
+        if: steps.restore.outputs.reused != 'true'
+        run: npm install --global pnpm@12.8.1
+      - name: Install dependencies
+        if: steps.restore.outputs.reused != 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Staple, package, verify and stage installers
+        id: package
+        if: steps.restore.outputs.reused != 'true'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: pnpm exec node scripts/fork/release-workflow.mjs package
+      - name: Preserve verified draft receipt
+        if: steps.restore.outputs.reused != 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ steps.package.outputs.ready_name }}
+          path: .fork-release/ready/ready.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 3
+  publish:
+    needs: [build, package]
+    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && needs.package.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      CANDIDATE_RUN_ID: ${{ needs.build.outputs.candidate_run_id }}
+      READY_RUN_ID: ${{ needs.package.outputs.ready_run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: '.node-version'
+          package-manager-cache: false
+      - name: Verify remote files and publish the original build
+        run: node scripts/fork/release-workflow.mjs promote

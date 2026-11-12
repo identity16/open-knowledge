@@ -181,11 +181,13 @@ node scripts/fork/restore-original.mjs
 브랜치는 `main`, 버전은 `0.76.0-identity16.4`처럼 기존 Release보다 큰 새 버전을 지정합니다.
 태그 push로 서명 작업을 시작하지 않습니다. 서명 자격증명은 `main`에서만 사용할 수 있습니다.
 
-workflow는 웹 GUI + CLI를 빌드한 뒤 macOS arm64 앱을 서명·공증합니다.
+workflow는 빌드·공증·패키징·공개를 별도 job으로 실행합니다. 웹 GUI + CLI의 renderer를
+데스크톱에서도 사용하며 중복 빌드하지 않습니다. 서명된 macOS arm64 앱을 저장한 뒤 공증을 제출하고,
+공증 submission ID도 대기 전에 저장합니다.
 앱 식별자·아키텍처·서명·공증 ticket·Gatekeeper·번들 CLI 버전을 검증하고,
 DMG·업데이트 ZIP·manifest·웹 설치 파일·checksum을 같은 draft Release에 올립니다.
 GitHub에 올라간 파일의 크기와 SHA-256이 로컬 산출물과 모두 같아야 정식 Release로 공개합니다.
-태그는 `identity16-v<버전>`이며 workflow의 소스 commit을 가리킵니다.
+태그는 `identity16-v<버전>`이며 실제 앱을 빌드한 원본 source commit을 가리킵니다.
 이 workflow는 Inkeep의 npm namespace에 publish하지 않습니다.
 
 GitHub environment `release-signing`을 `main` 전용으로 설정하고 다음 secrets를 등록합니다.
@@ -199,8 +201,22 @@ GitHub environment `release-signing`을 `main` 전용으로 설정하고 다음 
 제한되지 않습니다. Developer Program 멤버십·약관 동의·인증서 유효 상태를 유지해야 합니다.
 서명 키는 임시 키체인에 넣고 빌드 종료 시 정리합니다. 비밀값은 저장소에 커밋하지 않습니다.
 
-실패한 draft는 최신 정식 Release를 바꾸지 않습니다. 같은 소스 commit의 미공개 draft는 같은 버전으로
-다시 실행할 수 있습니다. 이미 공개한 Release는 덮어쓰지 않고 새 버전을 사용합니다.
+실패한 draft는 최신 정식 Release를 바꾸지 않습니다. 실패한 실행에서 **Re-run failed jobs**를 누르면
+저장된 서명 앱과 공증 ID를 재사용합니다. Apple 대기 시간이 초과되어도 같은 앱을 다시 제출하지 않습니다.
+공증 제출 직후 metadata 저장이 실패했으면 동일한 앱의 checksum이 포함된 제출 이름으로 Apple 기록을 복구합니다.
+
+workflow 코드를 고친 뒤 새 실행으로 이어가려면 같은 `version`과 **원본 빌드 실행의 `resume_run_id`**를
+입력합니다. 중간 재개 실행의 ID 대신 최초 서명 앱을 저장한 실행 ID를 사용하세요. 원본 실행이 이 저장소의
+main 수동 release workflow인지 확인하고, 원본 source가 현재 main의 ancestor인지 검증합니다.
+버전·원본 source SHA·파일 크기·SHA-256이 일치해야 재사용하며, 원본 빌드의 아이콘·패키징 리소스도 유지합니다.
+새 workflow commit으로 재개해도 태그는 원본 빌드 source를 가리킵니다.
+
+서명 앱·공증 ID·검증 완료 metadata는 Actions artifact에 **3일간** 보관합니다. 서명 인증서와 개인키는
+artifact에 포함하지 않습니다. 최종 설치 파일은 draft Release에 보관하고 공개 job에서 크기·checksum을
+다시 검증합니다. 공개 job만 실패했다면 재빌드·재공증 없이 공개를 재시도합니다.
+artifact가 만료되거나 손상되면 재개는 중단되며, 새 빌드에는 새 버전을 사용하세요.
+이미 공개된 파일은 수정하지 않습니다. 공개 직후 확인 단계만 실패한 재시도는 일치하는 기존 Release를 확인하고
+성공 처리하며, 더 최신 Release가 있더라도 latest를 과거 버전으로 바꾸지 않습니다.
 
 일반 사용자 설치에는 GitHub 인증이 필요하지 않습니다. 포크를 수정해 배포할 때
 GPL-3.0-or-later 의무와 제3자 고지를 유지해야 합니다.

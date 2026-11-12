@@ -14,6 +14,7 @@ import {
   CheckpointStore,
   checkpointName,
   createCandidate,
+  createReady,
   createSubmission,
   FORK_REPOSITORY,
   FORK_WORKFLOW,
@@ -258,5 +259,39 @@ describe('notarization checkpoint binding', () => {
     expect(invoke.mock.calls[0][0][1]).toContain(
       encodeURIComponent(checkpointName('notary', f.candidate)),
     );
+  });
+});
+
+describe('verified draft checkpoints', () => {
+  test('requires a complete release inventory and preserves original source identity', () => {
+    const f = fixture();
+    const plan = forkReleasePlan(version);
+    const submission = createSubmission(f.candidate, submissionId, '202');
+    const assets = [
+      plan.cli,
+      plan.dmg,
+      plan.zip,
+      plan.manifest,
+      'channel.mjs',
+      'checksums.txt',
+    ].map((name) => ({
+      name,
+      size: 12,
+      digest: `sha256:${'d'.repeat(64)}`,
+      path: '/private/temporary/path',
+    }));
+    const record = createReady(f.candidate, submission, 42, assets, '303');
+    expect(record.sourceSha).toBe(source);
+    expect(record.sourceRunId).toBe('101');
+    expect(record.producerRunId).toBe('303');
+    expect(JSON.stringify(record)).not.toContain('/private/');
+    for (const change of [
+      { assets: [] },
+      { assets: [...record.assets, record.assets[0]] },
+      { releaseId: 0 },
+      { sourceSha: current },
+      { assets: record.assets.map((a) => ({ ...a, digest: 'sha256:invalid' })) },
+    ])
+      expect(() => validateRecord({ ...record, ...change }, 'ready', f.candidate)).toThrow();
   });
 });

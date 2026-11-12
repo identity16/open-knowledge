@@ -38,3 +38,25 @@ export function forkReleasePlan(version) {
     cli: 'openknowledge-darwin-arm64.tgz',
   };
 }
+
+export function validateReleaseInventory(version, assets) {
+  const plan = forkReleasePlan(version);
+  const required = [plan.cli, plan.dmg, plan.zip, plan.manifest, 'channel.mjs', 'checksums.txt'];
+  const allowed = [...required, `${plan.dmg}.blockmap`, `${plan.zip}.blockmap`];
+  if (
+    !Array.isArray(assets) ||
+    new Set(assets.map((asset) => asset.name)).size !== assets.length ||
+    required.some((name) => !assets.some((asset) => asset.name === name)) ||
+    assets.some(
+      (asset) =>
+        !allowed.includes(asset.name) ||
+        !Number.isSafeInteger(asset.size) ||
+        asset.size < 1 ||
+        typeof asset.digest !== 'string' ||
+        asset.digest.trim() !== asset.digest ||
+        !/^sha256:[a-f0-9]{64}$/.test(asset.digest),
+    )
+  )
+    throw new Error('Incomplete or invalid staged release inventory.');
+  return assets;
+}

@@ -1,7 +1,11 @@
 import { spawnSync } from 'node:child_process';
 import { lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { forkReleasePlan, releaseFileDigest } from './release-identity.mjs';
+import {
+  forkReleasePlan,
+  releaseFileDigest,
+  validateReleaseInventory,
+} from './release-identity.mjs';
 
 export const FORK_REPOSITORY = 'identity16/open-knowledge';
 export const FORK_WORKFLOW = '.github/workflows/identity16-web-release.yml';
@@ -178,22 +182,9 @@ export function validateRecord(receipt, kind, candidate) {
   )
     throw new Error('The checkpoint belongs to a different signed application.');
   if (kind === 'ready') {
-    const plan = forkReleasePlan(receipt.version);
-    const required = [plan.cli, plan.dmg, plan.zip, plan.manifest, 'channel.mjs', 'checksums.txt'];
-    const allowed = [...required, `${plan.dmg}.blockmap`, `${plan.zip}.blockmap`];
-    if (
-      !Number.isSafeInteger(receipt.releaseId) ||
-      receipt.releaseId < 1 ||
-      !Array.isArray(receipt.assets) ||
-      new Set(receipt.assets.map((a) => a.name)).size !== receipt.assets.length ||
-      required.some((name) => !receipt.assets.some((a) => a.name === name))
-    )
-      throw new Error('Incomplete staged release checkpoint.');
-    for (const asset of receipt.assets) {
-      requireFile({ ...asset, sha256: asset.digest?.replace(/^sha256:/, '') });
-      if (!allowed.includes(asset.name) || !/^sha256:[a-f0-9]{64}$/.test(asset.digest ?? ''))
-        throw new Error('Unexpected staged release asset.');
-    }
+    if (!Number.isSafeInteger(receipt.releaseId) || receipt.releaseId < 1)
+      throw new Error('Invalid staged release ID.');
+    validateReleaseInventory(receipt.version, receipt.assets);
   }
   return receipt;
 }

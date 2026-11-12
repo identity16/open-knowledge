@@ -2,12 +2,16 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { forkReleasePlan, releaseFileDigest } from './release-identity.mjs';
+import {
+  forkReleasePlan,
+  releaseFileDigest,
+  validateReleaseInventory,
+} from './release-identity.mjs';
 
 const REPOSITORY = 'identity16/open-knowledge';
 
 function gh(args) {
-  const result = spawnSync('gh', args, { encoding: 'utf8' });
+  const result = spawnSync('gh', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
   if (result.error || result.status !== 0) {
     const error = new Error(
       'A GitHub release operation failed. Inspect the release state before retrying.',
@@ -83,16 +87,19 @@ export function verifyUploadedInventory(expected, uploaded) {
   }
 }
 
-export function publishForkRelease(version, directory, env = process.env, invoke = gh) {
+function publicationContext(version, sourceSha, env, invoke) {
   if (
     env.GITHUB_REPOSITORY !== REPOSITORY ||
     env.GITHUB_REF !== 'refs/heads/main' ||
-    !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA ?? '')
-  ) {
+    typeof env.GITHUB_SHA !== 'string' ||
+    env.GITHUB_SHA.trim() !== env.GITHUB_SHA ||
+    !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA) ||
+    typeof sourceSha !== 'string' ||
+    sourceSha.trim() !== sourceSha ||
+    !/^[a-f0-9]{40}$/.test(sourceSha)
+  )
     throw new Error('Publish only from the fork main branch in GitHub Actions.');
-  }
   const plan = forkReleasePlan(version);
-  const inventory = stagedReleaseInventory(directory, version);
   const api = (path, optional = false) => {
     try {
       return JSON.parse(invoke(['api', `repos/${REPOSITORY}/${path}`]));
@@ -101,28 +108,52 @@ export function publishForkRelease(version, directory, env = process.env, invoke
       throw error;
     }
   };
+  if (sourceSha !== env.GITHUB_SHA) {
+    const comparison = api(`compare/${sourceSha}...${env.GITHUB_SHA}`);
+    if (comparison.status !== 'ahead' || comparison.merge_base_commit?.sha !== sourceSha)
+      throw new Error('The release source must be an ancestor of the current main commit.');
+  }
+  const tagCommit = () =>
+    api(`git/ref/tags/${plan.tag}`, true) ? api(`commits/${plan.tag}`).sha : null;
+  const checkSource = (release) => {
+    const existing = tagCommit();
+    if (
+      (existing && existing !== sourceSha) ||
+      (release && (release.tag_name !== plan.tag || release.target_commitish !== sourceSha))
+    )
+      throw new Error('The release tag or draft targets a different source commit.');
+    return existing;
+  };
+  const checkLatest = () => {
+    const latest = api('releases/latest', true);
+    if (latest && !isNewerForkRelease(version, latest.tag_name.replace(/^identity16-v/, '')))
+      throw new Error('A fork release must be newer than the latest published release.');
+  };
   const findRelease = () => {
     const pages = JSON.parse(
       invoke(['api', `repos/${REPOSITORY}/releases?per_page=100`, '--paginate', '--slurp']),
     );
     return pages.flat().find((entry) => entry.tag_name === plan.tag) ?? null;
   };
-  const latest = api('releases/latest', true);
-  if (latest && !isNewerForkRelease(version, latest.tag_name.replace(/^identity16-v/, ''))) {
-    throw new Error('A fork release must be newer than the latest published release.');
-  }
-  let release = findRelease();
+  return { plan, api, checkSource, checkLatest, findRelease };
+}
+
+export function preflightForkRelease(version, sourceSha, env = process.env, invoke = gh) {
+  const context = publicationContext(version, sourceSha, env, invoke);
+  const release = context.findRelease();
+  context.checkSource(release);
   if (release && !release.draft)
     throw new Error('This release is already published; choose a new version.');
-  if (release?.assets.some((asset) => !inventory.some((entry) => entry.name === asset.name))) {
+  context.checkLatest();
+  return release;
+}
+
+export function stageForkRelease(version, directory, sourceSha, env = process.env, invoke = gh) {
+  const { plan, api, findRelease } = publicationContext(version, sourceSha, env, invoke);
+  let release = preflightForkRelease(version, sourceSha, env, invoke);
+  const inventory = stagedReleaseInventory(directory, version);
+  if (release?.assets.some((asset) => !inventory.some((entry) => entry.name === asset.name)))
     throw new Error('The existing draft contains unexpected assets; inspect it before resuming.');
-  }
-  const tagExists = () => api(`git/ref/tags/${plan.tag}`, true) !== null;
-  const existingTag = tagExists() ? api(`commits/${plan.tag}`) : null;
-  if (existingTag && existingTag.sha !== env.GITHUB_SHA)
-    throw new Error('The release tag does not point to the workflow source commit.');
-  if (release && !existingTag && release.target_commitish !== env.GITHUB_SHA)
-    throw new Error('The existing draft targets a different source commit.');
   if (!release) {
     invoke([
       'release',
@@ -131,14 +162,14 @@ export function publishForkRelease(version, directory, env = process.env, invoke
       '--repo',
       REPOSITORY,
       '--target',
-      env.GITHUB_SHA,
+      sourceSha,
       '--draft',
       '--prerelease=false',
       '--latest=false',
       '--title',
       `OpenKnowledge16 ${version}`,
       '--notes',
-      `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the fork web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${env.GITHUB_SHA}/MIGRATION_IDENTITY16.md`,
+      `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the fork web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION_IDENTITY16.md`,
     ]);
     release = findRelease();
     if (!release?.draft) throw new Error('GitHub did not confirm creation of the draft release.');
@@ -154,7 +185,34 @@ export function publishForkRelease(version, directory, env = process.env, invoke
   ]);
   release = api(`releases/${release.id}`);
   verifyUploadedInventory(inventory, release.assets);
-  if (!tagExists()) {
+  return {
+    version,
+    sourceSha,
+    releaseId: release.id,
+    assets: inventory.map(({ name, size, digest }) => ({ name, size, digest })),
+  };
+}
+
+export function promoteForkRelease(proof, env = process.env, invoke = gh) {
+  const { plan, api, checkSource, checkLatest } = publicationContext(
+    proof.version,
+    proof.sourceSha,
+    env,
+    invoke,
+  );
+  validateReleaseInventory(proof.version, proof.assets);
+  if (!Number.isSafeInteger(proof.releaseId) || proof.releaseId < 1)
+    throw new Error('Invalid staged release ID.');
+  let release = api(`releases/${proof.releaseId}`);
+  const existingTag = checkSource(release);
+  verifyUploadedInventory(proof.assets, release.assets);
+  if (!release.draft) {
+    if (!existingTag || release.prerelease)
+      throw new Error('The published release does not match the staged stable release.');
+    return release.html_url;
+  }
+  checkLatest();
+  if (!existingTag)
     invoke([
       'api',
       `repos/${REPOSITORY}/git/refs`,
@@ -163,11 +221,10 @@ export function publishForkRelease(version, directory, env = process.env, invoke
       '-f',
       `ref=refs/tags/${plan.tag}`,
       '-f',
-      `sha=${env.GITHUB_SHA}`,
+      `sha=${proof.sourceSha}`,
     ]);
-  }
-  if (api(`commits/${plan.tag}`).sha !== env.GITHUB_SHA)
-    throw new Error('The release tag does not point to the workflow source commit.');
+  if (api(`commits/${plan.tag}`).sha !== proof.sourceSha)
+    throw new Error('The release tag does not point to the original build source commit.');
   invoke([
     'release',
     'edit',
@@ -178,11 +235,18 @@ export function publishForkRelease(version, directory, env = process.env, invoke
     '--prerelease=false',
     '--latest',
   ]);
-  release = api(`releases/${release.id}`);
-  if (release.draft || release.prerelease || api('releases/latest').tag_name !== plan.tag) {
+  release = api(`releases/${proof.releaseId}`);
+  if (release.draft || release.prerelease || api('releases/latest').tag_name !== plan.tag)
     throw new Error('GitHub did not confirm publication as the latest stable release.');
-  }
   return release.html_url;
+}
+
+export function publishForkRelease(version, directory, env = process.env, invoke = gh) {
+  return promoteForkRelease(
+    stageForkRelease(version, directory, env.GITHUB_SHA, env, invoke),
+    env,
+    invoke,
+  );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
