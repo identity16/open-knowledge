@@ -37,6 +37,8 @@ function github(f, corrupt = false, tagSha = null) {
     const [command, operation] = args;
     if (command === 'api') {
       if (operation.endsWith('/releases/latest')) return JSON.stringify(latest);
+      if (operation.endsWith('/releases?per_page=100'))
+        return JSON.stringify([draft ? [draft] : []]);
       if (operation.endsWith('/git/refs') && args.includes('POST')) {
         tagSha = sha;
         return '{}';
@@ -51,12 +53,17 @@ function github(f, corrupt = false, tagSha = null) {
         return JSON.stringify({ sha: tagSha });
       }
       if (operation.includes('/releases/tags/')) {
+        throw Object.assign(new Error('draft is not available by tag'), { notFound: true });
+      }
+      if (operation.endsWith('/releases/42')) {
         if (!draft) throw Object.assign(new Error('not found'), { notFound: true });
         return JSON.stringify(draft);
       }
     }
     if (command === 'release' && operation === 'create')
       draft = {
+        id: 42,
+        tag_name: f.plan.tag,
         draft: true,
         target_commitish: sha,
         assets: [],

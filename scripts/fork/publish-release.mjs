@@ -101,11 +101,17 @@ export function publishForkRelease(version, directory, env = process.env, invoke
       throw error;
     }
   };
+  const findRelease = () => {
+    const pages = JSON.parse(
+      invoke(['api', `repos/${REPOSITORY}/releases?per_page=100`, '--paginate', '--slurp']),
+    );
+    return pages.flat().find((entry) => entry.tag_name === plan.tag) ?? null;
+  };
   const latest = api('releases/latest', true);
   if (latest && !isNewerForkRelease(version, latest.tag_name.replace(/^identity16-v/, ''))) {
     throw new Error('A fork release must be newer than the latest published release.');
   }
-  let release = api(`releases/tags/${plan.tag}`, true);
+  let release = findRelease();
   if (release && !release.draft)
     throw new Error('This release is already published; choose a new version.');
   if (release?.assets.some((asset) => !inventory.some((entry) => entry.name === asset.name))) {
@@ -134,6 +140,8 @@ export function publishForkRelease(version, directory, env = process.env, invoke
       '--notes',
       `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the fork web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${env.GITHUB_SHA}/MIGRATION_IDENTITY16.md`,
     ]);
+    release = findRelease();
+    if (!release?.draft) throw new Error('GitHub did not confirm creation of the draft release.');
   }
   invoke([
     'release',
@@ -144,7 +152,7 @@ export function publishForkRelease(version, directory, env = process.env, invoke
     '--clobber',
     ...inventory.map((asset) => asset.path),
   ]);
-  release = api(`releases/tags/${plan.tag}`);
+  release = api(`releases/${release.id}`);
   verifyUploadedInventory(inventory, release.assets);
   if (!tagExists()) {
     invoke([
@@ -170,7 +178,7 @@ export function publishForkRelease(version, directory, env = process.env, invoke
     '--prerelease=false',
     '--latest',
   ]);
-  release = api(`releases/tags/${plan.tag}`);
+  release = api(`releases/${release.id}`);
   if (release.draft || release.prerelease || api('releases/latest').tag_name !== plan.tag) {
     throw new Error('GitHub did not confirm publication as the latest stable release.');
   }
