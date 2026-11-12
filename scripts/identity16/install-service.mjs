@@ -42,6 +42,10 @@ function snapshotDatabases(source, destination) {
   for (const entry of readdirSync(source, { withFileTypes: true })) {
     const input = join(source, entry.name);
     const output = join(destination, entry.name);
+    if (entry.name === 'server-authority-leases') {
+      rmSync(output, { recursive: true, force: true });
+      continue;
+    }
     if (entry.isDirectory()) snapshotDatabases(input, output);
     else if (entry.isFile() && entry.name.endsWith('.sqlite')) {
       const pending = `${output}.snapshot`;
