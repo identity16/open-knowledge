@@ -110,7 +110,7 @@ function resolveNotarizeCredentials() {
   };
 }
 
-async function verifyFuses(electronBinary, expected) {
+export async function verifyFuses(electronBinary, expected) {
   let wire;
   try {
     wire = await getCurrentFuseWire(electronBinary);

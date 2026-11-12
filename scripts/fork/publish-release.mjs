@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { forkReleasePlan, releaseFileDigest } from './release-plan.mjs';
+import { forkReleasePlan, releaseFileDigest } from './release-identity.mjs';
 
 const REPOSITORY = 'identity16/open-knowledge';
 

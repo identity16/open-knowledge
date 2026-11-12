@@ -53,6 +53,7 @@ describe('fork release inventory', () => {
     'v0.76.0-identity16.3',
     '0.76.0-beta.3',
     '0.76.0-identity16.03',
+    '0.76.0-identity16.3\n',
     '../v1',
     '',
     undefined,
