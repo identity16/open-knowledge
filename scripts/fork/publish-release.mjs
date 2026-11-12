@@ -111,7 +111,8 @@ export function publishForkRelease(version, directory, env = process.env, invoke
   if (release?.assets.some((asset) => !inventory.some((entry) => entry.name === asset.name))) {
     throw new Error('The existing draft contains unexpected assets; inspect it before resuming.');
   }
-  const existingTag = api(`commits/${plan.tag}`, true);
+  const tagExists = () => api(`git/ref/tags/${plan.tag}`, true) !== null;
+  const existingTag = tagExists() ? api(`commits/${plan.tag}`) : null;
   if (existingTag && existingTag.sha !== env.GITHUB_SHA)
     throw new Error('The release tag does not point to the workflow source commit.');
   if (release && !existingTag && release.target_commitish !== env.GITHUB_SHA)
@@ -145,7 +146,7 @@ export function publishForkRelease(version, directory, env = process.env, invoke
   ]);
   release = api(`releases/tags/${plan.tag}`);
   verifyUploadedInventory(inventory, release.assets);
-  if (!api(`commits/${plan.tag}`, true)) {
+  if (!tagExists()) {
     invoke([
       'api',
       `repos/${REPOSITORY}/git/refs`,

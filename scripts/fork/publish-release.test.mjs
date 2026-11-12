@@ -41,8 +41,13 @@ function github(f, corrupt = false, tagSha = null) {
         tagSha = sha;
         return '{}';
       }
-      if (operation.includes('/commits/')) {
+      if (operation.includes('/git/ref/tags/')) {
         if (!tagSha) throw Object.assign(new Error('not found'), { notFound: true });
+        return JSON.stringify({ object: { type: 'commit', sha: tagSha } });
+      }
+      if (operation.includes('/commits/')) {
+        if (!tagSha)
+          throw Object.assign(new Error('No commit found (HTTP 422)'), { notFound: false });
         return JSON.stringify({ sha: tagSha });
       }
       if (operation.includes('/releases/tags/')) {
