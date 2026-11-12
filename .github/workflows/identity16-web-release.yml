@@ -36,22 +36,22 @@ jobs:
       - name: Install dependencies
         run: pnpm --filter '@inkeep/open-knowledge...' install --frozen-lockfile
       - name: Test update channel
-        run: node --test scripts/identity16/channel.test.mjs
+        run: node --test scripts/fork/channel.test.mjs
       - name: Build release
         env:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
           VERSION="${INPUT_VERSION:-${GITHUB_REF_NAME#identity16-v}}"
-          node scripts/identity16/build-release.mjs "$VERSION"
+          node scripts/fork/build-release.mjs "$VERSION"
           printf 'FORK_TAG=identity16-v%s\n' "$VERSION" >> "$GITHUB_ENV"
       - name: Publish fork release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$FORK_TAG" \
-            .identity16-release/openknowledge-darwin-arm64.tgz \
-            .identity16-release/checksums.txt \
-            scripts/identity16/channel.mjs \
+            .fork-release/openknowledge-darwin-arm64.tgz \
+            .fork-release/checksums.txt \
+            scripts/fork/channel.mjs \
             --target "$GITHUB_SHA" --title "$FORK_TAG" \
             --notes 'identity16 web GUI and CLI. See MIGRATION_IDENTITY16.md for installation and rollback.' \
             --prerelease=false --latest

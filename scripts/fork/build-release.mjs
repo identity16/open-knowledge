@@ -12,13 +12,13 @@ import { resolve } from 'node:path';
 
 const version = process.argv[2];
 if (!/^\d+\.\d+\.\d+-identity16\.\d+$/.test(version ?? '')) {
-  throw new Error('Usage: node scripts/identity16/build-release.mjs X.Y.Z-identity16.N');
+  throw new Error('Usage: node scripts/fork/build-release.mjs X.Y.Z-identity16.N');
 }
 if (process.platform !== 'darwin' || process.arch !== 'arm64') {
   throw new Error('This release channel currently supports macOS Apple Silicon only.');
 }
 const root = resolve(import.meta.dirname, '../..');
-const output = resolve(process.argv[3] ?? `${root}/.identity16-release`);
+const output = resolve(process.argv[3] ?? `${root}/.fork-release`);
 mkdirSync(output, { recursive: true });
 const manifest = resolve(root, 'packages/cli/package.json');
 const original = readFileSync(manifest, 'utf8');
@@ -30,7 +30,7 @@ try {
     env: { ...process.env, TURBO_CACHE_DIR: `${root}/.turbo/cache`, TURBO_TELEMETRY_DISABLED: '1' },
   });
   copyFileSync(
-    resolve(root, 'scripts/identity16/channel.mjs'),
+    resolve(root, 'scripts/fork/channel.mjs'),
     resolve(root, 'packages/cli/dist/identity16-channel.mjs'),
   );
   execFileSync('npm', ['pack', '--ignore-scripts', '--pack-destination', output], {

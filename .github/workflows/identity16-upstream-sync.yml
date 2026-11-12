@@ -18,13 +18,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-          sparse-checkout: scripts/identity16
+          sparse-checkout: scripts/fork
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '24.21.0'
       - name: Test synchronization decisions
-        run: node --test scripts/identity16/sync-upstream.test.mjs
+        run: node --test scripts/fork/sync-upstream.test.mjs
       - name: Open or update upstream PR
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/identity16/sync-upstream.mjs "$GITHUB_STEP_SUMMARY"
+        run: node scripts/fork/sync-upstream.mjs "$GITHUB_STEP_SUMMARY"

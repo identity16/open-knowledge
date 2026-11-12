@@ -37,7 +37,7 @@ ok ps
 ```sh
 git clone https://github.com/identity16/open-knowledge.git
 cd open-knowledge
-node scripts/identity16/install-service.mjs '/문서/프로젝트의/절대경로'
+node scripts/fork/install-service.mjs '/문서/프로젝트의/절대경로'
 ```
 
 빌드 도구나 Rust는 일반 사용자 설치에 필요하지 않습니다. 설치 스크립트는 다음을 수행합니다.
@@ -129,7 +129,7 @@ rollback한 버전은 고정되어 서비스 재시작 시 최신 버전으로 �
 ## 6. 원본 Inkeep 버전으로 복구하기
 
 ```sh
-node scripts/identity16/restore-original.mjs
+node scripts/fork/restore-original.mjs
 ```
 
 이 명령은 fork 서버를 중지하고 `~/.local/bin`의 fork 명령을 복구 또는 제거합니다.
