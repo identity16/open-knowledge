@@ -12,7 +12,7 @@ export function CornerCardStack() {
     >
       <div
         data-testid="corner-card-stack-column"
-        className="corner-card-column flex max-h-[calc(100vh-var(--ok-app-header-height,2.75rem)-1.5rem)] flex-col gap-2"
+        className="corner-card-column flex max-h-[calc(100dvh-var(--ok-app-header-height,2.75rem)-1.5rem)] flex-col gap-2"
       >
         <UpdateNotices />
         <FeedbackCardMount />

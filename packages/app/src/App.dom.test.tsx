@@ -407,7 +407,7 @@ describe('App runtime wiring', () => {
 
       expect(screen.queryByTestId('file-sidebar')).toBeNull();
       expectVisualClassTokens(appMain().className, [
-        'h-[calc(100vh-var(--ok-app-header-height,0px))]',
+        'h-[calc(100dvh-var(--ok-app-header-height,0px))]',
       ]);
       expectVisualClassTokensAbsent(appMain().className, ['h-screen']);
     });
@@ -427,7 +427,7 @@ describe('App runtime wiring', () => {
       expect(screen.getByTestId('system-doc-subscriber')).not.toBeNull();
       expect(screen.getByTestId('editor-pane')).not.toBeNull();
       expectVisualClassTokens(appMain().className, [
-        'h-[calc(100vh-var(--ok-app-header-height,0px))]',
+        'h-[calc(100dvh-var(--ok-app-header-height,0px))]',
       ]);
       expectVisualClassTokensAbsent(appMain().className, ['h-screen']);
     });
@@ -1206,14 +1206,14 @@ describe('App runtime wiring', () => {
       const shellRoot = document.querySelector<HTMLElement>('[data-app-shell]');
       expect(shellRoot?.style.getPropertyValue('--ok-app-header-height')).toBe('2.75rem');
       expectVisualClassTokens(screen.getByTestId('sidebar-provider').className, [
-        'h-[calc(100vh-var(--ok-app-header-height,0px))]',
+        'h-[calc(100dvh-var(--ok-app-header-height,0px))]',
         'min-h-[calc(100svh-var(--ok-app-header-height,0px))]',
       ]);
       expectVisualClassTokens(appMain().className, [
         'ps-2',
         'pb-2',
         'pe-2',
-        'h-[calc(100vh-var(--ok-app-header-height,0px))]',
+        'h-[calc(100dvh-var(--ok-app-header-height,0px))]',
       ]);
       expectVisualClassTokensAbsent(appMain().className, ['overflow-hidden', 'rounded-e-xl']);
     });
@@ -1226,7 +1226,7 @@ describe('App runtime wiring', () => {
       expect(shellRoot?.style.getPropertyValue('--ok-app-header-height')).toBe('');
       expectVisualClassTokens(appMain().className, ['h-screen']);
       expectVisualClassTokensAbsent(appMain().className, [
-        'h-[calc(100vh-var(--ok-app-header-height,0px))]',
+        'h-[calc(100dvh-var(--ok-app-header-height,0px))]',
       ]);
     });
 

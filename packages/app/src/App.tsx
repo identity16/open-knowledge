@@ -663,14 +663,14 @@ function AppBody() {
         <TerminalLaunchProvider value={terminalLaunch}>
           <CommentQueueShortcut />
           {showAppHeader && <AppHeader onOpenSearch={() => setCommandPaletteOpen(true)} />}
-          <SidebarProvider className="h-[calc(100vh-var(--ok-app-header-height,0px))] min-h-[calc(100svh-var(--ok-app-header-height,0px))]">
+          <SidebarProvider className="h-[calc(100dvh-var(--ok-app-header-height,0px))] min-h-[calc(100svh-var(--ok-app-header-height,0px))]">
             <FileListHostProvider enabled={showAppHeader && !singleFile} fileList={<FileSidebar />}>
               <div
                 data-app-main=""
                 className={cn(
                   'relative flex w-full flex-1 flex-col',
                   showAppHeader
-                    ? 'ps-2 pe-2 pb-2 h-[calc(100vh-var(--ok-app-header-height,0px))]'
+                    ? 'ps-2 pe-2 pb-2 h-[calc(100dvh-var(--ok-app-header-height,0px))]'
                     : 'h-screen overflow-hidden bg-background',
                 )}
               >
