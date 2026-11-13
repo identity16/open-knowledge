@@ -6,6 +6,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -166,6 +167,12 @@ function cleanupSigning(temp, signing) {
   }
 }
 
+function replaceFile(path, contents) {
+  const pending = `${path}.${process.pid}.pending`;
+  writeFileSync(pending, contents);
+  renameSync(pending, path);
+}
+
 export async function verifyPackagedApp(app, version, env = process.env, notarized = true) {
   const plist = join(app, 'Contents/Info.plist');
   const values = {
@@ -241,7 +248,7 @@ export async function buildDesktop(
       TURBO_CACHE_DIR: join(root, '.turbo/cache'),
     };
     for (const [path, contents] of originals) {
-      writeFileSync(path, `${JSON.stringify({ ...JSON.parse(contents), version }, null, 2)}\n`);
+      replaceFile(path, `${JSON.stringify({ ...JSON.parse(contents), version }, null, 2)}\n`);
     }
     run('pnpm', ['run', 'build:desktop', '--config', 'electron.vite.release.config.ts'], {
       cwd: desktop,
@@ -304,7 +311,7 @@ export async function buildDesktop(
     console.log(`Staged ${assets.length} release assets in ${releaseDir}`);
   } finally {
     try {
-      for (const [path, contents] of originals) writeFileSync(path, contents);
+      for (const [path, contents] of originals) replaceFile(path, contents);
     } finally {
       try {
         cleanupSigning(temp, signing);
