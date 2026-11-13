@@ -191,13 +191,33 @@ export async function update({ force = false } = {}) {
   });
 }
 
+export function localInstallBaseline(latestTag, state) {
+  return latestTag ?? releaseBaseline(state);
+}
+
+async function latestPublishedTag() {
+  if (process.env.OPENKNOWLEDGE16_OFFLINE === '1') return null;
+  try {
+    const release = JSON.parse(
+      await download(`https://api.github.com/repos/${repository}/releases/latest`),
+    );
+    return releaseIdentity(release).tag;
+  } catch (error) {
+    console.error(
+      `Could not read the latest release; pinning to the installed one: ${error.message}`,
+    );
+    return null;
+  }
+}
+
 export async function installLocal(archive, label) {
   if (!/^local-[A-Za-z0-9.-]+$/.test(label)) throw new Error(`Invalid local build label: ${label}`);
+  const latestTag = await latestPublishedTag();
   await withLock(() => {
     const target = join(base, 'releases', label);
     if (existsSync(target)) rmSync(target, { recursive: true, force: true });
     installArchive(archive, target);
-    const baseline = releaseBaseline(readState());
+    const baseline = localInstallBaseline(latestTag, readState());
     const previous = switchTo(target);
     writeState({ tag: label, previous, baseline });
     writeFileSync(join(base, 'pinned'), `${localPinPrefix}${baseline ?? ''}`);

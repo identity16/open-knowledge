@@ -16,6 +16,7 @@ import { test } from 'node:test';
 import {
   assetName,
   keepsLocalPin,
+  localInstallBaseline,
   localPinBaseline,
   releaseIdentity,
   repository,
@@ -141,7 +142,7 @@ test('install-local activates a packed build and pins it to the installed releas
       JSON.stringify({ tag: 'identity16-v0.76.0-identity16.4', previous: null }),
     );
     const options = {
-      env: { ...process.env, OPENKNOWLEDGE16_HOME: home },
+      env: { ...process.env, OPENKNOWLEDGE16_HOME: home, OPENKNOWLEDGE16_OFFLINE: '1' },
       encoding: 'utf8',
     };
     const channel = join(import.meta.dirname, 'channel.mjs');
@@ -165,4 +166,12 @@ test('install-local activates a packed build and pins it to the installed releas
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
+});
+
+test('a local build pins to the latest published release, not a stale installed baseline', () => {
+  const stale = { tag: 'local-old', baseline: 'identity16-v0.76.0-identity16.6' };
+  assert.equal(localInstallBaseline('v0.77.0', stale), 'v0.77.0');
+  assert.equal(localInstallBaseline(null, stale), 'identity16-v0.76.0-identity16.6');
+  assert.equal(localInstallBaseline(null, { tag: 'v0.77.0' }), 'v0.77.0');
+  assert.equal(localInstallBaseline(null, null), null);
 });
