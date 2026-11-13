@@ -98,7 +98,8 @@ function startDevServer(port) {
     child,
     stderr: () => stderr,
     stop: () => {
-      if (child.exitCode === null && child.signalCode === null) process.kill(-child.pid, 'SIGTERM');
+      if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) return;
+      process.kill(-child.pid, 'SIGTERM');
     },
   };
 }
