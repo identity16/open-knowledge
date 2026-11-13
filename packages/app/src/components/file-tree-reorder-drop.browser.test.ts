@@ -22,7 +22,8 @@ async function mountTree(canReorder: boolean): Promise<MountedTree> {
   document.body.append(host);
   const drops: FileTreeDropResult[] = [];
   const tree = new FileTree({
-    paths: ['docs/', 'docs/inner.md', 'alpha.md', 'beta.md', 'gamma.md'],
+    paths: ['docs/', 'docs/inner.md', 'docs/second.md', 'alpha.md', 'beta.md', 'gamma.md'],
+    initialExpandedPaths: ['docs/'],
     initialExpansion: 'closed',
     initialVisibleRowCount: 10,
     dragAndDrop: {
@@ -131,5 +132,22 @@ describe('@pierre/trees reorder drop zones (local patch)', () => {
     drop(host, 'docs/', 0.1, dataTransfer);
     await vi.waitFor(() => expect(drops).toHaveLength(1));
     expect(drops[0]?.operation).toBe('move');
+  });
+
+  test('reordering inside a nested folder reports a reorder and moves nothing', async () => {
+    const { host, tree, drops } = await mountTree(true);
+    const { dataTransfer, target } = await dragOnto(host, 'docs/second.md', 'docs/inner.md', 0.1);
+    await vi.waitFor(() =>
+      expect(target()?.getAttribute('data-item-drop-position')).toBe('before'),
+    );
+
+    drop(host, 'docs/inner.md', 0.1, dataTransfer);
+    await vi.waitFor(() => expect(drops).toHaveLength(1));
+    expect(drops[0]).toMatchObject({
+      operation: 'reorder',
+      draggedPaths: ['docs/second.md'],
+      target: { kind: 'directory', directoryPath: 'docs/', position: 'before' },
+    });
+    expect(tree.getItem('docs/second.md')).not.toBeNull();
   });
 });

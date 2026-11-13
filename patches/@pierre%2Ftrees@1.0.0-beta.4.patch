@@ -18,7 +18,7 @@ index 37c5d1ffedd5aff0258dec41b1b5cedb240aa3a6..681422304d7d004bfc47d4f7feb3c480
  		try {
  			if (dropPlan.operations.length === 1) {
 diff --git a/dist/model/dragAndDrop.js b/dist/model/dragAndDrop.js
-index 642d25d09823ecd3d0f5f66a23fc9c8e877bffa3..ff0dc83433ab28d79346bb44f3c4abf9067168f2 100644
+index 642d25d09823ecd3d0f5f66a23fc9c8e877bffa3..ff934e19b1676946b800cdc713ebe88703c0bc20 100644
 --- a/dist/model/dragAndDrop.js
 +++ b/dist/model/dragAndDrop.js
 @@ -40,7 +40,7 @@ function resolveDraggedPathsForStart(path, selectedPaths) {
@@ -30,6 +30,21 @@ index 642d25d09823ecd3d0f5f66a23fc9c8e877bffa3..ff0dc83433ab28d79346bb44f3c4abf9
  }
  function createDropContext(draggedPaths, target) {
  	return {
+@@ -60,8 +60,14 @@ function resolveMoveDestinationPath(sourcePath, target) {
+ 	if (target.kind === "root" || target.directoryPath == null) return getPathBasename(sourcePath);
+ 	return target.directoryPath;
+ }
++function getParentDirectoryPath(path) {
++	const trimmedPath = path.endsWith("/") ? path.slice(0, -1) : path;
++	const lastSlashIndex = trimmedPath.lastIndexOf("/");
++	return lastSlashIndex < 0 ? null : trimmedPath.slice(0, lastSlashIndex + 1);
++}
+ function buildDropOperations(draggedPaths, target) {
+ 	const operations = draggedPaths.map((draggedPath) => {
++		if (target.position != null && getParentDirectoryPath(draggedPath) === (target.kind === "root" ? null : target.directoryPath)) return null;
+ 		const destinationPath = resolveMoveDestinationPath(draggedPath, target);
+ 		if (destinationPath === draggedPath) return null;
+ 		return {
 diff --git a/dist/model/publicTypes.d.ts b/dist/model/publicTypes.d.ts
 index 84a7e2d14f67c1aad8230f19a3426ab7403f378e..5c8a26084fdc5a234b4bb26ac9b952b85ef7934f 100644
 --- a/dist/model/publicTypes.d.ts
