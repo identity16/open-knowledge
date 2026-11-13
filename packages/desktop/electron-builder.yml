@@ -11,16 +11,12 @@ copyright: Copyright © 2026 Inkeep
 # electron-rebuild / native-module ABI compilation cannot drift.
 electronVersion: "44.9.1"
 
-# @electron/rebuild stays enabled for mac and Windows from this config because
-# other native modules still use that pass. node-pty's N-API prebuilds do not
-# require an Electron ABI rebuild.
-#
-# Linux skips the pass instead: `run-electron-builder.mjs` sets
-# `npmRebuild: false` in its generated config whenever `--linux` is present. The
-# skip is NOT expressed as a `beforeBuild` hook returning false: in
-# app-builder-lib that also asserts "node_modules are staged externally", which
-# suppresses dependency collection entirely and ships an asar the app cannot
-# start from.
+# This fork builds macOS only. The fork release passes `-c.npmRebuild=false`
+# (scripts/fork/build-desktop.mjs): every native module the app and its CLI load
+# has an N-API prebuild, and scripts/fork/native-probe.cjs proves they load in
+# the packaged Electron runtime. Never skip the pass with a `beforeBuild` hook
+# returning false: app-builder-lib then assumes node_modules are staged
+# externally and ships an asar the app cannot start from.
 
 directories:
   output: dist-desktop
@@ -29,9 +25,7 @@ directories:
 # Core-assert: the CLI's build:assets step produces packages/cli/dist/public/
 # (Vite build of packages/app/, copied by `cp -r ../app/dist dist/public`).
 # We consume that output directly — no separate renderer build for the app.
-#
-# STOP: win.files and linux.files replace this list for files outside
-#       node_modules, so each repeats the three anchored patterns.
+
 files:
   - &app-out "out/**/*"
   - &no-renderer "!out/renderer/**"
@@ -94,11 +88,8 @@ extraResources:
       - "!**/*.d.mts.map"
       - "!**/*.d.ts"
       - "!**/*.d.ts.map"
-  # The `ok` CLI wrapper ships per-platform (each platform block's
-  # extraResources below): the darwin/.app-layout bash wrapper under `mac`,
-  # the linux-layout bash wrapper under `linux`, and the `.cmd`/`.ps1` pair
-  # under `win`. All land in `<resources>/cli/bin/` so path-install + the
-  # NSIS include agree on one location.
+  # The darwin/.app-layout `ok` wrapper ships from the `mac` block's
+  # extraResources into `<resources>/cli/bin/`, where path-install expects it.
   # `@inkeep/open-knowledge-server`'s `version-constants.ts` reads its
   # neighbouring `package.json` at module load to populate `RUNTIME_VERSION`
   # (the value written into `server.lock`'s `runtimeVersion`). The CLI bundles
@@ -221,8 +212,7 @@ mac:
   category: public.app-category.productivity
   # Platform-specific extraResources merge with the top-level list. The
   # darwin/.app-layout `ok.sh` wrapper + the darwin-arm64 keyring binary
-  # package ship only into the mac bundle; win/linux carry their own wrapper
-  # + binary rules in their blocks below. arm64-only keyring: matches the
+  # package ship only into the mac bundle. arm64-only keyring: matches the
   # arm64-only DMG (`mac.target`) and avoids the @electron/universal
   # lipo-merge collision documented under `target:`.
   extraResources:
@@ -400,268 +390,10 @@ dmg:
       path: /Applications
   iconSize: 100
 
-win:
-  icon: build/icon.ico
-  # Per-arch NSIS installers (see `nsis.buildUniversalInstaller: false`).
-  # electron-updater on Windows supports NSIS only; MSI is Future Work.
-  target:
-    - target: nsis
-      arch: [x64, arm64]
-  # Azure Artifact Signing (win.azureSignOptions) is wired by the manual
-  # build workflow via --config flags once the signing account exists —
-  # endpoint/account/profile names are procurement outputs and don't
-  # belong hardcoded here while unknown. Unsigned Windows artifacts are
-  # never published (internal QA only).
-  #
-  # node-pty ships in the Windows package: the terminal runs on ConPTY via the
-  # win32 prebuilds. The prune mirrors
-  # the Linux block (no foreign-platform prebuilds, no ~10 MB/arch .pdb debug
-  # symbols), and BOTH win32 arch prebuilds stay in BOTH per-arch installers —
-  # the addon picks prebuilds/win32-<process.arch> at runtime, which keeps
-  # x64-under-emulation working on arm64 hosts.
-  #
-  # Unlike Linux (whose overlay skips the rebuild pass entirely), mac/win keep
-  # @electron/rebuild enabled, and node-pty's node-gyp output under build/
-  # shadows the prebuilds at require() time — a cross-arch build would then
-  # ship builder-host binaries. Pruning build/** makes the per-arch prebuild
-  # the only loadable addon. third_party/ is ConPTY C++ source weight with no
-  # runtime role.
-  files:
-    - *app-out
-    - *no-renderer
-    - *no-maps
-    - "!**/node_modules/node-pty/prebuilds/**/*.pdb"
-    - "!**/node_modules/node-pty/prebuilds/darwin-*/**"
-    - "!**/node_modules/node-pty/prebuilds/linux-*/**"
-    - "!**/node_modules/node-pty/build/**"
-    - "!**/node_modules/node-pty/third_party/**"
-  # conpty.dll + OpenConsole.exe (under prebuilds/win32-*/conpty/) ship with
-  # Microsoft's Authenticode signatures and must keep them — re-signing would
-  # replace Microsoft's signature with ours and split the pair's provenance.
-  # The signing pass covers .exe files only, so this negative pattern excludes
-  # the one Microsoft .exe; conpty.dll is never in the default signing set.
-  signExts: ["!OpenConsole.exe"]
-  extraResources:
-    - from: "resources/cli/bin/ok.cmd"
-      to: "cli/bin/ok.cmd"
-    - from: "resources/cli/bin/ok.ps1"
-      to: "cli/bin/ok.ps1"
-    # Both arch binaries ship in each per-arch installer: extraResources
-    # rules are static across arches, and the napi wrapper picks the
-    # matching binary at runtime. ~1 MB of dead weight on the wrong arch,
-    # accepted (mirrors the mac arm64-only rationale, not its mechanism).
-    # `scripts/prepare-platform-natives.mjs` force-installs both before
-    # electron-builder runs (pnpm installs only the host-matching one).
-    - from: "../../node_modules/@napi-rs/keyring-win32-x64-msvc"
-      to: "cli/node_modules/@napi-rs/keyring-win32-x64-msvc"
-      filter: ["**/*"]
-    - from: "../../node_modules/@napi-rs/keyring-win32-arm64-msvc"
-      to: "cli/node_modules/@napi-rs/keyring-win32-arm64-msvc"
-      filter: ["**/*"]
-
-nsis:
-  # One-click, per-user (no UAC), per D1. Per-user install =
-  # %LOCALAPPDATA%\Programs\@inkeepopen-knowledge-desktop (electron-builder
-  # uses the sanitized package name for one-click per-user installs) =
-  # silent UAC-free auto-updates.
-  oneClick: true
-  perMachine: false
-  # zip payload instead of the default solid 7z. On Windows-on-ARM the x86
-  # NSIS stub runs emulated, and Nsis7z there silently drops the archive
-  # tail holding the exe + dlls (VM-verified half-install with every PE
-  # file missing — the staged payload was byte-identical to the built one,
-  # so this is extraction, not corruption); nsisunz handles a real zip.
-  # differentialPackage must be off for useZip to take effect: NsisTarget
-  # only builds a zip when the build is not differential-aware, yet the
-  # NSIS script unconditionally follows useZip — leaving the default on
-  # ships 7z bytes under a .zip name and the installer dies with "Error
-  # opening ZIP file". Costs: no differential auto-update downloads on
-  # Windows (no Windows release channel exists yet to regress), and the
-  # installer grows ~37% (deflate vs solid LZMA; 169 MB → 232 MB arm64).
-  useZip: true
-  # KEEP IN LOCK-STEP with build/installer.nsh customInstall: because
-  # differential packaging is off, the installer's self-copy to
-  # $LOCALAPPDATA\<updaterCacheDirName>\installer.exe (the differential-update
-  # seed) is inert and installer.nsh deletes it. Re-enabling
-  # differentialPackage requires removing that Delete in the same change.
-  differentialPackage: false
-  # Separate per-arch installers (the default single universal installer
-  # would double the download for every user). Version-less artifact names
-  # keep `releases/latest/download/…` URLs stable across releases — the
-  # same contract as `dmg.artifactName` (OpenKnowledge-arm64.dmg).
-  buildUniversalInstaller: false
-  artifactName: ${productName}-Setup-${arch}.${ext}
-  # Custom include: HKCU user-PATH append for the bundled `ok` CLI +
-  # HKCU\Software\Classes openknowledge:// protocol registration (electron-
-  # builder's `protocols` key is macOS-Info.plist-only; NSIS gets registry
-  # keys here, and the app self-heals via setAsDefaultProtocolClient at
-  # startup).
-  include: build/installer.nsh
-
-linux:
-  icon: build/icon.png
-  # Pinned (matches electron-builder's default lowercase-sanitized product
-  # name) because three other artifacts embed it: resources/cli/bin/
-  # ok-linux.sh ($ROOT_DIR/openknowledge), the deb maintainer scripts'
-  # ${executable} macro, and the .desktop Exec/Icon lines.
-  executableName: openknowledge
-  # productivity → no direct freedesktop mapping; Office is the
-  # conventional slot for knowledge/editor tools.
-  category: Office
-  synopsis: Collaborative markdown knowledge base
-  # deb only (integration-grade: .desktop protocol registration +
-  # /usr/bin/ok symlink via postinst). electron-builder appends
-  # MimeType=x-scheme-handler/openknowledge to the generated .desktop from
-  # the top-level `protocols` key.
-  #
-  # AppImage was CUT (2026-07-31) rather than fixed: its runtime needs
-  # FUSE 2 (`libfuse.so.2` + fuse2 `fusermount`), which no current
-  # mainstream distro ships — stock Debian 13 fails on BOTH arches
-  # (arm64 additionally on libz.so.1), verified in real-VM QA. Fixing it
-  # would mean maintaining custom launcher-swapping build machinery for a
-  # secondary artifact whose one distinguishing role — self-update — the
-  # deb/rpm now cover in-app: electron-builder stamps
-  # `resources/package-type` into fpm builds, which routes electron-updater
-  # to its DebUpdater/RpmUpdater classes (download from the release feed,
-  # install via pkexec — the user authenticates the swap; no apt/rpm
-  # repository involved). See RELEASES.md § "Linux updates (no package
-  # repository)". The no-sudo niche AppImage served is covered by the
-  # npm CLI / web app.
-  #
-  # The arm64 deb is built on a NATIVE arm64 runner (the `build-linux` matrix
-  # in .github/workflows/desktop-build-win-linux.yml), never cross-compiled:
-  # pnpm installs only the host-arch `@parcel/watcher` prebuild and the Linux
-  # build skips @electron/rebuild in the generated config, so an
-  # x64-host arm64 deb would package but ship the wrong native binaries.
-  target:
-    - target: deb
-      arch: [x64, arm64]
-    # rpm for the Fedora/RHEL family, same integration grade as the deb (both
-    # go through electron-builder's FpmTarget and share the maintainer
-    # scripts). Built on the same native runners as the debs, for the same
-    # prebuilt-natives reason.
-    - target: rpm
-      arch: [x64, arm64]
-  # Per-target arch naming is electron-builder's, not ours: this one pattern
-  # yields OpenKnowledge-amd64.deb / OpenKnowledge-arm64.deb and
-  # OpenKnowledge-x86_64.rpm / OpenKnowledge-aarch64.rpm (`getArtifactArchName`
-  # in builder-util rewrites `${arch}` per extension). deb and rpm therefore
-  # never collide on a filename even where the arch word differs.
-  artifactName: ${productName}-${arch}.${ext}
-  # node-pty publishes every platform prebuild in one package. Drop
-  # foreign-platform binaries and Windows debug symbols, but keep both Linux
-  # prebuilds so each installer carries the correct ELF regardless of builder
-  # architecture.
-  files:
-    - *app-out
-    - *no-renderer
-    - *no-maps
-    - "!**/node_modules/node-pty/prebuilds/**/*.pdb"
-    - "!**/node_modules/node-pty/prebuilds/darwin-*/**"
-    - "!**/node_modules/node-pty/prebuilds/win32-*/**"
-  extraResources:
-    # Linux-layout wrapper ships under the same canonical destination as
-    # the mac one so path-install + the deb postinst agree on one path.
-    - from: "resources/cli/bin/ok-linux.sh"
-      to: "cli/bin/ok.sh"
-    - from: "../../node_modules/@napi-rs/keyring-linux-x64-gnu"
-      to: "cli/node_modules/@napi-rs/keyring-linux-x64-gnu"
-      filter: ["**/*"]
-    - from: "../../node_modules/@napi-rs/keyring-linux-arm64-gnu"
-      to: "cli/node_modules/@napi-rs/keyring-linux-arm64-gnu"
-      filter: ["**/*"]
-
-deb:
-  # /usr/bin/ok symlink + AppArmor userns profile (Ubuntu 24.04+) live in
-  # the maintainer scripts; removal is symmetric.
-  afterInstall: build/deb-postinst.sh
-  afterRemove: build/deb-postrm.sh
-  # Chromium sandbox needs unprivileged userns; Ubuntu 24.04 restricts it
-  # via AppArmor. The postinst ships a profile permitting it for our
-  # binary.
-  #
-  # First nine entries mirror electron-builder's stock deb list (setting
-  # `depends` REPLACES it, so they must be restated). The last three are
-  # direct DT_NEEDED entries of the Electron binary that the stock list
-  # omits — without them the deb installs cleanly on a minimal system and
-  # then dies at exec with "error while loading shared libraries", before
-  # any window or dialog exists. libasound2 is the one actually observed
-  # missing (stock Debian 13 VM); libcups2 is a hard Depends of
-  # libgtk-3-0 and libgbm1 normally arrives with Mesa, so both are
-  # belt-and-braces. On Debian 13, libasound2/libcups2 resolve through the
-  # t64 renames' compatibility Provides (libasound2t64, libcups2t64);
-  # libgbm1 was never renamed.
-  depends:
-    - libgtk-3-0
-    - libnotify4
-    - libnss3
-    - libxss1
-    - libxtst6
-    - xdg-utils
-    - libatspi2.0-0
-    - libuuid1
-    - libsecret-1-0
-    - libasound2
-    - libcups2
-    - libgbm1
-
-rpm:
-  # Same maintainer scripts as the deb, deliberately. Every distro-specific
-  # step in them is already existence-guarded, so they no-op rather than fail
-  # on a Fedora/RHEL host: `update-alternatives` is present (chkconfig),
-  # `update-mime-database` / `update-desktop-database` sit behind `hash`, and
-  # the AppArmor block behind `apparmor_status --enabled`, which is simply
-  # absent outside the Ubuntu family. There are no dpkg-isms. The one thing
-  # they did NOT handle is rpm's upgrade ordering — the removal script grew a
-  # guard for it; see the UPSTREAM marker at the head of build/deb-postrm.sh.
-  afterInstall: build/deb-postinst.sh
-  afterRemove: build/deb-postrm.sh
-  # Our own list, not electron-builder's rpm default. The first eight entries
-  # are the Fedora/RHEL names for the `deb.depends` list above, in the same
-  # order. The default drops libsecret (the keyring backend), so an rpm built
-  # on it would install cleanly and then silently downgrade auth to the
-  # plaintext file store.
-  #
-  # `libxss1` has NO rpm counterpart here, deliberately. Its Fedora name is
-  # libXScrnSaver, which is EPEL-only on RHEL 10 — requiring it would make the
-  # package uninstallable on a stock RHEL 10 box. It buys nothing in exchange:
-  # `objdump -p` on the packaged `openknowledge` binary lists 34 DT_NEEDED
-  # entries and none of them is libXss (Electron moved idle detection to
-  # DBus). The deb keeps its `libxss1` because that is electron-builder's
-  # stock set and it is a harmless no-op on Debian/Ubuntu, where the package
-  # is in the default repos.
-  #
-  # The last three ARE direct DT_NEEDED entries of that same binary; without
-  # them the app dies at exec with a bare dynamic-linker error and no
-  # user-visible signal. They are absent from the deb list above only because
-  # that gap is being closed separately — the two lists are meant to stay a
-  # mirror of each other, which
-  # tests/unit/electron-builder-linux-depends-parity.test.ts enforces.
-  #
-  # Upstream spells two of its defaults as rpm boolean deps —
-  # `(libXtst or libXtst6)`, `(libuuid or libuuid1)` — to also satisfy
-  # openSUSE's soname-style naming. We use the plain Fedora/RHEL names:
-  # openSUSE is not a target, and a half-boolean list would imply coverage we
-  # do not test.
-  depends:
-    - gtk3
-    - libnotify
-    - nss
-    - libXtst
-    - xdg-utils
-    - at-spi2-core
-    - libuuid
-    - libsecret
-    - alsa-lib
-    - cups-libs
-    - mesa-libgbm
-
-# Flip fuses (D17 LOCKED, spec §8.9) on the packed app before code signing —
-# all platforms (D9): off-darwin builds without the fuse flip would ship
-# without RunAsNode, silently breaking the bundled-CLI/detached-spawn path.
+# Flip fuses on the packed app before code signing; without the flip the app
+# ships without RunAsNode, silently breaking the bundled-CLI/detached-spawn path.
 afterPack: scripts/afterPack.mjs
-# Post-sign: fuse verify on all platforms; @electron/notarize → stapler
-# validate on darwin only.
+# Post-sign: fuse verify, then @electron/notarize and stapler validate.
 afterSign: scripts/afterSign.mjs
 
 protocols:

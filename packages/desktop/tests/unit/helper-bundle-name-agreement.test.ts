@@ -2,11 +2,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  DESKTOP_PRODUCTS,
-  desktopWindowsExecutableName,
-  PACKAGED_DESKTOP_PRODUCT_NAMES,
-} from '@inkeep/open-knowledge-core';
-import {
   HELPER_BUNDLE_NAME,
   HELPER_EXECUTABLE_NAME,
   resolveHelperBundleBinary,
@@ -25,9 +20,9 @@ const helperPlistPath = resolve(desktopRoot, 'build/helper-bundle/Info.plist');
 const afterPackPath = resolve(desktopRoot, 'scripts/afterPack.mjs');
 const electronBuilderYmlPath = resolve(desktopRoot, 'electron-builder.yml');
 const okShPath = resolve(desktopRoot, 'resources/cli/bin/ok.sh');
-const okCmdPath = resolve(desktopRoot, 'resources/cli/bin/ok.cmd');
-const okPs1Path = resolve(desktopRoot, 'resources/cli/bin/ok.ps1');
-const okLinuxPath = resolve(desktopRoot, 'resources/cli/bin/ok-linux.sh');
+const _okCmdPath = resolve(desktopRoot, 'resources/cli/bin/ok.cmd');
+const _okPs1Path = resolve(desktopRoot, 'resources/cli/bin/ok.ps1');
+const _okLinuxPath = resolve(desktopRoot, 'resources/cli/bin/ok-linux.sh');
 
 function extractPlistString(content: string, key: string): string | null {
   const re = new RegExp(`<key>${key}</key>\\s*<string>([^<]*)</string>`);
@@ -119,17 +114,6 @@ describe('helper-bundle name agreement across spawn site / Info.plist / afterPac
     const okSh = readFileSync(okShPath, 'utf8');
     expect(okSh).toMatch(/case\s+"\$1"\s+in/);
     expect(okSh).toMatch(/mcp\|start\)/);
-  });
-
-  test('platform wrappers recognize every packaged desktop executable', () => {
-    const cmd = readFileSync(okCmdPath, 'utf8');
-    const ps1 = readFileSync(okPs1Path, 'utf8');
-    const linux = readFileSync(okLinuxPath, 'utf8');
-    for (const product of PACKAGED_DESKTOP_PRODUCT_NAMES.map((name) => DESKTOP_PRODUCTS[name])) {
-      expect(cmd).toContain(`"${desktopWindowsExecutableName(product)}"`);
-      expect(ps1).toContain(`'${desktopWindowsExecutableName(product)}'`);
-      expect(linux).toContain(product.linuxExecutableName);
-    }
   });
 
   test('all five sites agree on the executable name (single string-of-truth)', () => {

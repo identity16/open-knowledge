@@ -118,23 +118,12 @@ describe('bundled CLI can resolve tsdown neverBundle native addons', () => {
     });
   }
 
-  test("'@napi-rs/keyring' ships the wrapper AND a platform binary on every platform", () => {
+  test("'@napi-rs/keyring' ships the wrapper AND the macOS arm64 binary", () => {
     expect(targets).toContain('cli/node_modules/@napi-rs/keyring');
-    const expectedPerPlatform: Record<'mac' | 'win' | 'linux', string[]> = {
-      mac: ['keyring-darwin-arm64'],
-      win: ['keyring-win32-x64-msvc', 'keyring-win32-arm64-msvc'],
-      linux: ['keyring-linux-x64-gnu', 'keyring-linux-arm64-gnu'],
-    };
-    for (const [platform, pkgs] of Object.entries(expectedPerPlatform)) {
-      const platformTargets = readExtraResourceTargets(platform as 'mac' | 'win' | 'linux');
-      for (const pkg of pkgs) {
-        expect(
-          platformTargets,
-          `Ship '@napi-rs/${pkg}' into cli/node_modules for ${platform} — the wrapper ` +
-            'requires its platform binary sibling at runtime.',
-        ).toContain(`cli/node_modules/@napi-rs/${pkg}`);
-      }
-    }
+    expect(
+      readExtraResourceTargets('mac'),
+      'The wrapper requires its platform binary sibling at runtime.',
+    ).toContain('cli/node_modules/@napi-rs/keyring-darwin-arm64');
   });
 
   test('keyring copy sources exist at the hoisted root node_modules', () => {
@@ -147,23 +136,9 @@ describe('bundled CLI can resolve tsdown neverBundle native addons', () => {
   });
 });
 
-describe('per-platform ok CLI wrapper ships to cli/bin', () => {
-  test('mac + linux ship a cli/bin/ok.sh; win ships ok.cmd + ok.ps1', () => {
+describe('the ok CLI wrapper ships to cli/bin', () => {
+  test('mac ships a cli/bin/ok.sh', () => {
     expect(readExtraResourceTargets('mac')).toContain('cli/bin/ok.sh');
-    expect(readExtraResourceTargets('linux')).toContain('cli/bin/ok.sh');
-    const win = readExtraResourceTargets('win');
-    expect(win).toContain('cli/bin/ok.cmd');
-    expect(win).toContain('cli/bin/ok.ps1');
-  });
-
-  test('the linux cli/bin/ok.sh sources the linux-layout wrapper, not the .app one', () => {
-    const rule = readExtraResources('linux').find((r) => r.to === 'cli/bin/ok.sh');
-    expect(
-      rule?.from,
-      'linux must ship resources/cli/bin/ok-linux.sh as cli/bin/ok.sh — the darwin ' +
-        'ok.sh derives its paths from the .app bundle shape and self-diagnoses exit 69 ' +
-        'on the flat Linux layout.',
-    ).toBe('resources/cli/bin/ok-linux.sh');
   });
 });
 

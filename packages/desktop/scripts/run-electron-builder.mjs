@@ -9,10 +9,6 @@ import {
   createLocalEntitlements,
   createVariantBuilderConfig,
   createVariantHelperInfo,
-  createVariantNsisInclude,
-  createVariantPostInstall,
-  createVariantPostRemove,
-  createVariantPostTransaction,
   parseBuilderConfig,
 } from './desktop-variant-config.ts';
 import {
@@ -24,6 +20,9 @@ import { UPDATE_MANIFEST_FAILURE_MARKER } from './packaging-diagnostics.mjs';
 const variantName = parseDesktopVariantName(process.env.OK_DESKTOP_VARIANT);
 const variant = DESKTOP_VARIANTS[variantName];
 const args = process.argv.slice(2);
+if (args.some((arg) => ['--win', '--windows', '-w', '--linux', '-l'].includes(arg))) {
+  throw new Error('This fork packages the desktop app for macOS only.');
+}
 const buildDir = join(process.cwd(), '.variant-build');
 const profilePath = join(process.cwd(), `build/embedded.${variant.name}.provisionprofile`);
 const profileAvailable = variant.name === 'stable' || existsSync(profilePath);
@@ -39,10 +38,6 @@ if (packagingMac && signingRequested && !profileAvailable && variantName !== 'id
 rmSync(buildDir, { recursive: true, force: true });
 mkdirSync(buildDir, { recursive: true });
 
-const includePath = '.variant-build/installer.nsh';
-const postInstallPath = '.variant-build/deb-postinst.sh';
-const postRemovePath = '.variant-build/deb-postrm.sh';
-const postTransactionPath = '.variant-build/rpm-posttrans.sh';
 const localEntitlementsPath = '.variant-build/entitlements.mac.local.plist';
 const helperInfoPath = '.variant-build/helper-Info.plist';
 
@@ -52,33 +47,11 @@ const config = createVariantBuilderConfig(
   base,
   variantName,
   {
-    includePath,
-    postInstallPath,
-    postRemovePath,
-    postTransactionPath,
     localEntitlementsPath,
     helperInfoPath,
     profileAvailable,
   },
   sourceVersion,
-);
-if (args.includes('--linux')) config.npmRebuild = false;
-
-writeFileSync(
-  includePath,
-  createVariantNsisInclude(readFileSync('build/installer.nsh', 'utf8'), variantName),
-);
-writeFileSync(
-  postInstallPath,
-  createVariantPostInstall(readFileSync('build/deb-postinst.sh', 'utf8'), variantName),
-);
-writeFileSync(
-  postRemovePath,
-  createVariantPostRemove(readFileSync('build/deb-postrm.sh', 'utf8'), variantName),
-);
-writeFileSync(
-  postTransactionPath,
-  createVariantPostTransaction(readFileSync('build/deb-postinst.sh', 'utf8'), variantName),
 );
 writeFileSync(
   localEntitlementsPath,

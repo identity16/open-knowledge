@@ -12,6 +12,9 @@
   ],
   "homepage": "https://openknowledge.ai",
   "license": "GPL-3.0-or-later",
+  "os": [
+    "darwin"
+  ],
   "private": false,
   "type": "module",
   "repository": {

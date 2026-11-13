@@ -11,14 +11,6 @@ interface ResourceEntry {
   filter?: string[];
 }
 
-interface LinuxPackageTargetConfig {
-  afterInstall: string;
-  afterRemove: string;
-  packageName?: string;
-  depends?: string[];
-  fpm?: string[];
-}
-
 interface BuilderConfig {
   appId: string;
   productName: string;
@@ -42,25 +34,11 @@ interface BuilderConfig {
     extraFiles: ResourceEntry[];
     extendInfo?: Record<string, unknown>;
   };
-  win: { icon: string; extraResources: ResourceEntry[] };
   dmg: { artifactName: string };
-  linux: {
-    icon: string;
-    artifactName: string;
-    executableName: string;
-    extraResources: ResourceEntry[];
-  };
-  nsis: { artifactName: string; include: string };
-  deb: LinuxPackageTargetConfig;
-  rpm: LinuxPackageTargetConfig;
   npmRebuild?: boolean;
 }
 
 export interface VariantConfigPaths {
-  readonly includePath: string;
-  readonly postInstallPath: string;
-  readonly postRemovePath: string;
-  readonly postTransactionPath: string;
   readonly localEntitlementsPath: string;
   readonly helperInfoPath: string;
   readonly profileAvailable: boolean;
@@ -125,41 +103,7 @@ export function createVariantBuilderConfig(
   }
   config.mac.icon = variant.name === 'stable' ? config.mac.icon : variant.iconPath;
   config.mac.artifactName = `${variant.artifactName}-\${version}-\${arch}-mac.\${ext}`;
-  config.win.icon = variant.windowsIconPath;
-  config.linux.icon = variant.iconPath;
   config.dmg.artifactName = `${variant.artifactName}-\${arch}.\${ext}`;
-  config.nsis.artifactName = `${variant.artifactName}-Setup-\${arch}.\${ext}`;
-  config.linux.artifactName = `${variant.artifactName}-\${arch}.\${ext}`;
-  config.linux.executableName = variant.linuxExecutableName;
-  config.deb.packageName = variant.linuxPackageNames.deb;
-  config.rpm.packageName = variant.linuxPackageNames.rpm;
-  config.deb.fpm = [
-    ...(config.deb.fpm ?? []),
-    ...variant.retiredLinuxPackageNames.deb.flatMap((name) => [
-      '--replaces',
-      name,
-      '--conflicts',
-      name,
-      '--provides',
-      name,
-    ]),
-  ];
-  config.rpm.fpm = [
-    ...(config.rpm.fpm ?? []),
-    ...variant.retiredLinuxPackageNames.rpm.flatMap((name) => [
-      '--replaces',
-      name,
-      '--provides',
-      name,
-    ]),
-    '--rpm-posttrans',
-    paths.postTransactionPath,
-  ];
-  config.nsis.include = paths.includePath;
-  config.deb.afterInstall = paths.postInstallPath;
-  config.deb.afterRemove = paths.postRemovePath;
-  config.rpm.afterInstall = paths.postInstallPath;
-  config.rpm.afterRemove = paths.postRemovePath;
   config.mac.extendInfo = {
     ...config.mac.extendInfo,
     NSMicrophoneUsageDescription: `A program running in ${variant.productName}'s terminal wants to use the microphone.`,
@@ -179,19 +123,6 @@ export function createVariantBuilderConfig(
     delete config.mac.provisioningProfile;
     config.mac.entitlements = paths.localEntitlementsPath;
   }
-  if (variant.name === 'beta') {
-    const wrapperEntries = config.win.extraResources.filter(
-      (entry) =>
-        entry.from !== 'resources/cli/bin/ok.cmd' && entry.from !== 'resources/cli/bin/ok.ps1',
-    );
-    config.win.extraResources = [
-      ...variant.cliCommandNames.flatMap((name) => [
-        { from: 'resources/cli/bin/ok.cmd', to: `cli/bin/${name}.cmd` },
-        { from: 'resources/cli/bin/ok.ps1', to: `cli/bin/${name}.ps1` },
-      ]),
-      ...wrapperEntries,
-    ];
-  }
   return config;
 }
 
@@ -200,77 +131,6 @@ export function betaBuildVersion(sourceVersion: string): string {
   if (!base)
     throw new Error(`Desktop package version ${JSON.stringify(sourceVersion)} is invalid.`);
   return /-beta\.\d+(?:\+.*)?$/.test(sourceVersion) ? sourceVersion : `${base}-beta.0`;
-}
-
-export function createVariantNsisInclude(source: string, variantName: DesktopVariantName): string {
-  const variant = DESKTOP_VARIANTS[variantName];
-  const withScheme = replaceAllRequired(
-    source,
-    'openknowledge://',
-    `${variant.protocolScheme}://`,
-    'the openknowledge:// URL scheme in build/installer.nsh',
-  );
-  const withRegistryKey = replaceAllRequired(
-    withScheme,
-    'Software\\Classes\\openknowledge',
-    `Software\\Classes\\${variant.protocolScheme}`,
-    'the openknowledge registry key in build/installer.nsh',
-  );
-  return replaceAllRequired(
-    withRegistryKey,
-    'URL:OpenKnowledge',
-    `URL:${variant.productName}`,
-    'the OpenKnowledge protocol label in build/installer.nsh',
-  );
-}
-
-export function createVariantPostInstall(source: string, variantName: DesktopVariantName): string {
-  const [shortName, longName] = DESKTOP_VARIANTS[variantName].cliCommandNames;
-  const withShortName = replaceRequired(
-    source,
-    'ln -sf "$OK_WRAPPER" /usr/bin/ok',
-    `ln -sf "$OK_WRAPPER" /usr/bin/${shortName}`,
-    'the /usr/bin/ok install command in build/deb-postinst.sh',
-  );
-  return replaceRequired(
-    withShortName,
-    'ln -sf "$OK_WRAPPER" /usr/bin/open-knowledge',
-    `ln -sf "$OK_WRAPPER" /usr/bin/${longName}`,
-    'the /usr/bin/open-knowledge install command in build/deb-postinst.sh',
-  );
-}
-
-export function createVariantPostRemove(source: string, variantName: DesktopVariantName): string {
-  const [shortName, longName] = DESKTOP_VARIANTS[variantName].cliCommandNames;
-  return replaceRequired(
-    source,
-    'for link in /usr/bin/ok /usr/bin/open-knowledge; do',
-    `for link in /usr/bin/${shortName} /usr/bin/${longName}; do`,
-    'the Linux CLI removal loop in build/deb-postrm.sh',
-  );
-}
-
-export function createVariantPostTransaction(
-  postInstallSource: string,
-  variantName: DesktopVariantName,
-): string {
-  const variant = DESKTOP_VARIANTS[variantName];
-  const macros = new Map([
-    ['executable', variant.linuxExecutableName],
-    ['sanitizedProductName', variant.productName],
-  ]);
-  return createVariantPostInstall(postInstallSource, variantName).replace(
-    /\$\{([^}]*)\}/g,
-    (macro, name: string) => {
-      const value = macros.get(name);
-      if (value === undefined) {
-        throw new Error(
-          `Desktop packaging template build/deb-postinst.sh uses ${macro}, which the rpm post-transaction script cannot expand.`,
-        );
-      }
-      return value;
-    },
-  );
 }
 
 export function createLocalEntitlements(source: string): string {
