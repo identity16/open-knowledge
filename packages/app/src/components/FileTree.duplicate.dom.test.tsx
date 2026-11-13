@@ -369,6 +369,12 @@ vi.doMock('@/components/ui/dropdown-menu', () => ({
   DropdownMenuCheckboxItem: MenuItem,
   DropdownMenuContent: MenuContent,
   DropdownMenuItem: MenuItem,
+  DropdownMenuRadioGroup: PassThrough,
+  DropdownMenuRadioItem: ({ children }: { children?: ReactNode }) => (
+    <div role="menuitemradio" aria-checked="false" tabIndex={-1}>
+      {children}
+    </div>
+  ),
   DropdownMenuSeparator: MenuSeparator,
   DropdownMenuSub: PassThrough,
   DropdownMenuSubContent: MenuContent,
@@ -624,11 +630,15 @@ describe('FileTree duplicate action runtime behavior', () => {
       /Open with AI/,
       /Copy path/,
       /Expand all/,
+      /^Sort$/,
       /Duplicate/,
       /Rename/,
       /Hide folder/,
       /Delete/,
     ]);
+    expect(
+      Array.from(document.querySelectorAll('[role="menuitemradio"]')).map((el) => el.textContent),
+    ).toEqual(['Same as parent (Name)', 'Name', 'Date modified', 'Manual']);
 
     expect(screen.queryByTestId('file-tree-menu-show-hidden-files')).toBeNull();
 

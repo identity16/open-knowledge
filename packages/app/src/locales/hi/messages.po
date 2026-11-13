@@ -9063,6 +9063,9 @@ msgstr "प्रोजेक्ट ऑडिट चलाया जा रह�
 msgid "Runs a shell command"
 msgstr "एक शेल कमांड चलाता है"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "मूल फ़ोल्डर जैसा ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "नमूना छवि"
 
@@ -9953,6 +9956,9 @@ msgstr "टर्मिनल शुरू करते समय कुछ ग�
 
 msgid "Something went wrong. Please try again."
 msgstr "कुछ ग़लत हो गया। कृपया फिर कोशिश करें।"
+
+msgid "Sort"
+msgstr "क्रमबद्ध करें"
 
 msgid "Sort by"
 msgstr "इसके अनुसार क्रम"

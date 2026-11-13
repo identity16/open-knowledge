@@ -9063,6 +9063,9 @@ msgstr "প্রকল্প নিরীক্ষা চালানো হচ
 msgid "Runs a shell command"
 msgstr "একটি শেল কমান্ড চালায়"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "মূল ফোল্ডারের মতো ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "নমুনা ছবি"
 
@@ -9953,6 +9956,9 @@ msgstr "টার্মিনাল চালু করার সময় ক�
 
 msgid "Something went wrong. Please try again."
 msgstr "কিছু একটা ভুল হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
+
+msgid "Sort"
+msgstr "সাজান"
 
 msgid "Sort by"
 msgstr "এই অনুযায়ী সাজান"

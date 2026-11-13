@@ -9063,6 +9063,9 @@ msgstr "Menjalankan audit proyek"
 msgid "Runs a shell command"
 msgstr "Menjalankan perintah shell"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "Sama seperti folder induk ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "Contoh gambar"
 
@@ -9953,6 +9956,9 @@ msgstr "Ada yang tidak beres saat memulai terminal."
 
 msgid "Something went wrong. Please try again."
 msgstr "Ada yang tidak beres. Silakan coba lagi."
+
+msgid "Sort"
+msgstr "Urutkan"
 
 msgid "Sort by"
 msgstr "Urutkan menurut"

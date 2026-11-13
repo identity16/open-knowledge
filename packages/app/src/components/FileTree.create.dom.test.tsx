@@ -335,6 +335,12 @@ vi.doMock('@/components/ui/dropdown-menu', () => ({
   DropdownMenuCheckboxItem: MenuItem,
   DropdownMenuContent: MenuContent,
   DropdownMenuItem: MenuItem,
+  DropdownMenuRadioGroup: PassThrough,
+  DropdownMenuRadioItem: ({ children }: { children?: ReactNode }) => (
+    <div role="menuitemradio" aria-checked="false" tabIndex={-1}>
+      {children}
+    </div>
+  ),
   DropdownMenuSeparator: MenuSeparator,
   DropdownMenuSub: PassThrough,
   DropdownMenuSubContent: MenuContent,

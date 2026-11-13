@@ -9067,6 +9067,9 @@ msgstr "Ejecutando la auditoría del proyecto"
 msgid "Runs a shell command"
 msgstr "Ejecuta un comando de shell"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "Igual que la carpeta superior ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "Imagen de ejemplo"
 
@@ -9957,6 +9960,9 @@ msgstr "Algo salió mal al iniciar la terminal."
 
 msgid "Something went wrong. Please try again."
 msgstr "Algo salió mal. Inténtalo de nuevo."
+
+msgid "Sort"
+msgstr "Ordenar"
 
 msgid "Sort by"
 msgstr "Ordenar por"

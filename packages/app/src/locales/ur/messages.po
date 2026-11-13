@@ -9067,6 +9067,9 @@ msgstr "پروجیکٹ کا آڈٹ چل رہا ہے"
 msgid "Runs a shell command"
 msgstr "ایک شیل کمانڈ چلاتا ہے"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "بالائی فولڈر کی طرح ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "نمونہ تصویر"
 
@@ -9957,6 +9960,9 @@ msgstr "ٹرمینل شروع کرتے ہوئے کچھ غلط ہو گیا۔"
 
 msgid "Something went wrong. Please try again."
 msgstr "کچھ غلط ہو گیا۔ براہِ کرم دوبارہ کوشش کریں۔"
+
+msgid "Sort"
+msgstr "ترتیب دیں"
 
 msgid "Sort by"
 msgstr "ترتیب کا معیار"

@@ -9067,6 +9067,9 @@ msgstr "تجري مراجعة المشروع"
 msgid "Runs a shell command"
 msgstr "يشغّل أمر shell"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "مثل المجلد الأصلي ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "صورة نموذجية"
 
@@ -9957,6 +9960,9 @@ msgstr "حدث خطأ ما أثناء بدء الطرفية."
 
 msgid "Something went wrong. Please try again."
 msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+
+msgid "Sort"
+msgstr "فرز"
 
 msgid "Sort by"
 msgstr "الترتيب حسب"

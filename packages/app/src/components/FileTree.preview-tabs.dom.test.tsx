@@ -221,6 +221,8 @@ vi.doMock('@/components/ui/dropdown-menu', () => ({
   DropdownMenu: PassThrough,
   DropdownMenuContent: PassThrough,
   DropdownMenuItem: PassThrough,
+  DropdownMenuRadioGroup: PassThrough,
+  DropdownMenuRadioItem: PassThrough,
   DropdownMenuSeparator: () => <hr />,
   DropdownMenuSub: PassThrough,
   DropdownMenuSubContent: PassThrough,

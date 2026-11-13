@@ -9067,6 +9067,9 @@ msgstr "Audyt projektu w toku"
 msgid "Runs a shell command"
 msgstr "Uruchamia polecenie powłoki"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "Jak folder nadrzędny ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "Obraz przykładowy"
 
@@ -9957,6 +9960,9 @@ msgstr "Coś poszło nie tak podczas uruchamiania terminala."
 
 msgid "Something went wrong. Please try again."
 msgstr "Coś poszło nie tak. Spróbuj ponownie."
+
+msgid "Sort"
+msgstr "Sortuj"
 
 msgid "Sort by"
 msgstr "Sortuj według"

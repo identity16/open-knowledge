@@ -73,6 +73,7 @@ export interface FileTargetMenuItemsProps {
   deleteLabel?: ReactNode;
   folderCreate?: FolderCreateActions;
   folderTree?: FolderTreeActions;
+  folderSort?: ReactNode;
   hide?: HideAction;
   openWithAi?: ReactNode;
   primitives: FileTargetMenuPrimitives;
@@ -92,6 +93,7 @@ export function FileTargetMenuItems({
   deleteLabel,
   folderCreate,
   folderTree,
+  folderSort,
   hide,
   openWithAi,
   primitives,
@@ -107,7 +109,8 @@ export function FileTargetMenuItems({
 }: FileTargetMenuItemsProps) {
   const { Item, Separator, Sub, SubContent, SubTrigger } = primitives;
   const Group = primitives.Group ?? MenuGroupFallback;
-  const hasTreeActions = folderTree?.onExpandAll != null || folderTree?.onCollapseAll != null;
+  const hasTreeActions =
+    folderTree?.onExpandAll != null || folderTree?.onCollapseAll != null || folderSort != null;
   const hasMutationActions =
     onImportTemplate != null ||
     onDuplicate != null ||
@@ -197,6 +200,7 @@ export function FileTargetMenuItems({
                 <Trans>Collapse all</Trans>
               </Item>
             ) : null}
+            {folderSort}
           </Group>
         </>
       ) : null}

@@ -9067,6 +9067,9 @@ msgstr "正在运行项目审查"
 msgid "Runs a shell command"
 msgstr "运行 shell 命令"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "与上级文件夹相同（{inheritedLabel}）"
+
 msgid "Sample image"
 msgstr "示例图片"
 
@@ -9957,6 +9960,9 @@ msgstr "启动终端时出了点问题。"
 
 msgid "Something went wrong. Please try again."
 msgstr "出了点问题。请重试。"
+
+msgid "Sort"
+msgstr "排序"
 
 msgid "Sort by"
 msgstr "排序方式"

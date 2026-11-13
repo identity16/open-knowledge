@@ -4,6 +4,7 @@ import type { OkignoreBinding } from '@inkeep/open-knowledge-core/config/bind-ok
 import { humanFormat } from '@inkeep/open-knowledge-core/config/errors';
 import {
   FILE_TREE_MANUAL_ORDER_ROOT_KEY,
+  FILE_TREE_SORT_ORDERS,
   type FileTreeSortOrder,
 } from '@inkeep/open-knowledge-core/config/schema';
 import { isDocumentOverOpenByteLimit } from '@inkeep/open-knowledge-core/constants/document-open';
@@ -33,7 +34,7 @@ import {
   type FileTree as PierreFileTreeModel,
 } from '@pierre/trees';
 import { FileTree as PierreFileTree, useFileTree } from '@pierre/trees/react';
-import { Info, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ArrowDownUp, Info, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import {
   type DragEvent as ReactDragEvent,
@@ -184,6 +185,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -224,9 +227,11 @@ import {
   type FileTreeManualOrder,
   type FileTreeSortState,
   folderSortOrderPatchForMoves,
+  inheritedSortOrder,
   manualOrderPatchForMoves,
   NO_FOLDER_SORT_ORDER,
   NO_MANUAL_ORDER,
+  parentSortFolderKey,
   reorderedFolderNames,
   type TreePathMove,
   treePathBasename,
@@ -552,6 +557,51 @@ interface FileTreeMenuProps {
   folderTreePaths: readonly string[];
   isAsset: boolean;
   documents: readonly FileEntry[];
+  folderSort?: FolderSortMenuState;
+}
+
+interface FolderSortMenuState {
+  current: FileTreeSortOrder | null;
+  inherited: FileTreeSortOrder;
+  onChange: (next: FileTreeSortOrder | null) => void;
+}
+
+const FOLDER_SORT_INHERIT = 'inherit';
+
+function FolderSortSubmenu({ current, inherited, onChange }: FolderSortMenuState) {
+  const { t } = useLingui();
+  const labels: Record<FileTreeSortOrder, string> = {
+    name: t`Name`,
+    modified: t`Date modified`,
+    manual: t`Manual`,
+  };
+  const inheritedLabel = labels[inherited];
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <ArrowDownUp aria-hidden="true" />
+        {t`Sort`}
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent>
+        <DropdownMenuRadioGroup
+          value={current ?? FOLDER_SORT_INHERIT}
+          onValueChange={(value) => {
+            const next = value === FOLDER_SORT_INHERIT ? null : (value as FileTreeSortOrder);
+            if (next !== current) onChange(next);
+          }}
+        >
+          <DropdownMenuRadioItem value={FOLDER_SORT_INHERIT} data-testid="folder-sort-inherit">
+            {t`Same as parent (${inheritedLabel})`}
+          </DropdownMenuRadioItem>
+          {FILE_TREE_SORT_ORDERS.map((order) => (
+            <DropdownMenuRadioItem key={order} value={order} data-testid={`folder-sort-${order}`}>
+              {labels[order]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  );
 }
 
 function FileTreeMenu({
@@ -572,6 +622,7 @@ function FileTreeMenu({
   folderTreePaths,
   isAsset,
   documents,
+  folderSort,
 }: FileTreeMenuProps) {
   const { t } = useLingui();
   const target = treeItemToTarget(item, documents);
@@ -776,6 +827,9 @@ function FileTreeMenu({
             close();
             void copyToClipboard(relativePath, 'relative');
           }}
+          folderSort={
+            isFolder && !isOkRow && folderSort ? <FolderSortSubmenu {...folderSort} /> : undefined
+          }
           folderTree={
             isFolder
               ? {
@@ -1933,6 +1987,19 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     }
     const result = projectLocalBinding.patch({
       appearance: { sidebar: { manualOrder: { [folderKey]: nextNames } } },
+    });
+    if (!result.ok) {
+      toast.error(t`Could not save the file order`, { description: humanFormat(result.error) });
+    }
+  }
+
+  function setFolderSortOrder(folderKey: string, next: FileTreeSortOrder | null) {
+    if (!projectLocalSynced || projectLocalBinding === null) {
+      toast.info(settingsLoadingReason, { id: 'sidebar-settings-not-ready' });
+      return;
+    }
+    const result = projectLocalBinding.patch({
+      appearance: { sidebar: { folderSortOrder: { [folderKey]: next } } },
     });
     if (!result.ok) {
       toast.error(t`Could not save the file order`, { description: humanFormat(result.error) });
@@ -3349,6 +3416,19 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
               folderTreePaths={folderTreePaths}
               isAsset={assetTreePaths.has(item.path)}
               documents={documents}
+              folderSort={
+                item.kind === 'directory'
+                  ? {
+                      current: folderSortOrder[item.path] ?? null,
+                      inherited: inheritedSortOrder(
+                        sortOrder,
+                        new Map(Object.entries(folderSortOrder)),
+                        parentSortFolderKey(item.path),
+                      ),
+                      onChange: (next) => setFolderSortOrder(item.path, next),
+                    }
+                  : undefined
+              }
             />
           )}
         />

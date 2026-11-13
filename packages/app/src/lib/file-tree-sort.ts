@@ -22,14 +22,26 @@ function parentFolderKeyOf(folderKey: string): string | null {
   return slash < 0 ? FILE_TREE_MANUAL_ORDER_ROOT_KEY : `${trimmed.slice(0, slash)}/`;
 }
 
-export function effectiveSortOrder(state: FileTreeSortState, folderKey: string): FileTreeSortOrder {
-  const folderOrders = state.folderOrders;
-  if (folderOrders === undefined || folderOrders.size === 0) return state.order;
-  for (let key: string | null = folderKey; key !== null; key = parentFolderKeyOf(key)) {
+export function inheritedSortOrder(
+  defaultOrder: FileTreeSortOrder,
+  folderOrders: { get(key: string): FileTreeSortOrder | undefined },
+  folderKey: string | null,
+): FileTreeSortOrder {
+  for (let key = folderKey; key !== null; key = parentFolderKeyOf(key)) {
     const order = folderOrders.get(key);
     if (order !== undefined) return order;
   }
-  return state.order;
+  return defaultOrder;
+}
+
+export function parentSortFolderKey(folderKey: string): string | null {
+  return parentFolderKeyOf(folderKey);
+}
+
+export function effectiveSortOrder(state: FileTreeSortState, folderKey: string): FileTreeSortOrder {
+  const folderOrders = state.folderOrders;
+  if (folderOrders === undefined || folderOrders.size === 0) return state.order;
+  return inheritedSortOrder(state.order, folderOrders, folderKey);
 }
 
 export function sortOrdersInUse(

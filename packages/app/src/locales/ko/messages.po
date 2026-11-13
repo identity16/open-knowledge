@@ -9067,6 +9067,9 @@ msgstr "프로젝트 감사 실행 중"
 msgid "Runs a shell command"
 msgstr "셸 명령을 실행합니다"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "상위 폴더 따르기 ({inheritedLabel})"
+
 msgid "Sample image"
 msgstr "샘플 이미지"
 
@@ -9957,6 +9960,9 @@ msgstr "터미널 시작 중 문제 발생."
 
 msgid "Something went wrong. Please try again."
 msgstr "문제가 발생했습니다. 다시 시도하세요."
+
+msgid "Sort"
+msgstr "정렬"
 
 msgid "Sort by"
 msgstr "정렬 기준"

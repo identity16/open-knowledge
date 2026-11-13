@@ -9067,6 +9067,9 @@ msgstr "正在執行專案稽核"
 msgid "Runs a shell command"
 msgstr "執行 shell 指令"
 
+msgid "Same as parent ({inheritedLabel})"
+msgstr "與上層資料夾相同（{inheritedLabel}）"
+
 msgid "Sample image"
 msgstr "範例圖片"
 
@@ -9957,6 +9960,9 @@ msgstr "啟動終端機時出了點問題。"
 
 msgid "Something went wrong. Please try again."
 msgstr "出了點問題。請再試一次。"
+
+msgid "Sort"
+msgstr "排序"
 
 msgid "Sort by"
 msgstr "排序方式"
