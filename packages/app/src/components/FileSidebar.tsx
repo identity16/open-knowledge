@@ -129,6 +129,7 @@ import { revealEditorBeforeActing } from '@/lib/reveal-editor';
 import { scheduleClipboardWrite } from '@/lib/share/clipboard-adapter';
 import { buildFolderShareInput, runShareAction } from '@/lib/share/run-share-action';
 import { physicalSide, useFileSidebarSide } from '@/lib/sidebar-side-store';
+import { useSidebarSortSettings } from '@/lib/sidebar-sort-settings';
 import { useStickyAgent } from '@/lib/unified-agent-store';
 import { useDocumentDirection } from '@/lib/use-document-direction';
 import { useWorkspace } from '@/lib/use-workspace';
@@ -275,7 +276,7 @@ function FileSidebarInner() {
   const showOkFolders = merged?.appearance?.sidebar?.showOkFolders ?? false;
   const showOnlyMarkdownFiles = merged?.appearance?.sidebar?.showOnlyMarkdownFiles ?? false;
   const showSkillGroups = merged?.appearance?.sidebar?.showSkillGroups ?? true;
-  const sortOrder = merged?.appearance?.sidebar?.sortOrder ?? 'name';
+  const { sortOrder } = useSidebarSortSettings();
   const treeSortOptions: { value: FileTreeSortOrder; label: string }[] = [
     { value: 'name', label: t`Name` },
     { value: 'modified', label: t`Date modified` },

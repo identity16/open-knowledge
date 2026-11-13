@@ -230,11 +230,12 @@ vi.doMock('./ui/sidebar', () => ({
 }));
 const projectLocalPatch = vi.fn((_patch: unknown) => ({ ok: true as const }));
 let projectLocalBinding: { patch: typeof projectLocalPatch } | null = null;
+let projectLocalSyncedOverride: boolean | null = null;
 vi.doMock('@/lib/config-provider', () => ({
   useConfigContext: () => ({
     okignoreBinding: null,
     projectLocalBinding,
-    projectLocalSynced: projectLocalBinding !== null,
+    projectLocalSynced: projectLocalSyncedOverride ?? projectLocalBinding !== null,
     merged: mergedConfig,
   }),
 }));
@@ -1599,7 +1600,9 @@ describe('FileTree sort order', () => {
 
   afterEach(() => {
     projectLocalBinding = null;
+    projectLocalSyncedOverride = null;
     projectLocalPatch.mockClear();
+    window.localStorage.clear();
   });
 
   function modifiedDocEntry(docName: string, modified: string) {
@@ -1631,6 +1634,23 @@ describe('FileTree sort order', () => {
   afterEach(() => {
     cleanup();
     consoleWarnSpy.mockRestore();
+  });
+
+  test('before settings sync, the tree uses the sort settings cached from the last visit', async () => {
+    projectLocalSyncedOverride = true;
+    mergedConfig = {
+      appearance: {
+        sidebar: { sortOrder: 'manual', manualOrder: { '/': ['beta.md', 'zeta', 'alpha.md'] } },
+      },
+    };
+    const first = render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['beta.md', 'zeta/', 'alpha.md']));
+    first.unmount();
+
+    projectLocalSyncedOverride = false;
+    mergedConfig = { appearance: { sidebar: {} } };
+    render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['beta.md', 'zeta/', 'alpha.md']));
   });
 
   test('defaults to name order with folders first', async () => {

@@ -229,8 +229,6 @@ import {
   folderSortOrderPatchForMoves,
   inheritedSortOrder,
   manualOrderPatchForMoves,
-  NO_FOLDER_SORT_ORDER,
-  NO_MANUAL_ORDER,
   parentSortFolderKey,
   reorderedFolderNames,
   type TreePathMove,
@@ -253,6 +251,7 @@ import {
   OK_SIDEBAR_DRAG_MIME,
   serializeSidebarDragPayload,
 } from '@/lib/sidebar-drag';
+import { useSidebarSortSettings } from '@/lib/sidebar-sort-settings';
 import { cn } from '@/lib/utils';
 import { getValidationSnapshot, subscribeToValidationStore } from '@/lib/validation-store';
 import { joinWorkspacePath } from '@/lib/workspace-paths';
@@ -922,9 +921,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const showHiddenFiles = merged?.appearance?.sidebar?.showHiddenFiles ?? false;
   const showOnlyMarkdownFiles = merged?.appearance?.sidebar?.showOnlyMarkdownFiles ?? false;
   const showOkFolders = merged?.appearance?.sidebar?.showOkFolders ?? false;
-  const sortOrder = merged?.appearance?.sidebar?.sortOrder ?? 'name';
-  const manualOrder = merged?.appearance?.sidebar?.manualOrder ?? NO_MANUAL_ORDER;
-  const folderSortOrder = merged?.appearance?.sidebar?.folderSortOrder ?? NO_FOLDER_SORT_ORDER;
+  const { sortOrder, manualOrder, folderSortOrder } = useSidebarSortSettings();
   const previewTabsEnabled = merged?.editor?.previewTabs ?? true;
   const previewDisposition = previewOpenDisposition(previewTabsEnabled);
   const previewOpenOptions = {
