@@ -2,9 +2,14 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import {
+  notaryFailureMessage,
+  requireApiCredentials,
+  submitNotary,
+  waitNotary,
+} from './notarize-release.mjs';
 import { createCandidate, createSubmission, signedHash } from './release-checkpoint.mjs';
 import { releasePlan } from './release-identity.mjs';
-import { requireApiCredentials, submitNotary, waitNotary } from './notarize-release.mjs';
 
 const fixtures = [];
 afterEach(() => {
@@ -138,5 +143,27 @@ describe('resumable notarization', () => {
       }),
     ).not.toThrow();
     expect(() => requireApiCredentials({ APPLE_ID: 'private-value' })).toThrow(/APPLE_API_KEY/);
+  });
+});
+
+describe('notaryFailureMessage', () => {
+  test('carries what notarytool reported so a failed run explains itself', () => {
+    expect(
+      notaryFailureMessage(
+        { exitCode: 69, body: null, detail: 'Error: HTTP status code: 401. Unauthenticated.' },
+        'history',
+      ),
+    ).toBe(
+      'Notarization history failed; preserve the checkpoint and retry.\nnotarytool (exit 69): Error: HTTP status code: 401. Unauthenticated.',
+    );
+  });
+
+  test('falls back to a JSON message and stays short when notarytool said nothing', () => {
+    expect(
+      notaryFailureMessage({ exitCode: 1, body: { message: 'Agreement missing' } }, 'submission'),
+    ).toContain('notarytool (exit 1): Agreement missing');
+    expect(notaryFailureMessage({ exitCode: 1, body: null, detail: '' }, 'history')).toBe(
+      'Notarization history failed; preserve the checkpoint and retry.',
+    );
   });
 });

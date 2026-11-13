@@ -55,16 +55,27 @@ export async function withNotaryClient(env, action) {
       } catch {
         body = null;
       }
-      return { exitCode: result.status, body };
+      const detail = [result.error?.message, result.stderr, body === null ? result.stdout : null]
+        .filter((part) => typeof part === 'string' && part.trim().length > 0)
+        .map((part) => part.trim())
+        .join('\n');
+      return { exitCode: result.status, body, detail };
     }, temp);
   } finally {
     rmSync(temp, { recursive: true, force: true });
   }
 }
 
+export function notaryFailureMessage(response, operation) {
+  const reported =
+    response.detail || (typeof response.body?.message === 'string' ? response.body.message : '');
+  const cause = reported ? `\nnotarytool (exit ${response.exitCode}): ${reported}` : '';
+  return `Notarization ${operation} failed; preserve the checkpoint and retry.${cause}`;
+}
+
 function successful(response, operation) {
   if (response.exitCode !== 0 || !response.body)
-    throw new Error(`Notarization ${operation} failed; preserve the checkpoint and retry.`);
+    throw new Error(notaryFailureMessage(response, operation));
   return response.body;
 }
 
