@@ -24,7 +24,7 @@ import {
 } from './state-store.ts';
 import type { WindowsUpdateSurvivorSweepResult } from './windows-update-survivor-sweep.ts';
 
-const GITHUB_OWNER = DESKTOP_VARIANT.name === 'identity16' ? 'identity16' : 'inkeep';
+const GITHUB_OWNER = DESKTOP_VARIANT.name === 'openknowledge16' ? 'identity16' : 'inkeep';
 const GITHUB_REPO = 'open-knowledge';
 
 export interface UpdaterLike {

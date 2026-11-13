@@ -45,7 +45,7 @@ export function runningDesktopProduct(
 export function desktopProductsVisibleTo(
   cliProduct: DesktopProductName,
 ): readonly DesktopProductName[] {
-  if (cliProduct === 'identity16') return [cliProduct];
+  if (cliProduct === 'openknowledge16') return [cliProduct];
   return PUBLIC_DESKTOP_PRODUCTS.includes(cliProduct) ||
     !PACKAGED_DESKTOP_PRODUCTS.includes(cliProduct)
     ? PUBLIC_DESKTOP_PRODUCTS

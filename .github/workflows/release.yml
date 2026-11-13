@@ -78,7 +78,7 @@ jobs:
         if: steps.restore.outputs.reused != 'true'
         run: |
           pnpm --dir packages/core exec vitest run src/constants/product.test.ts src/constants/path-shim-layout.test.ts --maxWorkers=2
-          pnpm --dir packages/cli exec vitest run src/commands/desktop-dispatch.test.ts src/commands/identity16-mcp-launcher.test.ts src/commands/stop.test.ts --maxWorkers=2
+          pnpm --dir packages/cli exec vitest run src/commands/desktop-dispatch.test.ts src/commands/openknowledge16-mcp-launcher.test.ts src/commands/stop.test.ts --maxWorkers=2
           pnpm --dir packages/desktop exec vitest run src/shared/desktop-variant.test.ts src/shared/release-links.test.ts tests/unit/desktop-variant-config.test.ts tests/unit/auto-updater-apply-channel.test.ts tests/unit/electron-vite-release-config.test.ts --maxWorkers=2
       - name: Build and verify signed application
         if: steps.restore.outputs.reused != 'true'

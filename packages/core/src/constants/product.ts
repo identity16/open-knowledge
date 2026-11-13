@@ -41,7 +41,7 @@ export const DESKTOP_PRODUCTS = {
     userHomeDirName: '.ok-beta',
     keyringService: 'open-knowledge-beta',
   },
-  identity16: {
+  openknowledge16: {
     appId: 'com.identity16.openknowledge',
     productName: 'OpenKnowledge16',
     packageName: 'openknowledge16-desktop',
@@ -85,7 +85,7 @@ export type DesktopProduct = (typeof DESKTOP_PRODUCTS)[DesktopProductName];
 export const PACKAGED_DESKTOP_PRODUCT_NAMES = [
   'stable',
   'beta',
-  'identity16',
+  'openknowledge16',
 ] as const satisfies readonly DesktopProductName[];
 
 export type PackagedDesktopProductName = (typeof PACKAGED_DESKTOP_PRODUCT_NAMES)[number];

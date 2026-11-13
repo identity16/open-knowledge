@@ -34,15 +34,15 @@ const HOME_BETA_APP_EXEC =
 describe('detectDesktop — platform gate (FR10)', () => {
   test('fork CLI does not fall back to an installed upstream application', () => {
     const missing = detectDesktop(
-      baseDeps({ env: { OK_CHANNEL: 'identity16' }, statSync: statForFile(APP_EXEC) }),
+      baseDeps({ env: { OK_CHANNEL: 'openknowledge16' }, statSync: statForFile(APP_EXEC) }),
     );
-    expect(missing).toMatchObject({ available: false, cliProduct: 'identity16' });
+    expect(missing).toMatchObject({ available: false, cliProduct: 'openknowledge16' });
     const forkPath = '/Applications/OpenKnowledge16.app/Contents/MacOS/OpenKnowledge16';
     expect(
       detectDesktop(
-        baseDeps({ env: { OK_CHANNEL: 'identity16' }, statSync: statForFile(forkPath) }),
+        baseDeps({ env: { OK_CHANNEL: 'openknowledge16' }, statSync: statForFile(forkPath) }),
       ),
-    ).toMatchObject({ available: true, product: 'identity16' });
+    ).toMatchObject({ available: true, product: 'openknowledge16' });
   });
 
   test('unknown platform → unsupported-platform', () => {
@@ -340,7 +340,7 @@ describe('detectDesktop — unsupported channel override', () => {
     });
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn).toHaveBeenCalledWith(
-      `Treating this CLI as OpenKnowledge (Stable) for this command: Unsupported ${OK_CHANNEL_ENV}="nightly". Expected stable or beta or identity16 or dev.`,
+      `Treating this CLI as OpenKnowledge (Stable) for this command: Unsupported ${OK_CHANNEL_ENV}="nightly". Expected stable or beta or openknowledge16 or dev.`,
     );
   });
 
@@ -362,7 +362,7 @@ describe('detectDesktop — unsupported channel override', () => {
       cliProduct: 'beta',
     });
     expect(warn).toHaveBeenCalledWith(
-      `Treating this CLI as OpenKnowledge Beta for this command: Unsupported ${OK_CHANNEL_ENV}="nightly". Expected stable or beta or identity16 or dev.`,
+      `Treating this CLI as OpenKnowledge Beta for this command: Unsupported ${OK_CHANNEL_ENV}="nightly". Expected stable or beta or openknowledge16 or dev.`,
     );
   });
 

@@ -2,11 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import {
-  releasePlan,
-  releaseFileDigest,
-  validateReleaseInventory,
-} from './release-identity.mjs';
+import { releaseFileDigest, releasePlan, validateReleaseInventory } from './release-identity.mjs';
 
 const REPOSITORY = 'identity16/open-knowledge';
 
@@ -183,7 +179,7 @@ export function stageRelease(
       '--title',
       `OpenKnowledge16 ${version}`,
       '--notes',
-      `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION_IDENTITY16.md`,
+      `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION.md`,
     ]);
     release = findRelease();
     for (let attempt = 1; !release && attempt < DRAFT_VISIBILITY_ATTEMPTS; attempt += 1) {
@@ -260,11 +256,7 @@ export function promoteRelease(proof, env = process.env, invoke = gh) {
 }
 
 export function publishRelease(version, directory, env = process.env, invoke = gh) {
-  return promoteRelease(
-    stageRelease(version, directory, env.GITHUB_SHA, env, invoke),
-    env,
-    invoke,
-  );
+  return promoteRelease(stageRelease(version, directory, env.GITHUB_SHA, env, invoke), env, invoke);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

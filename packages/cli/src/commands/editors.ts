@@ -54,7 +54,7 @@ function winChainSentinel(product: DesktopProduct): string {
 
 function buildUnixChain(name: PackagedDesktopProductName): string {
   const product = DESKTOP_PRODUCTS[name];
-  if (name === 'identity16') {
+  if (name === 'openknowledge16') {
     return `${unixChainSentinel(product)}
 export ${OK_CHANNEL_ENV}=identity16
 for bundle in "$HOME/Applications/${product.productName}.app" "/Applications/${product.productName}.app"; do
@@ -83,7 +83,7 @@ exit 127`;
 
 function buildWinChain(name: PackagedDesktopProductName): string {
   const product = DESKTOP_PRODUCTS[name];
-  if (name === 'identity16') {
+  if (name === 'openknowledge16') {
     return `${winChainSentinel(product)}
 [Console]::Error.WriteLine('OpenKnowledge16 currently supports macOS Apple Silicon only')
 exit 127`;

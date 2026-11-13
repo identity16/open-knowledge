@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 export const repository = 'identity16/open-knowledge';
 export const service = 'com.identity16.openknowledge';
 export const assetName = 'openknowledge-darwin-arm64.tgz';
-const base = process.env.IDENTITY16_OPENKNOWLEDGE_HOME ?? join(homedir(), '.local/share', service);
+const base = process.env.OPENKNOWLEDGE16_HOME ?? join(homedir(), '.local/share', service);
 const cliRelative = 'node_modules/@inkeep/open-knowledge/dist/cli.mjs';
 const current = join(base, 'current');
 

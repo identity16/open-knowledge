@@ -21,7 +21,7 @@ describe('fork MCP launcher isolation', () => {
       const wrapper = join(bundle, 'ok.sh');
       writeFileSync(wrapper, '#!/bin/sh\nprintf "%s:%s" "$OK_CHANNEL" "$1"\n');
       chmodSync(wrapper, 0o755);
-      vi.stubEnv('OK_CHANNEL', 'identity16');
+      vi.stubEnv('OK_CHANNEL', 'openknowledge16');
       const entry = buildManagedServerEntry({ mode: 'published', platformName: 'darwin' });
       const args = entry.args as string[];
       const chain = args[2] ?? '';

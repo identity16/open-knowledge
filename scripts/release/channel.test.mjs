@@ -72,7 +72,7 @@ test('rollback changes the active release and pins service startup to it', () =>
     symlinkSync(targets[1], join(home, 'current'));
     writeFileSync(join(home, 'state.json'), JSON.stringify({ previous: targets[0] }));
     const options = {
-      env: { ...process.env, IDENTITY16_OPENKNOWLEDGE_HOME: home },
+      env: { ...process.env, OPENKNOWLEDGE16_HOME: home },
       encoding: 'utf8',
     };
     const channel = join(import.meta.dirname, 'channel.mjs');
@@ -127,7 +127,7 @@ test('install-local activates a packed build and pins it to the installed releas
       JSON.stringify({ tag: 'identity16-v0.76.0-identity16.4', previous: null }),
     );
     const options = {
-      env: { ...process.env, IDENTITY16_OPENKNOWLEDGE_HOME: home },
+      env: { ...process.env, OPENKNOWLEDGE16_HOME: home },
       encoding: 'utf8',
     };
     const channel = join(import.meta.dirname, 'channel.mjs');

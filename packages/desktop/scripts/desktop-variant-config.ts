@@ -2,7 +2,7 @@ import { parse as parseYaml } from 'yaml';
 import {
   DESKTOP_VARIANTS,
   type DesktopVariantName,
-  IDENTITY16_UPDATE_FEED_URL,
+  OPENKNOWLEDGE16_UPDATE_FEED_URL,
 } from '../src/shared/desktop-variant.ts';
 
 interface ResourceEntry {
@@ -93,8 +93,10 @@ export function createVariantBuilderConfig(
     ...entry,
     channel: variant.feedChannel,
   }));
-  if (variantName === 'identity16') {
-    config.publish = [{ provider: 'generic', url: IDENTITY16_UPDATE_FEED_URL, channel: 'latest' }];
+  if (variantName === 'openknowledge16') {
+    config.publish = [
+      { provider: 'generic', url: OPENKNOWLEDGE16_UPDATE_FEED_URL, channel: 'latest' },
+    ];
     config.mac.signIgnore = [
       ...(config.mac.signIgnore ?? []),
       '/Contents/Resources/app/.*\\.(?:woff2?|ttf|otf)$',
@@ -114,7 +116,7 @@ export function createVariantBuilderConfig(
       to: `Frameworks/${variant.productName} Server.app/Contents/Info.plist`,
     },
   ];
-  if (variantName !== 'identity16' && (variant.name === 'stable' || paths.profileAvailable)) {
+  if (variantName !== 'openknowledge16' && (variant.name === 'stable' || paths.profileAvailable)) {
     config.mac.provisioningProfile =
       variant.name === 'stable'
         ? 'build/embedded.provisionprofile'

@@ -196,7 +196,7 @@ describe('desktop variant builder config', () => {
   test('fork signing skips fonts and locale data while retaining every executable signature', () => {
     const config = createVariantBuilderConfig(
       parseBuilderConfig(configSource),
-      'identity16',
+      'openknowledge16',
       paths,
       '0.76.0-identity16.4',
     );
@@ -218,14 +218,14 @@ describe('desktop variant builder config', () => {
   test('fork packaging uses its own identity and feed without upstream domain entitlements', () => {
     const config = createVariantBuilderConfig(
       parseBuilderConfig(configSource),
-      'identity16',
+      'openknowledge16',
       paths,
       '0.76.0-identity16.3',
     );
     expect(config).toMatchObject({
       appId: 'com.identity16.openknowledge',
       productName: 'OpenKnowledge16',
-      extraMetadata: { name: 'openknowledge16-desktop', okDesktopVariant: 'identity16' },
+      extraMetadata: { name: 'openknowledge16-desktop', okDesktopVariant: 'openknowledge16' },
       publish: [
         {
           provider: 'generic',
@@ -242,7 +242,7 @@ describe('desktop variant builder config', () => {
     expect(
       createVariantHelperInfo(
         'com.inkeep.open-knowledge.server OpenKnowledge Server OpenKnowledge Helper',
-        'identity16',
+        'openknowledge16',
       ),
     ).toBe('com.identity16.openknowledge.server OpenKnowledge16 Server OpenKnowledge16 Helper');
   });

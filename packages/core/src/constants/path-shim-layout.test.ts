@@ -9,8 +9,10 @@ import {
 
 describe('path shim layout', () => {
   test('fork shims and install markers stay out of the upstream settings directory', () => {
-    expect(pathShimBinDir('identity16', '/Users/a')).toBe('/Users/a/.ok16/bin');
-    expect(pathShimMarkerPath('identity16', '/Users/a')).toBe('/Users/a/.ok16/path-install.json');
+    expect(pathShimBinDir('openknowledge16', '/Users/a')).toBe('/Users/a/.ok16/bin');
+    expect(pathShimMarkerPath('openknowledge16', '/Users/a')).toBe(
+      '/Users/a/.ok16/path-install.json',
+    );
   });
 
   test('Stable keeps its historical names and paths', () => {

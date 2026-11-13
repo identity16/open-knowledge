@@ -12,7 +12,7 @@ describe('release links', () => {
   });
 
   test('fork release links keep their repository and tag prefix', () => {
-    const url = releasesPageUrl(DESKTOP_VARIANTS.identity16);
+    const url = releasesPageUrl(DESKTOP_VARIANTS.openknowledge16);
     expect(url).toBe('https://github.com/identity16/open-knowledge/releases');
     expect(releaseUrlFor('0.76.0-identity16.2', url)).toBe(
       `${url}/tag/identity16-v0.76.0-identity16.2`,

@@ -244,7 +244,7 @@ export async function buildDesktop(
   try {
     const env = {
       ...prepareSigning(temp, desktop, input, signing, signOnly),
-      OK_DESKTOP_VARIANT: 'identity16',
+      OK_DESKTOP_VARIANT: 'openknowledge16',
       TURBO_CACHE_DIR: join(root, '.turbo/cache'),
     };
     for (const [path, contents] of originals) {
