@@ -291,6 +291,8 @@ const MENU_ACTION_BUFFER_POLICY: Record<OkMenuAction, MenuActionBufferPolicy> = 
   'toggle-show-ok-folders': 'parity',
   'toggle-show-only-markdown-files': 'parity',
   'toggle-show-skills-section': 'parity',
+  'sort-files-by-name': 'parity',
+  'sort-files-by-modified': 'parity',
   'move-terminal': 'parity',
 
   'new-doc': 'additive',

@@ -16,6 +16,8 @@ export const MENU_LABELS = {
   showOkFolders: 'Show .ok folders',
   showOnlyMarkdownFiles: 'Show only markdown files',
   showSkillsSection: 'Skills section',
+  sortFilesByName: 'Sort by name',
+  sortFilesByModified: 'Sort by date modified',
   expandAll: 'Expand all',
   collapseAll: 'Collapse all',
   moveToTrash: 'Move to Trash',

@@ -26,6 +26,8 @@ export const OK_MENU_ACTIONS = [
   'toggle-show-ok-folders',
   'toggle-show-only-markdown-files',
   'toggle-show-skills-section',
+  'sort-files-by-name',
+  'sort-files-by-modified',
   'expand-all-tree',
   'collapse-all-tree',
   'toggle-doc-panel',

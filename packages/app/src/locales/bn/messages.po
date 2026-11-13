@@ -9951,6 +9951,12 @@ msgstr "কিছু একটা ভুল হয়েছে। অনুগ�
 msgid "Sort by"
 msgstr "এই অনুযায়ী সাজান"
 
+msgid "Sort by date modified"
+msgstr "পরিবর্তনের তারিখ অনুসারে সাজান"
+
+msgid "Sort by name"
+msgstr "নাম অনুসারে সাজান"
+
 msgid "Sort skills"
 msgstr "স্কিল সাজান"
 

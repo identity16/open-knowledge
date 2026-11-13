@@ -314,6 +314,19 @@ export function AppMenubar({ className }: AppMenubarProps) {
             {t`Skills section`}
           </MenubarCheckboxItem>
           <MenubarSeparator />
+          <MenubarCheckboxItem
+            checked={view?.sortFilesByName ?? true}
+            onSelect={() => dispatch({ kind: 'menu-action', action: 'sort-files-by-name' })}
+          >
+            {t`Sort by name`}
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            checked={view?.sortFilesByModified ?? false}
+            onSelect={() => dispatch({ kind: 'menu-action', action: 'sort-files-by-modified' })}
+          >
+            {t`Sort by date modified`}
+          </MenubarCheckboxItem>
+          <MenubarSeparator />
           {(view?.canExpandAll ?? true) && (
             <MenubarItem
               onSelect={() => dispatch({ kind: 'menu-action', action: 'expand-all-tree' })}

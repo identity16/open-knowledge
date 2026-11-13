@@ -172,6 +172,8 @@ export type OkMenuAction =
   | 'toggle-show-ok-folders'
   | 'toggle-show-only-markdown-files'
   | 'toggle-show-skills-section'
+  | 'sort-files-by-name'
+  | 'sort-files-by-modified'
   | 'expand-all-tree'
   | 'collapse-all-tree'
   | 'toggle-doc-panel'
@@ -748,6 +750,8 @@ export interface OkEditorViewMenuStateSnapshot {
   readonly showOkFolders: boolean;
   readonly showOnlyMarkdownFiles: boolean;
   readonly showSkillsSection: boolean;
+  readonly sortFilesByName: boolean;
+  readonly sortFilesByModified: boolean;
   readonly canExpandAll: boolean;
   readonly canCollapseAll: boolean;
   readonly sidebarVisible: boolean;

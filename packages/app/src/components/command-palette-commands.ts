@@ -15,12 +15,14 @@ import {
 import type { MessageDescriptor } from '@lingui/core';
 import { msg, t } from '@lingui/core/macro';
 import {
+  ArrowDownAZ,
   ArrowLeftRight,
   Blocks,
   BookOpen,
   Bug,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Copy,
   Download,
   Eye,
@@ -192,6 +194,8 @@ const PALETTE_COMMAND_LABELS = {
   showOkFolders: msg`Show .ok folders`,
   showOnlyMarkdownFiles: msg`Show only markdown files`,
   showSkillsSection: msg`Skills section`,
+  sortFilesByName: msg`Sort by name`,
+  sortFilesByModified: msg`Sort by date modified`,
   expandAll: msg`Expand all`,
   collapseAll: msg`Collapse all`,
   newTerminal: msg`New Terminal`,
@@ -287,6 +291,8 @@ const COMMAND_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   'toggle-show-ok-folders': Folder,
   'toggle-show-only-markdown-files': FileText,
   'toggle-show-skills-section': Sparkles,
+  'sort-files-by-name': ArrowDownAZ,
+  'sort-files-by-modified': Clock,
   'expand-all-tree': UnfoldVertical,
   'collapse-all-tree': FoldVertical,
   'new-terminal': SquareTerminal,

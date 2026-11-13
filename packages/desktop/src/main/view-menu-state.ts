@@ -44,6 +44,8 @@ export function createDefaultEditorViewMenuState(): EditorViewMenuStateSnapshot 
     showOkFolders: false,
     showOnlyMarkdownFiles: false,
     showSkillsSection: true,
+    sortFilesByName: true,
+    sortFilesByModified: false,
     canExpandAll: true,
     canCollapseAll: true,
     sidebarVisible: true,
@@ -64,6 +66,8 @@ type ViewMenuStateDeps = Pick<
   | 'showOkFoldersChecked'
   | 'showOnlyMarkdownFilesChecked'
   | 'showSkillsSectionChecked'
+  | 'sortFilesByNameChecked'
+  | 'sortFilesByModifiedChecked'
   | 'canExpandAll'
   | 'canCollapseAll'
   | 'sidebarVisible'
@@ -78,6 +82,8 @@ type ViewMenuStateDeps = Pick<
   | 'onToggleShowOkFolders'
   | 'onToggleShowOnlyMarkdownFiles'
   | 'onToggleShowSkillsSection'
+  | 'onSortFilesByName'
+  | 'onSortFilesByModified'
   | 'onToggleSidebar'
   | 'onToggleDocPanel'
   | 'onToggleTerminal'
@@ -99,6 +105,8 @@ export function buildViewMenuStateDeps(
     showOkFoldersChecked: state.showOkFolders,
     showOnlyMarkdownFilesChecked: state.showOnlyMarkdownFiles,
     showSkillsSectionChecked: state.showSkillsSection,
+    sortFilesByNameChecked: state.sortFilesByName,
+    sortFilesByModifiedChecked: state.sortFilesByModified,
     canExpandAll: state.canExpandAll,
     canCollapseAll: state.canCollapseAll,
     sidebarVisible: state.sidebarVisible,
@@ -113,6 +121,8 @@ export function buildViewMenuStateDeps(
     onToggleShowOkFolders: () => sendMenuAction('toggle-show-ok-folders'),
     onToggleShowOnlyMarkdownFiles: () => sendMenuAction('toggle-show-only-markdown-files'),
     onToggleShowSkillsSection: () => sendMenuAction('toggle-show-skills-section'),
+    onSortFilesByName: () => sendMenuAction('sort-files-by-name'),
+    onSortFilesByModified: () => sendMenuAction('sort-files-by-modified'),
     onToggleSidebar: () => sendMenuAction('toggle-sidebar'),
     onToggleDocPanel: () => sendMenuAction('toggle-doc-panel'),
     onToggleTerminal: () => sendMenuAction('toggle-terminal'),

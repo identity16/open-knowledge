@@ -9955,6 +9955,12 @@ msgstr "Une erreur s'est produite. Veuillez réessayer."
 msgid "Sort by"
 msgstr "Trier par"
 
+msgid "Sort by date modified"
+msgstr "Trier par date de modification"
+
+msgid "Sort by name"
+msgstr "Trier par nom"
+
 msgid "Sort skills"
 msgstr "Trier les compétences"
 

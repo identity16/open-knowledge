@@ -78,7 +78,8 @@ const treeCalls = {
 const projectLocalPatch = vi.fn((_patch: unknown) => ({ ok: true as const }));
 const projectLocalBindingStub = { patch: projectLocalPatch };
 const DEFAULT_MERGED_CONFIG = { appearance: { sidebar: { showHiddenFiles: false } } };
-let mergedConfig: { appearance?: { sidebar?: Record<string, boolean> } } = DEFAULT_MERGED_CONFIG;
+let mergedConfig: { appearance?: { sidebar?: Record<string, boolean | string> } } =
+  DEFAULT_MERGED_CONFIG;
 let projectLocalSynced = true;
 let menuActionCallback: ((action: MenuAction) => void) | null = null;
 
@@ -720,6 +721,40 @@ describe('FileSidebar menu-action runtime routing', () => {
         appearance: { sidebar: { [key]: defaultValue } },
       });
     }
+  });
+
+  test('sort actions write sortOrder only when it changes and mirror it into the View menu state', async () => {
+    const { rerender } = renderSidebar();
+    await waitFor(() => expect(menuActionCallback).not.toBeNull());
+    await waitFor(() =>
+      expect(notifyViewMenuStateChangedMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sortFilesByName: true, sortFilesByModified: false }),
+      ),
+    );
+
+    menuActionCallback?.('sort-files-by-name' as MenuAction);
+    expect(projectLocalPatch).not.toHaveBeenCalled();
+
+    menuActionCallback?.('sort-files-by-modified' as MenuAction);
+    expect(projectLocalPatch).toHaveBeenCalledWith({
+      appearance: { sidebar: { sortOrder: 'modified' } },
+    });
+
+    mergedConfig = { appearance: { sidebar: { sortOrder: 'modified' } } };
+    rerender(<FileSidebar />);
+    await waitFor(() =>
+      expect(notifyViewMenuStateChangedMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sortFilesByName: false, sortFilesByModified: true }),
+      ),
+    );
+
+    projectLocalPatch.mockClear();
+    menuActionCallback?.('sort-files-by-modified' as MenuAction);
+    expect(projectLocalPatch).not.toHaveBeenCalled();
+    menuActionCallback?.('sort-files-by-name' as MenuAction);
+    expect(projectLocalPatch).toHaveBeenCalledWith({
+      appearance: { sidebar: { sortOrder: 'name' } },
+    });
   });
 
   test('pushes View menu state to the desktop bridge with merged visibility and tree gates', async () => {

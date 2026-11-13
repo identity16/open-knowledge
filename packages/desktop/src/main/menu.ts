@@ -68,6 +68,10 @@ export interface MenuDeps {
   onToggleShowOnlyMarkdownFiles?(): void;
   showSkillsSectionChecked?: boolean;
   onToggleShowSkillsSection?(): void;
+  sortFilesByNameChecked?: boolean;
+  onSortFilesByName?(): void;
+  sortFilesByModifiedChecked?: boolean;
+  onSortFilesByModified?(): void;
   sidebarVisible?: boolean;
   onToggleSidebar?(): void;
   noteWindow?: boolean;
@@ -327,6 +331,16 @@ const MENU_BINDINGS: Record<string, MenuCommandBinding> = {
     click: (d) => () => d.onToggleShowSkillsSection?.(),
     enabled: (d) => d.onToggleShowSkillsSection !== undefined,
     checked: (d) => d.showSkillsSectionChecked ?? true,
+  },
+  'sort-files-by-name': {
+    click: (d) => () => d.onSortFilesByName?.(),
+    enabled: (d) => d.onSortFilesByName !== undefined,
+    checked: (d) => d.sortFilesByNameChecked ?? true,
+  },
+  'sort-files-by-modified': {
+    click: (d) => () => d.onSortFilesByModified?.(),
+    enabled: (d) => d.onSortFilesByModified !== undefined,
+    checked: (d) => d.sortFilesByModifiedChecked ?? false,
   },
   'expand-all-tree': {
     click: (d) => () => d.onExpandAll?.(),
@@ -597,6 +611,8 @@ export function buildMenuTemplate(deps: MenuDeps): MenuItemConstructorOptions[] 
         ...leafOf('view-panels'),
         { type: 'separator' },
         ...leafOf('view-visibility'),
+        { type: 'separator' },
+        ...leafOf('view-sort'),
         { type: 'separator' },
         ...leafOf('view-tree'),
         { type: 'separator' },

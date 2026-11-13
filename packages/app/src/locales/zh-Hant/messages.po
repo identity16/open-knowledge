@@ -9955,6 +9955,12 @@ msgstr "出了點問題。請再試一次。"
 msgid "Sort by"
 msgstr "排序方式"
 
+msgid "Sort by date modified"
+msgstr "依修改日期排序"
+
+msgid "Sort by name"
+msgstr "依名稱排序"
+
 msgid "Sort skills"
 msgstr "技能排序"
 

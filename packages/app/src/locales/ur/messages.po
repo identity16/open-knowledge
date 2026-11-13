@@ -9955,6 +9955,12 @@ msgstr "کچھ غلط ہو گیا۔ براہِ کرم دوبارہ کوشش کر
 msgid "Sort by"
 msgstr "ترتیب کا معیار"
 
+msgid "Sort by date modified"
+msgstr "ترمیم کی تاریخ کے لحاظ سے ترتیب دیں"
+
+msgid "Sort by name"
+msgstr "نام کے لحاظ سے ترتیب دیں"
+
 msgid "Sort skills"
 msgstr "مہارتیں ترتیب دیں"
 

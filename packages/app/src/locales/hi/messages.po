@@ -9951,6 +9951,12 @@ msgstr "कुछ ग़लत हो गया। कृपया फिर क
 msgid "Sort by"
 msgstr "इसके अनुसार क्रम"
 
+msgid "Sort by date modified"
+msgstr "संशोधन तिथि के अनुसार क्रमबद्ध करें"
+
+msgid "Sort by name"
+msgstr "नाम के अनुसार क्रमबद्ध करें"
+
 msgid "Sort skills"
 msgstr "स्किल क्रम में लगाएँ"
 

@@ -1,6 +1,7 @@
 // oxlint-disable ok/no-physical-direction-utility -- pre-rule backlog — physical margin/padding/inset utilities predate the rule; drain by swapping ml/mr → ms/me, pl/pr → ps/pe, left/right → start/end, then deleting this line. See https://github.com/inkeep/open-knowledge/blob/main/lint-plugins/ok-rules/README.md#no-physical-direction-utility
 
 import { humanFormat } from '@inkeep/open-knowledge-core/config/errors';
+import type { FileTreeSortOrder } from '@inkeep/open-knowledge-core/config/schema';
 import { Trans, useLingui } from '@lingui/react/macro';
 import {
   ChevronLeft,
@@ -265,6 +266,7 @@ function FileSidebarInner() {
   const showOkFolders = merged?.appearance?.sidebar?.showOkFolders ?? false;
   const showOnlyMarkdownFiles = merged?.appearance?.sidebar?.showOnlyMarkdownFiles ?? false;
   const showSkillGroups = merged?.appearance?.sidebar?.showSkillGroups ?? true;
+  const sortOrder = merged?.appearance?.sidebar?.sortOrder ?? 'name';
   const [filesOpen, setFilesOpen] = useState(true);
   useEffect(() => subscribeToFilesSectionReveal(() => setFilesOpen(true)), []);
   const configSkillsSection = merged?.appearance?.sidebar?.showSkillsSection;
@@ -347,6 +349,7 @@ function FileSidebarInner() {
     showOnlyMarkdownFiles?: boolean;
     showSkillsSection?: boolean;
     showSkillGroups?: boolean;
+    sortOrder?: FileTreeSortOrder;
   }) => {
     if (!projectLocalBindingReady) {
       toast.info(settingsLoadingReason, { id: 'sidebar-settings-not-ready' });
@@ -376,6 +379,8 @@ function FileSidebarInner() {
       showOkFolders,
       showOnlyMarkdownFiles,
       showSkillsSection,
+      sortFilesByName: sortOrder === 'name',
+      sortFilesByModified: sortOrder === 'modified',
       canExpandAll: showExpandAll,
       canCollapseAll: showCollapseAll,
       sidebarVisible: sidebarState === 'expanded',
@@ -389,6 +394,7 @@ function FileSidebarInner() {
     showOkFolders,
     showOnlyMarkdownFiles,
     showSkillsSection,
+    sortOrder,
     showExpandAll,
     showCollapseAll,
     sidebarState,
@@ -539,6 +545,16 @@ function FileSidebarInner() {
           patchSidebarVisibility({ showSkillsSection: !showSkillsSection });
           return;
         }
+        case 'sort-files-by-name': {
+          revealEditorBeforeActing();
+          if (sortOrder !== 'name') patchSidebarVisibility({ sortOrder: 'name' });
+          return;
+        }
+        case 'sort-files-by-modified': {
+          revealEditorBeforeActing();
+          if (sortOrder !== 'modified') patchSidebarVisibility({ sortOrder: 'modified' });
+          return;
+        }
         case 'expand-all-tree': {
           revealEditorBeforeActing();
           tree?.expandAll();
@@ -578,6 +594,7 @@ function FileSidebarInner() {
     showOkFolders,
     showOnlyMarkdownFiles,
     showSkillsSection,
+    sortOrder,
     handoffInstallStates,
     dispatchHandoff,
     terminalLaunch,

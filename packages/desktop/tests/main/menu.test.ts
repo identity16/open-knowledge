@@ -936,6 +936,45 @@ describe('buildMenuTemplate — View → Show .ok folders', () => {
   });
 });
 
+describe('buildMenuTemplate — View → Sort by', () => {
+  test('both sort items render as checkboxes with name checked by default', () => {
+    const template = buildMenuTemplate(
+      makeDeps({ onSortFilesByName: vi.fn(() => {}), onSortFilesByModified: vi.fn(() => {}) }),
+    );
+    const byName = findByLabel(template, 'Sort by name');
+    const byModified = findByLabel(template, 'Sort by date modified');
+    expect(byName?.type).toBe('checkbox');
+    expect(byModified?.type).toBe('checkbox');
+    expect(byName?.checked).toBe(true);
+    expect(byModified?.checked).toBe(false);
+    expect(byName?.enabled).toBe(true);
+    expect(byModified?.enabled).toBe(true);
+  });
+
+  test('checked state follows the deps', () => {
+    const template = buildMenuTemplate(
+      makeDeps({
+        onSortFilesByName: vi.fn(() => {}),
+        onSortFilesByModified: vi.fn(() => {}),
+        sortFilesByNameChecked: false,
+        sortFilesByModifiedChecked: true,
+      }),
+    );
+    expect(findByLabel(template, 'Sort by name')?.checked).toBe(false);
+    expect(findByLabel(template, 'Sort by date modified')?.checked).toBe(true);
+  });
+
+  test('clicks dispatch their deps', () => {
+    const onSortFilesByName = vi.fn(() => {});
+    const onSortFilesByModified = vi.fn(() => {});
+    const template = buildMenuTemplate(makeDeps({ onSortFilesByName, onSortFilesByModified }));
+    (findByLabel(template, 'Sort by name')?.click as (() => void) | undefined)?.();
+    (findByLabel(template, 'Sort by date modified')?.click as (() => void) | undefined)?.();
+    expect(onSortFilesByName).toHaveBeenCalledTimes(1);
+    expect(onSortFilesByModified).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('buildMenuTemplate — View → Show only markdown files / Skills section', () => {
   test('Show only markdown files renders as a checkbox, unchecked by default', () => {
     const template = buildMenuTemplate(

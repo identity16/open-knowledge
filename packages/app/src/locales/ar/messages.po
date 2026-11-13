@@ -9955,6 +9955,12 @@ msgstr "حدث خطأ ما. يرجى المحاولة مرة أخرى."
 msgid "Sort by"
 msgstr "الترتيب حسب"
 
+msgid "Sort by date modified"
+msgstr "الفرز حسب تاريخ التعديل"
+
+msgid "Sort by name"
+msgstr "الفرز حسب الاسم"
+
 msgid "Sort skills"
 msgstr "ترتيب المهارات"
 

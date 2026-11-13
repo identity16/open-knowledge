@@ -9951,6 +9951,12 @@ msgstr "Ada yang tidak beres. Silakan coba lagi."
 msgid "Sort by"
 msgstr "Urutkan menurut"
 
+msgid "Sort by date modified"
+msgstr "Urutkan menurut tanggal diubah"
+
+msgid "Sort by name"
+msgstr "Urutkan menurut nama"
+
 msgid "Sort skills"
 msgstr "Urutkan keterampilan"
 

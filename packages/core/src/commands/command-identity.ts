@@ -67,6 +67,7 @@ export type MenuSection =
   | 'edit-spell'
   | 'view-panels'
   | 'view-visibility'
+  | 'view-sort'
   | 'view-tree'
   | 'view-history'
   | 'terminal'
@@ -110,7 +111,9 @@ export type CommandCheckField =
   | 'showHiddenFiles'
   | 'showOkFolders'
   | 'showOnlyMarkdownFiles'
-  | 'showSkillsSection';
+  | 'showSkillsSection'
+  | 'sortFilesByName'
+  | 'sortFilesByModified';
 
 export interface CommandPalettePresence {
   readonly group: CommandGroup;
@@ -699,6 +702,26 @@ export const COMMAND_IDENTITIES: readonly CommandIdentity[] = [
     availability: {},
     palette: { group: 'view', visibility: 'search-only' },
     menu: [{ section: 'view-visibility', order: 3, checkbox: true }],
+  },
+  {
+    id: 'sort-files-by-name',
+    menuActionId: 'sort-files-by-name',
+    labelKey: 'sortFilesByName',
+    keywords: ['sort', 'order', 'name', 'alphabetical'],
+    checkField: 'sortFilesByName',
+    availability: {},
+    palette: { group: 'view', visibility: 'search-only' },
+    menu: [{ section: 'view-sort', order: 0, checkbox: true }],
+  },
+  {
+    id: 'sort-files-by-modified',
+    menuActionId: 'sort-files-by-modified',
+    labelKey: 'sortFilesByModified',
+    keywords: ['sort', 'order', 'date', 'modified', 'recent'],
+    checkField: 'sortFilesByModified',
+    availability: {},
+    palette: { group: 'view', visibility: 'search-only' },
+    menu: [{ section: 'view-sort', order: 1, checkbox: true }],
   },
   {
     id: 'expand-all-tree',

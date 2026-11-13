@@ -9955,6 +9955,12 @@ msgstr "Algo salió mal. Inténtalo de nuevo."
 msgid "Sort by"
 msgstr "Ordenar por"
 
+msgid "Sort by date modified"
+msgstr "Ordenar por fecha de modificación"
+
+msgid "Sort by name"
+msgstr "Ordenar por nombre"
+
 msgid "Sort skills"
 msgstr "Ordenar las habilidades"
 

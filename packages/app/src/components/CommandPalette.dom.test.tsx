@@ -1371,6 +1371,16 @@ describe('Cmd+K menu-parity backfill', () => {
       query: 'skills section',
       id: 'toggle-show-skills-section',
     },
+    {
+      testid: 'command-palette-sort-files-by-name',
+      query: 'sort by name',
+      id: 'sort-files-by-name',
+    },
+    {
+      testid: 'command-palette-sort-files-by-modified',
+      query: 'sort by date modified',
+      id: 'sort-files-by-modified',
+    },
     { testid: 'command-palette-expand-all-tree', query: 'expand all', id: 'expand-all-tree' },
     { testid: 'command-palette-collapse-all-tree', query: 'collapse all', id: 'collapse-all-tree' },
     { testid: 'command-palette-new-terminal', query: 'new terminal', id: 'new-terminal' },

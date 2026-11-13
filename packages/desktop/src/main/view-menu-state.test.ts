@@ -163,6 +163,8 @@ describe('createDefaultEditorViewMenuState — pre-first-push menu state', () =>
       showOkFolders: false,
       showOnlyMarkdownFiles: false,
       showSkillsSection: true,
+      sortFilesByName: true,
+      sortFilesByModified: false,
       canExpandAll: true,
       canCollapseAll: true,
       sidebarVisible: true,
@@ -184,6 +186,8 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
     showOkFolders: true,
     showOnlyMarkdownFiles: true,
     showSkillsSection: false,
+    sortFilesByName: false,
+    sortFilesByModified: true,
     canExpandAll: false,
     canCollapseAll: false,
     sidebarVisible: false,
@@ -201,6 +205,8 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
     expect(deps.showOkFoldersChecked).toBe(true);
     expect(deps.showOnlyMarkdownFilesChecked).toBe(true);
     expect(deps.showSkillsSectionChecked).toBe(false);
+    expect(deps.sortFilesByNameChecked).toBe(false);
+    expect(deps.sortFilesByModifiedChecked).toBe(true);
     expect(deps.canExpandAll).toBe(false);
     expect(deps.canCollapseAll).toBe(false);
     expect(deps.sidebarVisible).toBe(false);
@@ -222,6 +228,8 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
     deps.onToggleShowOkFolders?.();
     deps.onToggleShowOnlyMarkdownFiles?.();
     deps.onToggleShowSkillsSection?.();
+    deps.onSortFilesByName?.();
+    deps.onSortFilesByModified?.();
     deps.onToggleSidebar?.();
     deps.onToggleDocPanel?.();
     deps.onToggleTerminal?.();
@@ -237,6 +245,8 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
       'toggle-show-ok-folders',
       'toggle-show-only-markdown-files',
       'toggle-show-skills-section',
+      'sort-files-by-name',
+      'sort-files-by-modified',
       'toggle-sidebar',
       'toggle-doc-panel',
       'toggle-terminal',
