@@ -1,3 +1,4 @@
+import type { FileTreeSortOrder } from '@inkeep/open-knowledge-core/config/schema';
 import { isEditableTextDocFile } from '@inkeep/open-knowledge-core/constants/code-languages';
 import {
   isExcalidrawDocFile,
@@ -14,6 +15,7 @@ import {
   isDocumentEntry,
   isFolderEntry,
 } from '@/components/file-tree-utils';
+import type { FileTreeSortState } from '@/lib/file-tree-sort';
 import { OK_SIDEBAR_DRAG_MIME } from '@/lib/sidebar-drag';
 
 const DEFAULT_TREE_EXTENSION = '.md';
@@ -140,6 +142,46 @@ export function documentsToTreePaths(documents: readonly FileEntry[]): string[] 
     paths.push(path);
   }
   return paths;
+}
+
+export function documentsModifiedMsByTreePath(
+  documents: readonly FileEntry[],
+): Map<string, number> {
+  const stemExtensions = markdownStemExtensions(documents);
+  const modifiedMs = new Map<string, number>();
+  for (const entry of documents) {
+    if (isFolderEntry(entry)) continue;
+    const ms = Date.parse(entry.modified);
+    if (Number.isNaN(ms)) continue;
+    modifiedMs.set(collectionTreePath(entry, stemExtensions), ms);
+  }
+  return modifiedMs;
+}
+
+const EMPTY_MODIFIED_MS: ReadonlyMap<string, number> = new Map();
+
+export function fileTreeSortState(
+  order: FileTreeSortOrder,
+  documents: readonly FileEntry[],
+): FileTreeSortState {
+  return {
+    order,
+    modifiedMsByTreePath:
+      order === 'modified' ? documentsModifiedMsByTreePath(documents) : EMPTY_MODIFIED_MS,
+  };
+}
+
+export function fileTreeSortSignature(
+  order: FileTreeSortOrder,
+  documents: readonly FileEntry[],
+): string {
+  if (order !== 'modified') return order;
+  const parts: string[] = [order];
+  for (const entry of documents) {
+    if (isFolderEntry(entry)) continue;
+    parts.push(`${fileEntryToTreePath(entry)}\u0001${entry.modified}`);
+  }
+  return parts.join('\0');
 }
 
 export function treePathSignature(paths: readonly string[]): string {

@@ -9,6 +9,7 @@ import {
   createPagePathFromTreeDestination,
   createTreePlaceholder,
   docNameToTreePath,
+  documentsModifiedMsByTreePath,
   documentsToTreePaths,
   fileEntryFromUploadedPath,
   fileEntryToTreePath,
@@ -670,5 +671,27 @@ describe('docNameToTreePath — editable text docs', () => {
   test('maps a text docName to the tree path verbatim (no .md appended)', () => {
     expect(docNameToTreePath('src/util.ts')).toBe('src/util.ts');
     expect(docNameToTreePath('config.json')).toBe('config.json');
+  });
+});
+
+describe('documentsModifiedMsByTreePath', () => {
+  test('keys file and asset times by tree path and skips folders and unparsable times', () => {
+    const map = documentsModifiedMsByTreePath([
+      { kind: 'document', docName: 'notes/a', size: 1, modified: '2026-01-02T00:00:00.000Z' },
+      {
+        kind: 'asset',
+        path: 'img/b.png',
+        assetExt: '.png',
+        mediaKind: 'image',
+        size: 1,
+        modified: '2026-01-03T00:00:00.000Z',
+      },
+      { kind: 'folder', path: 'notes', size: 0, modified: '2026-01-04T00:00:00.000Z' },
+      { kind: 'document', docName: 'broken', size: 1, modified: '' },
+    ]);
+    expect([...map]).toEqual([
+      ['notes/a.md', Date.parse('2026-01-02T00:00:00.000Z')],
+      ['img/b.png', Date.parse('2026-01-03T00:00:00.000Z')],
+    ]);
   });
 });

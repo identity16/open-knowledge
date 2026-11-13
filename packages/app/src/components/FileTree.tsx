@@ -1,6 +1,7 @@
 // oxlint-disable ok/no-raw-error-toast -- pre-rule backlog: toasts here show raw error text; delete this line once the file maps each failure to written copy. See https://github.com/inkeep/open-knowledge/blob/main/lint-plugins/ok-rules/README.md#no-raw-error-toast
 
 import type { OkignoreBinding } from '@inkeep/open-knowledge-core/config/bind-okignore-doc';
+import type { FileTreeSortOrder } from '@inkeep/open-knowledge-core/config/schema';
 import { isDocumentOverOpenByteLimit } from '@inkeep/open-knowledge-core/constants/document-open';
 import type {
   HandoffOutcome,
@@ -68,6 +69,8 @@ import {
   fileEntryFromUploadedPath,
   fileEntryToTreePath,
   filesFromExternalDrop,
+  fileTreeSortSignature,
+  fileTreeSortState,
   folderPathToTreeDirectoryPath,
   isExternalFileDrag,
   normalizeTreePathForKind,
@@ -208,6 +211,7 @@ import {
   subscribeToFileTreeMenuActionImportTemplate,
   subscribeToFileTreeMenuActionRename,
 } from '@/lib/file-tree-menu-action-events';
+import { compareFileTreeSortEntries, type FileTreeSortState } from '@/lib/file-tree-sort';
 import { importTemplate } from '@/lib/folder-config-api';
 import { isOverlayLayerOpen } from '@/lib/overlay-layers';
 import { parseServerResponse, parseSuccessOrWarn } from '@/lib/parse-server-response';
@@ -814,6 +818,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const showHiddenFiles = merged?.appearance?.sidebar?.showHiddenFiles ?? false;
   const showOnlyMarkdownFiles = merged?.appearance?.sidebar?.showOnlyMarkdownFiles ?? false;
   const showOkFolders = merged?.appearance?.sidebar?.showOkFolders ?? false;
+  const sortOrder = merged?.appearance?.sidebar?.sortOrder ?? 'name';
   const previewTabsEnabled = merged?.editor?.previewTabs ?? true;
   const previewDisposition = previewOpenDisposition(previewTabsEnabled);
   const previewOpenOptions = {
@@ -990,6 +995,9 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const copiedKeyboardTargetRef = useRef<FileTreeTarget | null>(null);
   const observeExpandedFolderPathsRef = useRef<(paths: readonly string[]) => void>(() => {});
   const showOkFoldersRef = useRef<boolean>(false);
+  const sortOrderRef = useRef<FileTreeSortOrder>(sortOrder);
+  const sortStateRef = useRef<FileTreeSortState>(fileTreeSortState(sortOrder, documents));
+  const appliedSortSignatureRef = useRef<string | null>(null);
   const fileTreeHostRef = useRef<HTMLDivElement | null>(null);
   const handleSelectionChangeRef = useRef<(selectedPaths: readonly string[]) => void>(() => {});
   const handleRenameRef = useRef<(event: FileTreeRenameEvent) => void>(() => {});
@@ -1144,6 +1152,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
 
   const { model } = useFileTree({
     paths: [],
+    sort: (left, right) => compareFileTreeSortEntries(left, right, sortStateRef.current),
     initialExpansion: 'closed',
     fileTreeSearchMode: 'hide-non-matches',
     initialVisibleRowCount: 18,
@@ -1225,6 +1234,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
 
   const treePaths = documentsToTreePaths(documents);
   const treePathsSignature = treePathSignature(treePaths);
+  const sortSignature = fileTreeSortSignature(sortOrder, documents);
   const treePathsRef = useRef(treePaths);
   const folderTreePaths = collectTreeFolderPathsFromDocuments(documents, {
     includeOkFolders: showOkFolders,
@@ -1263,6 +1273,10 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   };
 
   const resetModelToDocuments = (nextDocuments?: readonly FileEntry[]) => {
+    sortStateRef.current = fileTreeSortState(
+      sortOrderRef.current,
+      nextDocuments ?? documentsRef.current,
+    );
     const nextPaths = documentsToTreePaths(nextDocuments ?? documentsRef.current);
     model.resetPaths(nextPaths, {
       initialExpandedPaths: expandedPathsForReset(nextDocuments),
@@ -1528,16 +1542,19 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     };
   }, []);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: expandedPathsForReset reads refs; model + treePathsSignature are the reset triggers.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: expandedPathsForReset reads refs; model + treePathsSignature + sortSignature are the reset triggers.
   useEffect(() => {
+    const sortChanged = appliedSortSignatureRef.current !== sortSignature;
+    appliedSortSignatureRef.current = sortSignature;
     if (skipNextResetSignatureRef.current === treePathsSignature) {
       skipNextResetSignatureRef.current = null;
-      return;
+      if (!sortChanged) return;
     }
+    sortStateRef.current = fileTreeSortState(sortOrderRef.current, documentsRef.current);
     model.resetPaths(treePathsRef.current, {
       initialExpandedPaths: expandedPathsForReset(),
     });
-  }, [model, treePathsSignature]);
+  }, [model, treePathsSignature, sortSignature]);
 
   useSelectionMirror(
     model,
@@ -2237,6 +2254,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     assetTreePathsRef.current = assetTreePaths;
     busyPathRef.current = busyPath;
     showOkFoldersRef.current = showOkFolders;
+    sortOrderRef.current = sortOrder;
     treePathsRef.current = treePaths;
     folderTreePathsRef.current = folderTreePaths;
     activeAncestorTreePathsRef.current = activeAncestorTreePaths;

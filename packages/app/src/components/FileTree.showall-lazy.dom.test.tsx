@@ -113,7 +113,31 @@ class StubItem {
   focus() {}
 }
 
+type StubSortComparator = (left: StubSortEntry, right: StubSortEntry) => number;
+
+interface StubSortEntry {
+  basename: string;
+  depth: number;
+  isDirectory: boolean;
+  path: string;
+  segments: readonly string[];
+}
+
+function stubSortEntry(path: string): StubSortEntry {
+  const isDirectory = path.endsWith('/');
+  const segments = (isDirectory ? path.slice(0, -1) : path).split('/');
+  return {
+    basename: segments[segments.length - 1] ?? '',
+    depth: segments.length,
+    isDirectory,
+    path,
+    segments,
+  };
+}
+
 class StubModel {
+  sort: StubSortComparator | null = null;
+  order: string[] = [];
   focusedPath: string | null = null;
   selectedPaths: string[] = [];
   items = new Map<string, StubItem>();
@@ -138,6 +162,10 @@ class StubModel {
     return this.items.get(path) ?? null;
   }
   resetPaths(paths: string[], opts?: { initialExpandedPaths?: readonly string[] }) {
+    const sort = this.sort;
+    this.order = sort
+      ? [...paths].sort((left, right) => sort(stubSortEntry(left), stubSortEntry(right)))
+      : [...paths];
     this.items.clear();
     for (const path of paths) {
       this.items.set(path, new StubItem(path, path.endsWith('/'), () => this.notify()));
@@ -254,7 +282,10 @@ vi.doMock('@pierre/trees', () => ({
   themeToTreeStyles: () => ({}),
 }));
 vi.doMock('@pierre/trees/react', () => ({
-  useFileTree: () => ({ model }),
+  useFileTree: (options: { sort?: StubSortComparator }) => {
+    model.sort = options.sort ?? null;
+    return { model };
+  },
   FileTree: ({
     header,
     onClickCapture,
@@ -1541,5 +1572,76 @@ describe('FileTree show-ok-folders visibility', () => {
     );
     await waitFor(() => expect(model.getItem('.ok/')?.isExpanded()).toBe(true));
     expect(model.items.has('.ok/templates/')).toBe(true);
+  });
+});
+
+describe('FileTree sort order', () => {
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  function modifiedDocEntry(docName: string, modified: string) {
+    return { ...docEntry(docName), modified };
+  }
+
+  beforeEach(() => {
+    mergedConfig = { appearance: { sidebar: {} } };
+    showAllResponseFactory = () =>
+      jsonResponse({
+        documents: [
+          modifiedDocEntry('alpha', '2026-01-01T00:00:00.000Z'),
+          modifiedDocEntry('beta', '2026-03-01T00:00:00.000Z'),
+          folderEntry('zeta', true),
+        ],
+        truncated: false,
+      });
+    responseByUrl = new Map();
+    fetchUrls.length = 0;
+    model.items.clear();
+    model.listeners.clear();
+    model.order = [];
+    model.focusedPath = null;
+    model.selectedPaths = [];
+    globalThis.fetch = makeFetchMock() as unknown as typeof fetch;
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    cleanup();
+    consoleWarnSpy.mockRestore();
+  });
+
+  test('defaults to name order with folders first', async () => {
+    render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'alpha.md', 'beta.md']));
+  });
+
+  test('flipping sortOrder to modified re-sorts newest files first without refetching', async () => {
+    const view = render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'alpha.md', 'beta.md']));
+    const fetchesBefore = fetchUrls.length;
+
+    mergedConfig = { appearance: { sidebar: { sortOrder: 'modified' } } };
+    view.rerender(<FileTree />);
+
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'beta.md', 'alpha.md']));
+    expect(fetchUrls).toHaveLength(fetchesBefore);
+  });
+
+  test('in modified order a refreshed listing with a newer time moves that file up', async () => {
+    mergedConfig = { appearance: { sidebar: { sortOrder: 'modified' } } };
+    render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'beta.md', 'alpha.md']));
+
+    showAllResponseFactory = () =>
+      jsonResponse({
+        documents: [
+          modifiedDocEntry('alpha', '2026-05-01T00:00:00.000Z'),
+          modifiedDocEntry('beta', '2026-03-01T00:00:00.000Z'),
+          folderEntry('zeta', true),
+        ],
+        truncated: false,
+      });
+    emitDocumentsChanged(['files']);
+
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'alpha.md', 'beta.md']));
   });
 });
