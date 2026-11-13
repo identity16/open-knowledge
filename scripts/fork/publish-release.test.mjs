@@ -32,9 +32,10 @@ function fixture() {
   return { path, plan, inventory: stagedReleaseInventory(path, plan.version) };
 }
 
-function github(f, corrupt = false, tagSha = null) {
+function github(f, corrupt = false, tagSha = null, listingLag = 0) {
   const sha = 'a'.repeat(40);
   let draft = null;
+  let hiddenListings = 0;
   let latest = { tag_name: 'identity16-v0.76.0-identity16.3' };
   const invoke = vi.fn((args) => {
     const [command, operation] = args;
@@ -42,8 +43,13 @@ function github(f, corrupt = false, tagSha = null) {
       if (operation.includes('/compare/'))
         return JSON.stringify({ status: 'ahead', merge_base_commit: { sha } });
       if (operation.endsWith('/releases/latest')) return JSON.stringify(latest);
-      if (operation.endsWith('/releases?per_page=100'))
+      if (operation.endsWith('/releases?per_page=100')) {
+        if (draft && hiddenListings > 0) {
+          hiddenListings -= 1;
+          return JSON.stringify([[]]);
+        }
         return JSON.stringify([draft ? [draft] : []]);
+      }
       if (operation.endsWith('/git/refs') && args.includes('POST')) {
         tagSha = args.find((arg) => arg.startsWith('sha=')).slice(4);
         return '{}';
@@ -65,7 +71,8 @@ function github(f, corrupt = false, tagSha = null) {
         return JSON.stringify(draft);
       }
     }
-    if (command === 'release' && operation === 'create')
+    if (command === 'release' && operation === 'create') {
+      hiddenListings = listingLag;
       draft = {
         id: 42,
         tag_name: f.plan.tag,
@@ -74,7 +81,7 @@ function github(f, corrupt = false, tagSha = null) {
         assets: [],
         html_url: `${f.plan.downloadBase}`,
       };
-    else if (command === 'release' && operation === 'upload') {
+    } else if (command === 'release' && operation === 'upload') {
       draft.assets = f.inventory.map(({ name, size, digest }) => ({ name, size, digest }));
       if (corrupt) draft.assets[0].digest = 'sha256:bad';
     } else if (command === 'release' && operation === 'edit') {
@@ -179,6 +186,32 @@ describe('atomic fork publication', () => {
     const createRef = g.invoke.mock.calls.find(([args]) => args.includes('POST'))[0];
     expect(createRef).toContain(`sha=${g.env.GITHUB_SHA}`);
     expect(createRef).not.toContain(`sha=${env.GITHUB_SHA}`);
+  });
+
+  test('waits for a just-created draft that the release listing has not caught up with', () => {
+    const f = fixture();
+    const g = github(f, false, null, 3);
+    const pause = vi.fn();
+    const proof = stageForkRelease(
+      f.plan.version,
+      f.path,
+      g.env.GITHUB_SHA,
+      g.env,
+      g.invoke,
+      pause,
+    );
+    expect(proof.releaseId).toBe(42);
+    expect(pause).toHaveBeenCalledTimes(3);
+  });
+
+  test('gives up when a created draft never appears in the release listing', () => {
+    const f = fixture();
+    const g = github(f, false, null, 100);
+    const pause = vi.fn();
+    expect(() =>
+      stageForkRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke, pause),
+    ).toThrow(/did not confirm creation/);
+    expect(pause).toHaveBeenCalledTimes(9);
   });
 
   test('retries a lost publication response without changing public files or regressing latest', () => {

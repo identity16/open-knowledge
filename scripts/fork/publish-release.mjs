@@ -148,7 +148,21 @@ export function preflightForkRelease(version, sourceSha, env = process.env, invo
   return release;
 }
 
-export function stageForkRelease(version, directory, sourceSha, env = process.env, invoke = gh) {
+const DRAFT_VISIBILITY_ATTEMPTS = 10;
+const DRAFT_VISIBILITY_PAUSE_MS = 2_000;
+
+function pauseSync(milliseconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+export function stageForkRelease(
+  version,
+  directory,
+  sourceSha,
+  env = process.env,
+  invoke = gh,
+  pause = pauseSync,
+) {
   const { plan, api, findRelease } = publicationContext(version, sourceSha, env, invoke);
   let release = preflightForkRelease(version, sourceSha, env, invoke);
   const inventory = stagedReleaseInventory(directory, version);
@@ -172,6 +186,10 @@ export function stageForkRelease(version, directory, sourceSha, env = process.en
       `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the fork web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION_IDENTITY16.md`,
     ]);
     release = findRelease();
+    for (let attempt = 1; !release && attempt < DRAFT_VISIBILITY_ATTEMPTS; attempt += 1) {
+      pause(DRAFT_VISIBILITY_PAUSE_MS);
+      release = findRelease();
+    }
     if (!release?.draft) throw new Error('GitHub did not confirm creation of the draft release.');
   }
   invoke([
