@@ -74,22 +74,18 @@ jobs:
       - name: Build web GUI and CLI
         if: steps.restore.outputs.reused != 'true'
         run: pnpm exec node scripts/fork/build-release.mjs "$FORK_VERSION" "$PWD/.fork-release/web"
-      - name: Start fork product boundary tests alongside signing
+      - name: Test fork product boundaries
         if: steps.restore.outputs.reused != 'true'
         run: |
-          nohup bash -c 'pnpm --dir packages/core exec vitest run src/constants/product.test.ts src/constants/path-shim-layout.test.ts --maxWorkers=2 && pnpm --dir packages/cli exec vitest run src/commands/desktop-dispatch.test.ts src/commands/identity16-mcp-launcher.test.ts src/commands/stop.test.ts --maxWorkers=2 && pnpm --dir packages/desktop exec vitest run src/shared/desktop-variant.test.ts src/shared/release-links.test.ts tests/unit/desktop-variant-config.test.ts tests/unit/auto-updater-apply-channel.test.ts tests/unit/electron-vite-release-config.test.ts --maxWorkers=2; echo $? > .fork-release/boundaries.exit' > .fork-release/boundaries.log 2>&1 &
+          pnpm --dir packages/core exec vitest run src/constants/product.test.ts src/constants/path-shim-layout.test.ts --maxWorkers=2
+          pnpm --dir packages/cli exec vitest run src/commands/desktop-dispatch.test.ts src/commands/identity16-mcp-launcher.test.ts src/commands/stop.test.ts --maxWorkers=2
+          pnpm --dir packages/desktop exec vitest run src/shared/desktop-variant.test.ts src/shared/release-links.test.ts tests/unit/desktop-variant-config.test.ts tests/unit/auto-updater-apply-channel.test.ts tests/unit/electron-vite-release-config.test.ts --maxWorkers=2
       - name: Build and verify signed application
         if: steps.restore.outputs.reused != 'true'
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: pnpm exec node scripts/fork/release-workflow.mjs sign
-      - name: Require fork product boundary tests to pass
-        if: steps.restore.outputs.reused != 'true'
-        run: |
-          until [ -f .fork-release/boundaries.exit ]; do sleep 2; done
-          cat .fork-release/boundaries.log
-          exit "$(cat .fork-release/boundaries.exit)"
       - name: Preserve signed application before notarization
         if: steps.restore.outputs.reused != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
