@@ -10,6 +10,11 @@ on:
         description: 'Original signed build run ID; leave empty for a new release or automatic rerun recovery'
         required: false
         type: string
+      build_only:
+        description: 'Stop after the signed build to measure it; nothing is notarized or published'
+        required: false
+        type: boolean
+        default: false
 cache-mode: none
 permissions:
   contents: read
@@ -85,7 +90,7 @@ jobs:
           retention-days: 3
   notarize:
     needs: build
-    if: github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.outputs.ready_run_id == ''
+    if: github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.outputs.ready_run_id == '' && !inputs.build_only
     environment: release-signing
     runs-on: macos-26
     timeout-minutes: 60
@@ -123,7 +128,7 @@ jobs:
         run: node scripts/fork/release-workflow.mjs wait
   package:
     needs: [build, notarize]
-    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && (needs.notarize.result == 'success' || needs.notarize.result == 'skipped')
+    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && (needs.notarize.result == 'success' || needs.notarize.result == 'skipped') && !inputs.build_only
     environment: release-signing
     runs-on: macos-26
     timeout-minutes: 30
@@ -169,7 +174,7 @@ jobs:
           retention-days: 3
   publish:
     needs: [build, package]
-    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && needs.package.result == 'success'
+    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && needs.package.result == 'success' && !inputs.build_only
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

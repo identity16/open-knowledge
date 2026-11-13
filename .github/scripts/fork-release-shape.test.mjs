@@ -12,7 +12,14 @@ const command = (job, suffix) =>
 describe('recoverable fork release workflow', () => {
   test('keeps all release stages on fork main and exposes only the approved resume input', () => {
     expect(workflow.on.push).toBeUndefined();
-    expect(Object.keys(workflow.on.workflow_dispatch.inputs)).toEqual(['version', 'resume_run_id']);
+    expect(Object.keys(workflow.on.workflow_dispatch.inputs)).toEqual([
+      'version',
+      'resume_run_id',
+      'build_only',
+    ]);
+    expect(workflow.on.workflow_dispatch.inputs.build_only.default).toBe(false);
+    for (const name of ['notarize', 'package', 'publish'])
+      expect(jobs[name].if).toContain('!inputs.build_only');
     expect(workflow.on.workflow_dispatch.inputs.version.required).toBe(true);
     expect(workflow.on.workflow_dispatch.inputs.resume_run_id.required).toBe(false);
     expect(workflow.permissions.actions).toBe('read');
