@@ -1,9 +1,7 @@
 import { fileURLToPath } from 'node:url';
-import babel from '@rolldown/plugin-babel';
-import react from '@vitejs/plugin-react';
 import { build, type Plugin } from 'vite';
 import { RENDERER_DEDUPE } from '../../../app/vite.dedupe';
-import { RENDERER_BABEL_OPTIONS } from '../../../app/vite.react-babel';
+import { rendererPlugins } from '../../../app/vite.renderer-plugins';
 
 const APP_ROOT = fileURLToPath(new URL('../../../app/', import.meta.url));
 const UNINSTALL_ENTRY = fileURLToPath(
@@ -126,8 +124,9 @@ export async function buildUninstallModuleGraph(
     configFile: false,
     logLevel: 'silent',
     plugins: [
-      react(),
-      babel(RENDERER_BABEL_OPTIONS),
+      ...rendererPlugins({
+        linguiConfigPath: fileURLToPath(new URL('../../../app/lingui.config.ts', import.meta.url)),
+      }),
       probeEntryPlugin([UNINSTALL_ENTRY, ...extraEntryImports]),
       capture,
     ],

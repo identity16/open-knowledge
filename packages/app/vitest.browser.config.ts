@@ -1,10 +1,7 @@
 import { fileURLToPath } from 'node:url';
-import babel from '@rolldown/plugin-babel';
-import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { configDefaults, defineConfig, type ViteUserConfig } from 'vitest/config';
 import { okVitestBase } from '../../test-support/vitest.base';
-import { babelOutputCache } from './tests/foundation/babel-output-cache';
 import {
   BROWSER_OPTIMIZE_DEPS_INCLUDE,
   dependencyReloadGuard,
@@ -23,7 +20,7 @@ import {
 import { buildAppStylesheet } from './tests/foundation/build-app-stylesheet';
 import { chromiumGcLaunchEnvGuard } from './tests/foundation/chromium-gc-launch-env';
 import { RENDERER_DEDUPE } from './vite.dedupe';
-import { RENDERER_BABEL_OPTIONS, rendererLinguiPlugins } from './vite.react-babel';
+import { rendererPlugins } from './vite.renderer-plugins';
 
 const srcDir = fileURLToPath(new URL('./src/', import.meta.url));
 
@@ -32,12 +29,6 @@ const BROWSER_FILE_BRIDGE_ROOTS = [
   fileURLToPath(new URL('./tests/', import.meta.url)),
   fileURLToPath(new URL('../../test-support/', import.meta.url)),
 ];
-
-export const APP_BROWSER_BABEL_OUTPUT = babelOutputCache();
-
-export function appBrowserBabelPasses() {
-  return [babel({ ...RENDERER_BABEL_OPTIONS, exclude: [...BROWSER_PRODUCT_MODULE_EXCLUDES] })];
-}
 
 export const APP_BROWSER_SETUP_FILES = [
   fileURLToPath(new URL('./tests/foundation/browser-setup.ts', import.meta.url)),
@@ -52,9 +43,10 @@ export const appBrowserVitestConfig = {
     dependencyReloadGuard(),
     browserCiValue(process.env),
     browserNodeSubstitutes(BROWSER_FILE_BRIDGE_ROOTS),
-    react(),
-    ...rendererLinguiPlugins(fileURLToPath(new URL('./lingui.config.ts', import.meta.url))),
-    ...appBrowserBabelPasses().map((pass, index) => APP_BROWSER_BABEL_OUTPUT.wrap(pass, index)),
+    ...rendererPlugins({
+      linguiConfigPath: fileURLToPath(new URL('./lingui.config.ts', import.meta.url)),
+      compilerExclude: BROWSER_PRODUCT_MODULE_EXCLUDES,
+    }),
   ],
   resolve: {
     conditions: ['module', 'browser', 'development'],

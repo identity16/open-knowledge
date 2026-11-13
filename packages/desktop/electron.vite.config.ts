@@ -1,12 +1,10 @@
 import { resolve } from 'node:path';
-import babel from '@rolldown/plugin-babel';
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'electron-vite';
 import { injectAppVersionEnv } from '../app/src/build/app-version';
 import { chromeTokensVitePlugin } from '../app/src/build/chrome-tokens-vite-plugin';
 import { RENDERER_DEDUPE } from '../app/vite.dedupe';
 import { rendererHtmlInput } from '../app/vite.entries';
-import { RENDERER_BABEL_OPTIONS, rendererLinguiPlugins } from '../app/vite.react-babel';
+import { rendererPlugins } from '../app/vite.renderer-plugins';
 import { parseDesktopVariantName } from './src/shared/desktop-variant';
 
 // Inject the app's version onto import.meta.env.VITE_APP_VERSION for the
@@ -130,9 +128,7 @@ export default defineConfig({
     root: appRoot,
     plugins: [
       chromeTokensVitePlugin({ globalsCssPath: resolve(appRoot, 'src/globals.css') }),
-      react(),
-      ...rendererLinguiPlugins(resolve(appRoot, 'lingui.config.ts')),
-      babel(RENDERER_BABEL_OPTIONS),
+      ...rendererPlugins({ linguiConfigPath: resolve(appRoot, 'lingui.config.ts') }),
     ],
     resolve: {
       alias: {

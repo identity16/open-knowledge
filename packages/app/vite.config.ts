@@ -1,6 +1,4 @@
 import { join } from 'node:path';
-import babel from '@rolldown/plugin-babel';
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { injectAppVersionEnv } from './src/build/app-version';
 import { chromeTokensVitePlugin } from './src/build/chrome-tokens-vite-plugin';
@@ -16,7 +14,7 @@ import {
 import { hocuspocusPlugin } from './src/server/hocuspocus-plugin';
 import { RENDERER_DEDUPE } from './vite.dedupe';
 import { RENDERER_HTML_ENTRIES, rendererHtmlInput } from './vite.entries';
-import { RENDERER_BABEL_OPTIONS, rendererLinguiPlugins } from './vite.react-babel';
+import { rendererPlugins } from './vite.renderer-plugins';
 
 // Inject the app's own version onto import.meta.env.VITE_APP_VERSION for the
 // browser bundle (telemetry resource + client-version wire builder). Covers
@@ -72,9 +70,7 @@ export default defineConfig({
     // for the loop it breaks.
     rejectionLoopGuardPlugin(),
     chromeTokensVitePlugin(),
-    react(),
-    ...rendererLinguiPlugins(join(import.meta.dirname, 'lingui.config.ts')),
-    babel(RENDERER_BABEL_OPTIONS),
+    ...rendererPlugins({ linguiConfigPath: join(import.meta.dirname, 'lingui.config.ts') }),
     hocuspocusPlugin(),
     ...(startupRequest === undefined
       ? []
