@@ -22,6 +22,7 @@
     "build": "turbo run build",
     "build:desktop": "turbo run build:desktop",
     "fork:deploy-local": "node scripts/fork/deploy-local.mjs",
+    "fork:preview": "node scripts/fork/preview.mjs",
     "fork:verify": "node scripts/fork/verify.mjs",
     "build:desktop:dir": "turbo run build:desktop:dir",
     "check:desktop": "turbo run lint typecheck test --filter=@inkeep/open-knowledge-desktop && pnpm run test:uncached",

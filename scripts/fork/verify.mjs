@@ -113,6 +113,7 @@ function main() {
         'scripts/fork/channel.test.mjs',
         'scripts/fork/deploy-local.test.mjs',
         'scripts/fork/verify.test.mjs',
+        'scripts/fork/preview.test.mjs',
       ]),
     );
   console.log('\nSummary');
