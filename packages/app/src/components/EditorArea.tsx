@@ -71,6 +71,7 @@ import {
   partitionFrontmatterProblems,
   useFrontmatterDiagnostics,
 } from '@/editor/useFrontmatterDiagnostics';
+import { useCollapseComposerOnScroll } from '@/hooks/use-collapse-composer-on-scroll';
 import { useDocConflict } from '@/hooks/use-conflicts';
 import { useDocumentStats } from '@/hooks/use-document-stats';
 import { useSelectionStats } from '@/hooks/use-selection-stats';
@@ -1394,6 +1395,10 @@ function EditorAreaInner({
   const previousDocNameRef = useRef<string | null>(null);
   const [previousDocName, setPreviousDocName] = useState<string | null>(null);
   const [composerDismissed, setComposerDismissed] = useState(false);
+  const collapseComposerOnScrollRef = useCollapseComposerOnScroll({
+    enabled: !composerDismissed,
+    onCollapse: () => setComposerDismissed(true),
+  });
   const [blobRunRevealedTabId, setBlobRunRevealedTabId] = useState<string | null>(null);
   const activeDocumentHistoryName =
     activeTarget?.kind === 'large-file' ? activeTarget.docName : activeDocName;
@@ -1565,7 +1570,7 @@ function EditorAreaInner({
           </Suspense>
         ) : null}
         <DocChangeNotice docName={activeDocName} timelineAvailable={!noteWindow} />
-        <div className="relative min-h-0 flex-1">
+        <div ref={collapseComposerOnScrollRef} className="relative min-h-0 flex-1">
           <div className="relative h-full">
             {activityMount}
             <FindReplaceController activeDocName={activeDocName} isSourceMode={isSourceMode} />

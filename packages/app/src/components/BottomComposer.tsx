@@ -1002,6 +1002,7 @@ export function BottomComposer({
   return (
     <div
       className="pointer-events-none absolute inset-x-0 bottom-[var(--conflict-footer-height,0px)] z-20 editor-content-aligned bg-gradient-to-t from-background from-65% via-background to-transparent pt-10 pb-2"
+      data-bottom-composer=""
       data-testid="bottom-composer"
     >
       {card}
