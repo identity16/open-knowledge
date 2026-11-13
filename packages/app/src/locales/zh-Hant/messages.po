@@ -3508,6 +3508,9 @@ msgstr "資料"
 msgid "Date"
 msgstr "日期"
 
+msgid "Date modified"
+msgstr "修改日期"
+
 msgid "Default"
 msgstr "預設"
 

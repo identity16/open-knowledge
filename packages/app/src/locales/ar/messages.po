@@ -3508,6 +3508,9 @@ msgstr "البيانات"
 msgid "Date"
 msgstr "التاريخ"
 
+msgid "Date modified"
+msgstr "تاريخ التعديل"
+
 msgid "Default"
 msgstr "الافتراضي"
 

@@ -3508,6 +3508,9 @@ msgstr "Données"
 msgid "Date"
 msgstr "Date"
 
+msgid "Date modified"
+msgstr "Date de modification"
+
 msgid "Default"
 msgstr "Par defaut"
 

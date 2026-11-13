@@ -344,6 +344,55 @@ vi.doMock('@/components/ui/dropdown-menu', () => ({
   ),
   DropdownMenuItem: Button,
   DropdownMenuLabel: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  DropdownMenuRadioGroup: ({
+    children,
+    value,
+    onValueChange,
+  }: {
+    children?: ReactNode;
+    value?: string;
+    onValueChange?: (value: string) => void;
+  }) => (
+    <div role="radiogroup">
+      {(Array.isArray(children) ? children : [children]).map((child) =>
+        isValidElement<{ value?: string }>(child)
+          ? cloneElement(child as ReactElement<Record<string, unknown>>, {
+              checked: child.props.value === value,
+              onPick: () => onValueChange?.(child.props.value ?? ''),
+            })
+          : child,
+      )}
+    </div>
+  ),
+  DropdownMenuRadioItem: ({
+    children,
+    checked,
+    onPick,
+    onSelect,
+    value: _value,
+    ...props
+  }: {
+    children?: ReactNode;
+    checked?: boolean;
+    onPick?: () => void;
+    onSelect?: (event: Event) => void;
+    value?: string;
+    [key: string]: unknown;
+  }) => (
+    <button
+      type="button"
+      role="menuitemradio"
+      aria-checked={checked ? 'true' : 'false'}
+      onClick={() => {
+        const event = new Event('menu.itemSelect', { cancelable: true });
+        onSelect?.(event);
+        if (!event.defaultPrevented) onPick?.();
+      }}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
   DropdownMenuSeparator: () => <hr data-testid="dropdown-menu-separator" />,
   DropdownMenuTrigger: TriggerPassThrough,
 }));
@@ -654,7 +703,7 @@ describe('FileSidebar runtime behavior', () => {
     const menu = screen.getByTestId('tree-options-menu');
     expect(within(menu).getByRole('button', { name: 'Expand all' })).toBeTruthy();
     const collapseAll = within(menu).getByRole('button', { name: 'Collapse all' });
-    expect(within(menu).getAllByTestId('dropdown-menu-separator')).toHaveLength(3);
+    expect(within(menu).getAllByTestId('dropdown-menu-separator')).toHaveLength(4);
 
     const group = within(menu).getByRole('group', { name: 'Show' });
     const checkboxes = within(group).getAllByRole('menuitemcheckbox');
@@ -684,8 +733,9 @@ describe('FileSidebar runtime behavior', () => {
     const menu = screen.getByTestId('tree-options-menu');
     expect(within(menu).queryByRole('button', { name: 'Expand all' })).toBeNull();
     expect(within(menu).queryByRole('button', { name: 'Collapse all' })).toBeNull();
-    expect(within(menu).getAllByTestId('dropdown-menu-separator')).toHaveLength(2);
+    expect(within(menu).getAllByTestId('dropdown-menu-separator')).toHaveLength(3);
     expect(within(menu).getAllByRole('menuitemcheckbox')).toHaveLength(5);
+    expect(within(menu).getAllByRole('menuitemradio')).toHaveLength(3);
     expect(within(menu).getByRole('button', { name: 'Hide Files' })).toBeTruthy();
   });
 
@@ -726,6 +776,26 @@ describe('FileSidebar runtime behavior', () => {
     fireEvent.click(within(menu).getByTestId('tree-options-show-skills'));
     expect(projectLocalPatch).toHaveBeenCalledWith({
       appearance: { sidebar: { showSkillsSection: false } },
+    });
+  });
+
+  test('Sort by radio items show the current order and write a new one', async () => {
+    mergedConfig = { appearance: { sidebar: { sortOrder: 'modified' } } };
+    await renderSidebar();
+    const menu = screen.getByTestId('tree-options-menu');
+
+    expect(
+      within(menu).getByTestId('tree-options-sort-modified').getAttribute('aria-checked'),
+    ).toBe('true');
+    expect(within(menu).getByTestId('tree-options-sort-name').getAttribute('aria-checked')).toBe(
+      'false',
+    );
+
+    fireEvent.click(within(menu).getByTestId('tree-options-sort-modified'));
+    expect(projectLocalPatch).not.toHaveBeenCalled();
+    fireEvent.click(within(menu).getByTestId('tree-options-sort-manual'));
+    expect(projectLocalPatch).toHaveBeenCalledWith({
+      appearance: { sidebar: { sortOrder: 'manual' } },
     });
   });
 

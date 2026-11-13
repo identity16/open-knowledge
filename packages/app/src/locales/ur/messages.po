@@ -3508,6 +3508,9 @@ msgstr "ڈیٹا"
 msgid "Date"
 msgstr "تاریخ"
 
+msgid "Date modified"
+msgstr "ترمیم کی تاریخ"
+
 msgid "Default"
 msgstr "ڈیفالٹ"
 

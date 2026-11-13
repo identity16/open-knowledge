@@ -3504,6 +3504,9 @@ msgstr "Dados"
 msgid "Date"
 msgstr "Data"
 
+msgid "Date modified"
+msgstr "Data de modificação"
+
 msgid "Default"
 msgstr "Padrao"
 

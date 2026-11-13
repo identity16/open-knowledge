@@ -3504,6 +3504,9 @@ msgstr "डेटा"
 msgid "Date"
 msgstr "तारीख़"
 
+msgid "Date modified"
+msgstr "संशोधन तिथि"
+
 msgid "Default"
 msgstr "डिफ़ॉल्ट"
 
