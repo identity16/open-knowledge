@@ -75,74 +75,136 @@ function activate(target) {
   renameSync(pending, current);
 }
 
+const localPinPrefix = 'local:';
+
+export function localPinBaseline(pin) {
+  return pin.startsWith(localPinPrefix) ? pin.slice(localPinPrefix.length) : null;
+}
+
+export function keepsLocalPin(pin, latestTag) {
+  const baseline = localPinBaseline(pin);
+  return baseline !== null && baseline === latestTag;
+}
+
+function readState() {
+  const path = join(base, 'state.json');
+  return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
+}
+
+function writeState(state) {
+  writeFileSync(join(base, 'state.json'), `${JSON.stringify({ repository, ...state }, null, 2)}\n`);
+}
+
+function withLock(work) {
+  mkdirSync(join(base, 'releases'), { recursive: true });
+  const lock = join(base, 'update.lock');
+  mkdirSync(lock);
+  return Promise.resolve()
+    .then(work)
+    .finally(() => rmSync(lock, { recursive: true, force: true }));
+}
+
+function installArchive(archive, target) {
+  const staging = mkdtempSync(join(base, 'releases', '.install-'));
+  try {
+    execFileSync(
+      'npm',
+      [
+        'install',
+        '--prefix',
+        staging,
+        '--omit=dev',
+        '--ignore-scripts',
+        '--no-audit',
+        '--no-fund',
+        archive,
+      ],
+      { stdio: 'inherit', timeout: 300_000 },
+    );
+    const cli = join(staging, cliRelative);
+    execFileSync(process.execPath, [cli, '--version'], { stdio: 'inherit', timeout: 30_000 });
+    if (!existsSync(join(dirname(cli), 'public/index.html')))
+      throw new Error('Web GUI assets are missing.');
+    rmSync(join(staging, assetName), { force: true });
+    renameSync(staging, target);
+  } catch (error) {
+    rmSync(staging, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+function switchTo(target) {
+  const previous = existsSync(current) ? readlinkSync(current) : null;
+  activate(target);
+  const nextChannel = join(target, dirname(cliRelative), 'identity16-channel.mjs');
+  if (existsSync(nextChannel)) {
+    const pendingChannel = join(base, 'channel.pending.mjs');
+    copyFileSync(nextChannel, pendingChannel);
+    renameSync(pendingChannel, join(base, 'channel.mjs'));
+  }
+  return previous;
+}
+
+function releaseBaseline(state) {
+  if (!state) return null;
+  return state.baseline ?? state.tag ?? null;
+}
+
 export async function update({ force = false } = {}) {
   if (process.platform !== 'darwin' || process.arch !== 'arm64')
     throw new Error('This channel supports macOS Apple Silicon.');
   mkdirSync(join(base, 'releases'), { recursive: true });
-  if (!force && existsSync(join(base, 'pinned'))) return;
-  const lock = join(base, 'update.lock');
-  mkdirSync(lock);
-  let staging;
-  try {
+  const pinPath = join(base, 'pinned');
+  const pin = existsSync(pinPath) ? readFileSync(pinPath, 'utf8').trim() : null;
+  if (!force && pin !== null && localPinBaseline(pin) === null) return;
+  await withLock(async () => {
     const release = JSON.parse(
       await download(`https://api.github.com/repos/${repository}/releases/latest`),
     );
     const { tag, asset, checksums } = releaseIdentity(release);
+    if (!force && pin !== null && keepsLocalPin(pin, tag)) return;
     const target = join(base, 'releases', tag);
     if (existsSync(current) && readlinkSync(current) === target) {
-      if (force) rmSync(join(base, 'pinned'), { force: true });
+      if (force) rmSync(pinPath, { force: true });
       console.error(`Already installed: ${tag}`);
       return;
     }
     if (!existsSync(target)) {
-      staging = mkdtempSync(join(base, 'releases', '.install-'));
-      const [bytes, checksumBytes] = await Promise.all([
-        download(asset.browser_download_url),
-        download(checksums.browser_download_url),
-      ]);
-      verifyChecksum(bytes, checksumBytes.toString('utf8'));
-      const archive = join(staging, assetName);
-      writeFileSync(archive, bytes);
-      execFileSync(
-        'npm',
-        [
-          'install',
-          '--prefix',
-          staging,
-          '--omit=dev',
-          '--ignore-scripts',
-          '--no-audit',
-          '--no-fund',
-          archive,
-        ],
-        { stdio: 'inherit', timeout: 300_000 },
-      );
-      const cli = join(staging, cliRelative);
-      execFileSync(process.execPath, [cli, '--version'], { stdio: 'inherit', timeout: 30_000 });
-      if (!existsSync(join(dirname(cli), 'public/index.html')))
-        throw new Error('Web GUI assets are missing.');
-      rmSync(archive);
-      renameSync(staging, target);
-      staging = undefined;
+      const staging = mkdtempSync(join(base, 'releases', '.download-'));
+      try {
+        const [bytes, checksumBytes] = await Promise.all([
+          download(asset.browser_download_url),
+          download(checksums.browser_download_url),
+        ]);
+        verifyChecksum(bytes, checksumBytes.toString('utf8'));
+        const archive = join(staging, assetName);
+        writeFileSync(archive, bytes);
+        installArchive(archive, target);
+      } finally {
+        rmSync(staging, { recursive: true, force: true });
+      }
     }
-    const previous = existsSync(current) ? readlinkSync(current) : null;
-    activate(target);
-    writeFileSync(
-      join(base, 'state.json'),
-      `${JSON.stringify({ repository, tag, previous }, null, 2)}\n`,
-    );
-    rmSync(join(base, 'pinned'), { force: true });
-    const nextChannel = join(target, dirname(cliRelative), 'identity16-channel.mjs');
-    if (existsSync(nextChannel)) {
-      const pendingChannel = join(base, 'channel.pending.mjs');
-      copyFileSync(nextChannel, pendingChannel);
-      renameSync(pendingChannel, join(base, 'channel.mjs'));
-    }
+    const previous = switchTo(target);
+    writeState({ tag, previous });
+    rmSync(pinPath, { force: true });
     console.error(`Installed ${repository}@${tag}`);
-  } finally {
-    if (staging) rmSync(staging, { recursive: true, force: true });
-    rmSync(lock, { recursive: true, force: true });
-  }
+  });
+}
+
+export async function installLocal(archive, label) {
+  if (!/^local-[A-Za-z0-9.-]+$/.test(label)) throw new Error(`Invalid local build label: ${label}`);
+  await withLock(() => {
+    const target = join(base, 'releases', label);
+    if (existsSync(target)) rmSync(target, { recursive: true, force: true });
+    installArchive(archive, target);
+    const baseline = releaseBaseline(readState());
+    const previous = switchTo(target);
+    writeState({ tag: label, previous, baseline });
+    writeFileSync(join(base, 'pinned'), `${localPinPrefix}${baseline ?? ''}`);
+    console.error(
+      `Installed local build ${label}; it stays until a release newer than ${baseline ?? 'none'} is published.`,
+    );
+  });
 }
 
 function rollback() {
@@ -152,16 +214,14 @@ function rollback() {
   const previous = readlinkSync(current);
   activate(state.previous);
   writeFileSync(join(base, 'pinned'), state.previous);
-  writeFileSync(
-    join(base, 'state.json'),
-    `${JSON.stringify({ repository, tag: state.previous.split('/').at(-1), previous }, null, 2)}\n`,
-  );
+  writeState({ tag: state.previous.split('/').at(-1), previous, baseline: releaseBaseline(state) });
 }
 
 async function main() {
   const [command, ...args] = process.argv.slice(2);
   if (command === 'update') return update({ force: true });
   if (command === 'rollback') return rollback();
+  if (command === 'install-local') return installLocal(resolve(args[0] ?? ''), args[1] ?? '');
   if (command === 'status') {
     console.log(
       existsSync(current) ? readFileSync(join(base, 'state.json'), 'utf8') : 'Not installed',
@@ -185,7 +245,7 @@ async function main() {
     return;
   }
   throw new Error(
-    'Usage: channel.mjs update | status | rollback | run <ok arguments> | start <ok arguments>',
+    'Usage: channel.mjs update | status | rollback | install-local <archive> <label> | run <ok arguments> | start <ok arguments>',
   );
 }
 
