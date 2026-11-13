@@ -34,6 +34,7 @@ jobs:
     environment: release-signing
     runs-on: macos-26
     timeout-minutes: 45
+    cache-mode: write
     outputs:
       candidate_run_id: ${{ steps.restore.outputs.candidate_run_id }}
       ready_run_id: ${{ steps.restore.outputs.ready_run_id }}
@@ -51,10 +52,26 @@ jobs:
           RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: node scripts/fork/release-workflow.mjs restore
       - name: Install build tools
+        id: tools
         if: steps.restore.outputs.reused != 'true'
         run: |
           npm install --global pnpm@12.8.1
           rustup toolchain install --no-self-update
+          echo "pnpm_store=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Reuse the pnpm store from earlier fork builds
+        if: steps.restore.outputs.reused != 'true'
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        with:
+          path: ${{ steps.tools.outputs.pnpm_store }}
+          key: fork-pnpm-store-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: fork-pnpm-store-${{ runner.os }}-${{ runner.arch }}-
+      - name: Reuse turbo task outputs from earlier fork builds
+        if: steps.restore.outputs.reused != 'true'
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        with:
+          path: .turbo/cache
+          key: fork-turbo-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          restore-keys: fork-turbo-${{ runner.os }}-${{ runner.arch }}-
       - name: Install dependencies
         if: steps.restore.outputs.reused != 'true'
         run: pnpm install --frozen-lockfile

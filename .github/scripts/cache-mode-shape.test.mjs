@@ -26,6 +26,8 @@ const SHIPS = [
   'release.yml#build',
 ];
 
+const FORK_CACHED_BUILDS = ['identity16-web-release.yml#build'];
+
 const QA_BUILDS = [
   'desktop-build-win-linux.yml#build-linux',
   'desktop-build-win-linux.yml#build-windows',
@@ -68,7 +70,7 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
       'desktop-release.yml#finalize': 'none',
       'desktop-release.yml#release-consumers': 'none',
       'desktop-release.yml#alert': 'none',
-      'identity16-web-release.yml#build': 'none',
+      'identity16-web-release.yml#build': 'write',
       'identity16-web-release.yml#notarize': 'none',
       'identity16-web-release.yml#package': 'none',
       'identity16-web-release.yml#publish': 'none',
@@ -88,10 +90,27 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
     });
   });
 
-  test.each(credentialed.map(({ label, workflow, job }) => [label, workflow, job]))(
-    '%s extracts no cache entry and its mode matches its operations',
-    (_label, workflow, job) => {
-      expect(cacheModeProblems(workflow, job)).toEqual([]);
+  test.each(
+    credentialed
+      .filter(({ label }) => !FORK_CACHED_BUILDS.includes(label))
+      .map(({ label, workflow, job }) => [label, workflow, job]),
+  )('%s extracts no cache entry and its mode matches its operations', (_label, workflow, job) => {
+    expect(cacheModeProblems(workflow, job)).toEqual([]);
+  });
+
+  test.each(FORK_CACHED_BUILDS)(
+    '%s only extracts fork-owned build caches and declares the write mode they need',
+    (label) => {
+      const { workflow, job } = allJobs.find((candidate) => candidate.label === label);
+      const problems = cacheModeProblems(workflow, job);
+      expect(
+        problems.every((problem) => problem.startsWith('extracts a cache entry at Reuse ')),
+      ).toBe(true);
+      const keys = job.steps
+        .filter((step) => step.uses?.startsWith('actions/cache@'))
+        .map((step) => step.with.key);
+      expect(keys.length).toBeGreaterThan(0);
+      expect(keys.every((key) => key.startsWith('fork-'))).toBe(true);
     },
   );
 
