@@ -2901,6 +2901,9 @@ msgstr "Não foi possível ler o estado dos ramos deste projeto. Feche este diá
 msgid "Could not save sync preference: {detail}"
 msgstr "Não foi possível salvar a preferência de sincronização: {detail}"
 
+msgid "Could not save the file order"
+msgstr "Não foi possível salvar a ordem dos arquivos"
+
 msgid "Could not start creating a new item"
 msgstr "Não foi possível começar a criar um novo item"
 

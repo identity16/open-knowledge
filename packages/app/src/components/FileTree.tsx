@@ -1,6 +1,7 @@
 // oxlint-disable ok/no-raw-error-toast -- pre-rule backlog: toasts here show raw error text; delete this line once the file maps each failure to written copy. See https://github.com/inkeep/open-knowledge/blob/main/lint-plugins/ok-rules/README.md#no-raw-error-toast
 
 import type { OkignoreBinding } from '@inkeep/open-knowledge-core/config/bind-okignore-doc';
+import { humanFormat } from '@inkeep/open-knowledge-core/config/errors';
 import type { FileTreeSortOrder } from '@inkeep/open-knowledge-core/config/schema';
 import { isDocumentOverOpenByteLimit } from '@inkeep/open-knowledge-core/constants/document-open';
 import type {
@@ -71,6 +72,7 @@ import {
   filesFromExternalDrop,
   fileTreeSortSignature,
   fileTreeSortState,
+  folderChildTreePaths,
   folderPathToTreeDirectoryPath,
   isExternalFileDrag,
   normalizeTreePathForKind,
@@ -196,6 +198,7 @@ import { requestPreviewTabPromotionForTab } from '@/editor/preview-tab-promotion
 import { useConflicts } from '@/hooks/use-conflicts';
 import { useFolderConfig } from '@/hooks/use-folder-config';
 import { useGitSyncStatusDetailed } from '@/hooks/use-git-sync-status';
+import { useSettingsLoadingReason } from '@/lib/config-context';
 import { useConfigContext } from '@/lib/config-provider';
 import {
   hashFromAssetPath,
@@ -215,7 +218,11 @@ import {
   compareFileTreeSortEntries,
   type FileTreeManualOrder,
   type FileTreeSortState,
+  manualOrderFolderKey,
   NO_MANUAL_ORDER,
+  reorderedFolderNames,
+  treePathBasename,
+  treePathSortEntry,
 } from '@/lib/file-tree-sort';
 import { importTemplate } from '@/lib/folder-config-api';
 import { isOverlayLayerOpen } from '@/lib/overlay-layers';
@@ -424,12 +431,41 @@ const FILE_TREE_NAME_FOREGROUND_CSS = `
   }
 `;
 
+const FILE_TREE_REORDER_DROP_CSS = `
+  [data-type="item"][data-item-drop-position] {
+    position: relative;
+  }
+  [data-type="item"][data-item-drop-position]::before {
+    content: "";
+    position: absolute;
+    left: 0.25rem;
+    right: 0.25rem;
+    height: 2px;
+    z-index: 20;
+    border-radius: 1px;
+    background: var(--color-primary);
+    pointer-events: none;
+  }
+  [data-type="item"][data-item-drop-position="before"]::before {
+    top: -1px;
+  }
+  [data-type="item"][data-item-drop-position="after"]::before {
+    bottom: -1px;
+  }
+  @media (forced-colors: active) {
+    [data-type="item"][data-item-drop-position]::before {
+      background: Highlight;
+    }
+  }
+`;
+
 const FILE_TREE_UNSAFE_CSS = [
   OK_FILE_TREE_READONLY_UNSAFE_CSS,
   FILE_TREE_NAME_FOREGROUND_CSS,
   FILE_TREE_PROBLEM_CSS,
   FILE_TREE_RENAME_INPUT_CSS,
   FILE_TREE_ROOT_DROP_CSS,
+  FILE_TREE_REORDER_DROP_CSS,
   FILE_TREE_EXTERNAL_FILE_DROP_CSS,
   FILE_TREE_CREATION_CLEARED_CSS,
 ].join('\n');
@@ -819,7 +855,8 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const { notifySidebarFileSelected, cover: filesCover } = useSidebar();
   const { resolvedTheme } = useTheme();
   const { addPage, pageMeta, pages } = usePageList();
-  const { okignoreBinding, merged } = useConfigContext();
+  const { okignoreBinding, merged, projectLocalBinding, projectLocalSynced } = useConfigContext();
+  const settingsLoadingReason = useSettingsLoadingReason();
   const showHiddenFiles = merged?.appearance?.sidebar?.showHiddenFiles ?? false;
   const showOnlyMarkdownFiles = merged?.appearance?.sidebar?.showOnlyMarkdownFiles ?? false;
   const showOkFolders = merged?.appearance?.sidebar?.showOkFolders ?? false;
@@ -1190,6 +1227,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     dragAndDrop: {
       canDrag: isAvailable,
       canDrop: isAvailable,
+      canReorder: () => sortOrderRef.current === 'manual',
       onDropComplete: (event) => handleDropCompleteRef.current(event),
       onDropError: (message) => {
         toast.error(message);
@@ -1849,13 +1887,50 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const handleTreeRenameEvent = useEffectEvent(handleTreeRename);
 
   async function handleDropComplete(event: FileTreeDropResult) {
+    const moved = await moveDroppedPaths(event);
+    if (moved) saveManualOrderForDrop(event);
+  }
+
+  function saveManualOrderForDrop(event: FileTreeDropResult) {
+    const { hoveredPath, position } = event.target;
+    if (position === undefined || hoveredPath === null || sortOrderRef.current !== 'manual') return;
+    const folderTreePath = event.target.kind === 'root' ? null : event.target.directoryPath;
+    const currentNames = folderChildTreePaths(documentsRef.current, folderTreePath, {
+      includeOkFolders: showOkFoldersRef.current,
+    })
+      .map(treePathSortEntry)
+      .sort((left, right) => compareFileTreeSortEntries(left, right, sortStateRef.current))
+      .map((entry) => entry.basename);
+    const nextNames = reorderedFolderNames(
+      currentNames,
+      event.draggedPaths.map(treePathBasename),
+      treePathBasename(hoveredPath),
+      position,
+    );
+    if (nextNames === null) return;
+    if (!projectLocalSynced || projectLocalBinding === null) {
+      toast.info(settingsLoadingReason, { id: 'sidebar-settings-not-ready' });
+      return;
+    }
+    const folderKey = manualOrderFolderKey(
+      folderTreePath === null ? [] : treePathSortEntry(folderTreePath).segments,
+    );
+    const result = projectLocalBinding.patch({
+      appearance: { sidebar: { manualOrder: { [folderKey]: nextNames } } },
+    });
+    if (!result.ok) {
+      toast.error(t`Could not save the file order`, { description: humanFormat(result.error) });
+    }
+  }
+
+  async function moveDroppedPaths(event: FileTreeDropResult): Promise<boolean> {
     const operations = event.draggedPaths
       .map((sourcePath) => {
         const destinationTreePath = computeTreeDropDestinationPath(sourcePath, event.target);
         return sourcePath === destinationTreePath ? null : { sourcePath, destinationTreePath };
       })
       .filter((operation) => !!operation);
-    if (operations.length === 0) return;
+    if (operations.length === 0) return true;
 
     setBusyPath(operations[0]?.sourcePath ?? null);
     setError(null);
@@ -1909,7 +1984,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
           toast.error(parsed.title);
           resetModelToDocuments();
           setBusyPath(null);
-          return;
+          return false;
         }
         const success = parseSuccessOrWarn(
           RenamePathSuccessSchema,
@@ -1939,11 +2014,13 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
         toast.error(t`Move succeeded but the sidebar may be out of date — refresh to resync`);
       }
       setBusyPath(null);
+      return true;
     } catch (err) {
       console.warn('[FileTree] move failed:', err);
       toast.error(t`Network error — please try again`);
       resetModelToDocuments();
       setBusyPath(null);
+      return false;
     }
   }
 

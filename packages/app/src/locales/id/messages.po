@@ -2901,6 +2901,9 @@ msgstr "Keadaan cabang untuk proyek ini tidak dapat dibaca. Tutup dialog ini dan
 msgid "Could not save sync preference: {detail}"
 msgstr "Preferensi sinkronisasi tidak dapat disimpan: {detail}"
 
+msgid "Could not save the file order"
+msgstr "Tidak dapat menyimpan urutan file"
+
 msgid "Could not start creating a new item"
 msgstr "Pembuatan item baru tidak dapat dimulai"
 

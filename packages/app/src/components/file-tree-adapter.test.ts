@@ -14,6 +14,7 @@ import {
   fileEntryFromUploadedPath,
   fileEntryToTreePath,
   filesFromExternalDrop,
+  folderChildTreePaths,
   folderPathToTreeDirectoryPath,
   isExternalFileDrag,
   parentFolderPathForTreeItemDropTarget,
@@ -693,5 +694,22 @@ describe('documentsModifiedMsByTreePath', () => {
       ['notes/a.md', Date.parse('2026-01-02T00:00:00.000Z')],
       ['img/b.png', Date.parse('2026-01-03T00:00:00.000Z')],
     ]);
+  });
+});
+
+describe('folderChildTreePaths', () => {
+  const documents = [
+    { kind: 'document' as const, docName: 'top', size: 1, modified: '' },
+    { kind: 'document' as const, docName: 'notes/a', size: 1, modified: '' },
+    { kind: 'document' as const, docName: 'notes/deep/b', size: 1, modified: '' },
+    { kind: 'folder' as const, path: 'empty', size: 0, modified: '' },
+  ];
+
+  test('lists the direct children of the top level, implicit folders included', () => {
+    expect(folderChildTreePaths(documents, null).sort()).toEqual(['empty/', 'notes/', 'top.md']);
+  });
+
+  test('lists the direct children of a nested folder', () => {
+    expect(folderChildTreePaths(documents, 'notes/').sort()).toEqual(['notes/a.md', 'notes/deep/']);
   });
 });

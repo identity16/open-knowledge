@@ -2905,6 +2905,9 @@ msgstr "تعذّرت قراءة حالة الفرع لهذا المشروع. أ�
 msgid "Could not save sync preference: {detail}"
 msgstr "تعذّر حفظ تفضيل المزامنة: {detail}"
 
+msgid "Could not save the file order"
+msgstr "تعذّر حفظ ترتيب الملفات"
+
 msgid "Could not start creating a new item"
 msgstr "تعذّر بدء إنشاء عنصر جديد"
 

@@ -2901,6 +2901,9 @@ msgstr "इस प्रोजेक्ट की ब्रांच स्थ�
 msgid "Could not save sync preference: {detail}"
 msgstr "सिंक वरीयता नहीं सहेजी जा सकी: {detail}"
 
+msgid "Could not save the file order"
+msgstr "फ़ाइल क्रम सहेजा नहीं जा सका"
+
 msgid "Could not start creating a new item"
 msgstr "नया आइटम बनाना शुरू नहीं किया जा सका"
 

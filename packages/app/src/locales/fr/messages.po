@@ -2905,6 +2905,9 @@ msgstr "Impossible de lire l'état des branches de ce projet. Fermez cette boît
 msgid "Could not save sync preference: {detail}"
 msgstr "Impossible d'enregistrer la préférence de synchronisation : {detail}"
 
+msgid "Could not save the file order"
+msgstr "Impossible d’enregistrer l’ordre des fichiers"
+
 msgid "Could not start creating a new item"
 msgstr "Impossible de commencer la création d'un nouvel élément"
 

@@ -6,6 +6,7 @@ import {
   type FileTreeSortState,
   manualOrderFolderKey,
   manualRanksByFolderKey,
+  reorderedFolderNames,
 } from './file-tree-sort';
 
 const MIXED_PATHS = [
@@ -120,5 +121,49 @@ describe('manualOrderFolderKey', () => {
   test('uses a slash for the top level and a trailing slash for folders', () => {
     expect(manualOrderFolderKey([])).toBe('/');
     expect(manualOrderFolderKey(['notes', 'archive'])).toBe('notes/archive/');
+  });
+});
+
+describe('reorderedFolderNames', () => {
+  const names = ['a.md', 'b.md', 'docs', 'c.md'];
+
+  test('moves a row before or after the anchor', () => {
+    expect(reorderedFolderNames(names, ['c.md'], 'a.md', 'before')).toEqual([
+      'c.md',
+      'a.md',
+      'b.md',
+      'docs',
+    ]);
+    expect(reorderedFolderNames(names, ['a.md'], 'docs', 'after')).toEqual([
+      'b.md',
+      'docs',
+      'a.md',
+      'c.md',
+    ]);
+  });
+
+  test('keeps several dragged rows together in drag order', () => {
+    expect(reorderedFolderNames(names, ['c.md', 'a.md'], 'docs', 'before')).toEqual([
+      'b.md',
+      'c.md',
+      'a.md',
+      'docs',
+    ]);
+  });
+
+  test('inserts a row that came from another folder', () => {
+    expect(reorderedFolderNames(names, ['new.md'], 'b.md', 'after')).toEqual([
+      'a.md',
+      'b.md',
+      'new.md',
+      'docs',
+      'c.md',
+    ]);
+  });
+
+  test('returns null for a drop on a dragged row, an unknown anchor or no change', () => {
+    expect(reorderedFolderNames(names, ['b.md'], 'b.md', 'before')).toBeNull();
+    expect(reorderedFolderNames(names, ['b.md'], 'missing.md', 'before')).toBeNull();
+    expect(reorderedFolderNames(names, ['b.md'], 'a.md', 'after')).toBeNull();
   });
 });

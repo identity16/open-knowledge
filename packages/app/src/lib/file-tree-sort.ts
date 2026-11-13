@@ -150,3 +150,38 @@ export function compareFileTreeSortEntries(
   }
   return 0;
 }
+
+export function treePathSortEntry(treePath: string): FileTreeSortEntry {
+  const isDirectory = treePath.endsWith('/');
+  const segments = (isDirectory ? treePath.slice(0, -1) : treePath).split('/');
+  return {
+    basename: segments[segments.length - 1] ?? '',
+    depth: segments.length,
+    isDirectory,
+    path: treePath,
+    segments,
+  };
+}
+
+export function treePathBasename(treePath: string): string {
+  return treePathSortEntry(treePath).basename;
+}
+
+export function reorderedFolderNames(
+  currentNames: readonly string[],
+  draggedNames: readonly string[],
+  anchorName: string,
+  position: 'before' | 'after',
+): string[] | null {
+  const dragged = new Set(draggedNames);
+  if (dragged.has(anchorName)) return null;
+  const remaining = currentNames.filter((name) => !dragged.has(name));
+  const anchorIndex = remaining.indexOf(anchorName);
+  if (anchorIndex < 0) return null;
+  const insertAt = position === 'before' ? anchorIndex : anchorIndex + 1;
+  const next = [...remaining.slice(0, insertAt), ...draggedNames, ...remaining.slice(insertAt)];
+  const unchanged =
+    next.length === currentNames.length &&
+    next.every((name, index) => name === currentNames[index]);
+  return unchanged ? null : next;
+}

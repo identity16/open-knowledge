@@ -2905,6 +2905,9 @@ msgstr "Could not read branch state for this project. Close this dialog and open
 msgid "Could not save sync preference: {detail}"
 msgstr "Could not save sync preference: {detail}"
 
+msgid "Could not save the file order"
+msgstr "Could not save the file order"
+
 msgid "Could not start creating a new item"
 msgstr "Could not start creating a new item"
 

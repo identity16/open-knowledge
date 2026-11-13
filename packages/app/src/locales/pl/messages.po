@@ -2905,6 +2905,9 @@ msgstr "Nie udało się odczytać stanu gałęzi tego projektu. Zamknij to okno 
 msgid "Could not save sync preference: {detail}"
 msgstr "Nie udało się zapisać ustawienia synchronizacji: {detail}"
 
+msgid "Could not save the file order"
+msgstr "Nie udało się zapisać kolejności plików"
+
 msgid "Could not start creating a new item"
 msgstr "Nie udało się rozpocząć tworzenia nowego elementu"
 

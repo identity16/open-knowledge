@@ -2905,6 +2905,9 @@ msgstr "No se pudo leer el estado de las ramas de este proyecto. Cierra este di√
 msgid "Could not save sync preference: {detail}"
 msgstr "No se pudo guardar la preferencia de sincronizaci√≥n: {detail}"
 
+msgid "Could not save the file order"
+msgstr "No se pudo guardar el orden de los archivos"
+
 msgid "Could not start creating a new item"
 msgstr "No se pudo empezar a crear un elemento nuevo"
 

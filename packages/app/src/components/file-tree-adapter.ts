@@ -194,6 +194,27 @@ export function fileTreeSortSignature(
   return parts.join('\0');
 }
 
+export function treeParentDirectoryPath(treePath: string): string | null {
+  const trimmed = stripTrailingSlash(treePath);
+  const slash = trimmed.lastIndexOf('/');
+  return slash < 0 ? null : `${trimmed.slice(0, slash)}/`;
+}
+
+export function folderChildTreePaths(
+  documents: readonly FileEntry[],
+  folderTreePath: string | null,
+  options: { includeOkFolders?: boolean } = {},
+): string[] {
+  const children = new Set<string>();
+  for (const path of [
+    ...documentsToTreePaths(documents),
+    ...collectTreeFolderPathsFromDocuments(documents, options),
+  ]) {
+    if (treeParentDirectoryPath(path) === folderTreePath) children.add(path);
+  }
+  return [...children];
+}
+
 export function treePathSignature(paths: readonly string[]): string {
   return [...paths].sort().join('\0');
 }

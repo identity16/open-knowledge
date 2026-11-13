@@ -2905,6 +2905,9 @@ msgstr "اس پروجیکٹ کی برانچ کی حالت پڑھی نہیں جا
 msgid "Could not save sync preference: {detail}"
 msgstr "مطابقت پذیری کی ترجیح محفوظ نہیں ہو سکی: {detail}"
 
+msgid "Could not save the file order"
+msgstr "فائلوں کی ترتیب محفوظ نہیں ہو سکی"
+
 msgid "Could not start creating a new item"
 msgstr "نیا آئٹم بنانا شروع نہیں ہو سکا"
 

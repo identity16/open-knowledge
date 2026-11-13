@@ -2901,6 +2901,9 @@ msgstr "এই প্রকল্পের ব্রাঞ্চের অবস
 msgid "Could not save sync preference: {detail}"
 msgstr "সিঙ্ক পছন্দ সংরক্ষণ করা যায়নি: {detail}"
 
+msgid "Could not save the file order"
+msgstr "ফাইলের ক্রম সংরক্ষণ করা যায়নি"
+
 msgid "Could not start creating a new item"
 msgstr "নতুন আইটেম তৈরি শুরু করা যায়নি"
 

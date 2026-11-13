@@ -2905,6 +2905,9 @@ msgstr "이 프로젝트의 브랜치 상태를 읽을 수 없습니다. 이 대
 msgid "Could not save sync preference: {detail}"
 msgstr "동기화 환경설정을 저장할 수 없습니다: {detail}"
 
+msgid "Could not save the file order"
+msgstr "파일 순서를 저장하지 못했습니다"
+
 msgid "Could not start creating a new item"
 msgstr "새 항목 만들기를 시작하지 못했습니다"
 

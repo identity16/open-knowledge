@@ -2905,6 +2905,9 @@ msgstr "无法读取这个项目的分支状态。请关闭此对话框并重新
 msgid "Could not save sync preference: {detail}"
 msgstr "无法保存同步偏好：{detail}"
 
+msgid "Could not save the file order"
+msgstr "无法保存文件顺序"
+
 msgid "Could not start creating a new item"
 msgstr "无法开始创建新项目"
 

@@ -1,5 +1,5 @@
 import { i18n } from '@lingui/core';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { MouseEventHandler, ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { emitDocumentsChanged } from '@/lib/documents-events';
@@ -137,6 +137,10 @@ function stubSortEntry(path: string): StubSortEntry {
 
 class StubModel {
   sort: StubSortComparator | null = null;
+  dragAndDrop: {
+    canReorder?: () => boolean;
+    onDropComplete?: (event: unknown) => void;
+  } | null = null;
   order: string[] = [];
   focusedPath: string | null = null;
   selectedPaths: string[] = [];
@@ -223,10 +227,13 @@ vi.doMock('@/components/PageListContext', () => ({
 vi.doMock('./ui/sidebar', () => ({
   useSidebar: () => ({ notifySidebarFileSelected: vi.fn(() => {}) }),
 }));
+const projectLocalPatch = vi.fn((_patch: unknown) => ({ ok: true as const }));
+let projectLocalBinding: { patch: typeof projectLocalPatch } | null = null;
 vi.doMock('@/lib/config-provider', () => ({
   useConfigContext: () => ({
     okignoreBinding: null,
-    projectLocalBinding: null,
+    projectLocalBinding,
+    projectLocalSynced: projectLocalBinding !== null,
     merged: mergedConfig,
   }),
 }));
@@ -282,8 +289,12 @@ vi.doMock('@pierre/trees', () => ({
   themeToTreeStyles: () => ({}),
 }));
 vi.doMock('@pierre/trees/react', () => ({
-  useFileTree: (options: { sort?: StubSortComparator }) => {
+  useFileTree: (options: {
+    sort?: StubSortComparator;
+    dragAndDrop?: { canReorder?: () => boolean; onDropComplete?: (event: unknown) => void };
+  }) => {
     model.sort = options.sort ?? null;
+    model.dragAndDrop = options.dragAndDrop ?? null;
     return { model };
   },
   FileTree: ({
@@ -1578,6 +1589,11 @@ describe('FileTree show-ok-folders visibility', () => {
 describe('FileTree sort order', () => {
   let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
+  afterEach(() => {
+    projectLocalBinding = null;
+    projectLocalPatch.mockClear();
+  });
+
   function modifiedDocEntry(docName: string, modified: string) {
     return { ...docEntry(docName), modified };
   }
@@ -1640,6 +1656,43 @@ describe('FileTree sort order', () => {
     };
     view.rerender(<FileTree />);
     await waitFor(() => expect(model.order).toEqual(['alpha.md', 'zeta/', 'beta.md']));
+  });
+
+  test('reorder zones are on only in manual mode', async () => {
+    const view = render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'alpha.md', 'beta.md']));
+    expect(model.dragAndDrop?.canReorder?.()).toBe(false);
+
+    mergedConfig = { appearance: { sidebar: { sortOrder: 'manual' } } };
+    view.rerender(<FileTree />);
+    await waitFor(() => expect(model.dragAndDrop?.canReorder?.()).toBe(true));
+  });
+
+  test('a reorder drop in manual mode saves the folder order without moving files', async () => {
+    projectLocalBinding = { patch: projectLocalPatch };
+    mergedConfig = { appearance: { sidebar: { sortOrder: 'manual' } } };
+    render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'alpha.md', 'beta.md']));
+    const fetchesBefore = fetchUrls.length;
+
+    await act(async () => {
+      model.dragAndDrop?.onDropComplete?.({
+        draggedPaths: ['beta.md'],
+        operation: 'reorder',
+        target: {
+          kind: 'root',
+          directoryPath: null,
+          flattenedSegmentPath: null,
+          hoveredPath: 'zeta/',
+          position: 'before',
+        },
+      });
+    });
+
+    expect(projectLocalPatch).toHaveBeenCalledWith({
+      appearance: { sidebar: { manualOrder: { '/': ['beta.md', 'zeta', 'alpha.md'] } } },
+    });
+    expect(fetchUrls.slice(fetchesBefore).filter((url) => url.includes('rename-path'))).toEqual([]);
   });
 
   test('in modified order a refreshed listing with a newer time moves that file up', async () => {
