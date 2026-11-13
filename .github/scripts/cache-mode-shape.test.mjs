@@ -68,7 +68,6 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
       'desktop-release.yml#finalize': 'none',
       'desktop-release.yml#release-consumers': 'none',
       'desktop-release.yml#alert': 'none',
-      'identity16-upstream-sync.yml#sync': 'none',
       'identity16-web-release.yml#build': 'none',
       'identity16-web-release.yml#notarize': 'none',
       'identity16-web-release.yml#package': 'none',

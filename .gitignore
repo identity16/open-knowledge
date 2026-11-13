@@ -25,7 +25,8 @@ blob-report/
 .vscode/
 .mcp.json
 .cursor/mcp.json
-.claude/
+.claude/*
+!.claude/skills/
 .codex/
 .open-knowledge/
 .mirror-output/
