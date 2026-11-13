@@ -16,24 +16,7 @@ import { credentialReasons } from './workflow-credentials.test-helper.mjs';
 const OK_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const WORKFLOWS = join(OK_ROOT, '.github', 'workflows');
 
-const SHIPS = [
-  'desktop-release.yml#build-linux',
-  'desktop-release.yml#build-macos',
-  'desktop-release.yml#build-windows',
-  'desktop-release.yml#prepare',
-  'native-config-prebuild.yml#build',
-  'native-config-prebuild.yml#combine',
-  'release.yml#build',
-];
-
 const FORK_CACHED_BUILDS = ['identity16-web-release.yml#build'];
-
-const QA_BUILDS = [
-  'desktop-build-win-linux.yml#build-linux',
-  'desktop-build-win-linux.yml#build-windows',
-  'desktop-build-win-linux.yml#prepare',
-  'desktop-build.yml#build-macos-dmg',
-];
 
 const workflows = readdirSync(WORKFLOWS)
   .filter((name) => /\.ya?ml$/.test(name))
@@ -57,36 +40,10 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
         credentialed.map(({ label, workflow, job }) => [label, effectiveMode(workflow, job)]),
       ),
     ).toEqual({
-      'bug-lane-verify.yml#bug-lane-verify': 'write',
-      'bug-lane.yml#bug-lane': 'none',
-      'desktop-build-win-linux.yml#build-windows': 'none',
-      'desktop-build.yml#build-macos-dmg': 'none',
-      'desktop-release-auto-retry.yml#rerun': 'none',
-      'desktop-release-draft-janitor.yml#sweep': 'none',
-      'desktop-release.yml#prepare': 'none',
-      'desktop-release.yml#build-macos': 'none',
-      'desktop-release.yml#build-windows': 'none',
-      'desktop-release.yml#publish-assets': 'none',
-      'desktop-release.yml#finalize': 'none',
-      'desktop-release.yml#release-consumers': 'none',
-      'desktop-release.yml#alert': 'none',
       'identity16-web-release.yml#build': 'write',
       'identity16-web-release.yml#notarize': 'none',
       'identity16-web-release.yml#package': 'none',
       'identity16-web-release.yml#publish': 'none',
-      'linear-release.yml#stamp': 'none',
-      'point-release.yml#point-release': 'none',
-      'promote-stable.yml#promote': 'none',
-      'publish-linux-repo.yml#publish': 'none',
-      'release.yml#read-releases': 'none',
-      'release.yml#release': 'none',
-      'release.yml#publish': 'none',
-      'select-beta-to-promote.yml#evaluate': 'read',
-      'select-beta-to-promote.yml#dispatch-fast-tier-candidate': 'none',
-      'select-beta-to-promote.yml#page-smoke-incident': 'write-only',
-      'share-contract-deployment-gate.yml#reader-contract': 'none',
-      'share-contract-monitor.yml#probe': 'none',
-      'write-back.yml#notify': 'none',
     });
   });
 
@@ -129,34 +86,8 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
         .filter((op) => op.kind === 'lookup')
         .map((op) => `${label} ${op.step}`),
     );
-    expect(lookups).toEqual([
-      'bug-lane-verify.yml#bug-lane-verify Has this drop already been paged?',
-      'bug-lane-verify.yml#bug-lane-verify Has this refusal already been paged?',
-      'select-beta-to-promote.yml#evaluate Look up an earlier smoke failure for the fast-tier candidate',
-    ]);
+    expect(lookups).toEqual([]);
   });
-});
-
-describe('jobs in public/open-knowledge/.github/workflows that build what ships restore nothing from the Actions cache', () => {
-  test.each(SHIPS)(
-    '%s declares cache-mode none, touches no cache and turns every setup cache off',
-    (label) => {
-      const entry = allJobs.find((candidate) => candidate.label === label);
-      expect(entry, `${label} is missing`).toBeDefined();
-      expect(restoresNothingProblems(entry.workflow, entry.job)).toEqual([]);
-    },
-  );
-});
-
-describe('QA desktop build jobs in public/open-knowledge/.github/workflows, which can produce production-signed installers, restore nothing from the Actions cache', () => {
-  test.each(QA_BUILDS)(
-    '%s declares cache-mode none, touches no cache and turns every setup cache off',
-    (label) => {
-      const entry = allJobs.find((candidate) => candidate.label === label);
-      expect(entry, `${label} is missing`).toBeDefined();
-      expect(restoresNothingProblems(entry.workflow, entry.job)).toEqual([]);
-    },
-  );
 });
 
 describe('cache-mode sweep self-tests', () => {
@@ -651,86 +582,12 @@ describe('cache-mode sweep self-tests', () => {
     ).toThrow(/not classified/);
   });
 
-  test('the real ships jobs turn red when a cache comes back', () => {
-    const real = (label) => allJobs.find((candidate) => candidate.label === label);
-    const store = {
-      uses: `actions/cache@${sha}`,
-      with: { path: '${{ env.STORE_PATH }}', key: 'Linux-ok-pnpm-store-k' },
-    };
-    const release = real('release.yml#build');
-    expect(
-      restoresNothingProblems(release.workflow, {
-        ...release.job,
-        steps: [...release.job.steps, store],
-      }).join('\n'),
-    ).toMatch(/touches the cache \(extract\)/);
-    const linux = real('desktop-release.yml#build-linux');
-    expect(
-      restoresNothingProblems(linux.workflow, { ...linux.job, 'cache-mode': 'write' }).join('\n'),
-    ).toMatch(/declares cache-mode write, not none/);
-    const prebuild = real('native-config-prebuild.yml#build');
-    const withNode = (inputs) =>
-      prebuild.job.steps.map((step) =>
-        step.uses?.startsWith('actions/setup-node@') ? { ...step, with: inputs } : step,
-      );
-    expect(
-      restoresNothingProblems(prebuild.workflow, {
-        ...prebuild.job,
-        steps: withNode({ 'node-version': '24' }),
-      }).join('\n'),
-    ).toMatch(/does not set package-manager-cache: false at Setup Node/);
-    expect(
-      restoresNothingProblems(prebuild.workflow, {
-        ...prebuild.job,
-        steps: [
-          ...prebuild.job.steps,
-          {
-            uses: 'mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29',
-            with: { 'use-cache': false },
-          },
-        ],
-      }).join('\n'),
-    ).toMatch(/touches the cache \(extract\) at mlugg\/setup-zig/);
-    const combine = real('native-config-prebuild.yml#combine');
-    const { 'cache-mode': _mode, ...combineAtDefault } = combine.job;
-    expect(restoresNothingProblems(combine.workflow, combineAtDefault).join('\n')).toMatch(
-      /declares no cache-mode/,
+  test('the real fork release jobs turn red at the default or at a wider mode', () => {
+    const { workflow: declared } = workflows.find(
+      ({ file }) => file === 'identity16-web-release.yml',
     );
-  });
-
-  test('the real QA desktop build jobs turn red when a cache comes back', () => {
-    const real = (label) => allJobs.find((candidate) => candidate.label === label);
-    const store = {
-      uses: `actions/cache@${sha}`,
-      with: { path: '${{ env.STORE_PATH }}', key: 'Linux-ok-pnpm-store-k' },
-    };
-    const prepare = real('desktop-build-win-linux.yml#prepare');
-    expect(
-      restoresNothingProblems(prepare.workflow, {
-        ...prepare.job,
-        steps: [...prepare.job.steps, store],
-      }).join('\n'),
-    ).toMatch(/touches the cache \(extract\)/);
-    const { 'cache-mode': _mode, ...prepareAtDefault } = prepare.job;
-    expect(restoresNothingProblems(prepare.workflow, prepareAtDefault).join('\n')).toMatch(
-      /declares no cache-mode/,
-    );
-    const windows = real('desktop-build-win-linux.yml#build-windows');
-    expect(
-      restoresNothingProblems(windows.workflow, {
-        ...windows.job,
-        steps: windows.job.steps.map((step) =>
-          step.uses?.startsWith('pnpm/setup@') ? { ...step, with: { install: false } } : step,
-        ),
-      }).join('\n'),
-    ).toMatch(
-      /does not set cache: false at Installing pnpm\ndoes not set cache: false at Installing pnpm \(retry after a failed download\)/,
-    );
-  });
-
-  test('the real signing jobs turn red at the default or at write', () => {
-    const { workflow } = workflows.find(({ file }) => file === 'desktop-release.yml');
-    for (const id of ['build-macos', 'build-windows', 'prepare']) {
+    const { 'cache-mode': _workflowMode, ...workflow } = declared;
+    for (const id of ['notarize', 'package', 'publish']) {
       const { 'cache-mode': _mode, ...atDefault } = workflow.jobs[id];
       expect(cacheModeProblems(workflow, atDefault).join('\n'), `${id} at the default`).toMatch(
         /declares no cache-mode/,
@@ -740,15 +597,5 @@ describe('cache-mode sweep self-tests', () => {
         `${id} at write`,
       ).toMatch(/need exactly none/);
     }
-    const selector = workflows.find(({ file }) => file === 'select-beta-to-promote.yml').workflow;
-    expect(
-      cacheModeProblems(selector, { ...selector.jobs.evaluate, 'cache-mode': 'write' }).join('\n'),
-    ).toMatch(/need exactly read/);
-    expect(
-      cacheModeProblems(selector, {
-        ...selector.jobs['page-smoke-incident'],
-        'cache-mode': 'write',
-      }).join('\n'),
-    ).toMatch(/need exactly write-only/);
   });
 });

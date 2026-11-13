@@ -39,15 +39,10 @@ const OTHER_SECRETS = [
 ];
 const SIGNING_ENVIRONMENT = 'release-signing';
 const OTHER_ENVIRONMENTS = [];
-const MAIN_ONLY = "${{ github.ref == 'refs/heads/main' && 'release-signing' || '' }}";
 const EXPECTED = {
   'identity16-web-release.yml#build': SIGNING_ENVIRONMENT,
   'identity16-web-release.yml#notarize': SIGNING_ENVIRONMENT,
   'identity16-web-release.yml#package': SIGNING_ENVIRONMENT,
-  'desktop-build-win-linux.yml#build-windows': MAIN_ONLY,
-  'desktop-build.yml#build-macos-dmg': MAIN_ONLY,
-  'desktop-release.yml#build-macos': SIGNING_ENVIRONMENT,
-  'desktop-release.yml#build-windows': SIGNING_ENVIRONMENT,
 };
 const WHOLE_CONTEXT = '*';
 const SECRET_READ = /(?<![\w.-])secrets\b(?:\s*\.\s*([A-Za-z_][\w-]*)|\s*\[\s*'([^']*)'\s*\])?/gi;
@@ -133,7 +128,7 @@ describe('release-signing environment', () => {
     const reordered = [...JOBS].reverse();
     expect(contractProblems(reordered)).toEqual([]);
     expect(
-      contractProblems(reordered.filter(({ key }) => key !== 'desktop-release.yml#build-macos')),
+      contractProblems(reordered.filter(({ key }) => key !== 'identity16-web-release.yml#build')),
     ).toContainEqual(expect.stringContaining('jobs reading'));
   });
 
