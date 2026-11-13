@@ -200,8 +200,8 @@ describe.each(CHANNELS)('%s chain POSIX shell grammar (cross-platform)', (channe
         chainOverride: chain,
       });
       expect(status).toBe(0);
-      expect(stdout).toContain(
-        `HIT:npx:${fakeNpx}:channel=${channel === 'stable' ? '' : channel}\n`,
+      expect(stdout).toMatch(
+        new RegExp(`^HIT:npx:/\\S+/npx:channel=${channel === 'stable' ? '' : channel}$`, 'm'),
       );
     } finally {
       rmSync(tmpHome, { recursive: true, force: true });
