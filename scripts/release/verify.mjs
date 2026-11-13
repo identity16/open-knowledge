@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
+import { assertCachesRespond } from './cache-preflight.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
 
@@ -72,7 +73,8 @@ function step(label, command, args, cwd = root) {
   return { label, ok, seconds };
 }
 
-function main() {
+async function main() {
+  await assertCachesRespond();
   const base =
     process.argv[2] ??
     execFileSync('git', ['merge-base', 'HEAD', 'origin/main'], {
@@ -110,6 +112,7 @@ function main() {
     results.push(
       step('release script tests', 'node', [
         '--test',
+        'scripts/release/cache-preflight.test.mjs',
         'scripts/release/channel.test.mjs',
         'scripts/release/deploy-local.test.mjs',
         'scripts/release/verify.test.mjs',

@@ -69,7 +69,7 @@ jobs:
       - name: Test release recovery contracts
         if: steps.restore.outputs.reused != 'true'
         run: |
-          pnpm exec node --test scripts/release/channel.test.mjs scripts/release/deploy-local.test.mjs scripts/release/verify.test.mjs scripts/release/preview.test.mjs
+          pnpm exec node --test scripts/release/cache-preflight.test.mjs scripts/release/channel.test.mjs scripts/release/deploy-local.test.mjs scripts/release/verify.test.mjs scripts/release/preview.test.mjs
           pnpm exec vitest run --config vitest.scripts.config.ts scripts/release/release-plan.test.mjs scripts/release/publish-release.test.mjs scripts/release/release-checkpoint.test.mjs scripts/release/notarize-release.test.mjs scripts/release/release-workflow.test.mjs .github/scripts/release-signing-environment-shape.test.mjs .github/scripts/release-workflow-shape.test.mjs --maxWorkers=2
       - name: Build web GUI and CLI
         if: steps.restore.outputs.reused != 'true'

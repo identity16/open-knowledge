@@ -24,7 +24,7 @@ export default defineConfig({
     exclude: [
       ...okVitestBase.test.exclude,
       'plugins/**/scripts/*.test.mjs',
-      'scripts/release/{channel,deploy-local,preview,sync-upstream,verify}.test.mjs',
+      'scripts/release/{cache-preflight,channel,deploy-local,preview,sync-upstream,verify}.test.mjs',
     ],
   },
 });

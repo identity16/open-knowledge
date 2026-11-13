@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { buildReleaseAsset } from './build-release.mjs';
+import { assertCachesRespond } from './cache-preflight.mjs';
 import { service } from './channel.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
@@ -30,6 +31,7 @@ async function waitForService(timeoutMs) {
 }
 
 async function main() {
+  await assertCachesRespond();
   const started = Date.now();
   const rustupProxies = join(homedir(), '.cargo/bin');
   if (existsSync(rustupProxies))
