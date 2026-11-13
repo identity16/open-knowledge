@@ -1,13 +1,13 @@
 ---
 name: upstream-sync
-description: Bring selected changes from upstream inkeep/open-knowledge into this repository, which now develops independently. Use when the user asks to sync, pull, port or check upstream ("upstream 싱크", "원본 변경 가져와", "inkeep 쪽 바뀐 거 있어?"). Upstream is not tracked automatically; nothing runs on a schedule.
+description: Bring selected changes from upstream inkeep/open-knowledge into this repository. Use when the user asks to sync, pull, port or check upstream ("upstream 싱크", "원본 변경 가져와", "inkeep 쪽 바뀐 거 있어?"). Nothing tracks upstream on a schedule.
 ---
 
 # Upstream sync
 
-이 저장소가 제품의 원장이다. inkeep/open-knowledge(OK)에서 출발했지만 2026-11-13부터 독자적으로 개발하며, 원본은 자동으로 따라가지 않고 사용자가 요청할 때 필요한 변경만 골라 가져온다.
+This repository is the product's source of truth. It started from inkeep/open-knowledge and has developed independently since 2026-11-13, so upstream changes arrive only when the user picks them.
 
-## 1. 무엇이 쌓였는지 보고한다
+## 1. Report what upstream added
 
 ```bash
 git fetch --no-tags upstream main
@@ -15,26 +15,26 @@ git log --oneline --no-merges main..upstream/main | head -100
 git diff --stat main...upstream/main | tail -1
 ```
 
-커밋을 관심사별로 묶어 짧게 보고한다: 버그 픽스, 보안, 기능, CI·릴리스, 문서. 이 저장소가 이미 바꾼 파일(`git diff --name-only $(git merge-base main upstream/main) main`)과 겹치는 묶음은 충돌 위험으로 표시한다.
+Group the commits by concern (fixes, security, features, CI/release, docs) and mark groups that touch files this repository already changed (`git diff --name-only $(git merge-base main upstream/main) main`) as conflict risks.
 
-upstream의 태그는 가져오지도, 이 저장소에 push하지도 않는다. 이 제품의 버전과 태그(`vX.Y.Z`)는 upstream과 별개의 계열이고, 2026-11-13에 upstream 태그 1,445개를 지워 충돌을 없앴다.
+Fetch and push without tags: this product's `vX.Y.Z` tags are its own line, and the 1,445 upstream tags were removed on 2026-11-13 to end the collisions.
 
-## 2. 가져올 범위를 사용자와 정한다
+## 2. Agree the scope with the user
 
-- **골라 가져오기 (기본):** 사용자가 고른 커밋만 `git cherry-pick -x <sha>`로 새 브랜치에 옮긴다. `-x`로 원본 커밋을 메시지에 남긴다.
-- **전체 병합:** 사용자가 명시적으로 원할 때만. `node scripts/release/sync-upstream.mjs`가 `inkeep:main → main` PR을 열거나 갱신한다. squash가 아니라 merge commit으로 합쳐야 같은 커밋이 다시 제안되지 않는다.
+- **Pick (default):** move the chosen commits onto a new branch with `git cherry-pick -x <sha>`, keeping the upstream commit in each message.
+- **Full merge, only when asked:** `node scripts/release/sync-upstream.mjs` opens or updates an `inkeep:main → main` PR. Merge it with a merge commit so the same commits are not offered again.
 
-upstream의 CI·릴리스·미러 관련 변경(`.github/`, `release.yml`, `desktop-release*.yml`, 미러 allowlist)은 이 저장소가 쓰지 않으므로 기본으로 제외한다.
+Leave out upstream CI, release and mirror changes (`.github/`, their release workflows, the mirror allowlist); this repository does not use them.
 
-## 3. 충돌은 이 저장소의 방향을 기준으로 푼다
+## 3. Resolve conflicts in this repository's favour
 
-이 저장소의 결정(모바일 UI, `scripts/release/`, `release.yml`, 채널, 캐시 정책)을 되돌리지 않는다. 판단이 갈리는 충돌은 멈추고 양쪽 의도를 한 줄씩 정리해 묻는다.
+Keep this repository's decisions (mobile UI, `scripts/release/`, `release.yml`, the channel, the cache policy). When a conflict needs judgement, stop and ask with one line per side's intent.
 
-## 4. 검증하고 넘긴다
+## 4. Verify and hand over
 
 ```bash
 pnpm verify:changed
-pnpm preview   # UI가 바뀌었을 때
+pnpm preview   # when the UI changed
 ```
 
-통과하면 브랜치를 push하고 PR을 연다. main에 직접 넣거나 릴리스를 돌리는 것은 사용자가 요청할 때만 한다.
+Push the branch and open a PR once it passes. Merge to main or cut a release only when the user asks.

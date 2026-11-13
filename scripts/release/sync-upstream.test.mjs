@@ -37,7 +37,7 @@ test('new upstream commits open one direct cross-repository PR into main', () =>
   assert.equal(mutation.endpoint, 'repos/identity16/open-knowledge/pulls');
   assert.equal(mutation.data.head, 'inkeep:main');
   assert.equal(mutation.data.base, 'main');
-  assert.match(mutation.data.body, /commit 3개/);
+  assert.match(mutation.data.body, /3 upstream commits were not in main/);
   assert.match(mutation.data.body, /Create a merge commit/);
 });
 
