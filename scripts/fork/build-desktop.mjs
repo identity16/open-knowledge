@@ -189,6 +189,13 @@ export async function verifyPackagedApp(app, version, env = process.env, notariz
     run('xcrun', ['stapler', 'validate', app]);
     run('spctl', ['--assess', '--type', 'execute', '--verbose=2', app]);
   }
+  const probe = spawnSync(
+    binary,
+    [join(import.meta.dirname, 'native-probe.cjs'), join(app, 'Contents/Resources')],
+    { stdio: 'inherit', env: { ...env, ELECTRON_RUN_AS_NODE: '1' }, timeout: 60_000 },
+  );
+  if (probe.status !== 0)
+    throw new Error('A native module does not load in the packaged Electron runtime.');
   const wrapper = join(app, 'Contents/Resources/cli/bin/ok.sh');
   const cli = spawnSync(wrapper, ['--version'], { encoding: 'utf8', env });
   if (cli.status !== 0 || cli.stdout.split(/\r?\n/, 1)[0].trim() !== version)
@@ -254,6 +261,7 @@ export async function buildDesktop(
         '--publish',
         'never',
         '-c.forceCodeSigning=true',
+        '-c.npmRebuild=false',
       ],
       { cwd: desktop, env },
     );
