@@ -539,6 +539,17 @@ export const ConfigSchema = z.looseObject({
                 'Order of entries within each folder of the file tree. "name" sorts alphabetically with numbers in natural order; "modified" puts the most recently modified files first, with folders above files by name; "manual" follows appearance.sidebar.manualOrder, set by dragging rows. Per-machine (project-local) — not shared with collaborators.',
             })
             .default('name'),
+          folderSortOrder: z
+            .record(z.string(), z.enum(FILE_TREE_SORT_ORDERS))
+            .register(fieldRegistry, {
+              scope: 'project-local',
+              agentSettable: false,
+              reload: 'live',
+              defaultScope: 'project-local',
+              description:
+                'Per-folder overrides of sortOrder. Keys are folder paths with a trailing slash ("Daily Notes/"); a folder uses the entry of its nearest listed ancestor (itself included) and falls back to sortOrder. Set from a folder\'s Sort submenu. Per-machine (project-local) — not shared with collaborators.',
+            })
+            .default({}),
           manualOrder: z
             .record(z.string(), z.array(z.string()))
             .register(fieldRegistry, {

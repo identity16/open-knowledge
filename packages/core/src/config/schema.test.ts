@@ -186,6 +186,7 @@ describe('appearance.sidebar view toggles', () => {
       showOkFolders: false,
       showSkillGroups: true,
       sortOrder: 'name',
+      folderSortOrder: {},
       manualOrder: {},
       pinnedProjectSkills: [],
       pinnedGlobalSkills: [],
@@ -202,6 +203,7 @@ describe('appearance.sidebar view toggles', () => {
           showOkFolders: true,
           showSkillGroups: false,
           sortOrder: 'manual',
+          folderSortOrder: { 'Daily Notes/': 'modified' },
           manualOrder: { '/': ['b.md', 'docs', 'a.md'] },
           pinnedProjectSkills: ['mine'],
           pinnedGlobalSkills: ['ponytail'],
@@ -215,6 +217,7 @@ describe('appearance.sidebar view toggles', () => {
       showOkFolders: true,
       showSkillGroups: false,
       sortOrder: 'manual',
+      folderSortOrder: { 'Daily Notes/': 'modified' },
       manualOrder: { '/': ['b.md', 'docs', 'a.md'] },
       pinnedProjectSkills: ['mine'],
       pinnedGlobalSkills: ['ponytail'],
@@ -223,6 +226,12 @@ describe('appearance.sidebar view toggles', () => {
 
   test('sortOrder rejects values outside name, modified and manual', () => {
     expect(() => ConfigSchema.parse({ appearance: { sidebar: { sortOrder: 'size' } } })).toThrow();
+  });
+
+  test('folderSortOrder rejects values outside the sort orders', () => {
+    expect(() =>
+      ConfigSchema.parse({ appearance: { sidebar: { folderSortOrder: { 'a/': 'size' } } } }),
+    ).toThrow();
   });
 
   test('manualOrder rejects non-string entries', () => {
