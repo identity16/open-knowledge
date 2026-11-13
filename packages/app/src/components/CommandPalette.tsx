@@ -36,6 +36,7 @@ import {
   loadOmnibarRecents,
   makeOmnibarRecentKey,
   type OmnibarRecentEntry,
+  omnibarRecentOpenedNow,
   rememberOmnibarRecent,
   saveOmnibarRecents,
 } from '@/components/command-palette-recents';
@@ -619,12 +620,7 @@ export function CommandPalette({ bridge = null, open, onOpenChange }: CommandPal
   };
 
   function rememberNavigation(entry: WorkspaceEntry | OmnibarRecentEntry) {
-    const nextEntry = {
-      kind: entry.kind,
-      path: entry.path,
-      lastOpenedAt: new Date().toISOString(),
-    } satisfies OmnibarRecentEntry;
-    const nextRecents = rememberOmnibarRecent(loadOmnibarRecents(), nextEntry);
+    const nextRecents = rememberOmnibarRecent(loadOmnibarRecents(), omnibarRecentOpenedNow(entry));
     saveOmnibarRecents(nextRecents);
     setRecentNavigation(nextRecents);
   }

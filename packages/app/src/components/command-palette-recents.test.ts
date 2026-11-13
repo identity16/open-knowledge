@@ -4,6 +4,7 @@ import {
   loadOmnibarRecents,
   makeOmnibarRecentKey,
   type OmnibarRecentEntry,
+  omnibarRecentOpenedNow,
   rememberOmnibarRecent,
   saveOmnibarRecents,
 } from './command-palette-recents';
@@ -19,6 +20,20 @@ function makeStorage() {
     },
   };
 }
+
+describe('omnibarRecentOpenedNow', () => {
+  test('stamps the opened entry with the given time and keeps only its identity', () => {
+    const opened = omnibarRecentOpenedNow(
+      { kind: 'file', path: 'notes/a.md', lastOpenedAt: '2020-01-01T00:00:00.000Z' },
+      new Date('2026-11-13T05:00:00.000Z'),
+    );
+    expect(opened).toEqual({
+      kind: 'file',
+      path: 'notes/a.md',
+      lastOpenedAt: '2026-11-13T05:00:00.000Z',
+    });
+  });
+});
 
 describe('rememberOmnibarRecent', () => {
   test('dedupes by kind and path and moves the latest entry to the front', () => {

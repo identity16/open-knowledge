@@ -68,6 +68,13 @@ export function saveOmnibarRecents(
   }
 }
 
+export function omnibarRecentOpenedNow(
+  entry: Pick<OmnibarRecentEntry, 'kind' | 'path'>,
+  now: Date = new Date(),
+): OmnibarRecentEntry {
+  return { kind: entry.kind, path: entry.path, lastOpenedAt: now.toISOString() };
+}
+
 export function rememberOmnibarRecent(
   entries: readonly OmnibarRecentEntry[],
   next: OmnibarRecentEntry,
