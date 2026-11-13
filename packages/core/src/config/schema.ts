@@ -63,7 +63,8 @@ export const DEFAULT_LOGS_MAX_BYTES = 26_214_400;
 
 const DEFAULT_LOSS_CAPTURE_MAX_BYTES = 12_582_912;
 
-export const FILE_TREE_SORT_ORDERS = ['name', 'modified'] as const;
+export const FILE_TREE_SORT_ORDERS = ['name', 'modified', 'manual'] as const;
+export const FILE_TREE_MANUAL_ORDER_ROOT_KEY = '/';
 export type FileTreeSortOrder = (typeof FILE_TREE_SORT_ORDERS)[number];
 
 export const DEFAULT_EMBEDDINGS_BASE_URL = 'https://api.openai.com/v1';
@@ -535,9 +536,20 @@ export const ConfigSchema = z.looseObject({
               reload: 'live',
               defaultScope: 'project-local',
               description:
-                'Order of entries within each folder of the file tree. "name" sorts alphabetically with numbers in natural order; "modified" puts the most recently modified files first. Folders always stay above files and sort by name. Per-machine (project-local) — not shared with collaborators.',
+                'Order of entries within each folder of the file tree. "name" sorts alphabetically with numbers in natural order; "modified" puts the most recently modified files first, with folders above files by name; "manual" follows appearance.sidebar.manualOrder, set by dragging rows. Per-machine (project-local) — not shared with collaborators.',
             })
             .default('name'),
+          manualOrder: z
+            .record(z.string(), z.array(z.string()))
+            .register(fieldRegistry, {
+              scope: 'project-local',
+              agentSettable: false,
+              reload: 'live',
+              defaultScope: 'project-local',
+              description:
+                'Hand-arranged order used when sortOrder is "manual". Keys are folder paths with a trailing slash ("notes/archive/"), or "/" for the top level; values list the entry names in that folder (files with their extension, folders without a slash). Entries missing from a list follow the listed ones, sorted by name. Per-machine (project-local) — not shared with collaborators.',
+            })
+            .default({}),
           showSkillsSection: z
             .boolean()
             .register(fieldRegistry, {

@@ -235,6 +235,29 @@ describe('bindConfigDoc — patch()', () => {
     binding.dispose();
   });
 
+  test('manualOrder patches replace one folder list at a time and keep the others', () => {
+    const binding = bindSyncedConfigDoc('project-local');
+    expect(
+      binding.patch({ appearance: { sidebar: { manualOrder: { '/': ['b.md', 'a.md'] } } } }).ok,
+    ).toBe(true);
+    expect(
+      binding.patch({ appearance: { sidebar: { manualOrder: { 'notes.v2/': ['z.md', 'y.md'] } } } })
+        .ok,
+    ).toBe(true);
+    const result = binding.patch({
+      appearance: { sidebar: { manualOrder: { '/': ['a.md', 'b.md'] } } },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('expected ok');
+    expect(result.appliedPaths).toEqual(['appearance.sidebar.manualOrder./']);
+    expect(result.effective.appearance?.sidebar?.manualOrder).toEqual({
+      '/': ['a.md', 'b.md'],
+      'notes.v2/': ['z.md', 'y.md'],
+    });
+    binding.dispose();
+  });
+
   test('updates existing field + preserves comments via yaml@2 Document', () => {
     const initial = '# Project config\ncontent:\n  dir: old # original\n';
     doc.getText('source').insert(0, initial);

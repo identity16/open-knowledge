@@ -236,6 +236,7 @@ describe('ConfigSchema coverage (NR3 — every leaf has fieldRegistry metadata)'
       .map((l) => l.path.join('.'))
       .sort();
     expect(projectLocalStrict).toEqual([
+      'appearance.sidebar.manualOrder',
       'appearance.sidebar.pinnedProjectSkills',
       'appearance.sidebar.showHiddenFiles',
       'appearance.sidebar.showOkFolders',
