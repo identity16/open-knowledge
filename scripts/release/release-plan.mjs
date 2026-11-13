@@ -1,12 +1,12 @@
 import { copyFileSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
-import { forkReleasePlan, releaseFileDigest } from './release-identity.mjs';
+import { releasePlan, releaseFileDigest } from './release-identity.mjs';
 
-export { forkReleasePlan, releaseFileDigest } from './release-identity.mjs';
+export { releasePlan, releaseFileDigest } from './release-identity.mjs';
 
 export function stageDesktopRelease(packagedDir, releaseDir, version) {
-  const plan = forkReleasePlan(version);
+  const plan = releasePlan(version);
   for (const name of [plan.cli, plan.dmg, plan.zip, plan.manifest]) {
     const root = name === plan.cli ? releaseDir : packagedDir;
     if (!existsSync(join(root, name))) throw new Error(`Release asset is missing: ${name}`);

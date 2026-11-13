@@ -35,7 +35,7 @@ function release() {
   };
 }
 
-test('accepts only published fork releases with both fork-owned assets', () => {
+test('accepts only published releases with both release-owned assets', () => {
   assert.equal(releaseIdentity(release()).tag, release().tag_name);
   for (const field of ['draft', 'prerelease']) {
     assert.throws(() => releaseIdentity({ ...release(), [field]: true }));

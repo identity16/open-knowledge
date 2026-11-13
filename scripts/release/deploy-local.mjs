@@ -42,7 +42,7 @@ async function main() {
   });
   const asset = buildReleaseAsset({
     version: identity.version,
-    output: resolve(root, '.fork-release/local'),
+    output: resolve(root, '.release/local'),
   });
   execFileSync(
     process.execPath,

@@ -12,7 +12,7 @@ test('an app-only change lints, typechecks app and its consumers, and runs relat
     ['vitest.config.ts', 'vitest.dom.config.ts'],
   );
   assert.deepEqual(plan.tests[0].sources, ['src/App.tsx']);
-  assert.equal(plan.forkScripts, false);
+  assert.equal(plan.releaseScripts, false);
 });
 
 test('a core change typechecks every consumer', () => {
@@ -23,16 +23,16 @@ test('a core change typechecks every consumer', () => {
   ]);
 });
 
-test('fork tooling changes run the fork script tests and skip biome', () => {
+test('release tooling changes run the release script tests and skip biome', () => {
   const plan = planVerify([
-    'scripts/fork/channel.mjs',
+    'scripts/release/channel.mjs',
     '.changeset/x.md',
     '.turbo-cache/meta.json',
   ]);
   assert.deepEqual(plan.biome, []);
-  assert.deepEqual(plan.oxlint, ['scripts/fork/channel.mjs']);
+  assert.deepEqual(plan.oxlint, ['scripts/release/channel.mjs']);
   assert.deepEqual(plan.typecheck, []);
-  assert.equal(plan.forkScripts, true);
+  assert.equal(plan.releaseScripts, true);
 });
 
 test('root config files stay in biome scope', () => {

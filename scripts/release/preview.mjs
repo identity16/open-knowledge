@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '../..');
 const appDir = resolve(root, 'packages/app');
-const previewRoot = '/tmp/ok-fork-preview';
+const previewRoot = '/tmp/ok-preview';
 const fixtureDir = join(previewRoot, 'knowledge-base');
 const outputDir = join(previewRoot, 'latest');
 

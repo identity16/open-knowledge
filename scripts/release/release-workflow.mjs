@@ -2,7 +2,7 @@ import { appendFileSync, copyFileSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { submitNotary, waitNotary, withNotaryClient } from './notarize-release.mjs';
-import { preflightForkRelease, promoteForkRelease, stageForkRelease } from './publish-release.mjs';
+import { preflightRelease, promoteRelease, stageRelease } from './publish-release.mjs';
 import {
   CheckpointStore,
   checkpointName,
@@ -12,13 +12,13 @@ import {
   validateRecord,
   workflowContext,
 } from './release-checkpoint.mjs';
-import { forkReleasePlan } from './release-identity.mjs';
+import { releasePlan } from './release-identity.mjs';
 
 export async function runReleaseStep(command, env = process.env) {
   const context = workflowContext(env);
-  const version = env.FORK_VERSION;
-  const plan = forkReleasePlan(version);
-  const root = resolve(import.meta.dirname, '../../.fork-release');
+  const version = env.RELEASE_VERSION;
+  const plan = releasePlan(version);
+  const root = resolve(import.meta.dirname, '../../.release');
   const signed = join(root, 'signed');
   const notary = join(root, 'notary');
   const ready = join(root, 'ready');
@@ -39,7 +39,7 @@ export async function runReleaseStep(command, env = process.env) {
       Boolean(env.RESUME_RUN_ID),
     );
     const staged = candidate && store.restoreRecord('ready', candidate, ready);
-    if (!staged) preflightForkRelease(version, candidate?.sourceSha ?? context.sourceSha, env);
+    if (!staged) preflightRelease(version, candidate?.sourceSha ?? context.sourceSha, env);
     output({
       reused: Boolean(candidate),
       candidate_run_id: candidate?.sourceRunId ?? context.sourceRunId,
@@ -75,7 +75,7 @@ export async function runReleaseStep(command, env = process.env) {
     const assets = join(root, 'assets');
     const { packageDesktop } = await import('./build-desktop.mjs');
     await packageDesktop(version, signed, assets, env);
-    const staged = stageForkRelease(version, assets, candidate.sourceSha, env);
+    const staged = stageRelease(version, assets, candidate.sourceSha, env);
     const receipt = createReady(
       candidate,
       submission,
@@ -92,8 +92,8 @@ export async function runReleaseStep(command, env = process.env) {
     if (!staged || staged.producerRunId !== env.READY_RUN_ID)
       throw new Error('The verified draft release checkpoint is missing or has changed.');
     validateRecord(staged, 'ready', candidate);
-    console.log(promoteForkRelease(staged, env));
-  } else throw new Error('Unknown fork release workflow step.');
+    console.log(promoteRelease(staged, env));
+  } else throw new Error('Unknown release workflow step.');
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)

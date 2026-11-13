@@ -16,15 +16,15 @@ import {
   createCandidate,
   createReady,
   createSubmission,
-  FORK_REPOSITORY,
-  FORK_WORKFLOW,
+  RELEASE_REPOSITORY,
+  RELEASE_WORKFLOW,
   readCheckpoint,
   signedHash,
   validateCandidate,
   validateRecord,
   workflowContext,
 } from './release-checkpoint.mjs';
-import { forkReleasePlan } from './release-identity.mjs';
+import { releasePlan } from './release-identity.mjs';
 
 const fixtures = [];
 afterEach(() => {
@@ -35,14 +35,14 @@ const source = 'a'.repeat(40);
 const current = 'b'.repeat(40);
 const submissionId = '12ab34cd-1234-4567-89ab-123456789abc';
 const env = {
-  GITHUB_REPOSITORY: FORK_REPOSITORY,
+  GITHUB_REPOSITORY: RELEASE_REPOSITORY,
   GITHUB_REF: 'refs/heads/main',
   GITHUB_SHA: current,
   GITHUB_RUN_ID: '303',
 };
 
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), 'fork-checkpoint-'));
+  const root = mkdtempSync(join(tmpdir(), 'release-checkpoint-'));
   fixtures.push(root);
   const candidateDir = join(root, 'signed');
   mkdirSync(candidateDir);
@@ -50,7 +50,7 @@ function fixture() {
     'signed-app.zip',
     'builder-config.yml',
     'packaging-resources.tar',
-    forkReleasePlan(version).cli,
+    releasePlan(version).cli,
     'channel.mjs',
   ])
     writeFileSync(join(candidateDir, name), `content:${name}`);
@@ -64,12 +64,12 @@ function fixture() {
 function run(id, sha) {
   return {
     id: Number(id),
-    path: FORK_WORKFLOW,
+    path: RELEASE_WORKFLOW,
     head_branch: 'main',
     event: 'workflow_dispatch',
     head_sha: sha,
-    repository: { full_name: FORK_REPOSITORY },
-    head_repository: { full_name: FORK_REPOSITORY },
+    repository: { full_name: RELEASE_REPOSITORY },
+    head_repository: { full_name: RELEASE_REPOSITORY },
   };
 }
 
@@ -87,7 +87,7 @@ function storeFixture(f, { wrongRun = {}, corrupt = false } = {}) {
       if (corrupt) writeFileSync(join(directory, 'signed-app.zip'), 'corrupt');
       return '';
     }
-    const path = args[1].replace(`repos/${FORK_REPOSITORY}/`, '');
+    const path = args[1].replace(`repos/${RELEASE_REPOSITORY}/`, '');
     if (path === 'actions/runs/101') return JSON.stringify({ ...run('101', source), ...wrongRun });
     if (path === `compare/${source}...${current}`)
       return JSON.stringify({ status: 'ahead', merge_base_commit: { sha: source } });
@@ -265,7 +265,7 @@ describe('notarization checkpoint binding', () => {
 describe('verified draft checkpoints', () => {
   test('requires a complete release inventory and preserves original source identity', () => {
     const f = fixture();
-    const plan = forkReleasePlan(version);
+    const plan = releasePlan(version);
     const submission = createSubmission(f.candidate, submissionId, '202');
     const assets = [
       plan.cli,

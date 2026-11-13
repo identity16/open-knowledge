@@ -3,15 +3,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  isNewerForkRelease,
-  publishForkRelease,
-  stageForkRelease,
-  promoteForkRelease,
-  preflightForkRelease,
+  isNewerRelease,
+  publishRelease,
+  stageRelease,
+  promoteRelease,
+  preflightRelease,
   stagedReleaseInventory,
   verifyUploadedInventory,
 } from './publish-release.mjs';
-import { forkReleasePlan, releaseFileDigest } from './release-plan.mjs';
+import { releasePlan, releaseFileDigest } from './release-plan.mjs';
 
 const fixtures = [];
 afterEach(() => {
@@ -21,7 +21,7 @@ afterEach(() => {
 function fixture() {
   const path = mkdtempSync(join(tmpdir(), 'ok16-publish-'));
   fixtures.push(path);
-  const plan = forkReleasePlan('0.76.0-identity16.4');
+  const plan = releasePlan('0.76.0-identity16.4');
   const files = [plan.cli, plan.dmg, plan.zip, plan.manifest, 'channel.mjs'];
   for (const name of files) writeFileSync(join(path, name), `content:${name}`);
   writeFileSync(
@@ -104,11 +104,11 @@ function github(f, corrupt = false, tagSha = null, listingLag = 0) {
   };
 }
 
-describe('atomic fork publication', () => {
+describe('atomic publication', () => {
   test('publishes only after uploaded hashes and sizes match the staged inventory', () => {
     const f = fixture();
     const g = github(f);
-    expect(publishForkRelease(f.plan.version, f.path, g.env, g.invoke)).toBe(f.plan.downloadBase);
+    expect(publishRelease(f.plan.version, f.path, g.env, g.invoke)).toBe(f.plan.downloadBase);
     expect(
       g.invoke.mock.calls.filter(([args]) => args[0] === 'release').map(([args]) => args[1]),
     ).toEqual(['create', 'upload', 'edit']);
@@ -117,7 +117,7 @@ describe('atomic fork publication', () => {
   test('leaves a corrupted upload in draft', () => {
     const f = fixture();
     const g = github(f, true);
-    expect(() => publishForkRelease(f.plan.version, f.path, g.env, g.invoke)).toThrow(
+    expect(() => publishRelease(f.plan.version, f.path, g.env, g.invoke)).toThrow(
       /failed verification/,
     );
     expect(g.invoke.mock.calls.some(([args]) => args[0] === 'release' && args[1] === 'edit')).toBe(
@@ -128,7 +128,7 @@ describe('atomic fork publication', () => {
   test('refuses an existing tag for different source before modifying the release', () => {
     const f = fixture();
     const g = github(f, false, 'b'.repeat(40));
-    expect(() => publishForkRelease(f.plan.version, f.path, g.env, g.invoke)).toThrow(
+    expect(() => publishRelease(f.plan.version, f.path, g.env, g.invoke)).toThrow(
       /source commit/,
     );
     expect(g.invoke.mock.calls.some(([args]) => args[0] === 'release')).toBe(false);
@@ -151,7 +151,7 @@ describe('atomic fork publication', () => {
     const f = fixture();
     const g = github(f);
     expect(() =>
-      publishForkRelease(
+      publishRelease(
         f.plan.version,
         f.path,
         { ...g.env, GITHUB_REF: 'refs/heads/feature' },
@@ -164,12 +164,12 @@ describe('atomic fork publication', () => {
   test('preflights before building without mutating GitHub', () => {
     const f = fixture();
     const g = github(f);
-    expect(preflightForkRelease(f.plan.version, g.env.GITHUB_SHA, g.env, g.invoke)).toBeNull();
+    expect(preflightRelease(f.plan.version, g.env.GITHUB_SHA, g.env, g.invoke)).toBeNull();
     expect(g.invoke.mock.calls.every(([args]) => args[0] === 'api' && !args.includes('POST'))).toBe(
       true,
     );
     g.setLatest('0.76.0-identity16.5');
-    expect(() => preflightForkRelease(f.plan.version, g.env.GITHUB_SHA, g.env, g.invoke)).toThrow(
+    expect(() => preflightRelease(f.plan.version, g.env.GITHUB_SHA, g.env, g.invoke)).toThrow(
       /newer/,
     );
   });
@@ -178,11 +178,11 @@ describe('atomic fork publication', () => {
     const f = fixture();
     const g = github(f);
     const env = { ...g.env, GITHUB_SHA: 'b'.repeat(40) };
-    const proof = stageForkRelease(f.plan.version, f.path, g.env.GITHUB_SHA, env, g.invoke);
+    const proof = stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, env, g.invoke);
     expect(g.invoke.mock.calls.some(([args]) => args[1] === 'edit')).toBe(false);
     expect(proof.sourceSha).toBe(g.env.GITHUB_SHA);
     expect(proof.assets.every((asset) => !Object.hasOwn(asset, 'path'))).toBe(true);
-    expect(promoteForkRelease(proof, env, g.invoke)).toBe(f.plan.downloadBase);
+    expect(promoteRelease(proof, env, g.invoke)).toBe(f.plan.downloadBase);
     const createRef = g.invoke.mock.calls.find(([args]) => args.includes('POST'))[0];
     expect(createRef).toContain(`sha=${g.env.GITHUB_SHA}`);
     expect(createRef).not.toContain(`sha=${env.GITHUB_SHA}`);
@@ -192,7 +192,7 @@ describe('atomic fork publication', () => {
     const f = fixture();
     const g = github(f, false, null, 3);
     const pause = vi.fn();
-    const proof = stageForkRelease(
+    const proof = stageRelease(
       f.plan.version,
       f.path,
       g.env.GITHUB_SHA,
@@ -209,7 +209,7 @@ describe('atomic fork publication', () => {
     const g = github(f, false, null, 100);
     const pause = vi.fn();
     expect(() =>
-      stageForkRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke, pause),
+      stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke, pause),
     ).toThrow(/did not confirm creation/);
     expect(pause).toHaveBeenCalledTimes(9);
   });
@@ -217,33 +217,33 @@ describe('atomic fork publication', () => {
   test('retries a lost publication response without changing public files or regressing latest', () => {
     const f = fixture();
     const g = github(f);
-    const proof = stageForkRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke);
+    const proof = stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke);
     const lostResponse = (args) => {
       const result = g.invoke(args);
       if (args[0] === 'release' && args[1] === 'edit') throw new Error('Lost response');
       return result;
     };
-    expect(() => promoteForkRelease(proof, g.env, lostResponse)).toThrow('Lost response');
+    expect(() => promoteRelease(proof, g.env, lostResponse)).toThrow('Lost response');
     g.setLatest('0.76.0-identity16.10');
     g.invoke.mockClear();
-    expect(promoteForkRelease(proof, g.env, g.invoke)).toBe(f.plan.downloadBase);
+    expect(promoteRelease(proof, g.env, g.invoke)).toBe(f.plan.downloadBase);
     expect(g.invoke.mock.calls.every(([args]) => args[0] === 'api' && !args.includes('POST'))).toBe(
       true,
     );
     expect(() =>
-      stageForkRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke),
+      stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke),
     ).toThrow(/already published/);
   });
 
   test('rejects incomplete proofs and changed remote files before publishing', () => {
     const f = fixture();
     const g = github(f);
-    const proof = stageForkRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke);
-    expect(() => promoteForkRelease({ ...proof, assets: [] }, g.env, g.invoke)).toThrow(
+    const proof = stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke);
+    expect(() => promoteRelease({ ...proof, assets: [] }, g.env, g.invoke)).toThrow(
       /inventory/,
     );
     const altered = { ...proof, assets: proof.assets.map((a) => ({ ...a, size: a.size + 1 })) };
-    expect(() => promoteForkRelease(altered, g.env, g.invoke)).toThrow(/failed verification/);
+    expect(() => promoteRelease(altered, g.env, g.invoke)).toThrow(/failed verification/);
     expect(g.invoke.mock.calls.some(([args]) => args[1] === 'edit')).toBe(false);
   });
 
@@ -254,15 +254,15 @@ describe('atomic fork publication', () => {
       args[1].includes('/compare/')
         ? JSON.stringify({ status: 'diverged', merge_base_commit: { sha: 'c'.repeat(40) } })
         : g.invoke(args);
-    expect(() => stageForkRelease(f.plan.version, f.path, 'b'.repeat(40), g.env, invoke)).toThrow(
+    expect(() => stageRelease(f.plan.version, f.path, 'b'.repeat(40), g.env, invoke)).toThrow(
       /ancestor/,
     );
     expect(g.invoke).not.toHaveBeenCalled();
   });
 
-  test('orders fork counters numerically and prevents downgrades', () => {
-    expect(isNewerForkRelease('0.76.0-identity16.10', '0.76.0-identity16.9')).toBe(true);
-    expect(isNewerForkRelease('0.76.0-identity16.4', '0.76.0-identity16.4')).toBe(false);
-    expect(isNewerForkRelease('0.75.9-identity16.99', '0.76.0-identity16.3')).toBe(false);
+  test('orders release counters numerically and prevents downgrades', () => {
+    expect(isNewerRelease('0.76.0-identity16.10', '0.76.0-identity16.9')).toBe(true);
+    expect(isNewerRelease('0.76.0-identity16.4', '0.76.0-identity16.4')).toBe(false);
+    expect(isNewerRelease('0.75.9-identity16.99', '0.76.0-identity16.3')).toBe(false);
   });
 });

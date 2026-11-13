@@ -16,7 +16,7 @@ import { credentialReasons } from './workflow-credentials.test-helper.mjs';
 const OK_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const WORKFLOWS = join(OK_ROOT, '.github', 'workflows');
 
-const FORK_CACHED_BUILDS = ['identity16-web-release.yml#build'];
+const CACHED_RELEASE_BUILDS = ['release.yml#build'];
 
 const workflows = readdirSync(WORKFLOWS)
   .filter((name) => /\.ya?ml$/.test(name))
@@ -40,23 +40,23 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
         credentialed.map(({ label, workflow, job }) => [label, effectiveMode(workflow, job)]),
       ),
     ).toEqual({
-      'identity16-web-release.yml#build': 'write',
-      'identity16-web-release.yml#notarize': 'none',
-      'identity16-web-release.yml#package': 'none',
-      'identity16-web-release.yml#publish': 'none',
+      'release.yml#build': 'write',
+      'release.yml#notarize': 'none',
+      'release.yml#package': 'none',
+      'release.yml#publish': 'none',
     });
   });
 
   test.each(
     credentialed
-      .filter(({ label }) => !FORK_CACHED_BUILDS.includes(label))
+      .filter(({ label }) => !CACHED_RELEASE_BUILDS.includes(label))
       .map(({ label, workflow, job }) => [label, workflow, job]),
   )('%s extracts no cache entry and its mode matches its operations', (_label, workflow, job) => {
     expect(cacheModeProblems(workflow, job)).toEqual([]);
   });
 
-  test.each(FORK_CACHED_BUILDS)(
-    '%s only extracts fork-owned build caches and declares the write mode they need',
+  test.each(CACHED_RELEASE_BUILDS)(
+    '%s only extracts release-owned build caches and declares the write mode they need',
     (label) => {
       const { workflow, job } = allJobs.find((candidate) => candidate.label === label);
       const problems = cacheModeProblems(workflow, job);
@@ -67,7 +67,7 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
         .filter((step) => step.uses?.startsWith('actions/cache@'))
         .map((step) => step.with.key);
       expect(keys.length).toBeGreaterThan(0);
-      expect(keys.every((key) => key.startsWith('fork-'))).toBe(true);
+      expect(keys.every((key) => key.startsWith('release-'))).toBe(true);
     },
   );
 
@@ -582,9 +582,9 @@ describe('cache-mode sweep self-tests', () => {
     ).toThrow(/not classified/);
   });
 
-  test('the real fork release jobs turn red at the default or at a wider mode', () => {
+  test('the real release jobs turn red at the default or at a wider mode', () => {
     const { workflow: declared } = workflows.find(
-      ({ file }) => file === 'identity16-web-release.yml',
+      ({ file }) => file === 'release.yml',
     );
     const { 'cache-mode': _workflowMode, ...workflow } = declared;
     for (const id of ['notarize', 'package', 'publish']) {

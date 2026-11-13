@@ -2,13 +2,13 @@ import { spawnSync } from 'node:child_process';
 import { lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  forkReleasePlan,
+  releasePlan,
   releaseFileDigest,
   validateReleaseInventory,
 } from './release-identity.mjs';
 
-export const FORK_REPOSITORY = 'identity16/open-knowledge';
-export const FORK_WORKFLOW = '.github/workflows/identity16-web-release.yml';
+export const RELEASE_REPOSITORY = 'identity16/open-knowledge';
+export const RELEASE_WORKFLOW = '.github/workflows/release.yml';
 const SHA = /^[a-f0-9]{40}$/;
 const DIGEST = /^[a-f0-9]{64}$/;
 const RUN = /^[1-9]\d*$/;
@@ -43,18 +43,18 @@ export function github(args, optional = false) {
 
 export function workflowContext(env = process.env) {
   if (
-    env.GITHUB_REPOSITORY !== FORK_REPOSITORY ||
+    env.GITHUB_REPOSITORY !== RELEASE_REPOSITORY ||
     env.GITHUB_REF !== 'refs/heads/main' ||
     !matches(SHA, env.GITHUB_SHA) ||
     !matches(RUN, env.GITHUB_RUN_ID)
   ) {
-    throw new Error('Run the fork release workflow on the main branch.');
+    throw new Error('Run the release workflow on the main branch.');
   }
   return { sourceSha: env.GITHUB_SHA, sourceRunId: env.GITHUB_RUN_ID };
 }
 
 function requireIdentity(value) {
-  forkReleasePlan(value?.version);
+  releasePlan(value?.version);
   if (value?.schema !== 1 || !matches(SHA, value.sourceSha) || !matches(RUN, value.sourceRunId))
     throw new Error('Invalid release checkpoint identity.');
 }
@@ -79,12 +79,12 @@ export function signedHash(candidate) {
 
 export function checkpointName(kind, candidate) {
   return kind === 'signed'
-    ? `fork-signed-${candidate.version}`
-    : `fork-${kind}-${signedHash(candidate)}`;
+    ? `release-signed-${candidate.version}`
+    : `release-${kind}-${signedHash(candidate)}`;
 }
 
 export function createCandidate(directory, version, context) {
-  const plan = forkReleasePlan(version);
+  const plan = releasePlan(version);
   const files = [
     'signed-app.zip',
     'builder-config.yml',
@@ -111,7 +111,7 @@ export function createCandidate(directory, version, context) {
 
 export function validateCandidate(receipt, directory, version) {
   requireIdentity(receipt);
-  const plan = forkReleasePlan(version);
+  const plan = releasePlan(version);
   const names = [
     'signed-app.zip',
     'builder-config.yml',
@@ -196,7 +196,7 @@ export class CheckpointStore {
   }
 
   api(path, optional = false) {
-    const result = this.invoke(['api', `repos/${FORK_REPOSITORY}/${path}`], optional);
+    const result = this.invoke(['api', `repos/${RELEASE_REPOSITORY}/${path}`], optional);
     return result === null ? null : JSON.parse(result);
   }
 
@@ -205,14 +205,14 @@ export class CheckpointStore {
     const run = this.api(`actions/runs/${runId}`);
     if (
       String(run.id) !== String(runId) ||
-      run.path !== FORK_WORKFLOW ||
+      run.path !== RELEASE_WORKFLOW ||
       run.event !== 'workflow_dispatch' ||
       run.head_branch !== 'main' ||
-      run.repository?.full_name !== FORK_REPOSITORY ||
-      run.head_repository?.full_name !== FORK_REPOSITORY ||
+      run.repository?.full_name !== RELEASE_REPOSITORY ||
+      run.head_repository?.full_name !== RELEASE_REPOSITORY ||
       !matches(SHA, run.head_sha)
     )
-      throw new Error('The checkpoint was not produced by the fork main release workflow.');
+      throw new Error('The checkpoint was not produced by main release workflow.');
     this.ancestor(run.head_sha, this.context.sourceSha);
     return run;
   }
@@ -226,7 +226,7 @@ export class CheckpointStore {
 
   artifacts(path) {
     const pages = JSON.parse(
-      this.invoke(['api', `repos/${FORK_REPOSITORY}/${path}`, '--paginate', '--slurp']),
+      this.invoke(['api', `repos/${RELEASE_REPOSITORY}/${path}`, '--paginate', '--slurp']),
     );
     return pages.flatMap((page) => page.artifacts).filter((artifact) => !artifact.expired);
   }
@@ -238,7 +238,7 @@ export class CheckpointStore {
       'download',
       String(artifact.workflow_run.id),
       '--repo',
-      FORK_REPOSITORY,
+      RELEASE_REPOSITORY,
       '--name',
       artifact.name,
       '--dir',

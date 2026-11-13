@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createCandidate, createSubmission, signedHash } from './release-checkpoint.mjs';
-import { forkReleasePlan } from './release-identity.mjs';
+import { releasePlan } from './release-identity.mjs';
 import { requireApiCredentials, submitNotary, waitNotary } from './notarize-release.mjs';
 
 const fixtures = [];
@@ -12,7 +12,7 @@ afterEach(() => {
 });
 const id = '12ab34cd-1234-4567-89ab-123456789abc';
 function fixture() {
-  const root = mkdtempSync(join(tmpdir(), 'fork-notary-test-'));
+  const root = mkdtempSync(join(tmpdir(), 'release-notary-test-'));
   fixtures.push(root);
   const directory = join(root, 'signed');
   mkdirSync(directory);
@@ -21,7 +21,7 @@ function fixture() {
     'signed-app.zip',
     'builder-config.yml',
     'packaging-resources.tar',
-    forkReleasePlan(version).cli,
+    releasePlan(version).cli,
     'channel.mjs',
   ])
     writeFileSync(join(directory, name), name);

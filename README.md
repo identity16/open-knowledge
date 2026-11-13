@@ -43,9 +43,9 @@ Highlights:
 
 ## Install
 
-**OpenKnowledge16 (this fork, macOS Apple Silicon)** — download the signed desktop app from the
-[fork releases](https://github.com/identity16/open-knowledge/releases/latest).
-See [installation, updates, and rollback](MIGRATION_IDENTITY16.md) for the desktop app and the existing fork web GUI + CLI channel.
+**OpenKnowledge16 (this product, macOS Apple Silicon)** — download the signed desktop app from the
+[releases](https://github.com/identity16/open-knowledge/releases/latest).
+See [installation, updates, and rollback](MIGRATION_IDENTITY16.md) for the desktop app and the existing web GUI + CLI channel.
 
 **Upstream desktop app** — download it from [openknowledge.ai/download](https://openknowledge.ai/download) (or grab an installer from the [latest release](https://github.com/inkeep/open-knowledge/releases/latest)):
 

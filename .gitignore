@@ -30,7 +30,7 @@ blob-report/
 .codex/
 .open-knowledge/
 .mirror-output/
-.fork-release/
+.release/
 /test-doc.md
 
 # Env files (keep .env.example committed)

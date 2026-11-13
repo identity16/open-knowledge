@@ -47,7 +47,7 @@ export function planVerify(files) {
     oxlint: files.filter((file) => oxlintable.test(file)),
     typecheck: [...typecheck].sort(),
     tests,
-    forkScripts: files.some((file) => file.startsWith('scripts/fork/')),
+    releaseScripts: files.some((file) => file.startsWith('scripts/release/')),
   };
 }
 
@@ -106,14 +106,14 @@ function main() {
         resolve(root, `packages/${name}`),
       ),
     );
-  if (plan.forkScripts)
+  if (plan.releaseScripts)
     results.push(
-      step('fork script tests', 'node', [
+      step('release script tests', 'node', [
         '--test',
-        'scripts/fork/channel.test.mjs',
-        'scripts/fork/deploy-local.test.mjs',
-        'scripts/fork/verify.test.mjs',
-        'scripts/fork/preview.test.mjs',
+        'scripts/release/channel.test.mjs',
+        'scripts/release/deploy-local.test.mjs',
+        'scripts/release/verify.test.mjs',
+        'scripts/release/preview.test.mjs',
       ]),
     );
   console.log('\nSummary');

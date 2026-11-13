@@ -33,7 +33,7 @@ export function buildReleaseAsset({ version, output }) {
       },
     });
     copyFileSync(
-      resolve(root, 'scripts/fork/channel.mjs'),
+      resolve(root, 'scripts/release/channel.mjs'),
       resolve(root, 'packages/cli/dist/identity16-channel.mjs'),
     );
     execFileSync('npm', ['pack', '--ignore-scripts', '--pack-destination', output], {
@@ -57,7 +57,7 @@ export function buildReleaseAsset({ version, output }) {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const version = process.argv[2];
   if (!/^\d+\.\d+\.\d+-identity16\.\d+$/.test(version ?? '')) {
-    throw new Error('Usage: node scripts/fork/build-release.mjs X.Y.Z-identity16.N');
+    throw new Error('Usage: node scripts/release/build-release.mjs X.Y.Z-identity16.N');
   }
-  buildReleaseAsset({ version, output: resolve(process.argv[3] ?? `${root}/.fork-release`) });
+  buildReleaseAsset({ version, output: resolve(process.argv[3] ?? `${root}/.release`) });
 }

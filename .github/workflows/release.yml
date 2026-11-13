@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Fork version, for example 0.76.0-identity16.5'
+        description: 'Release version, for example 0.76.0-identity16.5'
         required: true
         type: string
       resume_run_id:
@@ -20,10 +20,10 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: fork-release
+  group: release
   cancel-in-progress: false
 env:
-  FORK_VERSION: ${{ inputs.version }}
+  RELEASE_VERSION: ${{ inputs.version }}
   GH_TOKEN: ${{ github.token }}
   ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
   PUPPETEER_SKIP_DOWNLOAD: '1'
@@ -50,31 +50,31 @@ jobs:
         id: restore
         env:
           RESUME_RUN_ID: ${{ inputs.resume_run_id }}
-        run: node scripts/fork/release-workflow.mjs restore
+        run: node scripts/release/release-workflow.mjs restore
       - name: Install build tools
         if: steps.restore.outputs.reused != 'true'
         run: |
           npm install --global pnpm@12.8.1
           rustup toolchain install --no-self-update
-      - name: Reuse turbo task outputs from earlier fork builds
+      - name: Reuse turbo task outputs from earlier builds
         if: steps.restore.outputs.reused != 'true'
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: .turbo/cache
-          key: fork-turbo-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
-          restore-keys: fork-turbo-${{ runner.os }}-${{ runner.arch }}-
+          key: release-turbo-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          restore-keys: release-turbo-${{ runner.os }}-${{ runner.arch }}-
       - name: Install dependencies
         if: steps.restore.outputs.reused != 'true'
         run: pnpm install --frozen-lockfile
       - name: Test release recovery contracts
         if: steps.restore.outputs.reused != 'true'
         run: |
-          pnpm exec node --test scripts/fork/channel.test.mjs scripts/fork/deploy-local.test.mjs scripts/fork/verify.test.mjs scripts/fork/preview.test.mjs
-          pnpm exec vitest run --config vitest.scripts.config.ts scripts/fork/release-plan.test.mjs scripts/fork/publish-release.test.mjs scripts/fork/release-checkpoint.test.mjs scripts/fork/notarize-release.test.mjs scripts/fork/release-workflow.test.mjs .github/scripts/release-signing-environment-shape.test.mjs .github/scripts/fork-release-shape.test.mjs --maxWorkers=2
+          pnpm exec node --test scripts/release/channel.test.mjs scripts/release/deploy-local.test.mjs scripts/release/verify.test.mjs scripts/release/preview.test.mjs
+          pnpm exec vitest run --config vitest.scripts.config.ts scripts/release/release-plan.test.mjs scripts/release/publish-release.test.mjs scripts/release/release-checkpoint.test.mjs scripts/release/notarize-release.test.mjs scripts/release/release-workflow.test.mjs .github/scripts/release-signing-environment-shape.test.mjs .github/scripts/release-workflow-shape.test.mjs --maxWorkers=2
       - name: Build web GUI and CLI
         if: steps.restore.outputs.reused != 'true'
-        run: pnpm exec node scripts/fork/build-release.mjs "$FORK_VERSION" "$PWD/.fork-release/web"
-      - name: Test fork product boundaries
+        run: pnpm exec node scripts/release/build-release.mjs "$RELEASE_VERSION" "$PWD/.release/web"
+      - name: Test product boundaries
         if: steps.restore.outputs.reused != 'true'
         run: |
           pnpm --dir packages/core exec vitest run src/constants/product.test.ts src/constants/path-shim-layout.test.ts --maxWorkers=2
@@ -85,13 +85,13 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        run: pnpm exec node scripts/fork/release-workflow.mjs sign
+        run: pnpm exec node scripts/release/release-workflow.mjs sign
       - name: Preserve signed application before notarization
         if: steps.restore.outputs.reused != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.restore.outputs.signed_name }}
-          path: .fork-release/signed/
+          path: .release/signed/
           if-no-files-found: error
           include-hidden-files: true
           compression-level: 0
@@ -118,13 +118,13 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-        run: node scripts/fork/release-workflow.mjs submit
+        run: node scripts/release/release-workflow.mjs submit
       - name: Preserve submission ID before waiting
         if: steps.submit.outputs.new_notary == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.submit.outputs.notary_name }}
-          path: .fork-release/notary/notary.json
+          path: .release/notary/notary.json
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 3
@@ -133,7 +133,7 @@ jobs:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-        run: node scripts/fork/release-workflow.mjs wait
+        run: node scripts/release/release-workflow.mjs wait
   package:
     needs: [build, notarize]
     if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && (needs.notarize.result == 'success' || needs.notarize.result == 'skipped') && !inputs.build_only
@@ -157,7 +157,7 @@ jobs:
           package-manager-cache: false
       - name: Restore signed application and check for a verified draft
         id: restore
-        run: node scripts/fork/release-workflow.mjs prepare-package
+        run: node scripts/release/release-workflow.mjs prepare-package
       - name: Install packaging tools
         if: steps.restore.outputs.reused != 'true'
         run: npm install --global pnpm@12.8.1
@@ -170,13 +170,13 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        run: pnpm exec node scripts/fork/release-workflow.mjs package
+        run: pnpm exec node scripts/release/release-workflow.mjs package
       - name: Preserve verified draft receipt
         if: steps.restore.outputs.reused != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.package.outputs.ready_name }}
-          path: .fork-release/ready/ready.json
+          path: .release/ready/ready.json
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 3
@@ -200,4 +200,4 @@ jobs:
           node-version-file: '.node-version'
           package-manager-cache: false
       - name: Verify remote files and publish the original build
-        run: node scripts/fork/release-workflow.mjs promote
+        run: node scripts/release/release-workflow.mjs promote

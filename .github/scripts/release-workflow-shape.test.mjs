@@ -3,14 +3,14 @@ import { describe, expect, test } from 'vitest';
 import { parse } from 'yaml';
 
 const workflow = parse(
-  readFileSync(new URL('../workflows/identity16-web-release.yml', import.meta.url), 'utf8'),
+  readFileSync(new URL('../workflows/release.yml', import.meta.url), 'utf8'),
 );
 const jobs = workflow.jobs;
 const command = (job, suffix) =>
   job.steps.findIndex((step) => step.run?.includes(`release-workflow.mjs ${suffix}`));
 
-describe('recoverable fork release workflow', () => {
-  test('keeps all release stages on fork main and exposes only the approved resume input', () => {
+describe('recoverable release workflow', () => {
+  test('keeps all release stages on main and exposes only the approved resume input', () => {
     expect(workflow.on.push).toBeUndefined();
     expect(Object.keys(workflow.on.workflow_dispatch.inputs)).toEqual([
       'version',
@@ -71,9 +71,9 @@ describe('recoverable fork release workflow', () => {
       .flatMap((j) => j.steps)
       .filter((s) => s.uses?.startsWith('actions/upload-artifact@'));
     expect(uploads.map((s) => s.with.path)).toEqual([
-      '.fork-release/signed/',
-      '.fork-release/notary/notary.json',
-      '.fork-release/ready/ready.json',
+      '.release/signed/',
+      '.release/notary/notary.json',
+      '.release/ready/ready.json',
     ]);
     for (const upload of uploads) {
       expect(upload.with['retention-days']).toBe(3);

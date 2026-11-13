@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 import { parse, stringify } from 'yaml';
 import { requireNotarizationCredentials } from './build-desktop.mjs';
-import { forkReleasePlan, releaseFileDigest, stageDesktopRelease } from './release-plan.mjs';
+import { releasePlan, releaseFileDigest, stageDesktopRelease } from './release-plan.mjs';
 
 const fixtures = [];
 afterEach(() => {
@@ -19,7 +19,7 @@ function fixture() {
   const release = join(root, 'release');
   mkdirSync(packaged);
   mkdirSync(release);
-  const plan = forkReleasePlan('0.76.0-identity16.3');
+  const plan = releasePlan('0.76.0-identity16.3');
   writeFileSync(join(release, plan.cli), 'web cli');
   writeFileSync(join(release, 'channel.mjs'), 'channel');
   const manifest = {
@@ -40,7 +40,7 @@ function fixture() {
   return { packaged, release, plan, manifest };
 }
 
-describe('fork release inventory', () => {
+describe('release inventory', () => {
   test('hashes artifacts larger than one read buffer without retaining the whole file', () => {
     const { packaged } = fixture();
     const path = join(packaged, 'large-asset');
@@ -58,7 +58,7 @@ describe('fork release inventory', () => {
     '',
     undefined,
   ])('rejects an invalid release version %j', (version) => {
-    expect(() => forkReleasePlan(version)).toThrow(/fork version/);
+    expect(() => releasePlan(version)).toThrow(/release version/);
   });
 
   test('pins updater downloads to the versioned release and checksums every published file', () => {

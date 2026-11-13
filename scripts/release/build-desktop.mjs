@@ -19,7 +19,7 @@ import { verifyFuses } from '../../packages/desktop/scripts/afterSign.mjs';
 import { stampMacUpdateManifests } from '../../packages/desktop/scripts/mac-update-manifest.ts';
 import { targetFuses } from '../../packages/desktop/scripts/target-fuses.mjs';
 import { readCheckpoint, validateCandidate } from './release-checkpoint.mjs';
-import { forkReleasePlan, stageDesktopRelease } from './release-plan.mjs';
+import { releasePlan, stageDesktopRelease } from './release-plan.mjs';
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { stdio: 'inherit', ...options });
@@ -206,7 +206,7 @@ export async function verifyPackagedApp(app, version, env = process.env, notariz
   const wrapper = join(app, 'Contents/Resources/cli/bin/ok.sh');
   const cli = spawnSync(wrapper, ['--version'], { encoding: 'utf8', env });
   if (cli.status !== 0 || cli.stdout.split(/\r?\n/, 1)[0].trim() !== version)
-    throw new Error('The bundled fork CLI did not report the release version.');
+    throw new Error('The bundled CLI did not report the release version.');
   console.log(
     `Verified ${notarized ? 'signed, notarized' : 'signed'} arm64 application and bundled CLI: ${version}`,
   );
@@ -218,14 +218,14 @@ export async function buildDesktop(
   input = process.env,
   { signOnly = false } = {},
 ) {
-  const plan = forkReleasePlan(version);
+  const plan = releasePlan(version);
   if (process.platform !== 'darwin' || process.arch !== 'arm64')
     throw new Error('Build OpenKnowledge16 on macOS arm64.');
   if (signOnly) requireSigningCredentials(input);
   else requireNotarizationCredentials(input);
   const root = resolve(import.meta.dirname, '../..');
   const desktop = join(root, 'packages/desktop');
-  const releaseDir = resolve(output ?? join(root, '.fork-release'));
+  const releaseDir = resolve(output ?? join(root, '.release'));
   const cliArchive = join(releaseDir, plan.cli);
   const packedManifest = JSON.parse(
     readCommand('tar', ['-xOf', cliArchive, 'package/package.json']),
@@ -237,7 +237,7 @@ export async function buildDesktop(
   );
   const originals = new Map(manifests.map((path) => [path, readFileSync(path, 'utf8')]));
   const temp = mkdtempSync(join(tmpdir(), 'openknowledge16-signing-'));
-  const scratchRoot = join(root, '.fork-release');
+  const scratchRoot = join(root, '.release');
   mkdirSync(scratchRoot, { recursive: true });
   const signedOutput = signOnly ? mkdtempSync(join(scratchRoot, '.signed-')) : null;
   const signing = { keychain: null, addedKeychains: [] };
@@ -277,7 +277,7 @@ export async function buildDesktop(
       'mac-arm64/OpenKnowledge16.app',
     );
     await verifyPackagedApp(app, version, env, !signOnly);
-    copyFileSync(join(root, 'scripts/fork/channel.mjs'), join(releaseDir, 'channel.mjs'));
+    copyFileSync(join(root, 'scripts/release/channel.mjs'), join(releaseDir, 'channel.mjs'));
     if (signOnly) {
       run('ditto', [
         '-c',
@@ -323,18 +323,18 @@ export async function buildDesktop(
 }
 
 export async function packageDesktop(version, candidateDir, releaseDir, input = process.env) {
-  forkReleasePlan(version);
+  releasePlan(version);
   requireSigningCredentials(input);
   validateCandidate(readCheckpoint(candidateDir, 'candidate'), candidateDir, version);
   if (resolve(candidateDir) === resolve(releaseDir))
     throw new Error('Keep the signed checkpoint separate from packaged assets.');
   if (process.platform !== 'darwin' || process.arch !== 'arm64')
-    throw new Error('Package the fork on macOS arm64.');
+    throw new Error('Package the desktop app on macOS arm64.');
   const root = resolve(import.meta.dirname, '../..');
   const desktop = join(root, 'packages/desktop');
-  mkdirSync(join(root, '.fork-release'), { recursive: true });
+  mkdirSync(join(root, '.release'), { recursive: true });
   mkdirSync(releaseDir, { recursive: true });
-  const temp = mkdtempSync(join(root, '.fork-release/.package-'));
+  const temp = mkdtempSync(join(root, '.release/.package-'));
   const signing = { keychain: null, addedKeychains: [] };
   try {
     const env = prepareSigning(temp, desktop, input, signing, true);
@@ -404,7 +404,7 @@ export async function packageDesktop(version, candidateDir, releaseDir, input = 
     );
     await verifyPackagedApp(app, version, env);
     stampMacUpdateManifests(artifacts);
-    const plan = forkReleasePlan(version);
+    const plan = releasePlan(version);
     run('codesign', ['--verify', '--verbose=2', join(artifacts, plan.dmg)]);
     copyFileSync(join(candidateDir, plan.cli), join(releaseDir, plan.cli));
     copyFileSync(join(candidateDir, 'channel.mjs'), join(releaseDir, 'channel.mjs'));

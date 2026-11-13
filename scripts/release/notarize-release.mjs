@@ -23,7 +23,7 @@ export function requireApiCredentials(env) {
 
 export async function withNotaryClient(env, action) {
   requireApiCredentials(env);
-  const temp = mkdtempSync(join(tmpdir(), 'fork-notary-'));
+  const temp = mkdtempSync(join(tmpdir(), 'release-notary-'));
   try {
     const key = env.APPLE_API_KEY.includes('-----BEGIN')
       ? env.APPLE_API_KEY

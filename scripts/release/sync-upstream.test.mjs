@@ -22,14 +22,14 @@ function scenario(ahead, pulls = [], mutationError = null) {
   return { result, calls };
 }
 
-test('up-to-date forks require no PR queries or writes', () => {
+test('an up-to-date main requires no PR queries or writes', () => {
   const { result, calls } = scenario(0);
   assert.equal(result().action, 'unchanged');
   assert.equal(calls.length, 2);
   assert.ok(calls.every((call) => call.method === 'GET'));
 });
 
-test('new upstream commits open one direct cross-repository PR into fork main', () => {
+test('new upstream commits open one direct cross-repository PR into main', () => {
   const { result, calls } = scenario(3);
   assert.deepEqual(result(), { action: 'created', url });
   const mutation = calls.at(-1);

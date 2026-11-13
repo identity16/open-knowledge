@@ -3,7 +3,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
-  forkReleasePlan,
+  releasePlan,
   releaseFileDigest,
   validateReleaseInventory,
 } from './release-identity.mjs';
@@ -22,9 +22,9 @@ function gh(args) {
   return result.stdout;
 }
 
-export function isNewerForkRelease(version, previous) {
-  forkReleasePlan(version);
-  forkReleasePlan(previous);
+export function isNewerRelease(version, previous) {
+  releasePlan(version);
+  releasePlan(previous);
   const parts = (value) =>
     value
       .replace('-identity16.', '.')
@@ -39,7 +39,7 @@ export function isNewerForkRelease(version, previous) {
 }
 
 export function stagedReleaseInventory(directory, version) {
-  const plan = forkReleasePlan(version);
+  const plan = releasePlan(version);
   const required = [plan.cli, plan.dmg, plan.zip, plan.manifest, 'channel.mjs', 'checksums.txt'];
   const allowed = new Set([...required, `${plan.dmg}.blockmap`, `${plan.zip}.blockmap`]);
   const names = JSON.parse(readFileSync(join(directory, 'release-assets.json'), 'utf8'));
@@ -98,8 +98,8 @@ function publicationContext(version, sourceSha, env, invoke) {
     sourceSha.trim() !== sourceSha ||
     !/^[a-f0-9]{40}$/.test(sourceSha)
   )
-    throw new Error('Publish only from the fork main branch in GitHub Actions.');
-  const plan = forkReleasePlan(version);
+    throw new Error('Publish only from main branch in GitHub Actions.');
+  const plan = releasePlan(version);
   const api = (path, optional = false) => {
     try {
       return JSON.parse(invoke(['api', `repos/${REPOSITORY}/${path}`]));
@@ -126,8 +126,8 @@ function publicationContext(version, sourceSha, env, invoke) {
   };
   const checkLatest = () => {
     const latest = api('releases/latest', true);
-    if (latest && !isNewerForkRelease(version, latest.tag_name.replace(/^identity16-v/, '')))
-      throw new Error('A fork release must be newer than the latest published release.');
+    if (latest && !isNewerRelease(version, latest.tag_name.replace(/^identity16-v/, '')))
+      throw new Error('A release must be newer than the latest published release.');
   };
   const findRelease = () => {
     const pages = JSON.parse(
@@ -138,7 +138,7 @@ function publicationContext(version, sourceSha, env, invoke) {
   return { plan, api, checkSource, checkLatest, findRelease };
 }
 
-export function preflightForkRelease(version, sourceSha, env = process.env, invoke = gh) {
+export function preflightRelease(version, sourceSha, env = process.env, invoke = gh) {
   const context = publicationContext(version, sourceSha, env, invoke);
   const release = context.findRelease();
   context.checkSource(release);
@@ -155,7 +155,7 @@ function pauseSync(milliseconds) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
 }
 
-export function stageForkRelease(
+export function stageRelease(
   version,
   directory,
   sourceSha,
@@ -164,7 +164,7 @@ export function stageForkRelease(
   pause = pauseSync,
 ) {
   const { plan, api, findRelease } = publicationContext(version, sourceSha, env, invoke);
-  let release = preflightForkRelease(version, sourceSha, env, invoke);
+  let release = preflightRelease(version, sourceSha, env, invoke);
   const inventory = stagedReleaseInventory(directory, version);
   if (release?.assets.some((asset) => !inventory.some((entry) => entry.name === asset.name)))
     throw new Error('The existing draft contains unexpected assets; inspect it before resuming.');
@@ -183,7 +183,7 @@ export function stageForkRelease(
       '--title',
       `OpenKnowledge16 ${version}`,
       '--notes',
-      `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the fork web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION_IDENTITY16.md`,
+      `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION_IDENTITY16.md`,
     ]);
     release = findRelease();
     for (let attempt = 1; !release && attempt < DRAFT_VISIBILITY_ATTEMPTS; attempt += 1) {
@@ -211,7 +211,7 @@ export function stageForkRelease(
   };
 }
 
-export function promoteForkRelease(proof, env = process.env, invoke = gh) {
+export function promoteRelease(proof, env = process.env, invoke = gh) {
   const { plan, api, checkSource, checkLatest } = publicationContext(
     proof.version,
     proof.sourceSha,
@@ -259,15 +259,15 @@ export function promoteForkRelease(proof, env = process.env, invoke = gh) {
   return release.html_url;
 }
 
-export function publishForkRelease(version, directory, env = process.env, invoke = gh) {
-  return promoteForkRelease(
-    stageForkRelease(version, directory, env.GITHUB_SHA, env, invoke),
+export function publishRelease(version, directory, env = process.env, invoke = gh) {
+  return promoteRelease(
+    stageRelease(version, directory, env.GITHUB_SHA, env, invoke),
     env,
     invoke,
   );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const directory = resolve(import.meta.dirname, '../../.fork-release');
-  console.log(publishForkRelease(process.argv[2], directory));
+  const directory = resolve(import.meta.dirname, '../../.release');
+  console.log(publishRelease(process.argv[2], directory));
 }

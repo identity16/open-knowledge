@@ -210,7 +210,7 @@ export async function installLocal(archive, label) {
 function rollback() {
   const state = JSON.parse(readFileSync(join(base, 'state.json'), 'utf8'));
   if (!state.previous || !existsSync(join(state.previous, cliRelative)))
-    throw new Error('No previous fork installation is available.');
+    throw new Error('No previous installation is available.');
   const previous = readlinkSync(current);
   activate(state.previous);
   writeFileSync(join(base, 'pinned'), state.previous);

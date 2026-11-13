@@ -17,7 +17,7 @@ export function releaseFileDigest(path, algorithm = 'sha256', encoding = 'hex') 
   }
 }
 
-export function forkReleasePlan(version) {
+export function releasePlan(version) {
   if (
     typeof version !== 'string' ||
     version.trim() !== version ||
@@ -25,7 +25,7 @@ export function forkReleasePlan(version) {
       version ?? '',
     )
   ) {
-    throw new Error('Expected a fork version such as 0.76.0-identity16.3.');
+    throw new Error('Expected a release version such as 0.76.0-identity16.3.');
   }
   const tag = `identity16-v${version}`;
   return {
@@ -40,7 +40,7 @@ export function forkReleasePlan(version) {
 }
 
 export function validateReleaseInventory(version, assets) {
-  const plan = forkReleasePlan(version);
+  const plan = releasePlan(version);
   const required = [plan.cli, plan.dmg, plan.zip, plan.manifest, 'channel.mjs', 'checksums.txt'];
   const allowed = [...required, `${plan.dmg}.blockmap`, `${plan.zip}.blockmap`];
   if (

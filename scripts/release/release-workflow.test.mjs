@@ -18,9 +18,9 @@ afterEach(() => {
 });
 
 test('bootstraps release recovery and preflight without installing workspace dependencies', () => {
-  const root = realpathSync(mkdtempSync(join(tmpdir(), 'fork-workflow-bootstrap-')));
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'release-workflow-bootstrap-')));
   fixtures.push(root);
-  const scripts = join(root, 'scripts/fork');
+  const scripts = join(root, 'scripts/release');
   const bin = join(root, 'bin');
   mkdirSync(scripts, { recursive: true });
   mkdirSync(bin);
@@ -38,11 +38,11 @@ test('bootstraps release recovery and preflight without installing workspace dep
     `
 const fs = require('node:fs');
 const args = process.argv.slice(2);
-fs.appendFileSync(process.env.FORK_TEST_COMMANDS, JSON.stringify(args) + '\\n');
+fs.appendFileSync(process.env.RELEASE_TEST_COMMANDS, JSON.stringify(args) + '\\n');
 const path = args[1];
 if (args[0] !== 'api' || args.includes('POST')) throw new Error('Unexpected mutation');
 if (path.endsWith('/actions/runs/303')) console.log(JSON.stringify({
-  id: 303, path: '.github/workflows/identity16-web-release.yml', event: 'workflow_dispatch',
+  id: 303, path: '.github/workflows/release.yml', event: 'workflow_dispatch',
   head_branch: 'main', head_sha: 'a'.repeat(40),
   repository: { full_name: 'identity16/open-knowledge' },
   head_repository: { full_name: 'identity16/open-knowledge' },
@@ -72,14 +72,14 @@ else if (path.includes('/git/ref/') || path.endsWith('/releases/latest')) {
       GITHUB_SHA: 'a'.repeat(40),
       GITHUB_RUN_ID: '303',
       GITHUB_OUTPUT: output,
-      FORK_VERSION: '0.76.0-identity16.5',
-      FORK_TEST_COMMANDS: commands,
+      RELEASE_VERSION: '0.76.0-identity16.5',
+      RELEASE_TEST_COMMANDS: commands,
     },
   });
   expect(result.stderr).toBe('');
   expect(result.status).toBe(0);
   expect(readFileSync(output, 'utf8')).toBe(
-    'reused=false\ncandidate_run_id=303\nready_run_id=\nsigned_name=fork-signed-0.76.0-identity16.5\n',
+    'reused=false\ncandidate_run_id=303\nready_run_id=\nsigned_name=release-signed-0.76.0-identity16.5\n',
   );
   expect(readFileSync(commands, 'utf8')).not.toContain('release","create');
 });

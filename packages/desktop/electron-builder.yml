@@ -11,9 +11,9 @@ copyright: Copyright © 2026 Inkeep
 # electron-rebuild / native-module ABI compilation cannot drift.
 electronVersion: "44.9.1"
 
-# This fork builds macOS only. The fork release passes `-c.npmRebuild=false`
-# (scripts/fork/build-desktop.mjs): every native module the app and its CLI load
-# has an N-API prebuild, and scripts/fork/native-probe.cjs proves they load in
+# This product builds macOS only. The release passes `-c.npmRebuild=false`
+# (scripts/release/build-desktop.mjs): every native module the app and its CLI load
+# has an N-API prebuild, and scripts/release/native-probe.cjs proves they load in
 # the packaged Electron runtime. Never skip the pass with a `beforeBuild` hook
 # returning false: app-builder-lib then assumes node_modules are staged
 # externally and ships an asar the app cannot start from.
