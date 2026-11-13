@@ -242,6 +242,7 @@ describe('ConfigSchema coverage (NR3 — every leaf has fieldRegistry metadata)'
       'appearance.sidebar.showOnlyMarkdownFiles',
       'appearance.sidebar.showSkillGroups',
       'appearance.sidebar.showSkillsSection',
+      'appearance.sidebar.sortOrder',
       'autoSync.enabled',
       'autoSync.mode',
       'autoSync.pullIntervalSeconds',

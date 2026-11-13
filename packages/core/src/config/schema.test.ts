@@ -177,7 +177,7 @@ describe('content.attachmentFolderPath', () => {
 });
 
 describe('appearance.sidebar view toggles', () => {
-  test('sidebar defaults: hidden files off, only-markdown off, Skills section on, .ok folders off, grouping on', () => {
+  test('sidebar defaults: hidden files off, only-markdown off, Skills section on, .ok folders off, grouping on, sorted by name', () => {
     const sidebar = ConfigSchema.parse({ appearance: { sidebar: {} } }).appearance.sidebar;
     expect(sidebar).toEqual({
       showHiddenFiles: false,
@@ -185,6 +185,7 @@ describe('appearance.sidebar view toggles', () => {
       showSkillsSection: true,
       showOkFolders: false,
       showSkillGroups: true,
+      sortOrder: 'name',
       pinnedProjectSkills: [],
       pinnedGlobalSkills: [],
     });
@@ -199,6 +200,7 @@ describe('appearance.sidebar view toggles', () => {
           showSkillsSection: false,
           showOkFolders: true,
           showSkillGroups: false,
+          sortOrder: 'modified',
           pinnedProjectSkills: ['mine'],
           pinnedGlobalSkills: ['ponytail'],
         },
@@ -210,9 +212,16 @@ describe('appearance.sidebar view toggles', () => {
       showSkillsSection: false,
       showOkFolders: true,
       showSkillGroups: false,
+      sortOrder: 'modified',
       pinnedProjectSkills: ['mine'],
       pinnedGlobalSkills: ['ponytail'],
     });
+  });
+
+  test('sortOrder rejects values outside name and modified', () => {
+    expect(() =>
+      ConfigSchema.parse({ appearance: { sidebar: { sortOrder: 'manual' } } }),
+    ).toThrow();
   });
 });
 

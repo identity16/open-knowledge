@@ -63,6 +63,9 @@ export const DEFAULT_LOGS_MAX_BYTES = 26_214_400;
 
 const DEFAULT_LOSS_CAPTURE_MAX_BYTES = 12_582_912;
 
+export const FILE_TREE_SORT_ORDERS = ['name', 'modified'] as const;
+export type FileTreeSortOrder = (typeof FILE_TREE_SORT_ORDERS)[number];
+
 export const DEFAULT_EMBEDDINGS_BASE_URL = 'https://api.openai.com/v1';
 export const DEFAULT_EMBEDDINGS_MODEL = 'text-embedding-3-small';
 export const DEFAULT_EMBEDDINGS_MAX_BATCH_SIZE = 96;
@@ -524,6 +527,17 @@ export const ConfigSchema = z.looseObject({
                 'Show only markdown documents (.md/.mdx) and folders in the file tree, hiding other file types from view. View-only: hidden files stay on disk and remain reachable via links and search. Per-machine (project-local) — not shared with collaborators.',
             })
             .default(false),
+          sortOrder: z
+            .enum(FILE_TREE_SORT_ORDERS)
+            .register(fieldRegistry, {
+              scope: 'project-local',
+              agentSettable: false,
+              reload: 'live',
+              defaultScope: 'project-local',
+              description:
+                'Order of entries within each folder of the file tree. "name" sorts alphabetically with numbers in natural order; "modified" puts the most recently modified files first. Folders always stay above files and sort by name. Per-machine (project-local) — not shared with collaborators.',
+            })
+            .default('name'),
           showSkillsSection: z
             .boolean()
             .register(fieldRegistry, {
