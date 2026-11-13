@@ -46,7 +46,7 @@ index 642d25d09823ecd3d0f5f66a23fc9c8e877bffa3..ff934e19b1676946b800cdc713ebe887
  		if (destinationPath === draggedPath) return null;
  		return {
 diff --git a/dist/model/publicTypes.d.ts b/dist/model/publicTypes.d.ts
-index 84a7e2d14f67c1aad8230f19a3426ab7403f378e..5c8a26084fdc5a234b4bb26ac9b952b85ef7934f 100644
+index 84a7e2d14f67c1aad8230f19a3426ab7403f378e..17572c31914547893712e6cfa53f09c0c8401fbc 100644
 --- a/dist/model/publicTypes.d.ts
 +++ b/dist/model/publicTypes.d.ts
 @@ -132,16 +132,18 @@ interface FileTreeDropTarget {
@@ -65,12 +65,12 @@ index 84a7e2d14f67c1aad8230f19a3426ab7403f378e..5c8a26084fdc5a234b4bb26ac9b952b8
  }
  interface FileTreeDragAndDropConfig {
    canDrag?: (paths: readonly FileTreePublicId[]) => boolean;
-+  canReorder?: () => boolean;
++  canReorder?: (parentDirectoryPath: FileTreePublicId | null) => boolean;
    canDrop?: (event: FileTreeDropContext) => boolean;
    onDropComplete?: (event: FileTreeDropResult) => void;
    onDropError?: (error: string, event: FileTreeDropContext) => void;
 diff --git a/dist/render/FileTreeView.js b/dist/render/FileTreeView.js
-index 648639b4b65c1dd797434e3afe189848426f4d53..37ab6e085a9bf61b3e50cbc063b29b26cb258d28 100644
+index 648639b4b65c1dd797434e3afe189848426f4d53..6e1f98edf655aadf2cb7776a31e2d22fc134f1fa 100644
 --- a/dist/render/FileTreeView.js
 +++ b/dist/render/FileTreeView.js
 @@ -96,13 +96,43 @@ function getShadowPointElementByGeometry(rootNode, clientX, clientY) {
@@ -88,7 +88,7 @@ index 648639b4b65c1dd797434e3afe189848426f4d53..37ab6e085a9bf61b3e50cbc063b29b26
 +	if (ratio > 1 - DROP_REORDER_EDGE_RATIO) return "after";
 +	return null;
 +}
-+function resolveDropTargetFromElement(target, clientY = null, reorderEnabled = false) {
++function resolveDropTargetFromElement(target, clientY = null, canReorder = null) {
  	const rowButton = target?.closest?.("[data-type=\"item\"]");
 -	if (!(rowButton instanceof HTMLElement)) return null;
 +	if (!(rowButton instanceof HTMLElement)) {
@@ -105,9 +105,9 @@ index 648639b4b65c1dd797434e3afe189848426f4d53..37ab6e085a9bf61b3e50cbc063b29b26
  	if (hoveredPath == null) return null;
  	const flattenedSegment = target?.closest?.("[data-item-flattened-subitem]");
  	const flattenedSegmentPath = flattenedSegment instanceof HTMLElement ? flattenedSegment.getAttribute("data-item-flattened-subitem") ?? null : null;
-+	const reorderPosition = reorderEnabled && flattenedSegmentPath == null && rowButton.querySelector("[data-item-flattened-subitem]") == null ? resolveDropReorderPosition(rowButton, clientY) : null;
++	const reorderParentPath = rowButton.dataset.itemParentPath ?? null;
++	const reorderPosition = canReorder != null && flattenedSegmentPath == null && rowButton.querySelector("[data-item-flattened-subitem]") == null && canReorder(reorderParentPath == null || reorderParentPath.length === 0 ? null : reorderParentPath) === true ? resolveDropReorderPosition(rowButton, clientY) : null;
 +	if (reorderPosition != null) {
-+		const reorderParentPath = rowButton.dataset.itemParentPath ?? null;
 +		return {
 +			directoryPath: reorderParentPath == null || reorderParentPath.length === 0 ? null : reorderParentPath,
 +			flattenedSegmentPath: null,
@@ -134,7 +134,7 @@ index 648639b4b65c1dd797434e3afe189848426f4d53..37ab6e085a9bf61b3e50cbc063b29b26
  	const syncDropTargetFromPoint = (clientX, clientY) => {
  		const rootNode = rootRef.current?.getRootNode();
 -		const nextTarget = resolveDropTargetFromElement(getPointElement(rootNode instanceof ShadowRoot ? rootNode : document, clientX, clientY));
-+		const nextTarget = resolveDropTargetFromElement(getPointElement(rootNode instanceof ShadowRoot ? rootNode : document, clientX, clientY), clientY, controller.getDragAndDropConfig()?.canReorder?.() === true);
++		const nextTarget = resolveDropTargetFromElement(getPointElement(rootNode instanceof ShadowRoot ? rootNode : document, clientX, clientY), clientY, controller.getDragAndDropConfig()?.canReorder ?? null);
  		controller.setDragTarget(nextTarget);
  		return controller.getDragSession()?.target ?? null;
  	};
@@ -150,7 +150,7 @@ index 648639b4b65c1dd797434e3afe189848426f4d53..37ab6e085a9bf61b3e50cbc063b29b26
  	const handleTreeDragOver = (event) => {
  		if (!dragAndDropEnabled || controller.getDragSession() == null || touchDragActiveRef.current) return;
 -		const nextTarget = resolveDropTargetFromElement(event.target instanceof HTMLElement ? event.target : null);
-+		const nextTarget = resolveDropTargetFromElement(event.target instanceof HTMLElement ? event.target : null, event.clientY, controller.getDragAndDropConfig()?.canReorder?.() === true);
++		const nextTarget = resolveDropTargetFromElement(event.target instanceof HTMLElement ? event.target : null, event.clientY, controller.getDragAndDropConfig()?.canReorder ?? null);
  		controller.setDragTarget(nextTarget);
  		scheduleDragHoverOpen(controller.getDragSession()?.target ?? null);
  		updateDragPoint(event.clientX, event.clientY);

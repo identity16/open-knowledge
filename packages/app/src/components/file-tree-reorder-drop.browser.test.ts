@@ -16,7 +16,9 @@ afterEach(() => {
   }
 });
 
-async function mountTree(canReorder: boolean): Promise<MountedTree> {
+async function mountTree(
+  canReorder: boolean | ((parentDirectoryPath: string | null) => boolean),
+): Promise<MountedTree> {
   const host = document.createElement('div');
   host.style.cssText = 'width: 320px; height: 400px;';
   document.body.append(host);
@@ -27,7 +29,7 @@ async function mountTree(canReorder: boolean): Promise<MountedTree> {
     initialExpansion: 'closed',
     initialVisibleRowCount: 10,
     dragAndDrop: {
-      canReorder: () => canReorder,
+      canReorder: typeof canReorder === 'function' ? canReorder : () => canReorder,
       onDropComplete: (event) => drops.push(event),
     },
   });
@@ -149,5 +151,22 @@ describe('@pierre/trees reorder drop zones (local patch)', () => {
       target: { kind: 'directory', directoryPath: 'docs/', position: 'before' },
     });
     expect(tree.getItem('docs/second.md')).not.toBeNull();
+  });
+
+  test('canReorder is asked per parent folder, so a denied folder keeps plain drops', async () => {
+    const asked: (string | null)[] = [];
+    const { host } = await mountTree((parent) => {
+      asked.push(parent);
+      return parent === 'docs/';
+    });
+    const inside = await dragOnto(host, 'docs/second.md', 'docs/inner.md', 0.1);
+    await vi.waitFor(() =>
+      expect(inside.target()?.getAttribute('data-item-drop-position')).toBe('before'),
+    );
+    expect(asked).toContain('docs/');
+
+    const top = await dragOnto(host, 'gamma.md', 'alpha.md', 0.1);
+    await vi.waitFor(() => expect(asked).toContain(null));
+    expect(top.target()?.hasAttribute('data-item-drop-position')).toBe(false);
   });
 });
