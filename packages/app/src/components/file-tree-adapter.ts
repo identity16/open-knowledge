@@ -23,6 +23,7 @@ import {
   manualRanksByFolderKey,
   NO_FOLDER_SORT_ORDER,
   sortOrdersInUse,
+  usesModifiedTimes,
 } from '@/lib/file-tree-sort';
 import { OK_SIDEBAR_DRAG_MIME } from '@/lib/sidebar-drag';
 
@@ -177,7 +178,7 @@ export function fileTreeSortState(
   const inUse = sortOrdersInUse(order, folderSortOrder);
   return {
     order,
-    modifiedMsByTreePath: inUse.has('modified')
+    modifiedMsByTreePath: usesModifiedTimes(inUse)
       ? documentsModifiedMsByTreePath(documents)
       : EMPTY_MODIFIED_MS,
     manualRanksByFolderKey: inUse.has('manual')
@@ -196,7 +197,7 @@ export function fileTreeSortSignature(
   const inUse = sortOrdersInUse(order, folderSortOrder);
   const head = `${order}\0${JSON.stringify(folderSortOrder)}`;
   const manualPart = inUse.has('manual') ? JSON.stringify(manualOrder) : '';
-  if (!inUse.has('modified')) return `${head}\0${manualPart}`;
+  if (!usesModifiedTimes(inUse)) return `${head}\0${manualPart}`;
   const parts: string[] = [head, manualPart];
   for (const entry of documents) {
     if (isFolderEntry(entry)) continue;

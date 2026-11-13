@@ -3504,8 +3504,11 @@ msgstr "তথ্য"
 msgid "Date"
 msgstr "তারিখ"
 
-msgid "Date modified"
-msgstr "পরিবর্তনের তারিখ"
+msgid "Date modified (newest first)"
+msgstr "পরিবর্তনের তারিখ (নতুনটি আগে)"
+
+msgid "Date modified (oldest first)"
+msgstr "পরিবর্তনের তারিখ (পুরনোটি আগে)"
 
 msgid "Default"
 msgstr "ডিফল্ট"
@@ -6572,8 +6575,14 @@ msgstr "নাম"
 msgid "Name"
 msgstr "নাম"
 
+msgid "Name (A to Z)"
+msgstr "নাম (A থেকে Z)"
+
 msgid "Name (e.g. {login})"
 msgstr "নাম (যেমন {login})"
+
+msgid "Name (Z to A)"
+msgstr "নাম (Z থেকে A)"
 
 msgid "Name cannot be empty"
 msgstr "নাম খালি হতে পারে না"
@@ -9063,8 +9072,8 @@ msgstr "প্রকল্প নিরীক্ষা চালানো হচ
 msgid "Runs a shell command"
 msgstr "একটি শেল কমান্ড চালায়"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "মূল ফোল্ডারের মতো ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "মূল ফোল্ডারের মতো: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "নমুনা ছবি"

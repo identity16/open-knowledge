@@ -130,6 +130,7 @@ import { scheduleClipboardWrite } from '@/lib/share/clipboard-adapter';
 import { buildFolderShareInput, runShareAction } from '@/lib/share/run-share-action';
 import { physicalSide, useFileSidebarSide } from '@/lib/sidebar-side-store';
 import { useSidebarSortSettings } from '@/lib/sidebar-sort-settings';
+import { useSortOrderLabels } from '@/lib/sort-order-labels';
 import { useStickyAgent } from '@/lib/unified-agent-store';
 import { useDocumentDirection } from '@/lib/use-document-direction';
 import { useWorkspace } from '@/lib/use-workspace';
@@ -277,11 +278,11 @@ function FileSidebarInner() {
   const showOnlyMarkdownFiles = merged?.appearance?.sidebar?.showOnlyMarkdownFiles ?? false;
   const showSkillGroups = merged?.appearance?.sidebar?.showSkillGroups ?? true;
   const { sortOrder } = useSidebarSortSettings();
-  const treeSortOptions: { value: FileTreeSortOrder; label: string }[] = [
-    { value: 'name', label: t`Name` },
-    { value: 'modified', label: t`Date modified` },
-    { value: 'manual', label: t`Manual` },
-  ];
+  const sortOrderLabels = useSortOrderLabels();
+  const treeSortOptions = FILE_TREE_SORT_ORDERS.map((value) => ({
+    value,
+    label: sortOrderLabels[value],
+  }));
   const [filesOpen, setFilesOpen] = useState(true);
   useEffect(() => subscribeToFilesSectionReveal(() => setFilesOpen(true)), []);
   const configSkillsSection = merged?.appearance?.sidebar?.showSkillsSection;
@@ -394,8 +395,8 @@ function FileSidebarInner() {
       showOkFolders,
       showOnlyMarkdownFiles,
       showSkillsSection,
-      sortFilesByName: sortOrder === 'name',
-      sortFilesByModified: sortOrder === 'modified',
+      sortFilesByName: sortOrder === 'name' || sortOrder === 'name-desc',
+      sortFilesByModified: sortOrder === 'modified' || sortOrder === 'modified-asc',
       sortFilesManually: sortOrder === 'manual',
       canExpandAll: showExpandAll,
       canCollapseAll: showCollapseAll,
@@ -563,12 +564,16 @@ function FileSidebarInner() {
         }
         case 'sort-files-by-name': {
           revealEditorBeforeActing();
-          if (sortOrder !== 'name') patchSidebarVisibility({ sortOrder: 'name' });
+          if (sortOrder !== 'name' && sortOrder !== 'name-desc') {
+            patchSidebarVisibility({ sortOrder: 'name' });
+          }
           return;
         }
         case 'sort-files-by-modified': {
           revealEditorBeforeActing();
-          if (sortOrder !== 'modified') patchSidebarVisibility({ sortOrder: 'modified' });
+          if (sortOrder !== 'modified' && sortOrder !== 'modified-asc') {
+            patchSidebarVisibility({ sortOrder: 'modified' });
+          }
           return;
         }
         case 'sort-files-manually': {

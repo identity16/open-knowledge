@@ -273,3 +273,38 @@ describe('per-folder sort orders', () => {
     ).toBe(null);
   });
 });
+
+describe('descending sort orders', () => {
+  const times = new Map([
+    ['b.md', 3],
+    ['a.md', 1],
+    ['c.md', 2],
+  ]);
+  const paths = ['a.md', 'b.md', 'c.md', 'zdir/x.md', 'adir/y.md'];
+
+  test('name-desc reverses names and keeps folders above files', () => {
+    expect(
+      sortWith(
+        {
+          order: 'name-desc',
+          modifiedMsByTreePath: new Map(),
+          manualRanksByFolderKey: EMPTY_MANUAL_RANKS,
+        },
+        paths,
+      ),
+    ).toEqual(['zdir/x.md', 'adir/y.md', 'c.md', 'b.md', 'a.md']);
+  });
+
+  test('modified-asc lists the oldest file first and keeps folders by name', () => {
+    expect(
+      sortWith(
+        {
+          order: 'modified-asc',
+          modifiedMsByTreePath: times,
+          manualRanksByFolderKey: EMPTY_MANUAL_RANKS,
+        },
+        paths,
+      ),
+    ).toEqual(['adir/y.md', 'zdir/x.md', 'a.md', 'c.md', 'b.md']);
+  });
+});

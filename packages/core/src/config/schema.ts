@@ -63,7 +63,13 @@ export const DEFAULT_LOGS_MAX_BYTES = 26_214_400;
 
 const DEFAULT_LOSS_CAPTURE_MAX_BYTES = 12_582_912;
 
-export const FILE_TREE_SORT_ORDERS = ['name', 'modified', 'manual'] as const;
+export const FILE_TREE_SORT_ORDERS = [
+  'name',
+  'name-desc',
+  'modified',
+  'modified-asc',
+  'manual',
+] as const;
 export const FILE_TREE_MANUAL_ORDER_ROOT_KEY = '/';
 export type FileTreeSortOrder = (typeof FILE_TREE_SORT_ORDERS)[number];
 
@@ -536,7 +542,7 @@ export const ConfigSchema = z.looseObject({
               reload: 'live',
               defaultScope: 'project-local',
               description:
-                'Order of entries within each folder of the file tree. "name" sorts alphabetically with numbers in natural order; "modified" puts the most recently modified files first, with folders above files by name; "manual" follows appearance.sidebar.manualOrder, set by dragging rows. Per-machine (project-local) — not shared with collaborators.',
+                'Order of entries within each folder of the file tree. "name" sorts alphabetically with numbers in natural order and "name-desc" reverses it; "modified" puts the most recently modified files first and "modified-asc" the oldest, with folders above files by name; "manual" follows appearance.sidebar.manualOrder, set by dragging rows. Folders always stay above files except in manual order. Per-machine (project-local) — not shared with collaborators.',
             })
             .default('name'),
           folderSortOrder: z

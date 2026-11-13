@@ -638,7 +638,14 @@ describe('FileTree duplicate action runtime behavior', () => {
     ]);
     expect(
       Array.from(document.querySelectorAll('[role="menuitemradio"]')).map((el) => el.textContent),
-    ).toEqual(['Same as parent (Name)', 'Name', 'Date modified', 'Manual']);
+    ).toEqual([
+      'Same as parent: Name (A to Z)',
+      'Name (A to Z)',
+      'Name (Z to A)',
+      'Date modified (newest first)',
+      'Date modified (oldest first)',
+      'Manual',
+    ]);
 
     expect(screen.queryByTestId('file-tree-menu-show-hidden-files')).toBeNull();
 

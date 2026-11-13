@@ -3508,8 +3508,11 @@ msgstr "Dane"
 msgid "Date"
 msgstr "Data"
 
-msgid "Date modified"
-msgstr "Data modyfikacji"
+msgid "Date modified (newest first)"
+msgstr "Data modyfikacji (od najnowszych)"
+
+msgid "Date modified (oldest first)"
+msgstr "Data modyfikacji (od najstarszych)"
 
 msgid "Default"
 msgstr "Domyślny"
@@ -6576,8 +6579,14 @@ msgstr "nazwa"
 msgid "Name"
 msgstr "Nazwa"
 
+msgid "Name (A to Z)"
+msgstr "Nazwa (A–Z)"
+
 msgid "Name (e.g. {login})"
 msgstr "Nazwa (np. {login})"
+
+msgid "Name (Z to A)"
+msgstr "Nazwa (Z–A)"
 
 msgid "Name cannot be empty"
 msgstr "Nazwa nie może być pusta"
@@ -9067,8 +9076,8 @@ msgstr "Audyt projektu w toku"
 msgid "Runs a shell command"
 msgstr "Uruchamia polecenie powłoki"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "Jak folder nadrzędny ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "Jak folder nadrzędny: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "Obraz przykładowy"

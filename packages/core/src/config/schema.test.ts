@@ -224,7 +224,15 @@ describe('appearance.sidebar view toggles', () => {
     });
   });
 
-  test('sortOrder rejects values outside name, modified and manual', () => {
+  test('sortOrder accepts both directions of name and modified', () => {
+    for (const sortOrder of ['name-desc', 'modified-asc'] as const) {
+      expect(
+        ConfigSchema.parse({ appearance: { sidebar: { sortOrder } } }).appearance.sidebar.sortOrder,
+      ).toBe(sortOrder);
+    }
+  });
+
+  test('sortOrder rejects values outside the sort orders', () => {
     expect(() => ConfigSchema.parse({ appearance: { sidebar: { sortOrder: 'size' } } })).toThrow();
   });
 

@@ -3504,8 +3504,11 @@ msgstr "डेटा"
 msgid "Date"
 msgstr "तारीख़"
 
-msgid "Date modified"
-msgstr "संशोधन तिथि"
+msgid "Date modified (newest first)"
+msgstr "संशोधन तिथि (नवीनतम पहले)"
+
+msgid "Date modified (oldest first)"
+msgstr "संशोधन तिथि (सबसे पुराना पहले)"
 
 msgid "Default"
 msgstr "डिफ़ॉल्ट"
@@ -6572,8 +6575,14 @@ msgstr "नाम"
 msgid "Name"
 msgstr "नाम"
 
+msgid "Name (A to Z)"
+msgstr "नाम (A से Z)"
+
 msgid "Name (e.g. {login})"
 msgstr "नाम (जैसे {login})"
+
+msgid "Name (Z to A)"
+msgstr "नाम (Z से A)"
 
 msgid "Name cannot be empty"
 msgstr "नाम खाली नहीं हो सकता"
@@ -9063,8 +9072,8 @@ msgstr "प्रोजेक्ट ऑडिट चलाया जा रह�
 msgid "Runs a shell command"
 msgstr "एक शेल कमांड चलाता है"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "मूल फ़ोल्डर जैसा ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "मूल फ़ोल्डर जैसा: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "नमूना छवि"

@@ -735,7 +735,7 @@ describe('FileSidebar runtime behavior', () => {
     expect(within(menu).queryByRole('button', { name: 'Collapse all' })).toBeNull();
     expect(within(menu).getAllByTestId('dropdown-menu-separator')).toHaveLength(3);
     expect(within(menu).getAllByRole('menuitemcheckbox')).toHaveLength(5);
-    expect(within(menu).getAllByRole('menuitemradio')).toHaveLength(3);
+    expect(within(menu).getAllByRole('menuitemradio')).toHaveLength(5);
     expect(within(menu).getByRole('button', { name: 'Hide Files' })).toBeTruthy();
   });
 

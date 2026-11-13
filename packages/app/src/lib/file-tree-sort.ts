@@ -44,6 +44,10 @@ export function effectiveSortOrder(state: FileTreeSortState, folderKey: string):
   return inheritedSortOrder(state.order, folderOrders, folderKey);
 }
 
+export function usesModifiedTimes(orders: ReadonlySet<FileTreeSortOrder>): boolean {
+  return orders.has('modified') || orders.has('modified-asc');
+}
+
 export function sortOrdersInUse(
   order: FileTreeSortOrder,
   folderSortOrder: FileTreeFolderSortOrder,
@@ -181,11 +185,12 @@ export function compareFileTreeSortEntries(
     const leftIsDirectory = isDirectoryAtDepth(left, depth);
     const rightIsDirectory = isDirectoryAtDepth(right, depth);
     if (leftIsDirectory !== rightIsDirectory) return leftIsDirectory ? -1 : 1;
-    if (!leftIsDirectory && order === 'modified') {
+    if (!leftIsDirectory && (order === 'modified' || order === 'modified-asc')) {
       const byModified = compareFilesByModified(left, right, state.modifiedMsByTreePath);
-      if (byModified !== 0) return byModified;
+      if (byModified !== 0) return order === 'modified' ? byModified : -byModified;
     }
-    return compareSegmentNames(leftSegment, rightSegment);
+    const byName = compareSegmentNames(leftSegment, rightSegment);
+    return order === 'name-desc' ? -byName : byName;
   }
   if (left.segments.length !== right.segments.length) {
     return left.segments.length < right.segments.length ? -1 : 1;

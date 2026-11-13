@@ -3508,8 +3508,11 @@ msgstr "البيانات"
 msgid "Date"
 msgstr "التاريخ"
 
-msgid "Date modified"
-msgstr "تاريخ التعديل"
+msgid "Date modified (newest first)"
+msgstr "تاريخ التعديل (الأحدث أولًا)"
+
+msgid "Date modified (oldest first)"
+msgstr "تاريخ التعديل (الأقدم أولًا)"
 
 msgid "Default"
 msgstr "الافتراضي"
@@ -6576,8 +6579,14 @@ msgstr "الاسم"
 msgid "Name"
 msgstr "الاسم"
 
+msgid "Name (A to Z)"
+msgstr "الاسم (أ إلى ي)"
+
 msgid "Name (e.g. {login})"
 msgstr "الاسم (مثل {login})"
+
+msgid "Name (Z to A)"
+msgstr "الاسم (ي إلى أ)"
 
 msgid "Name cannot be empty"
 msgstr "لا يمكن أن يكون الاسم فارغًا"
@@ -9067,8 +9076,8 @@ msgstr "تجري مراجعة المشروع"
 msgid "Runs a shell command"
 msgstr "يشغّل أمر shell"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "مثل المجلد الأصلي ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "مثل المجلد الأصلي: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "صورة نموذجية"

@@ -3508,8 +3508,11 @@ msgstr "資料"
 msgid "Date"
 msgstr "日期"
 
-msgid "Date modified"
-msgstr "修改日期"
+msgid "Date modified (newest first)"
+msgstr "修改日期（最新優先）"
+
+msgid "Date modified (oldest first)"
+msgstr "修改日期（最舊優先）"
 
 msgid "Default"
 msgstr "預設"
@@ -6576,8 +6579,14 @@ msgstr "名稱"
 msgid "Name"
 msgstr "名稱"
 
+msgid "Name (A to Z)"
+msgstr "名稱（A 到 Z）"
+
 msgid "Name (e.g. {login})"
 msgstr "名稱（例如 {login}）"
+
+msgid "Name (Z to A)"
+msgstr "名稱（Z 到 A）"
 
 msgid "Name cannot be empty"
 msgstr "名稱不能是空的"
@@ -9067,8 +9076,8 @@ msgstr "正在執行專案稽核"
 msgid "Runs a shell command"
 msgstr "執行 shell 指令"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "與上層資料夾相同（{inheritedLabel}）"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "與上層資料夾相同：{inheritedLabel}"
 
 msgid "Sample image"
 msgstr "範例圖片"

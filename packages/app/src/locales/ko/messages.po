@@ -3508,8 +3508,11 @@ msgstr "데이터"
 msgid "Date"
 msgstr "날짜"
 
-msgid "Date modified"
-msgstr "수정한 날짜"
+msgid "Date modified (newest first)"
+msgstr "수정한 날짜 (최신순)"
+
+msgid "Date modified (oldest first)"
+msgstr "수정한 날짜 (오래된 순)"
 
 msgid "Default"
 msgstr "기본값"
@@ -6576,8 +6579,14 @@ msgstr "이름"
 msgid "Name"
 msgstr "이름"
 
+msgid "Name (A to Z)"
+msgstr "이름 (가나다순)"
+
 msgid "Name (e.g. {login})"
 msgstr "이름(예: {login})"
+
+msgid "Name (Z to A)"
+msgstr "이름 (역순)"
 
 msgid "Name cannot be empty"
 msgstr "이름은 비워 둘 수 없습니다"
@@ -9067,8 +9076,8 @@ msgstr "프로젝트 감사 실행 중"
 msgid "Runs a shell command"
 msgstr "셸 명령을 실행합니다"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "상위 폴더 따르기 ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "상위 폴더 따르기: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "샘플 이미지"

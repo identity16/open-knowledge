@@ -3508,8 +3508,11 @@ msgstr "Data"
 msgid "Date"
 msgstr "Date"
 
-msgid "Date modified"
-msgstr "Date modified"
+msgid "Date modified (newest first)"
+msgstr "Date modified (newest first)"
+
+msgid "Date modified (oldest first)"
+msgstr "Date modified (oldest first)"
 
 msgid "Default"
 msgstr "Default"
@@ -6576,8 +6579,14 @@ msgstr "name"
 msgid "Name"
 msgstr "Name"
 
+msgid "Name (A to Z)"
+msgstr "Name (A to Z)"
+
 msgid "Name (e.g. {login})"
 msgstr "Name (e.g. {login})"
+
+msgid "Name (Z to A)"
+msgstr "Name (Z to A)"
 
 msgid "Name cannot be empty"
 msgstr "Name cannot be empty"
@@ -9067,8 +9076,8 @@ msgstr "Running project audit"
 msgid "Runs a shell command"
 msgstr "Runs a shell command"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "Same as parent ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "Same as parent: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "Sample image"

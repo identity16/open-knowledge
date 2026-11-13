@@ -3508,8 +3508,11 @@ msgstr "ڈیٹا"
 msgid "Date"
 msgstr "تاریخ"
 
-msgid "Date modified"
-msgstr "ترمیم کی تاریخ"
+msgid "Date modified (newest first)"
+msgstr "ترمیم کی تاریخ (تازہ ترین پہلے)"
+
+msgid "Date modified (oldest first)"
+msgstr "ترمیم کی تاریخ (پرانی پہلے)"
 
 msgid "Default"
 msgstr "ڈیفالٹ"
@@ -6576,8 +6579,14 @@ msgstr "نام"
 msgid "Name"
 msgstr "نام"
 
+msgid "Name (A to Z)"
+msgstr "نام (A تا Z)"
+
 msgid "Name (e.g. {login})"
 msgstr "نام (مثلاً {login})"
+
+msgid "Name (Z to A)"
+msgstr "نام (Z تا A)"
 
 msgid "Name cannot be empty"
 msgstr "نام خالی نہیں ہو سکتا"
@@ -9067,8 +9076,8 @@ msgstr "پروجیکٹ کا آڈٹ چل رہا ہے"
 msgid "Runs a shell command"
 msgstr "ایک شیل کمانڈ چلاتا ہے"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "بالائی فولڈر کی طرح ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "بالائی فولڈر کی طرح: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "نمونہ تصویر"

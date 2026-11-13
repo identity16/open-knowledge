@@ -3504,8 +3504,11 @@ msgstr "Data"
 msgid "Date"
 msgstr "Tanggal"
 
-msgid "Date modified"
-msgstr "Tanggal diubah"
+msgid "Date modified (newest first)"
+msgstr "Tanggal diubah (terbaru dulu)"
+
+msgid "Date modified (oldest first)"
+msgstr "Tanggal diubah (terlama dulu)"
 
 msgid "Default"
 msgstr "Bawaan"
@@ -6572,8 +6575,14 @@ msgstr "nama"
 msgid "Name"
 msgstr "Nama"
 
+msgid "Name (A to Z)"
+msgstr "Nama (A ke Z)"
+
 msgid "Name (e.g. {login})"
 msgstr "Nama (mis. {login})"
+
+msgid "Name (Z to A)"
+msgstr "Nama (Z ke A)"
 
 msgid "Name cannot be empty"
 msgstr "Nama tidak boleh kosong"
@@ -9063,8 +9072,8 @@ msgstr "Menjalankan audit proyek"
 msgid "Runs a shell command"
 msgstr "Menjalankan perintah shell"
 
-msgid "Same as parent ({inheritedLabel})"
-msgstr "Sama seperti folder induk ({inheritedLabel})"
+msgid "Same as parent: {inheritedLabel}"
+msgstr "Sama seperti folder induk: {inheritedLabel}"
 
 msgid "Sample image"
 msgstr "Contoh gambar"

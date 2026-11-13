@@ -252,6 +252,7 @@ import {
   serializeSidebarDragPayload,
 } from '@/lib/sidebar-drag';
 import { useSidebarSortSettings } from '@/lib/sidebar-sort-settings';
+import { useSortOrderLabels } from '@/lib/sort-order-labels';
 import { cn } from '@/lib/utils';
 import { getValidationSnapshot, subscribeToValidationStore } from '@/lib/validation-store';
 import { joinWorkspacePath } from '@/lib/workspace-paths';
@@ -569,11 +570,7 @@ const FOLDER_SORT_INHERIT = 'inherit';
 
 function FolderSortSubmenu({ current, inherited, onChange }: FolderSortMenuState) {
   const { t } = useLingui();
-  const labels: Record<FileTreeSortOrder, string> = {
-    name: t`Name`,
-    modified: t`Date modified`,
-    manual: t`Manual`,
-  };
+  const labels = useSortOrderLabels();
   const inheritedLabel = labels[inherited];
   return (
     <DropdownMenuSub>
@@ -590,7 +587,7 @@ function FolderSortSubmenu({ current, inherited, onChange }: FolderSortMenuState
           }}
         >
           <DropdownMenuRadioItem value={FOLDER_SORT_INHERIT} data-testid="folder-sort-inherit">
-            {t`Same as parent (${inheritedLabel})`}
+            {t`Same as parent: ${inheritedLabel}`}
           </DropdownMenuRadioItem>
           {FILE_TREE_SORT_ORDERS.map((order) => (
             <DropdownMenuRadioItem key={order} value={order} data-testid={`folder-sort-${order}`}>
