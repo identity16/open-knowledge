@@ -61,7 +61,7 @@ export function UserMessageActions({
         'mt-1 flex items-center justify-end gap-1 text-muted-foreground',
         alwaysVisible
           ? null
-          : 'opacity-0 transition-opacity focus-within:opacity-100 group-hover/user-message:opacity-100',
+          : 'opacity-0 transition-opacity focus-within:opacity-100 group-hover/user-message:opacity-100 pointer-coarse:opacity-100',
       )}
       data-testid="agent-thread-user-message-actions"
     >

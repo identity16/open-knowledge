@@ -153,7 +153,7 @@ export function SkillsSidebarDock({ filesOpen = true }: { filesOpen?: boolean } 
           role="group"
           aria-label={t`Skills toolbar`}
           data-testid="skills-dock-toolbar"
-          className="flex items-center gap-0.5 opacity-0 transition-opacity group-focus-within/skills-dock:opacity-100 group-hover/skills-dock:opacity-100 motion-reduce:transition-none [&>*]:[-webkit-app-region:no-drag]"
+          className="flex items-center gap-0.5 opacity-0 transition-opacity group-focus-within/skills-dock:opacity-100 group-hover/skills-dock:opacity-100 pointer-coarse:opacity-100 motion-reduce:transition-none [&>*]:[-webkit-app-region:no-drag]"
         >
           <DockAction
             icon={SquarePen}

@@ -644,7 +644,7 @@ function RecentRow({
           onClick={onRemove}
           aria-label={t`Remove ${projectName} from recent projects`}
           title={t`Remove from recent projects`}
-          className="pointer-events-none mr-2 opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100"
+          className="pointer-events-none mr-2 opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 pointer-coarse:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100"
           data-testid={`nav-recent-remove-${project.path}`}
         >
           <XIcon aria-hidden="true" />

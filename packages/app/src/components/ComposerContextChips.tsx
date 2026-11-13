@@ -40,7 +40,7 @@ function FileChip({ path, onRemove }: { path: string; onRemove: () => void }) {
           <FileEntryPathIcon path={path} className="size-3" showExtensionBadge={false} />
         </span>
         <X
-          className="absolute top-1/2 left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover/chip:opacity-100 group-focus-within/chip:opacity-100 motion-reduce:transition-none"
+          className="absolute top-1/2 left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover/chip:opacity-100 pointer-coarse:opacity-100 group-focus-within/chip:opacity-100 motion-reduce:transition-none"
           aria-hidden
         />
       </Button>

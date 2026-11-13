@@ -248,7 +248,7 @@ function DiagnosticGroupItem({
           <DiagnosticRowBody diagnostic={first} />
         </button>
         {actions === null ? null : (
-          <div className="absolute bottom-1 right-1 flex items-center gap-1 rounded bg-muted opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none">
+          <div className="absolute bottom-1 right-1 flex items-center gap-1 rounded bg-muted opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 motion-reduce:transition-none">
             {actions}
           </div>
         )}
@@ -287,7 +287,7 @@ function DiagnosticGroupItem({
                     {t`line ${displayLine}`}
                   </button>
                   {actions === null ? null : (
-                    <div className="absolute bottom-0.5 right-1 flex items-center gap-1 rounded bg-muted opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none">
+                    <div className="absolute bottom-0.5 right-1 flex items-center gap-1 rounded bg-muted opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 motion-reduce:transition-none">
                       {actions}
                     </div>
                   )}

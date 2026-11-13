@@ -36,7 +36,7 @@ export function RecentRemoveButton({
         e.stopPropagation();
         onRemoveRecent(path);
       }}
-      className="absolute top-1/2 right-1 size-6 -translate-y-1/2 text-muted-foreground opacity-0 transition-opacity group-hover/recent:opacity-100 focus-visible:opacity-100"
+      className="absolute top-1/2 right-1 size-6 -translate-y-1/2 text-muted-foreground opacity-0 transition-opacity group-hover/recent:opacity-100 pointer-coarse:opacity-100 focus-visible:opacity-100"
       data-testid={`${testIdPrefix}-remove-${path}`}
     >
       <X aria-hidden="true" className="size-3.5" />

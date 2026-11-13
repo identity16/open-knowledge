@@ -53,7 +53,7 @@ export function TemplateRow({ template, onEdit, onDelete, onCreate, badge }: Tem
           type="button"
           variant="ghost"
           size="sm"
-          className="shrink-0 font-mono uppercase opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          className="shrink-0 font-mono uppercase opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100 focus-visible:opacity-100"
           onClick={onCreate}
           aria-label={t`Create a document from ${label}`}
         >
@@ -66,7 +66,7 @@ export function TemplateRow({ template, onEdit, onDelete, onCreate, badge }: Tem
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+            className="size-7 shrink-0 opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
             aria-label={t`Actions for ${label}`}
           >
             <MoreVertical className="size-4" aria-hidden />

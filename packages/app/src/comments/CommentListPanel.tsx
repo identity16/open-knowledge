@@ -276,7 +276,7 @@ export function CommentListPanel({
                         data-testid={`${testIdPrefix}-file-select-${group.docName}`}
                         className={
                           tick === false
-                            ? 'absolute inset-0 opacity-0 transition-opacity group-hover/file:opacity-100 group-has-[:focus-visible]/file:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 motion-reduce:transition-none'
+                            ? 'absolute inset-0 opacity-0 transition-opacity group-hover/file:opacity-100 pointer-coarse:opacity-100 group-has-[:focus-visible]/file:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 motion-reduce:transition-none'
                             : 'absolute inset-0'
                         }
                       />

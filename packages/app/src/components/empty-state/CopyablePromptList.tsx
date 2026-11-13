@@ -65,7 +65,9 @@ export function CopyablePromptList({ scenario, className }: CopyablePromptListPr
               aria-label={copied ? t`Copied` : t`Copy ${suggestion.label} prompt`}
               className={cn(
                 'shrink-0 gap-1.5 transition-opacity focus-visible:opacity-100 uppercase font-mono',
-                copied ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+                copied
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100',
               )}
               data-testid={`copy-prompt-button-${suggestion.id}`}
             >

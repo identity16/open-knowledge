@@ -759,7 +759,7 @@ export function BottomComposer({
           aria-label={t`Collapse Ask AI`}
           onClick={() => onDismiss?.()}
           data-testid="ask-ai-collapse"
-          className="-top-2.5 -translate-x-1/2 absolute left-1/2 z-10 h-5 w-10 rounded-md p-0 text-muted-foreground opacity-0 shadow-sm transition-opacity hover:text-foreground focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100 dark:bg-background dark:hover:bg-muted"
+          className="-top-2.5 -translate-x-1/2 absolute left-1/2 z-10 h-5 w-10 rounded-md p-0 text-muted-foreground opacity-0 shadow-sm transition-opacity hover:text-foreground focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 dark:bg-background dark:hover:bg-muted"
         >
           <ChevronDown className="size-3.5" aria-hidden />
         </Button>
@@ -797,7 +797,7 @@ export function BottomComposer({
                   aria-hidden
                 />
                 <X
-                  className="absolute top-1/2 left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover/chip:opacity-100 group-focus-within/chip:opacity-100 motion-reduce:transition-none"
+                  className="absolute top-1/2 left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-150 ease-out group-hover/chip:opacity-100 pointer-coarse:opacity-100 group-focus-within/chip:opacity-100 motion-reduce:transition-none"
                   aria-hidden
                 />
               </Button>

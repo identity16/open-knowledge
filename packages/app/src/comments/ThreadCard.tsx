@@ -32,7 +32,7 @@ import {
 import type { CommentThread } from './types';
 
 const actionRevealClass =
-  'size-6 p-0 pointer-events-none opacity-0 transition-opacity duration-150 ease-out-strong text-muted-foreground group-hover/comment-card:pointer-events-auto group-hover/comment-card:opacity-100 group-has-[:focus-visible]/comment-card:pointer-events-auto group-has-[:focus-visible]/comment-card:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100 motion-reduce:transition-none';
+  'size-6 p-0 pointer-events-none opacity-0 transition-opacity duration-150 ease-out-strong text-muted-foreground group-hover/comment-card:pointer-events-auto group-hover/comment-card:opacity-100 pointer-coarse:opacity-100 group-has-[:focus-visible]/comment-card:pointer-events-auto group-has-[:focus-visible]/comment-card:opacity-100 focus-visible:pointer-events-auto focus-visible:opacity-100 [@media(hover:none)]:pointer-events-auto [@media(hover:none)]:opacity-100 motion-reduce:transition-none';
 
 function editedAt(at: number, now: number): string {
   const date = new Date(at);

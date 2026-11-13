@@ -577,7 +577,7 @@ export function SkillInstallMenuItems({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 shrink-0 rounded border border-border/60 px-1 font-normal text-[10px] text-muted-foreground uppercase tracking-wide opacity-0 focus-visible:opacity-100 group-hover:opacity-100 hover:border-foreground/40 hover:text-foreground"
+                        className="h-5 shrink-0 rounded border border-border/60 px-1 font-normal text-[10px] text-muted-foreground uppercase tracking-wide opacity-0 focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 hover:border-foreground/40 hover:text-foreground"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -662,7 +662,7 @@ export function SkillInstallMenuItems({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 shrink-0 rounded border border-border/60 px-1 font-normal text-[10px] text-muted-foreground uppercase tracking-wide opacity-0 focus-visible:opacity-100 group-hover:opacity-100 hover:border-foreground/40 hover:text-foreground"
+                        className="h-5 shrink-0 rounded border border-border/60 px-1 font-normal text-[10px] text-muted-foreground uppercase tracking-wide opacity-0 focus-visible:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 hover:border-foreground/40 hover:text-foreground"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

@@ -87,7 +87,7 @@ export function PendingImageStrip({
                 onRemove(index);
               }}
               aria-label={t`Remove ${image.name}`}
-              className="absolute top-0.5 end-0.5 size-5 rounded-full border border-border bg-background/80 p-0 shadow-sm opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+              className="absolute top-0.5 end-0.5 size-5 rounded-full border border-border bg-background/80 p-0 shadow-sm opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 pointer-coarse:opacity-100 focus-visible:opacity-100"
               data-testid={`${testIdPrefix}-pending-image-remove`}
             >
               <X className="size-3" aria-hidden="true" />
