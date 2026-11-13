@@ -1,10 +1,10 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  COMPACT_TOUCH_QUERY,
   shouldCollapseOnScroll,
   useCollapseComposerOnScroll,
 } from './use-collapse-composer-on-scroll';
+import { COMPACT_TOUCH_QUERY } from './use-is-compact-touch';
 
 let compactTouch = true;
 
