@@ -9964,6 +9964,9 @@ msgstr "按修改日期排序"
 msgid "Sort by name"
 msgstr "按名称排序"
 
+msgid "Sort manually"
+msgstr "手动排序"
+
 msgid "Sort skills"
 msgstr "技能排序"
 

@@ -9964,6 +9964,9 @@ msgstr "Trier par date de modification"
 msgid "Sort by name"
 msgstr "Trier par nom"
 
+msgid "Sort manually"
+msgstr "Trier manuellement"
+
 msgid "Sort skills"
 msgstr "Trier les compétences"
 

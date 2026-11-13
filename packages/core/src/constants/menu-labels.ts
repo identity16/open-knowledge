@@ -18,6 +18,7 @@ export const MENU_LABELS = {
   showSkillsSection: 'Skills section',
   sortFilesByName: 'Sort by name',
   sortFilesByModified: 'Sort by date modified',
+  sortFilesManually: 'Sort manually',
   expandAll: 'Expand all',
   collapseAll: 'Collapse all',
   moveToTrash: 'Move to Trash',

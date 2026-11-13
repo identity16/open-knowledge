@@ -755,6 +755,10 @@ describe('FileSidebar menu-action runtime routing', () => {
     expect(projectLocalPatch).toHaveBeenCalledWith({
       appearance: { sidebar: { sortOrder: 'name' } },
     });
+    menuActionCallback?.('sort-files-manually' as MenuAction);
+    expect(projectLocalPatch).toHaveBeenCalledWith({
+      appearance: { sidebar: { sortOrder: 'manual' } },
+    });
   });
 
   test('pushes View menu state to the desktop bridge with merged visibility and tree gates', async () => {

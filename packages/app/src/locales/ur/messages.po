@@ -9964,6 +9964,9 @@ msgstr "ترمیم کی تاریخ کے لحاظ سے ترتیب دیں"
 msgid "Sort by name"
 msgstr "نام کے لحاظ سے ترتیب دیں"
 
+msgid "Sort manually"
+msgstr "دستی طور پر ترتیب دیں"
+
 msgid "Sort skills"
 msgstr "مہارتیں ترتیب دیں"
 

@@ -72,6 +72,8 @@ export interface MenuDeps {
   onSortFilesByName?(): void;
   sortFilesByModifiedChecked?: boolean;
   onSortFilesByModified?(): void;
+  sortFilesManuallyChecked?: boolean;
+  onSortFilesManually?(): void;
   sidebarVisible?: boolean;
   onToggleSidebar?(): void;
   noteWindow?: boolean;
@@ -341,6 +343,11 @@ const MENU_BINDINGS: Record<string, MenuCommandBinding> = {
     click: (d) => () => d.onSortFilesByModified?.(),
     enabled: (d) => d.onSortFilesByModified !== undefined,
     checked: (d) => d.sortFilesByModifiedChecked ?? false,
+  },
+  'sort-files-manually': {
+    click: (d) => () => d.onSortFilesManually?.(),
+    enabled: (d) => d.onSortFilesManually !== undefined,
+    checked: (d) => d.sortFilesManuallyChecked ?? false,
   },
   'expand-all-tree': {
     click: (d) => () => d.onExpandAll?.(),

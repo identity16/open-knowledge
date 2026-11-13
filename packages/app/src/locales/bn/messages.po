@@ -9960,6 +9960,9 @@ msgstr "পরিবর্তনের তারিখ অনুসারে স
 msgid "Sort by name"
 msgstr "নাম অনুসারে সাজান"
 
+msgid "Sort manually"
+msgstr "নিজে সাজান"
+
 msgid "Sort skills"
 msgstr "স্কিল সাজান"
 

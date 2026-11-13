@@ -326,6 +326,12 @@ export function AppMenubar({ className }: AppMenubarProps) {
           >
             {t`Sort by date modified`}
           </MenubarCheckboxItem>
+          <MenubarCheckboxItem
+            checked={view?.sortFilesManually ?? false}
+            onSelect={() => dispatch({ kind: 'menu-action', action: 'sort-files-manually' })}
+          >
+            {t`Sort manually`}
+          </MenubarCheckboxItem>
           <MenubarSeparator />
           {(view?.canExpandAll ?? true) && (
             <MenubarItem

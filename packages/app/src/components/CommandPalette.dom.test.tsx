@@ -1381,6 +1381,11 @@ describe('Cmd+K menu-parity backfill', () => {
       query: 'sort by date modified',
       id: 'sort-files-by-modified',
     },
+    {
+      testid: 'command-palette-sort-files-manually',
+      query: 'sort manually',
+      id: 'sort-files-manually',
+    },
     { testid: 'command-palette-expand-all-tree', query: 'expand all', id: 'expand-all-tree' },
     { testid: 'command-palette-collapse-all-tree', query: 'collapse all', id: 'collapse-all-tree' },
     { testid: 'command-palette-new-terminal', query: 'new terminal', id: 'new-terminal' },

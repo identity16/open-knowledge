@@ -381,6 +381,7 @@ function FileSidebarInner() {
       showSkillsSection,
       sortFilesByName: sortOrder === 'name',
       sortFilesByModified: sortOrder === 'modified',
+      sortFilesManually: sortOrder === 'manual',
       canExpandAll: showExpandAll,
       canCollapseAll: showCollapseAll,
       sidebarVisible: sidebarState === 'expanded',
@@ -553,6 +554,11 @@ function FileSidebarInner() {
         case 'sort-files-by-modified': {
           revealEditorBeforeActing();
           if (sortOrder !== 'modified') patchSidebarVisibility({ sortOrder: 'modified' });
+          return;
+        }
+        case 'sort-files-manually': {
+          revealEditorBeforeActing();
+          if (sortOrder !== 'manual') patchSidebarVisibility({ sortOrder: 'manual' });
           return;
         }
         case 'expand-all-tree': {

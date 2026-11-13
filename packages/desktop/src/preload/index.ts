@@ -293,6 +293,7 @@ const MENU_ACTION_BUFFER_POLICY: Record<OkMenuAction, MenuActionBufferPolicy> = 
   'toggle-show-skills-section': 'parity',
   'sort-files-by-name': 'parity',
   'sort-files-by-modified': 'parity',
+  'sort-files-manually': 'parity',
   'move-terminal': 'parity',
 
   'new-doc': 'additive',

@@ -9960,6 +9960,9 @@ msgstr "संशोधन तिथि के अनुसार क्रम�
 msgid "Sort by name"
 msgstr "नाम के अनुसार क्रमबद्ध करें"
 
+msgid "Sort manually"
+msgstr "मैन्युअल रूप से क्रमबद्ध करें"
+
 msgid "Sort skills"
 msgstr "स्किल क्रम में लगाएँ"
 

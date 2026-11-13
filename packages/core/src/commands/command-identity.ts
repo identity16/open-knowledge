@@ -113,7 +113,8 @@ export type CommandCheckField =
   | 'showOnlyMarkdownFiles'
   | 'showSkillsSection'
   | 'sortFilesByName'
-  | 'sortFilesByModified';
+  | 'sortFilesByModified'
+  | 'sortFilesManually';
 
 export interface CommandPalettePresence {
   readonly group: CommandGroup;
@@ -722,6 +723,16 @@ export const COMMAND_IDENTITIES: readonly CommandIdentity[] = [
     availability: {},
     palette: { group: 'view', visibility: 'search-only' },
     menu: [{ section: 'view-sort', order: 1, checkbox: true }],
+  },
+  {
+    id: 'sort-files-manually',
+    menuActionId: 'sort-files-manually',
+    labelKey: 'sortFilesManually',
+    keywords: ['sort', 'order', 'manual', 'custom', 'drag', 'arrange'],
+    checkField: 'sortFilesManually',
+    availability: {},
+    palette: { group: 'view', visibility: 'search-only' },
+    menu: [{ section: 'view-sort', order: 2, checkbox: true }],
   },
   {
     id: 'expand-all-tree',

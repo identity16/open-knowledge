@@ -967,11 +967,25 @@ describe('buildMenuTemplate — View → Sort by', () => {
   test('clicks dispatch their deps', () => {
     const onSortFilesByName = vi.fn(() => {});
     const onSortFilesByModified = vi.fn(() => {});
-    const template = buildMenuTemplate(makeDeps({ onSortFilesByName, onSortFilesByModified }));
+    const onSortFilesManually = vi.fn(() => {});
+    const template = buildMenuTemplate(
+      makeDeps({ onSortFilesByName, onSortFilesByModified, onSortFilesManually }),
+    );
     (findByLabel(template, 'Sort by name')?.click as (() => void) | undefined)?.();
     (findByLabel(template, 'Sort by date modified')?.click as (() => void) | undefined)?.();
+    (findByLabel(template, 'Sort manually')?.click as (() => void) | undefined)?.();
     expect(onSortFilesByName).toHaveBeenCalledTimes(1);
     expect(onSortFilesByModified).toHaveBeenCalledTimes(1);
+    expect(onSortFilesManually).toHaveBeenCalledTimes(1);
+  });
+
+  test('Sort manually is a checkbox that follows sortFilesManuallyChecked', () => {
+    const template = buildMenuTemplate(
+      makeDeps({ onSortFilesManually: vi.fn(() => {}), sortFilesManuallyChecked: true }),
+    );
+    const item = findByLabel(template, 'Sort manually');
+    expect(item?.type).toBe('checkbox');
+    expect(item?.checked).toBe(true);
   });
 });
 

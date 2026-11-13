@@ -46,6 +46,7 @@ export function createDefaultEditorViewMenuState(): EditorViewMenuStateSnapshot 
     showSkillsSection: true,
     sortFilesByName: true,
     sortFilesByModified: false,
+    sortFilesManually: false,
     canExpandAll: true,
     canCollapseAll: true,
     sidebarVisible: true,
@@ -68,6 +69,7 @@ type ViewMenuStateDeps = Pick<
   | 'showSkillsSectionChecked'
   | 'sortFilesByNameChecked'
   | 'sortFilesByModifiedChecked'
+  | 'sortFilesManuallyChecked'
   | 'canExpandAll'
   | 'canCollapseAll'
   | 'sidebarVisible'
@@ -84,6 +86,7 @@ type ViewMenuStateDeps = Pick<
   | 'onToggleShowSkillsSection'
   | 'onSortFilesByName'
   | 'onSortFilesByModified'
+  | 'onSortFilesManually'
   | 'onToggleSidebar'
   | 'onToggleDocPanel'
   | 'onToggleTerminal'
@@ -107,6 +110,7 @@ export function buildViewMenuStateDeps(
     showSkillsSectionChecked: state.showSkillsSection,
     sortFilesByNameChecked: state.sortFilesByName,
     sortFilesByModifiedChecked: state.sortFilesByModified,
+    sortFilesManuallyChecked: state.sortFilesManually,
     canExpandAll: state.canExpandAll,
     canCollapseAll: state.canCollapseAll,
     sidebarVisible: state.sidebarVisible,
@@ -123,6 +127,7 @@ export function buildViewMenuStateDeps(
     onToggleShowSkillsSection: () => sendMenuAction('toggle-show-skills-section'),
     onSortFilesByName: () => sendMenuAction('sort-files-by-name'),
     onSortFilesByModified: () => sendMenuAction('sort-files-by-modified'),
+    onSortFilesManually: () => sendMenuAction('sort-files-manually'),
     onToggleSidebar: () => sendMenuAction('toggle-sidebar'),
     onToggleDocPanel: () => sendMenuAction('toggle-doc-panel'),
     onToggleTerminal: () => sendMenuAction('toggle-terminal'),

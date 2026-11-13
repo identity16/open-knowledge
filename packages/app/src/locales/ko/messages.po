@@ -9964,6 +9964,9 @@ msgstr "수정한 날짜순 정렬"
 msgid "Sort by name"
 msgstr "이름순 정렬"
 
+msgid "Sort manually"
+msgstr "수동 정렬"
+
 msgid "Sort skills"
 msgstr "스킬 정렬"
 

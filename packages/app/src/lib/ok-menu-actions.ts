@@ -28,6 +28,7 @@ export const OK_MENU_ACTIONS = [
   'toggle-show-skills-section',
   'sort-files-by-name',
   'sort-files-by-modified',
+  'sort-files-manually',
   'expand-all-tree',
   'collapse-all-tree',
   'toggle-doc-panel',

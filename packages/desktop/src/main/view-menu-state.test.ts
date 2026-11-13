@@ -165,6 +165,7 @@ describe('createDefaultEditorViewMenuState — pre-first-push menu state', () =>
       showSkillsSection: true,
       sortFilesByName: true,
       sortFilesByModified: false,
+      sortFilesManually: false,
       canExpandAll: true,
       canCollapseAll: true,
       sidebarVisible: true,
@@ -188,6 +189,7 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
     showSkillsSection: false,
     sortFilesByName: false,
     sortFilesByModified: true,
+    sortFilesManually: false,
     canExpandAll: false,
     canCollapseAll: false,
     sidebarVisible: false,
@@ -207,6 +209,7 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
     expect(deps.showSkillsSectionChecked).toBe(false);
     expect(deps.sortFilesByNameChecked).toBe(false);
     expect(deps.sortFilesByModifiedChecked).toBe(true);
+    expect(deps.sortFilesManuallyChecked).toBe(false);
     expect(deps.canExpandAll).toBe(false);
     expect(deps.canCollapseAll).toBe(false);
     expect(deps.sidebarVisible).toBe(false);
@@ -230,6 +233,7 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
     deps.onToggleShowSkillsSection?.();
     deps.onSortFilesByName?.();
     deps.onSortFilesByModified?.();
+    deps.onSortFilesManually?.();
     deps.onToggleSidebar?.();
     deps.onToggleDocPanel?.();
     deps.onToggleTerminal?.();
@@ -247,6 +251,7 @@ describe('buildViewMenuStateDeps — snapshot → menu-deps wiring', () => {
       'toggle-show-skills-section',
       'sort-files-by-name',
       'sort-files-by-modified',
+      'sort-files-manually',
       'toggle-sidebar',
       'toggle-doc-panel',
       'toggle-terminal',

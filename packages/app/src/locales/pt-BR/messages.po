@@ -9960,6 +9960,9 @@ msgstr "Ordenar por data de modificação"
 msgid "Sort by name"
 msgstr "Ordenar por nome"
 
+msgid "Sort manually"
+msgstr "Ordenar manualmente"
+
 msgid "Sort skills"
 msgstr "Ordenar as habilidades"
 

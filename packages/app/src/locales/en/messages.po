@@ -9964,6 +9964,9 @@ msgstr "Sort by date modified"
 msgid "Sort by name"
 msgstr "Sort by name"
 
+msgid "Sort manually"
+msgstr "Sort manually"
+
 msgid "Sort skills"
 msgstr "Sort skills"
 

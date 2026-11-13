@@ -9960,6 +9960,9 @@ msgstr "Urutkan menurut tanggal diubah"
 msgid "Sort by name"
 msgstr "Urutkan menurut nama"
 
+msgid "Sort manually"
+msgstr "Urutkan secara manual"
+
 msgid "Sort skills"
 msgstr "Urutkan keterampilan"
 
