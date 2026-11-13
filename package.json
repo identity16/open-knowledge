@@ -21,6 +21,7 @@
     "schema:dump": "node --import tsx packages/core/scripts/dump-schema.ts",
     "build": "turbo run build",
     "build:desktop": "turbo run build:desktop",
+    "fork:deploy-local": "node scripts/fork/deploy-local.mjs",
     "build:desktop:dir": "turbo run build:desktop:dir",
     "check:desktop": "turbo run lint typecheck test --filter=@inkeep/open-knowledge-desktop && pnpm run test:uncached",
     "check:types": "pnpm run typecheck",
