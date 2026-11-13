@@ -1,10 +1,79 @@
+diff --git a/dist/model/FileTreeController.js b/dist/model/FileTreeController.js
+index 37c5d1ffedd5aff0258dec41b1b5cedb240aa3a6..681422304d7d004bfc47d4f7feb3c480624e5219 100644
+--- a/dist/model/FileTreeController.js
++++ b/dist/model/FileTreeController.js
+@@ -480,7 +480,13 @@ var FileTreeController = class {
+ 		const dropPlan = buildDropOperations(dragSession.draggedPaths, target);
+ 		if (dropPlan == null) {
+ 			this.#emit();
+-			return false;
++			if (target.position == null) return false;
++			this.#dragAndDropConfig?.onDropComplete?.({
++				draggedPaths: dragSession.draggedPaths,
++				operation: "reorder",
++				target
++			});
++			return true;
+ 		}
+ 		try {
+ 			if (dropPlan.operations.length === 1) {
+diff --git a/dist/model/dragAndDrop.js b/dist/model/dragAndDrop.js
+index 642d25d09823ecd3d0f5f66a23fc9c8e877bffa3..ff0dc83433ab28d79346bb44f3c4abf9067168f2 100644
+--- a/dist/model/dragAndDrop.js
++++ b/dist/model/dragAndDrop.js
+@@ -40,7 +40,7 @@ function resolveDraggedPathsForStart(path, selectedPaths) {
+ function dropTargetsEqual(left, right) {
+ 	if (left === right) return true;
+ 	if (left == null || right == null) return false;
+-	return left.kind === right.kind && left.directoryPath === right.directoryPath && left.flattenedSegmentPath === right.flattenedSegmentPath && left.hoveredPath === right.hoveredPath;
++	return left.kind === right.kind && left.directoryPath === right.directoryPath && left.flattenedSegmentPath === right.flattenedSegmentPath && left.hoveredPath === right.hoveredPath && (left.position ?? null) === (right.position ?? null);
+ }
+ function createDropContext(draggedPaths, target) {
+ 	return {
+diff --git a/dist/model/publicTypes.d.ts b/dist/model/publicTypes.d.ts
+index 84a7e2d14f67c1aad8230f19a3426ab7403f378e..5c8a26084fdc5a234b4bb26ac9b952b85ef7934f 100644
+--- a/dist/model/publicTypes.d.ts
++++ b/dist/model/publicTypes.d.ts
+@@ -132,16 +132,18 @@ interface FileTreeDropTarget {
+   flattenedSegmentPath: FileTreePublicId | null;
+   hoveredPath: FileTreePublicId | null;
+   kind: 'directory' | 'root';
++  position?: 'before' | 'after';
+ }
+ interface FileTreeDropContext {
+   draggedPaths: readonly FileTreePublicId[];
+   target: FileTreeDropTarget;
+ }
+ interface FileTreeDropResult extends FileTreeDropContext {
+-  operation: 'batch' | 'move';
++  operation: 'batch' | 'move' | 'reorder';
+ }
+ interface FileTreeDragAndDropConfig {
+   canDrag?: (paths: readonly FileTreePublicId[]) => boolean;
++  canReorder?: () => boolean;
+   canDrop?: (event: FileTreeDropContext) => boolean;
+   onDropComplete?: (event: FileTreeDropResult) => void;
+   onDropError?: (error: string, event: FileTreeDropContext) => void;
 diff --git a/dist/render/FileTreeView.js b/dist/render/FileTreeView.js
-index 648639b4b65c1dd797434e3afe189848426f4d53..e0347f160e582691ee219b96d6e07c9ca9d92114 100644
+index 648639b4b65c1dd797434e3afe189848426f4d53..37ab6e085a9bf61b3e50cbc063b29b26cb258d28 100644
 --- a/dist/render/FileTreeView.js
 +++ b/dist/render/FileTreeView.js
-@@ -98,7 +98,16 @@ function getShadowPointElementByGeometry(rootNode, clientX, clientY) {
+@@ -96,13 +96,43 @@ function getShadowPointElementByGeometry(rootNode, clientX, clientY) {
+ 	}
+ 	return null;
  }
- function resolveDropTargetFromElement(target) {
+-function resolveDropTargetFromElement(target) {
++const DROP_REORDER_EDGE_RATIO = .25;
++function resolveDropReorderPosition(rowButton, clientY) {
++	if (clientY == null || rowButton.dataset.fileTreeStickyRow === "true") return null;
++	const rect = rowButton.getBoundingClientRect();
++	if (!(rect.height > 0)) return null;
++	const ratio = (clientY - rect.top) / rect.height;
++	if (ratio < DROP_REORDER_EDGE_RATIO) return "before";
++	if (ratio > 1 - DROP_REORDER_EDGE_RATIO) return "after";
++	return null;
++}
++function resolveDropTargetFromElement(target, clientY = null, reorderEnabled = false) {
  	const rowButton = target?.closest?.("[data-type=\"item\"]");
 -	if (!(rowButton instanceof HTMLElement)) return null;
 +	if (!(rowButton instanceof HTMLElement)) {
@@ -20,11 +89,73 @@ index 648639b4b65c1dd797434e3afe189848426f4d53..e0347f160e582691ee219b96d6e07c9c
  	const hoveredPath = rowButton.dataset.itemPath ?? null;
  	if (hoveredPath == null) return null;
  	const flattenedSegment = target?.closest?.("[data-item-flattened-subitem]");
-@@ -1771,6 +1780,7 @@ function FileTreeView({ composition, controller, gitStatusByPath, ignoredGitDire
+ 	const flattenedSegmentPath = flattenedSegment instanceof HTMLElement ? flattenedSegment.getAttribute("data-item-flattened-subitem") ?? null : null;
++	const reorderPosition = reorderEnabled && flattenedSegmentPath == null && rowButton.querySelector("[data-item-flattened-subitem]") == null ? resolveDropReorderPosition(rowButton, clientY) : null;
++	if (reorderPosition != null) {
++		const reorderParentPath = rowButton.dataset.itemParentPath ?? null;
++		return {
++			directoryPath: reorderParentPath == null || reorderParentPath.length === 0 ? null : reorderParentPath,
++			flattenedSegmentPath: null,
++			hoveredPath,
++			kind: reorderParentPath == null || reorderParentPath.length === 0 ? "root" : "directory",
++			position: reorderPosition
++		};
++	}
+ 	if (flattenedSegmentPath != null && flattenedSegmentPath.endsWith("/")) return {
+ 		directoryPath: flattenedSegmentPath,
+ 		flattenedSegmentPath,
+@@ -452,7 +482,8 @@ function renderStyledRow(frame, row, key, options = {}) {
+ 				containsGitChange,
+ 				effectiveGitStatus,
+ 				isContextHovered: contextHoverPath === targetPath,
+-				isDragTarget: dragTarget?.kind === "directory" && dragTarget.directoryPath === targetPath,
++				isDragTarget: dragTarget?.position == null && dragTarget?.kind === "directory" && dragTarget.directoryPath === targetPath,
++				dropPosition: dragTarget?.position != null && dragTarget.hoveredPath === targetPath ? dragTarget.position : null,
+ 				isDragging: draggedPathSet?.has(targetPath) === true,
+ 				isFocusRinged: row.isFocused && visualFocusPath === targetPath
+ 			},
+@@ -838,13 +869,13 @@ function FileTreeView({ composition, controller, gitStatusByPath, ignoredGitDire
+ 	};
+ 	const syncDropTargetFromPoint = (clientX, clientY) => {
+ 		const rootNode = rootRef.current?.getRootNode();
+-		const nextTarget = resolveDropTargetFromElement(getPointElement(rootNode instanceof ShadowRoot ? rootNode : document, clientX, clientY));
++		const nextTarget = resolveDropTargetFromElement(getPointElement(rootNode instanceof ShadowRoot ? rootNode : document, clientX, clientY), clientY, controller.getDragAndDropConfig()?.canReorder?.() === true);
+ 		controller.setDragTarget(nextTarget);
+ 		return controller.getDragSession()?.target ?? null;
+ 	};
+ 	const scheduleDragHoverOpen = (nextTarget) => {
+ 		const openDelay = controller.getDragAndDropConfig()?.openOnDropDelay ?? 800;
+-		if (nextTarget == null || nextTarget.kind !== "directory" || nextTarget.directoryPath == null || openDelay <= 0) {
++		if (nextTarget == null || nextTarget.position != null || nextTarget.kind !== "directory" || nextTarget.directoryPath == null || openDelay <= 0) {
+ 			clearDragHoverOpen();
+ 			return;
+ 		}
+@@ -1611,7 +1642,7 @@ function FileTreeView({ composition, controller, gitStatusByPath, ignoredGitDire
+ 	}, [controller, dragAndDropEnabled]);
+ 	const handleTreeDragOver = (event) => {
+ 		if (!dragAndDropEnabled || controller.getDragSession() == null || touchDragActiveRef.current) return;
+-		const nextTarget = resolveDropTargetFromElement(event.target instanceof HTMLElement ? event.target : null);
++		const nextTarget = resolveDropTargetFromElement(event.target instanceof HTMLElement ? event.target : null, event.clientY, controller.getDragAndDropConfig()?.canReorder?.() === true);
+ 		controller.setDragTarget(nextTarget);
+ 		scheduleDragHoverOpen(controller.getDragSession()?.target ?? null);
+ 		updateDragPoint(event.clientX, event.clientY);
+@@ -1771,6 +1802,7 @@ function FileTreeView({ composition, controller, gitStatusByPath, ignoredGitDire
  		"data-file-tree-has-context-menu-action-lane": contextMenuEnabled && contextMenuButtonTriggerEnabled ? "true" : void 0,
  		"data-file-tree-has-git-lane": gitLaneActive ? "true" : void 0,
  		"data-file-tree-virtualized-root": "true",
-+		"data-file-tree-root-drag-target": dragTarget?.kind === "root" ? "true" : void 0,
++		"data-file-tree-root-drag-target": dragTarget?.kind === "root" && dragTarget.position == null ? "true" : void 0,
  		onDragLeave: dragAndDropEnabled ? handleTreeDragLeave : void 0,
  		onDragOver: dragAndDropEnabled ? handleTreeDragOver : void 0,
  		onDrop: dragAndDropEnabled ? handleTreeDrop : void 0,
+diff --git a/dist/render/rowAttributes.js b/dist/render/rowAttributes.js
+index e2c83f8ef7b336176d305a3a2837daad29b9e453..4e72c35c285df060ef0b845f531f5ba038266613 100644
+--- a/dist/render/rowAttributes.js
++++ b/dist/render/rowAttributes.js
+@@ -8,6 +8,7 @@ function computeFileTreeRowElementAttributes(input) {
+ 	if (row.isSelected) stateAttributes["data-item-selected"] = true;
+ 	if (state.isContextHovered) stateAttributes["data-item-context-hover"] = "true";
+ 	if (state.isDragTarget) stateAttributes["data-item-drag-target"] = true;
++	if (state.dropPosition != null) stateAttributes["data-item-drop-position"] = state.dropPosition;
+ 	if (state.isDragging) stateAttributes["data-item-dragging"] = true;
+ 	if (state.effectiveGitStatus != null) stateAttributes["data-item-git-status"] = state.effectiveGitStatus;
+ 	if (state.containsGitChange) stateAttributes["data-item-contains-git-change"] = "true";
