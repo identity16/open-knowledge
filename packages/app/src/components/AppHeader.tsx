@@ -22,6 +22,7 @@ import { displayState, SyncStatusBadge } from '@/components/SyncStatusBadge';
 import { WebProjectName } from '@/components/WebProjectName';
 import { useDocumentContext } from '@/editor/DocumentContext';
 import { useGitSyncStatusDetailed } from '@/hooks/use-git-sync-status';
+import { useIsCompactTouch } from '@/hooks/use-is-compact-touch';
 import { useTrailingOverflow } from '@/hooks/use-trailing-overflow';
 import { authPromptStore } from '@/lib/auth-prompt-store';
 import {
@@ -148,7 +149,8 @@ export function AppHeader({ onOpenSearch }: AppHeaderProps) {
     presence.crossDoc.length,
   ].join('|');
 
-  const { overflowed: actionsOverflowed, remeasuring: actionsRemeasuring } = useTrailingOverflow({
+  const compactTouch = useIsCompactTouch();
+  const { overflowed: widthOverflowed, remeasuring: actionsRemeasuring } = useTrailingOverflow({
     header,
     leading,
     trailing,
@@ -191,6 +193,7 @@ export function AppHeader({ onOpenSearch }: AppHeaderProps) {
       return headerWidth - leadingSettledWidth - (centre != null ? centreFloorWidth(centre) : 0);
     },
   });
+  const actionsOverflowed = widthOverflowed || compactTouch;
   useLayoutEffect(() => {
     if (!actionsOverflowed) setOverflowOpen(false);
   }, [actionsOverflowed]);

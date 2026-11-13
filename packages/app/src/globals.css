@@ -7086,3 +7086,10 @@ html:not([data-color-theme]):not(.dark) [data-slot="kbd"] {
   background: var(--popover);
   box-shadow: var(--shadow-md, 0 2px 8px oklch(0% 0 0 / 0.15));
 }
+
+@media (pointer: coarse) {
+  [data-app-header] button[data-size] {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+  }
+}
