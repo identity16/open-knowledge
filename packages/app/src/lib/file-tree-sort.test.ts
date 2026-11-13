@@ -5,6 +5,7 @@ import {
   EMPTY_MANUAL_RANKS,
   type FileTreeSortState,
   manualOrderFolderKey,
+  manualOrderPatchForMoves,
   manualRanksByFolderKey,
   reorderedFolderNames,
 } from './file-tree-sort';
@@ -165,5 +166,44 @@ describe('reorderedFolderNames', () => {
     expect(reorderedFolderNames(names, ['b.md'], 'b.md', 'before')).toBeNull();
     expect(reorderedFolderNames(names, ['b.md'], 'missing.md', 'before')).toBeNull();
     expect(reorderedFolderNames(names, ['b.md'], 'a.md', 'after')).toBeNull();
+  });
+});
+
+describe('manualOrderPatchForMoves', () => {
+  const manualOrder = {
+    '/': ['b.md', 'notes', 'a.md'],
+    'notes/': ['two.md', 'one.md', 'deep'],
+    'notes/deep/': ['z.md', 'y.md'],
+  };
+
+  test('a rename in place keeps the position under the new name', () => {
+    expect(manualOrderPatchForMoves(manualOrder, [{ from: 'a.md', to: 'c.md' }])).toEqual({
+      '/': ['b.md', 'notes', 'c.md'],
+    });
+  });
+
+  test('a move to another folder drops the name from the old list only', () => {
+    expect(manualOrderPatchForMoves(manualOrder, [{ from: 'notes/one.md', to: 'one.md' }])).toEqual(
+      {
+        'notes/': ['two.md', 'deep'],
+      },
+    );
+  });
+
+  test('a folder rename renames its row and re-keys its own and nested lists', () => {
+    expect(manualOrderPatchForMoves(manualOrder, [{ from: 'notes/', to: 'journal/' }])).toEqual({
+      '/': ['b.md', 'journal', 'a.md'],
+      'notes/': null,
+      'notes/deep/': null,
+      'journal/': ['two.md', 'one.md', 'deep'],
+      'journal/deep/': ['z.md', 'y.md'],
+    });
+  });
+
+  test('returns null when no list mentions the moved path', () => {
+    expect(manualOrderPatchForMoves(manualOrder, [{ from: 'other/x.md', to: 'other/y.md' }])).toBe(
+      null,
+    );
+    expect(manualOrderPatchForMoves({}, [{ from: 'a.md', to: 'b.md' }])).toBeNull();
   });
 });

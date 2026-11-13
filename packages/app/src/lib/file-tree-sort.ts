@@ -185,3 +185,58 @@ export function reorderedFolderNames(
     next.every((name, index) => name === currentNames[index]);
   return unchanged ? null : next;
 }
+
+export interface TreePathMove {
+  readonly from: string;
+  readonly to: string;
+}
+
+function parentFolderKey(treePath: string): string {
+  return manualOrderFolderKey(treePathSortEntry(treePath).segments.slice(0, -1));
+}
+
+export function manualOrderPatchForMoves(
+  manualOrder: FileTreeManualOrder,
+  moves: readonly TreePathMove[],
+): Record<string, string[] | null> | null {
+  const next = new Map<string, readonly string[]>(Object.entries(manualOrder));
+  for (const { from, to } of moves) {
+    if (from === to) continue;
+    const fromKey = parentFolderKey(from);
+    const toKey = parentFolderKey(to);
+    const fromName = treePathBasename(from);
+    const toName = treePathBasename(to);
+    const sourceList = next.get(fromKey);
+    if (sourceList?.includes(fromName)) {
+      next.set(
+        fromKey,
+        fromKey === toKey
+          ? sourceList.map((name) => (name === fromName ? toName : name))
+          : sourceList.filter((name) => name !== fromName),
+      );
+    }
+    if (from.endsWith('/') && to.endsWith('/')) {
+      const nestedLists: [string, readonly string[]][] = [];
+      for (const [key, names] of next) {
+        if (key.startsWith(from)) nestedLists.push([key, names]);
+      }
+      for (const [key, names] of nestedLists) {
+        next.delete(key);
+        next.set(`${to}${key.slice(from.length)}`, names);
+      }
+    }
+  }
+  const patch: Record<string, string[] | null> = {};
+  for (const key of Object.keys(manualOrder)) {
+    if (!next.has(key)) patch[key] = null;
+  }
+  for (const [key, names] of next) {
+    const before = manualOrder[key];
+    const same =
+      before !== undefined &&
+      before.length === names.length &&
+      before.every((name, index) => name === names[index]);
+    if (!same) patch[key] = [...names];
+  }
+  return Object.keys(patch).length === 0 ? null : patch;
+}

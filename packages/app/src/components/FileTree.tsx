@@ -219,8 +219,10 @@ import {
   type FileTreeManualOrder,
   type FileTreeSortState,
   manualOrderFolderKey,
+  manualOrderPatchForMoves,
   NO_MANUAL_ORDER,
   reorderedFolderNames,
+  type TreePathMove,
   treePathBasename,
   treePathSortEntry,
 } from '@/lib/file-tree-sort';
@@ -1836,6 +1838,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
         renamed: [],
         renamedAssets: [],
       });
+      followManualOrderMoves([{ from: sourceTreePath, to: destinationTreePath }]);
       try {
         await applyRenamedDocuments(
           success.renamed,
@@ -1923,6 +1926,19 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     }
   }
 
+  function followManualOrderMoves(moves: readonly TreePathMove[]) {
+    const patch = manualOrderPatchForMoves(manualOrderRef.current, moves);
+    if (patch === null) return;
+    if (!projectLocalSynced || projectLocalBinding === null) {
+      console.warn('[FileTree] manual order not updated for moved paths: settings not ready');
+      return;
+    }
+    const result = projectLocalBinding.patch({ appearance: { sidebar: { manualOrder: patch } } });
+    if (!result.ok) {
+      toast.error(t`Could not save the file order`, { description: humanFormat(result.error) });
+    }
+  }
+
   async function moveDroppedPaths(event: FileTreeDropResult): Promise<boolean> {
     const operations = event.draggedPaths
       .map((sourcePath) => {
@@ -1939,6 +1955,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       let renamed: RenamedDocMapping[] = [];
       let renamedAssets: RenamedAssetMapping[] = [];
       const renamedFolders: RenamedFolderMapping[] = [];
+      const completedMoves: TreePathMove[] = [];
       const activeBeforeRename = {
         docName: activeDocNameRef.current,
         folderPath:
@@ -1982,6 +1999,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
 
         if (!parsed.ok) {
           toast.error(parsed.title);
+          followManualOrderMoves(completedMoves);
           resetModelToDocuments();
           setBusyPath(null);
           return false;
@@ -1992,6 +2010,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
           'rename-path:drop',
           { renamed: [], renamedAssets: [] },
         );
+        completedMoves.push({ from: operation.sourcePath, to: operation.destinationTreePath });
         renamed = renamed.concat(success.renamed);
         renamedAssets = renamedAssets.concat(success.renamedAssets);
         if (isFolder) {
@@ -2002,6 +2021,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
         }
       }
 
+      followManualOrderMoves(completedMoves);
       try {
         await applyRenamedDocuments(renamed, renamedFolders, renamedAssets, activeBeforeRename);
       } catch (reconcileErr) {

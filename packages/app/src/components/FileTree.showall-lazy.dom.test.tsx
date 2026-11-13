@@ -137,6 +137,7 @@ function stubSortEntry(path: string): StubSortEntry {
 
 class StubModel {
   sort: StubSortComparator | null = null;
+  renaming: { onRename?: (event: unknown) => void } | null = null;
   dragAndDrop: {
     canReorder?: () => boolean;
     onDropComplete?: (event: unknown) => void;
@@ -292,8 +293,10 @@ vi.doMock('@pierre/trees/react', () => ({
   useFileTree: (options: {
     sort?: StubSortComparator;
     dragAndDrop?: { canReorder?: () => boolean; onDropComplete?: (event: unknown) => void };
+    renaming?: { onRename?: (event: unknown) => void };
   }) => {
     model.sort = options.sort ?? null;
+    model.renaming = options.renaming ?? null;
     model.dragAndDrop = options.dragAndDrop ?? null;
     return { model };
   },
@@ -1693,6 +1696,73 @@ describe('FileTree sort order', () => {
       appearance: { sidebar: { manualOrder: { '/': ['beta.md', 'zeta', 'alpha.md'] } } },
     });
     expect(fetchUrls.slice(fetchesBefore).filter((url) => url.includes('rename-path'))).toEqual([]);
+  });
+
+  test('renaming a file keeps its manual position under the new name', async () => {
+    projectLocalBinding = { patch: projectLocalPatch };
+    mergedConfig = {
+      appearance: {
+        sidebar: { sortOrder: 'manual', manualOrder: { '/': ['beta.md', 'zeta', 'alpha.md'] } },
+      },
+    };
+    responseByUrl.set('/api/rename-path', () =>
+      jsonResponse({
+        renamed: [{ fromDocName: 'alpha', toDocName: 'omega' }],
+        renamedAssets: [],
+      }),
+    );
+    render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['beta.md', 'zeta/', 'alpha.md']));
+
+    await act(async () => {
+      model.renaming?.onRename?.({
+        sourcePath: 'alpha.md',
+        destinationPath: 'omega.md',
+        isFolder: false,
+      });
+    });
+
+    await waitFor(() =>
+      expect(projectLocalPatch).toHaveBeenCalledWith({
+        appearance: { sidebar: { manualOrder: { '/': ['beta.md', 'zeta', 'omega.md'] } } },
+      }),
+    );
+  });
+
+  test('moving a file into a folder by drop removes it from the old folder list', async () => {
+    projectLocalBinding = { patch: projectLocalPatch };
+    mergedConfig = {
+      appearance: {
+        sidebar: { sortOrder: 'manual', manualOrder: { '/': ['beta.md', 'zeta', 'alpha.md'] } },
+      },
+    };
+    responseByUrl.set('/api/rename-path', () =>
+      jsonResponse({
+        renamed: [{ fromDocName: 'alpha', toDocName: 'zeta/alpha' }],
+        renamedAssets: [],
+      }),
+    );
+    render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['beta.md', 'zeta/', 'alpha.md']));
+
+    await act(async () => {
+      model.dragAndDrop?.onDropComplete?.({
+        draggedPaths: ['alpha.md'],
+        operation: 'move',
+        target: {
+          kind: 'directory',
+          directoryPath: 'zeta/',
+          flattenedSegmentPath: null,
+          hoveredPath: 'zeta/',
+        },
+      });
+    });
+
+    await waitFor(() =>
+      expect(projectLocalPatch).toHaveBeenCalledWith({
+        appearance: { sidebar: { manualOrder: { '/': ['beta.md', 'zeta'] } } },
+      }),
+    );
   });
 
   test('in modified order a refreshed listing with a newer time moves that file up', async () => {
