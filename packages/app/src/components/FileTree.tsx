@@ -2,7 +2,10 @@
 
 import type { OkignoreBinding } from '@inkeep/open-knowledge-core/config/bind-okignore-doc';
 import { humanFormat } from '@inkeep/open-knowledge-core/config/errors';
-import type { FileTreeSortOrder } from '@inkeep/open-knowledge-core/config/schema';
+import {
+  FILE_TREE_MANUAL_ORDER_ROOT_KEY,
+  type FileTreeSortOrder,
+} from '@inkeep/open-knowledge-core/config/schema';
 import { isDocumentOverOpenByteLimit } from '@inkeep/open-knowledge-core/constants/document-open';
 import type {
   HandoffOutcome,
@@ -216,10 +219,13 @@ import {
 } from '@/lib/file-tree-menu-action-events';
 import {
   compareFileTreeSortEntries,
+  effectiveSortOrder,
+  type FileTreeFolderSortOrder,
   type FileTreeManualOrder,
   type FileTreeSortState,
-  manualOrderFolderKey,
+  folderSortOrderPatchForMoves,
   manualOrderPatchForMoves,
+  NO_FOLDER_SORT_ORDER,
   NO_MANUAL_ORDER,
   reorderedFolderNames,
   type TreePathMove,
@@ -864,6 +870,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const showOkFolders = merged?.appearance?.sidebar?.showOkFolders ?? false;
   const sortOrder = merged?.appearance?.sidebar?.sortOrder ?? 'name';
   const manualOrder = merged?.appearance?.sidebar?.manualOrder ?? NO_MANUAL_ORDER;
+  const folderSortOrder = merged?.appearance?.sidebar?.folderSortOrder ?? NO_FOLDER_SORT_ORDER;
   const previewTabsEnabled = merged?.editor?.previewTabs ?? true;
   const previewDisposition = previewOpenDisposition(previewTabsEnabled);
   const previewOpenOptions = {
@@ -1042,8 +1049,9 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const showOkFoldersRef = useRef<boolean>(false);
   const sortOrderRef = useRef<FileTreeSortOrder>(sortOrder);
   const manualOrderRef = useRef<FileTreeManualOrder>(manualOrder);
+  const folderSortOrderRef = useRef<FileTreeFolderSortOrder>(folderSortOrder);
   const sortStateRef = useRef<FileTreeSortState>(
-    fileTreeSortState(sortOrder, documents, manualOrder),
+    fileTreeSortState(sortOrder, documents, manualOrder, folderSortOrder),
   );
   const appliedSortSignatureRef = useRef<string | null>(null);
   const fileTreeHostRef = useRef<HTMLDivElement | null>(null);
@@ -1229,7 +1237,11 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     dragAndDrop: {
       canDrag: isAvailable,
       canDrop: isAvailable,
-      canReorder: () => sortOrderRef.current === 'manual',
+      canReorder: (parentDirectoryPath) =>
+        effectiveSortOrder(
+          sortStateRef.current,
+          parentDirectoryPath ?? FILE_TREE_MANUAL_ORDER_ROOT_KEY,
+        ) === 'manual',
       onDropComplete: (event) => handleDropCompleteRef.current(event),
       onDropError: (message) => {
         toast.error(message);
@@ -1283,7 +1295,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
 
   const treePaths = documentsToTreePaths(documents);
   const treePathsSignature = treePathSignature(treePaths);
-  const sortSignature = fileTreeSortSignature(sortOrder, documents, manualOrder);
+  const sortSignature = fileTreeSortSignature(sortOrder, documents, manualOrder, folderSortOrder);
   const treePathsRef = useRef(treePaths);
   const folderTreePaths = collectTreeFolderPathsFromDocuments(documents, {
     includeOkFolders: showOkFolders,
@@ -1326,6 +1338,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       sortOrderRef.current,
       nextDocuments ?? documentsRef.current,
       manualOrderRef.current,
+      folderSortOrderRef.current,
     );
     const nextPaths = documentsToTreePaths(nextDocuments ?? documentsRef.current);
     model.resetPaths(nextPaths, {
@@ -1604,6 +1617,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       sortOrderRef.current,
       documentsRef.current,
       manualOrderRef.current,
+      folderSortOrderRef.current,
     );
     model.resetPaths(treePathsRef.current, {
       initialExpandedPaths: expandedPathsForReset(),
@@ -1896,8 +1910,10 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
 
   function saveManualOrderForDrop(event: FileTreeDropResult) {
     const { hoveredPath, position } = event.target;
-    if (position === undefined || hoveredPath === null || sortOrderRef.current !== 'manual') return;
+    if (position === undefined || hoveredPath === null) return;
     const folderTreePath = event.target.kind === 'root' ? null : event.target.directoryPath;
+    const folderKey = folderTreePath ?? FILE_TREE_MANUAL_ORDER_ROOT_KEY;
+    if (effectiveSortOrder(sortStateRef.current, folderKey) !== 'manual') return;
     const currentNames = folderChildTreePaths(documentsRef.current, folderTreePath, {
       includeOkFolders: showOkFoldersRef.current,
     })
@@ -1915,9 +1931,6 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       toast.info(settingsLoadingReason, { id: 'sidebar-settings-not-ready' });
       return;
     }
-    const folderKey = manualOrderFolderKey(
-      folderTreePath === null ? [] : treePathSortEntry(folderTreePath).segments,
-    );
     const result = projectLocalBinding.patch({
       appearance: { sidebar: { manualOrder: { [folderKey]: nextNames } } },
     });
@@ -1927,13 +1940,21 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   }
 
   function followManualOrderMoves(moves: readonly TreePathMove[]) {
-    const patch = manualOrderPatchForMoves(manualOrderRef.current, moves);
-    if (patch === null) return;
+    const manualPatch = manualOrderPatchForMoves(manualOrderRef.current, moves);
+    const folderSortPatch = folderSortOrderPatchForMoves(folderSortOrderRef.current, moves);
+    if (manualPatch === null && folderSortPatch === null) return;
     if (!projectLocalSynced || projectLocalBinding === null) {
       console.warn('[FileTree] manual order not updated for moved paths: settings not ready');
       return;
     }
-    const result = projectLocalBinding.patch({ appearance: { sidebar: { manualOrder: patch } } });
+    const result = projectLocalBinding.patch({
+      appearance: {
+        sidebar: {
+          ...(manualPatch === null ? {} : { manualOrder: manualPatch }),
+          ...(folderSortPatch === null ? {} : { folderSortOrder: folderSortPatch }),
+        },
+      },
+    });
     if (!result.ok) {
       toast.error(t`Could not save the file order`, { description: humanFormat(result.error) });
     }
@@ -2367,6 +2388,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     showOkFoldersRef.current = showOkFolders;
     sortOrderRef.current = sortOrder;
     manualOrderRef.current = manualOrder;
+    folderSortOrderRef.current = folderSortOrder;
     treePathsRef.current = treePaths;
     folderTreePathsRef.current = folderTreePaths;
     activeAncestorTreePathsRef.current = activeAncestorTreePaths;

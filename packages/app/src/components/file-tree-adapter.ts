@@ -17,9 +17,12 @@ import {
 } from '@/components/file-tree-utils';
 import {
   EMPTY_MANUAL_RANKS,
+  type FileTreeFolderSortOrder,
   type FileTreeManualOrder,
   type FileTreeSortState,
   manualRanksByFolderKey,
+  NO_FOLDER_SORT_ORDER,
+  sortOrdersInUse,
 } from '@/lib/file-tree-sort';
 import { OK_SIDEBAR_DRAG_MIME } from '@/lib/sidebar-drag';
 
@@ -169,13 +172,18 @@ export function fileTreeSortState(
   order: FileTreeSortOrder,
   documents: readonly FileEntry[],
   manualOrder: FileTreeManualOrder,
+  folderSortOrder: FileTreeFolderSortOrder = NO_FOLDER_SORT_ORDER,
 ): FileTreeSortState {
+  const inUse = sortOrdersInUse(order, folderSortOrder);
   return {
     order,
-    modifiedMsByTreePath:
-      order === 'modified' ? documentsModifiedMsByTreePath(documents) : EMPTY_MODIFIED_MS,
-    manualRanksByFolderKey:
-      order === 'manual' ? manualRanksByFolderKey(manualOrder) : EMPTY_MANUAL_RANKS,
+    modifiedMsByTreePath: inUse.has('modified')
+      ? documentsModifiedMsByTreePath(documents)
+      : EMPTY_MODIFIED_MS,
+    manualRanksByFolderKey: inUse.has('manual')
+      ? manualRanksByFolderKey(manualOrder)
+      : EMPTY_MANUAL_RANKS,
+    folderOrders: new Map(Object.entries(folderSortOrder)),
   };
 }
 
@@ -183,10 +191,13 @@ export function fileTreeSortSignature(
   order: FileTreeSortOrder,
   documents: readonly FileEntry[],
   manualOrder: FileTreeManualOrder,
+  folderSortOrder: FileTreeFolderSortOrder = NO_FOLDER_SORT_ORDER,
 ): string {
-  if (order === 'manual') return `${order}\0${JSON.stringify(manualOrder)}`;
-  if (order !== 'modified') return order;
-  const parts: string[] = [order];
+  const inUse = sortOrdersInUse(order, folderSortOrder);
+  const head = `${order}\0${JSON.stringify(folderSortOrder)}`;
+  const manualPart = inUse.has('manual') ? JSON.stringify(manualOrder) : '';
+  if (!inUse.has('modified')) return `${head}\0${manualPart}`;
+  const parts: string[] = [head, manualPart];
   for (const entry of documents) {
     if (isFolderEntry(entry)) continue;
     parts.push(`${fileEntryToTreePath(entry)}\u0001${entry.modified}`);

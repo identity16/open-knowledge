@@ -3,7 +3,9 @@ import { describe, expect, test } from 'vitest';
 import {
   compareFileTreeSortEntries,
   EMPTY_MANUAL_RANKS,
+  effectiveSortOrder,
   type FileTreeSortState,
+  folderSortOrderPatchForMoves,
   manualOrderFolderKey,
   manualOrderPatchForMoves,
   manualRanksByFolderKey,
@@ -205,5 +207,69 @@ describe('manualOrderPatchForMoves', () => {
       null,
     );
     expect(manualOrderPatchForMoves({}, [{ from: 'a.md', to: 'b.md' }])).toBeNull();
+  });
+});
+
+describe('per-folder sort orders', () => {
+  const state: FileTreeSortState = {
+    order: 'name',
+    modifiedMsByTreePath: new Map([
+      ['journal/old.md', 1],
+      ['journal/new.md', 2],
+      ['journal/2026/jan.md', 1],
+      ['journal/2026/feb.md', 2],
+      ['notes/b.md', 2],
+      ['notes/a.md', 1],
+    ]),
+    manualRanksByFolderKey: EMPTY_MANUAL_RANKS,
+    folderOrders: new Map([
+      ['journal/', 'modified'],
+      ['journal/archive/', 'name'],
+    ]),
+  };
+
+  test('a folder setting covers its subfolders until one sets its own', () => {
+    expect(effectiveSortOrder(state, '/')).toBe('name');
+    expect(effectiveSortOrder(state, 'journal/')).toBe('modified');
+    expect(effectiveSortOrder(state, 'journal/2026/')).toBe('modified');
+    expect(effectiveSortOrder(state, 'journal/archive/')).toBe('name');
+    expect(effectiveSortOrder(state, 'journal/archive/x/')).toBe('name');
+    expect(effectiveSortOrder(state, 'notes/')).toBe('name');
+  });
+
+  test('each folder sorts its own children by its effective order', () => {
+    expect(
+      sortWith(state, [
+        'journal/old.md',
+        'journal/new.md',
+        'journal/2026/jan.md',
+        'journal/2026/feb.md',
+        'notes/b.md',
+        'notes/a.md',
+      ]),
+    ).toEqual([
+      'journal/2026/feb.md',
+      'journal/2026/jan.md',
+      'journal/new.md',
+      'journal/old.md',
+      'notes/a.md',
+      'notes/b.md',
+    ]);
+  });
+
+  test('renaming a folder moves its own and nested folder settings', () => {
+    expect(
+      folderSortOrderPatchForMoves({ 'journal/': 'modified', 'journal/archive/': 'name' }, [
+        { from: 'journal/', to: 'diary/' },
+      ]),
+    ).toEqual({
+      'journal/': null,
+      'journal/archive/': null,
+      'diary/': 'modified',
+      'diary/archive/': 'name',
+    });
+    expect(
+      folderSortOrderPatchForMoves({ 'journal/': 'modified' }, [{ from: 'a.md', to: 'b.md' }]),
+    ).toBe(null);
   });
 });

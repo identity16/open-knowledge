@@ -139,7 +139,7 @@ class StubModel {
   sort: StubSortComparator | null = null;
   renaming: { onRename?: (event: unknown) => void } | null = null;
   dragAndDrop: {
-    canReorder?: () => boolean;
+    canReorder?: (parentDirectoryPath: string | null) => boolean;
     onDropComplete?: (event: unknown) => void;
   } | null = null;
   order: string[] = [];
@@ -292,7 +292,10 @@ vi.doMock('@pierre/trees', () => ({
 vi.doMock('@pierre/trees/react', () => ({
   useFileTree: (options: {
     sort?: StubSortComparator;
-    dragAndDrop?: { canReorder?: () => boolean; onDropComplete?: (event: unknown) => void };
+    dragAndDrop?: {
+      canReorder?: (parentDirectoryPath: string | null) => boolean;
+      onDropComplete?: (event: unknown) => void;
+    };
     renaming?: { onRename?: (event: unknown) => void };
   }) => {
     model.sort = options.sort ?? null;
@@ -1659,6 +1662,15 @@ describe('FileTree sort order', () => {
     };
     view.rerender(<FileTree />);
     await waitFor(() => expect(model.order).toEqual(['alpha.md', 'zeta/', 'beta.md']));
+  });
+
+  test('a folder set to manual gets reorder zones while the top level does not', async () => {
+    mergedConfig = { appearance: { sidebar: { folderSortOrder: { 'zeta/': 'manual' } } } };
+    render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['zeta/', 'alpha.md', 'beta.md']));
+    expect(model.dragAndDrop?.canReorder?.(null)).toBe(false);
+    expect(model.dragAndDrop?.canReorder?.('zeta/')).toBe(true);
+    expect(model.dragAndDrop?.canReorder?.('zeta/deep/')).toBe(true);
   });
 
   test('reorder zones are on only in manual mode', async () => {

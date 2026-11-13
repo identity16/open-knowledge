@@ -10,9 +10,38 @@ export interface FileTreeSortState {
   readonly order: FileTreeSortOrder;
   readonly modifiedMsByTreePath: ReadonlyMap<string, number>;
   readonly manualRanksByFolderKey: ReadonlyMap<string, ReadonlyMap<string, number>>;
+  readonly folderOrders?: ReadonlyMap<string, FileTreeSortOrder>;
+}
+
+export type FileTreeFolderSortOrder = Readonly<Record<string, FileTreeSortOrder>>;
+
+function parentFolderKeyOf(folderKey: string): string | null {
+  if (folderKey === FILE_TREE_MANUAL_ORDER_ROOT_KEY) return null;
+  const trimmed = folderKey.slice(0, -1);
+  const slash = trimmed.lastIndexOf('/');
+  return slash < 0 ? FILE_TREE_MANUAL_ORDER_ROOT_KEY : `${trimmed.slice(0, slash)}/`;
+}
+
+export function effectiveSortOrder(state: FileTreeSortState, folderKey: string): FileTreeSortOrder {
+  const folderOrders = state.folderOrders;
+  if (folderOrders === undefined || folderOrders.size === 0) return state.order;
+  for (let key: string | null = folderKey; key !== null; key = parentFolderKeyOf(key)) {
+    const order = folderOrders.get(key);
+    if (order !== undefined) return order;
+  }
+  return state.order;
+}
+
+export function sortOrdersInUse(
+  order: FileTreeSortOrder,
+  folderSortOrder: FileTreeFolderSortOrder,
+): ReadonlySet<FileTreeSortOrder> {
+  return new Set([order, ...Object.values(folderSortOrder)]);
 }
 
 export const NO_MANUAL_ORDER: FileTreeManualOrder = Object.freeze({});
+
+export const NO_FOLDER_SORT_ORDER: Readonly<Record<string, FileTreeSortOrder>> = Object.freeze({});
 
 export const EMPTY_MANUAL_RANKS: ReadonlyMap<string, ReadonlyMap<string, number>> = new Map();
 
@@ -132,14 +161,15 @@ export function compareFileTreeSortEntries(
     const leftSegment = left.segments[depth] ?? '';
     const rightSegment = right.segments[depth] ?? '';
     if (leftSegment === rightSegment) continue;
-    if (state.order === 'manual') {
+    const order = effectiveSortOrder(state, manualOrderFolderKey(left.segments.slice(0, depth)));
+    if (order === 'manual') {
       const byRank = compareByManualRank(left, right, depth, state.manualRanksByFolderKey);
       if (byRank !== 0) return byRank;
     }
     const leftIsDirectory = isDirectoryAtDepth(left, depth);
     const rightIsDirectory = isDirectoryAtDepth(right, depth);
     if (leftIsDirectory !== rightIsDirectory) return leftIsDirectory ? -1 : 1;
-    if (!leftIsDirectory && state.order === 'modified') {
+    if (!leftIsDirectory && order === 'modified') {
       const byModified = compareFilesByModified(left, right, state.modifiedMsByTreePath);
       if (byModified !== 0) return byModified;
     }
@@ -237,6 +267,32 @@ export function manualOrderPatchForMoves(
       before.length === names.length &&
       before.every((name, index) => name === names[index]);
     if (!same) patch[key] = [...names];
+  }
+  return Object.keys(patch).length === 0 ? null : patch;
+}
+
+export function folderSortOrderPatchForMoves(
+  folderSortOrder: FileTreeFolderSortOrder,
+  moves: readonly TreePathMove[],
+): Record<string, FileTreeSortOrder | null> | null {
+  const next = new Map<string, FileTreeSortOrder>(Object.entries(folderSortOrder));
+  for (const { from, to } of moves) {
+    if (from === to || !from.endsWith('/') || !to.endsWith('/')) continue;
+    const moved: [string, FileTreeSortOrder][] = [];
+    for (const [key, order] of next) {
+      if (key.startsWith(from)) moved.push([key, order]);
+    }
+    for (const [key, order] of moved) {
+      next.delete(key);
+      next.set(`${to}${key.slice(from.length)}`, order);
+    }
+  }
+  const patch: Record<string, FileTreeSortOrder | null> = {};
+  for (const key of Object.keys(folderSortOrder)) {
+    if (!next.has(key)) patch[key] = null;
+  }
+  for (const [key, order] of next) {
+    if (folderSortOrder[key] !== order) patch[key] = order;
   }
   return Object.keys(patch).length === 0 ? null : patch;
 }
