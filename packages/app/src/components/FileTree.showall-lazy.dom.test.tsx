@@ -1626,6 +1626,22 @@ describe('FileTree sort order', () => {
     expect(fetchUrls).toHaveLength(fetchesBefore);
   });
 
+  test('manual order follows manualOrder and re-sorts when it changes', async () => {
+    mergedConfig = {
+      appearance: {
+        sidebar: { sortOrder: 'manual', manualOrder: { '/': ['beta.md', 'zeta', 'alpha.md'] } },
+      },
+    };
+    const view = render(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['beta.md', 'zeta/', 'alpha.md']));
+
+    mergedConfig = {
+      appearance: { sidebar: { sortOrder: 'manual', manualOrder: { '/': ['alpha.md'] } } },
+    };
+    view.rerender(<FileTree />);
+    await waitFor(() => expect(model.order).toEqual(['alpha.md', 'zeta/', 'beta.md']));
+  });
+
   test('in modified order a refreshed listing with a newer time moves that file up', async () => {
     mergedConfig = { appearance: { sidebar: { sortOrder: 'modified' } } };
     render(<FileTree />);

@@ -15,7 +15,12 @@ import {
   isDocumentEntry,
   isFolderEntry,
 } from '@/components/file-tree-utils';
-import type { FileTreeSortState } from '@/lib/file-tree-sort';
+import {
+  EMPTY_MANUAL_RANKS,
+  type FileTreeManualOrder,
+  type FileTreeSortState,
+  manualRanksByFolderKey,
+} from '@/lib/file-tree-sort';
 import { OK_SIDEBAR_DRAG_MIME } from '@/lib/sidebar-drag';
 
 const DEFAULT_TREE_EXTENSION = '.md';
@@ -163,18 +168,23 @@ const EMPTY_MODIFIED_MS: ReadonlyMap<string, number> = new Map();
 export function fileTreeSortState(
   order: FileTreeSortOrder,
   documents: readonly FileEntry[],
+  manualOrder: FileTreeManualOrder,
 ): FileTreeSortState {
   return {
     order,
     modifiedMsByTreePath:
       order === 'modified' ? documentsModifiedMsByTreePath(documents) : EMPTY_MODIFIED_MS,
+    manualRanksByFolderKey:
+      order === 'manual' ? manualRanksByFolderKey(manualOrder) : EMPTY_MANUAL_RANKS,
   };
 }
 
 export function fileTreeSortSignature(
   order: FileTreeSortOrder,
   documents: readonly FileEntry[],
+  manualOrder: FileTreeManualOrder,
 ): string {
+  if (order === 'manual') return `${order}\0${JSON.stringify(manualOrder)}`;
   if (order !== 'modified') return order;
   const parts: string[] = [order];
   for (const entry of documents) {

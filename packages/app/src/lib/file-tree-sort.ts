@@ -1,9 +1,39 @@
-import type { FileTreeSortOrder } from '@inkeep/open-knowledge-core/config/schema';
+import {
+  FILE_TREE_MANUAL_ORDER_ROOT_KEY,
+  type FileTreeSortOrder,
+} from '@inkeep/open-knowledge-core/config/schema';
 import type { FileTreeSortEntry } from '@pierre/trees';
+
+export type FileTreeManualOrder = Readonly<Record<string, readonly string[]>>;
 
 export interface FileTreeSortState {
   readonly order: FileTreeSortOrder;
   readonly modifiedMsByTreePath: ReadonlyMap<string, number>;
+  readonly manualRanksByFolderKey: ReadonlyMap<string, ReadonlyMap<string, number>>;
+}
+
+export const NO_MANUAL_ORDER: FileTreeManualOrder = Object.freeze({});
+
+export const EMPTY_MANUAL_RANKS: ReadonlyMap<string, ReadonlyMap<string, number>> = new Map();
+
+export function manualOrderFolderKey(parentSegments: readonly string[]): string {
+  return parentSegments.length === 0
+    ? FILE_TREE_MANUAL_ORDER_ROOT_KEY
+    : `${parentSegments.join('/')}/`;
+}
+
+export function manualRanksByFolderKey(
+  manualOrder: FileTreeManualOrder,
+): Map<string, ReadonlyMap<string, number>> {
+  const ranks = new Map<string, ReadonlyMap<string, number>>();
+  for (const [folderKey, names] of Object.entries(manualOrder)) {
+    const folderRanks = new Map<string, number>();
+    names.forEach((name, index) => {
+      if (!folderRanks.has(name)) folderRanks.set(name, index);
+    });
+    ranks.set(folderKey, folderRanks);
+  }
+  return ranks;
 }
 
 type NaturalToken = string | number;
@@ -63,6 +93,24 @@ function isDirectoryAtDepth(entry: FileTreeSortEntry, depth: number): boolean {
   return depth < entry.segments.length - 1 || entry.isDirectory;
 }
 
+function compareByManualRank(
+  left: FileTreeSortEntry,
+  right: FileTreeSortEntry,
+  depth: number,
+  manualRanksByFolderKey: ReadonlyMap<string, ReadonlyMap<string, number>>,
+): number {
+  const folderRanks = manualRanksByFolderKey.get(
+    manualOrderFolderKey(left.segments.slice(0, depth)),
+  );
+  if (folderRanks === undefined) return 0;
+  const leftRank = folderRanks.get(left.segments[depth] ?? '');
+  const rightRank = folderRanks.get(right.segments[depth] ?? '');
+  if (leftRank === undefined && rightRank === undefined) return 0;
+  if (leftRank === undefined) return 1;
+  if (rightRank === undefined) return -1;
+  return leftRank - rightRank;
+}
+
 function compareFilesByModified(
   left: FileTreeSortEntry,
   right: FileTreeSortEntry,
@@ -84,6 +132,10 @@ export function compareFileTreeSortEntries(
     const leftSegment = left.segments[depth] ?? '';
     const rightSegment = right.segments[depth] ?? '';
     if (leftSegment === rightSegment) continue;
+    if (state.order === 'manual') {
+      const byRank = compareByManualRank(left, right, depth, state.manualRanksByFolderKey);
+      if (byRank !== 0) return byRank;
+    }
     const leftIsDirectory = isDirectoryAtDepth(left, depth);
     const rightIsDirectory = isDirectoryAtDepth(right, depth);
     if (leftIsDirectory !== rightIsDirectory) return leftIsDirectory ? -1 : 1;

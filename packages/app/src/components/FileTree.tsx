@@ -211,7 +211,12 @@ import {
   subscribeToFileTreeMenuActionImportTemplate,
   subscribeToFileTreeMenuActionRename,
 } from '@/lib/file-tree-menu-action-events';
-import { compareFileTreeSortEntries, type FileTreeSortState } from '@/lib/file-tree-sort';
+import {
+  compareFileTreeSortEntries,
+  type FileTreeManualOrder,
+  type FileTreeSortState,
+  NO_MANUAL_ORDER,
+} from '@/lib/file-tree-sort';
 import { importTemplate } from '@/lib/folder-config-api';
 import { isOverlayLayerOpen } from '@/lib/overlay-layers';
 import { parseServerResponse, parseSuccessOrWarn } from '@/lib/parse-server-response';
@@ -819,6 +824,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const showOnlyMarkdownFiles = merged?.appearance?.sidebar?.showOnlyMarkdownFiles ?? false;
   const showOkFolders = merged?.appearance?.sidebar?.showOkFolders ?? false;
   const sortOrder = merged?.appearance?.sidebar?.sortOrder ?? 'name';
+  const manualOrder = merged?.appearance?.sidebar?.manualOrder ?? NO_MANUAL_ORDER;
   const previewTabsEnabled = merged?.editor?.previewTabs ?? true;
   const previewDisposition = previewOpenDisposition(previewTabsEnabled);
   const previewOpenOptions = {
@@ -996,7 +1002,10 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   const observeExpandedFolderPathsRef = useRef<(paths: readonly string[]) => void>(() => {});
   const showOkFoldersRef = useRef<boolean>(false);
   const sortOrderRef = useRef<FileTreeSortOrder>(sortOrder);
-  const sortStateRef = useRef<FileTreeSortState>(fileTreeSortState(sortOrder, documents));
+  const manualOrderRef = useRef<FileTreeManualOrder>(manualOrder);
+  const sortStateRef = useRef<FileTreeSortState>(
+    fileTreeSortState(sortOrder, documents, manualOrder),
+  );
   const appliedSortSignatureRef = useRef<string | null>(null);
   const fileTreeHostRef = useRef<HTMLDivElement | null>(null);
   const handleSelectionChangeRef = useRef<(selectedPaths: readonly string[]) => void>(() => {});
@@ -1234,7 +1243,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
 
   const treePaths = documentsToTreePaths(documents);
   const treePathsSignature = treePathSignature(treePaths);
-  const sortSignature = fileTreeSortSignature(sortOrder, documents);
+  const sortSignature = fileTreeSortSignature(sortOrder, documents, manualOrder);
   const treePathsRef = useRef(treePaths);
   const folderTreePaths = collectTreeFolderPathsFromDocuments(documents, {
     includeOkFolders: showOkFolders,
@@ -1276,6 +1285,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     sortStateRef.current = fileTreeSortState(
       sortOrderRef.current,
       nextDocuments ?? documentsRef.current,
+      manualOrderRef.current,
     );
     const nextPaths = documentsToTreePaths(nextDocuments ?? documentsRef.current);
     model.resetPaths(nextPaths, {
@@ -1550,7 +1560,11 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       skipNextResetSignatureRef.current = null;
       if (!sortChanged) return;
     }
-    sortStateRef.current = fileTreeSortState(sortOrderRef.current, documentsRef.current);
+    sortStateRef.current = fileTreeSortState(
+      sortOrderRef.current,
+      documentsRef.current,
+      manualOrderRef.current,
+    );
     model.resetPaths(treePathsRef.current, {
       initialExpandedPaths: expandedPathsForReset(),
     });
@@ -2255,6 +2269,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     busyPathRef.current = busyPath;
     showOkFoldersRef.current = showOkFolders;
     sortOrderRef.current = sortOrder;
+    manualOrderRef.current = manualOrder;
     treePathsRef.current = treePaths;
     folderTreePathsRef.current = folderTreePaths;
     activeAncestorTreePathsRef.current = activeAncestorTreePaths;
