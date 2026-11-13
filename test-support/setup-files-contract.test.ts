@@ -53,6 +53,7 @@ const TEST_PROJECTS_OUTSIDE_THE_PUBLIC_TREE = [
 const KNOWN_BUILD_CONFIGS = [
   'packages/app/vite.config.ts',
   'packages/desktop/electron.vite.config.ts',
+  'packages/desktop/electron.vite.release.config.ts',
 ];
 
 const REQUIRED_BASE_SETUP_FILES = ['bun-global-shim.ts', 'no-net-connect.ts', 'read-declarations.ts'];
