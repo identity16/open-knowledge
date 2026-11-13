@@ -1639,27 +1639,27 @@ Homepage: https://github.com/lifeomic/attempt#readme
 
 Copyright 2018 LifeOmic
 
-### `@lingui/babel-plugin-lingui-macro@6.5.0`
+### `@lingui/babel-plugin-lingui-macro@6.12.0`
 Homepage: https://lingui.dev
 
 Copyright (c) 2017-2022 Tomáš Ehrlich, (c) 2022-2023 Crowdin.
 
-### `@lingui/conf@6.5.0`
+### `@lingui/conf@6.12.0`
 Homepage: https://lingui.dev
 
 Copyright (c) 2017-2022 Tomáš Ehrlich, (c) 2022-2023 Crowdin.
 
-### `@lingui/core@6.5.0`
+### `@lingui/core@6.12.0`
 Homepage: https://lingui.dev
 
 Copyright (c) 2017-2022 Tomáš Ehrlich, (c) 2022-2023 Crowdin.
 
-### `@lingui/message-utils@6.5.0`
+### `@lingui/message-utils@6.12.0`
 Homepage: https://lingui.dev
 
 Copyright (c) 2017-2022 Tomáš Ehrlich, (c) 2022-2023 Crowdin.
 
-### `@lingui/react@6.5.0`
+### `@lingui/react@6.12.0`
 Homepage: https://lingui.dev
 
 Copyright (c) 2017-2022 Tomáš Ehrlich, (c) 2022-2023 Crowdin.
@@ -1703,6 +1703,11 @@ Copyright (c) 2020 lynweklm@gmail.com
 Homepage: https://github.com/Brooooooklyn/keyring-node
 
 Copyright (c) 2020 N-API for Rust
+
+### `@noble/hashes@2.4.0`
+Homepage: https://paulmillr.com/noble/
+
+Copyright (c) 2022 Paul Miller (https://paulmillr.com)
 
 ### `@nodable/entities@3.0.0`
 Homepage: https://github.com/nodable/val-parsers
@@ -4046,11 +4051,6 @@ Copyright (c) 2023 Daishi Kato
 Homepage: https://github.com/egoist/joycon
 
 _(LICENSE file present but no auto-extractable copyright line; refer to the package source for canonical attribution.)_
-
-### `js-sha256@0.10.1`
-Homepage: https://github.com/emn178/js-sha256
-
-Copyright (c) 2014-2023 Chen, Yi-Cyuan
 
 ### `js-tokens@4.0.0`
 Homepage: https://github.com/lydell/js-tokens
@@ -6734,7 +6734,7 @@ The following packages are patched in this repository via pnpm's `patchedDepende
 | --- | --- |
 | `@handlewithcare/remark-prosemirror@0.1.5` | `patches/@handlewithcare%2Fremark-prosemirror@0.1.5.patch` |
 | `@hocuspocus/provider@4.0.0-rc.1` | `patches/@hocuspocus%2Fprovider@4.0.0-rc.1.patch` |
-| `@lingui/core@6.5.0` | `patches/@lingui%2Fcore@6.5.0.patch` |
+| `@lingui/core@6.12.0` | `patches/@lingui%2Fcore@6.12.0.patch` |
 | `@pierre/diffs@1.3.6` | `patches/@pierre%2Fdiffs@1.3.6.patch` |
 | `@pierre/trees@1.0.0-beta.4` | `patches/@pierre%2Ftrees@1.0.0-beta.4.patch` |
 | `@radix-ui/react-tooltip@1.2.8` | `patches/@radix-ui__react-tooltip@1.2.8.patch` |

@@ -1,8 +1,8 @@
 diff --git a/dist/index.mjs b/dist/index.mjs
-index 6f35bbf88c86bd2a068206ad1bc524113bc0e85c..92e40b7a9739f2f06ef8ea25b203af14a4c9ef5d 100644
+index f1edb28..6a2bfb5 100644
 --- a/dist/index.mjs
 +++ b/dist/index.mjs
-@@ -167,7 +167,7 @@ function interpolate(translation, locale, locales) {
+@@ -185,7 +185,7 @@ function interpolate(translation, locale, locales, customFormatters = {}) {
            return message + OCTOTHORPE_PH;
          }
          if (isString(token)) {
@@ -11,7 +11,7 @@ index 6f35bbf88c86bd2a068206ad1bc524113bc0e85c..92e40b7a9739f2f06ef8ea25b203af14
          }
          const [name, type, format] = token;
          let interpolatedFormat = {};
-@@ -197,9 +197,6 @@ function interpolate(translation, locale, locales) {
+@@ -232,9 +232,6 @@ function interpolate(translation, locale, locales, customFormatters = {}) {
        }, "");
      };
      const result = formatMessage(translation);

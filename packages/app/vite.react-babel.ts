@@ -1,3 +1,4 @@
+import { lingui } from '@lingui/vite-plugin';
 import type { RolldownBabelPreset } from '@rolldown/plugin-babel';
 import { reactCompilerPreset } from '@vitejs/plugin-react';
 import type { PluginOptions } from 'babel-plugin-react-compiler';
@@ -20,14 +21,10 @@ const reactCompilerConfig: PluginOptions = {
   },
 };
 
-/**
- * The Lingui macro (`<Trans>`, `t`, `msg`, …) runs as a Babel **plugin** —
- * Babel applies plugins before presets, so the macro expands first and the
- * React Compiler **preset** only ever sees plain components + `i18n._()`
- * calls. `@vitejs/plugin-react` v6 (oxc-based) has no `babel` option, so this
- * shared pass is where the macro must live.
- */
-export const RENDERER_BABEL_OPTIONS: { plugins: string[]; presets: RolldownBabelPreset[] } = {
-  plugins: ['@lingui/babel-plugin-lingui-macro'],
+export const RENDERER_BABEL_OPTIONS: { presets: RolldownBabelPreset[] } = {
   presets: [reactCompilerPreset(reactCompilerConfig)],
 };
+
+export function rendererLinguiPlugins(configPath: string) {
+  return lingui({ macroTransform: true, configPath });
+}

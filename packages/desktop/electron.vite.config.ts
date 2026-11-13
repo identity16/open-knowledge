@@ -6,7 +6,7 @@ import { injectAppVersionEnv } from '../app/src/build/app-version';
 import { chromeTokensVitePlugin } from '../app/src/build/chrome-tokens-vite-plugin';
 import { RENDERER_DEDUPE } from '../app/vite.dedupe';
 import { rendererHtmlInput } from '../app/vite.entries';
-import { RENDERER_BABEL_OPTIONS } from '../app/vite.react-babel';
+import { RENDERER_BABEL_OPTIONS, rendererLinguiPlugins } from '../app/vite.react-babel';
 import { parseDesktopVariantName } from './src/shared/desktop-variant';
 
 // Inject the app's version onto import.meta.env.VITE_APP_VERSION for the
@@ -131,8 +131,7 @@ export default defineConfig({
     plugins: [
       chromeTokensVitePlugin({ globalsCssPath: resolve(appRoot, 'src/globals.css') }),
       react(),
-      // Lingui macro + React Compiler share one Babel pass, options shared
-      // with `packages/app/vite.config.ts` via `RENDERER_BABEL_OPTIONS`.
+      ...rendererLinguiPlugins(resolve(appRoot, 'lingui.config.ts')),
       babel(RENDERER_BABEL_OPTIONS),
     ],
     resolve: {

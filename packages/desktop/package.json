@@ -36,8 +36,8 @@
     "@inkeep/open-knowledge-core": "workspace:*",
     "@inkeep/open-knowledge-native-config": "workspace:*",
     "@inkeep/open-knowledge-server": "workspace:*",
-    "@lingui/core": "^6.0.1",
-    "@lingui/message-utils": "^6.0.1",
+    "@lingui/core": "^6.12.0",
+    "@lingui/message-utils": "^6.12.0",
     "@napi-rs/keyring": "2.1.2",
     "@opentelemetry/api": "^1.9.0",
     "electron-updater": "6.8.4",
@@ -52,6 +52,7 @@
   "devDependencies": {
     "@electron/fuses": "^2.1.1",
     "@electron/notarize": "^3.1.1",
+    "@lingui/vite-plugin": "^6.12.0",
     "@playwright/test": "^1.63.0",
     "@rolldown/plugin-babel": "^0.2.2",
     "@types/node": "^24.7.0",

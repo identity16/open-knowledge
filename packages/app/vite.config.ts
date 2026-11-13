@@ -16,7 +16,7 @@ import {
 import { hocuspocusPlugin } from './src/server/hocuspocus-plugin';
 import { RENDERER_DEDUPE } from './vite.dedupe';
 import { RENDERER_HTML_ENTRIES, rendererHtmlInput } from './vite.entries';
-import { RENDERER_BABEL_OPTIONS } from './vite.react-babel';
+import { RENDERER_BABEL_OPTIONS, rendererLinguiPlugins } from './vite.react-babel';
 
 // Inject the app's own version onto import.meta.env.VITE_APP_VERSION for the
 // browser bundle (telemetry resource + client-version wire builder). Covers
@@ -73,9 +73,7 @@ export default defineConfig({
     rejectionLoopGuardPlugin(),
     chromeTokensVitePlugin(),
     react(),
-    // Single Babel pass — Lingui macro (plugin) + React Compiler (preset).
-    // See `vite.react-babel.ts` for the plugin-before-preset rationale; the
-    // options are shared with the Electron renderer build.
+    ...rendererLinguiPlugins(join(import.meta.dirname, 'lingui.config.ts')),
     babel(RENDERER_BABEL_OPTIONS),
     hocuspocusPlugin(),
     ...(startupRequest === undefined

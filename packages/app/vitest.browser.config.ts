@@ -17,15 +17,13 @@ import {
 } from './tests/foundation/browser-network-guard';
 import {
   BROWSER_PRODUCT_MODULE_EXCLUDES,
-  BROWSER_TEST_MODULES,
   browserCiValue,
   browserNodeSubstitutes,
-  NODE_MODULES,
 } from './tests/foundation/browser-node-compat';
 import { buildAppStylesheet } from './tests/foundation/build-app-stylesheet';
 import { chromiumGcLaunchEnvGuard } from './tests/foundation/chromium-gc-launch-env';
 import { RENDERER_DEDUPE } from './vite.dedupe';
-import { RENDERER_BABEL_OPTIONS } from './vite.react-babel';
+import { RENDERER_BABEL_OPTIONS, rendererLinguiPlugins } from './vite.react-babel';
 
 const srcDir = fileURLToPath(new URL('./src/', import.meta.url));
 
@@ -38,14 +36,7 @@ const BROWSER_FILE_BRIDGE_ROOTS = [
 export const APP_BROWSER_BABEL_OUTPUT = babelOutputCache();
 
 export function appBrowserBabelPasses() {
-  return [
-    babel({ ...RENDERER_BABEL_OPTIONS, exclude: [...BROWSER_PRODUCT_MODULE_EXCLUDES] }),
-    babel({
-      plugins: RENDERER_BABEL_OPTIONS.plugins,
-      include: [...BROWSER_TEST_MODULES],
-      exclude: [NODE_MODULES],
-    }),
-  ];
+  return [babel({ ...RENDERER_BABEL_OPTIONS, exclude: [...BROWSER_PRODUCT_MODULE_EXCLUDES] })];
 }
 
 export const APP_BROWSER_SETUP_FILES = [
@@ -62,6 +53,7 @@ export const appBrowserVitestConfig = {
     browserCiValue(process.env),
     browserNodeSubstitutes(BROWSER_FILE_BRIDGE_ROOTS),
     react(),
+    ...rendererLinguiPlugins(fileURLToPath(new URL('./lingui.config.ts', import.meta.url))),
     ...appBrowserBabelPasses().map((pass, index) => APP_BROWSER_BABEL_OUTPUT.wrap(pass, index)),
   ],
   resolve: {
