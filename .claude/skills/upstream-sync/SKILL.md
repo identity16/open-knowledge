@@ -10,12 +10,14 @@ description: Bring selected changes from upstream inkeep/open-knowledge into thi
 ## 1. 무엇이 쌓였는지 보고한다
 
 ```bash
-git fetch upstream main
+git fetch --no-tags upstream main
 git log --oneline --no-merges main..upstream/main | head -100
 git diff --stat main...upstream/main | tail -1
 ```
 
 커밋을 관심사별로 묶어 짧게 보고한다: 버그 픽스, 보안, 기능, CI·릴리스, 문서. 이 저장소가 이미 바꾼 파일(`git diff --name-only $(git merge-base main upstream/main) main`)과 겹치는 묶음은 충돌 위험으로 표시한다.
+
+upstream의 태그는 가져오지도, 이 저장소에 push하지도 않는다. 이 제품의 버전과 태그(`vX.Y.Z`)는 upstream과 별개의 계열이고, 2026-11-13에 upstream 태그 1,445개를 지워 충돌을 없앴다.
 
 ## 2. 가져올 범위를 사용자와 정한다
 
