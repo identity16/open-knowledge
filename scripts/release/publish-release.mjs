@@ -2,7 +2,13 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { releaseFileDigest, releasePlan, validateReleaseInventory } from './release-identity.mjs';
+import {
+  compareReleaseVersions,
+  releaseFileDigest,
+  releasePlan,
+  validateReleaseInventory,
+  versionFromTag,
+} from './release-identity.mjs';
 
 const REPOSITORY = 'identity16/open-knowledge';
 
@@ -19,19 +25,7 @@ function gh(args) {
 }
 
 export function isNewerRelease(version, previous) {
-  releasePlan(version);
-  releasePlan(previous);
-  const parts = (value) =>
-    value
-      .replace('-identity16.', '.')
-      .split('.')
-      .map((part) => BigInt(part));
-  const left = parts(version);
-  const right = parts(previous);
-  for (let index = 0; index < left.length; index++) {
-    if (left[index] !== right[index]) return left[index] > right[index];
-  }
-  return false;
+  return compareReleaseVersions(version, previous) > 0;
 }
 
 export function stagedReleaseInventory(directory, version) {
@@ -122,7 +116,7 @@ function publicationContext(version, sourceSha, env, invoke) {
   };
   const checkLatest = () => {
     const latest = api('releases/latest', true);
-    if (latest && !isNewerRelease(version, latest.tag_name.replace(/^identity16-v/, '')))
+    if (latest && !isNewerRelease(version, versionFromTag(latest.tag_name)))
       throw new Error('A release must be newer than the latest published release.');
   };
   const findRelease = () => {

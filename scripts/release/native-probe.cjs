@@ -17,7 +17,9 @@ for (const [scope, name, relative] of modules) {
     console.log(`native module loads: ${scope} ${name}`);
   } catch (error) {
     failures += 1;
-    console.error(`native module failed: ${scope} ${name}: ${String(error.message).split('\n')[0]}`);
+    console.error(
+      `native module failed: ${scope} ${name}: ${String(error.message).split('\n')[0]}`,
+    );
   }
 }
 

@@ -17,17 +17,51 @@ export function releaseFileDigest(path, algorithm = 'sha256', encoding = 'hex') 
   }
 }
 
-export function releasePlan(version) {
-  if (
-    typeof version !== 'string' ||
-    version.trim() !== version ||
-    !/^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)-identity16\.(?:0|[1-9]\d*)$/.test(
-      version ?? '',
-    )
-  ) {
-    throw new Error('Expected a release version such as 0.76.0-identity16.3.');
+const NUMBER = '(?:0|[1-9]\\d*)';
+const RELEASE_VERSION = new RegExp(
+  `^(${NUMBER})\\.(${NUMBER})\\.(${NUMBER})(?:-identity16\\.(${NUMBER}))?$`,
+);
+const LEGACY_TAG_PREFIX = 'identity16-v';
+
+export function parseReleaseVersion(version) {
+  const match = typeof version === 'string' ? RELEASE_VERSION.exec(version) : null;
+  if (!match) throw new Error('Expected a release version such as 0.77.0.');
+  const [, major, minor, patch, legacyCounter] = match;
+  return {
+    core: [major, minor, patch].map((part) => BigInt(part)),
+    legacyCounter: legacyCounter === undefined ? null : BigInt(legacyCounter),
+  };
+}
+
+export function releaseTag(version) {
+  return parseReleaseVersion(version).legacyCounter === null
+    ? `v${version}`
+    : `${LEGACY_TAG_PREFIX}${version}`;
+}
+
+export function versionFromTag(tag) {
+  const version = tag.startsWith(LEGACY_TAG_PREFIX)
+    ? tag.slice(LEGACY_TAG_PREFIX.length)
+    : tag.replace(/^v/, '');
+  if (releaseTag(version) !== tag) throw new Error(`Not a release tag: ${tag}`);
+  return version;
+}
+
+export function compareReleaseVersions(left, right) {
+  const a = parseReleaseVersion(left);
+  const b = parseReleaseVersion(right);
+  for (let index = 0; index < a.core.length; index++) {
+    if (a.core[index] !== b.core[index]) return a.core[index] > b.core[index] ? 1 : -1;
   }
-  const tag = `identity16-v${version}`;
+  if (a.legacyCounter === b.legacyCounter) return 0;
+  if (a.legacyCounter === null) return 1;
+  if (b.legacyCounter === null) return -1;
+  return a.legacyCounter > b.legacyCounter ? 1 : -1;
+}
+
+export function releasePlan(version) {
+  if (typeof version !== 'string' || version.trim() !== version) parseReleaseVersion(null);
+  const tag = releaseTag(version);
   return {
     version,
     tag,

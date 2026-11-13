@@ -1,11 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import {
-  releasePlan,
-  releaseFileDigest,
-  validateReleaseInventory,
-} from './release-identity.mjs';
+import { releasePlan, releaseFileDigest, validateReleaseInventory } from './release-identity.mjs';
 
 export const RELEASE_REPOSITORY = 'identity16/open-knowledge';
 export const RELEASE_WORKFLOW = '.github/workflows/release.yml';

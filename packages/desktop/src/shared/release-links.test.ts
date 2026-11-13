@@ -11,9 +11,10 @@ describe('release links', () => {
     expect(releasesPageUrl(DESKTOP_VARIANTS['legacy-beta'])).toBe(PUBLIC_RELEASES_URL);
   });
 
-  test('fork release links keep their repository and tag prefix', () => {
+  test('product release links use v tags and keep legacy tags for legacy versions', () => {
     const url = releasesPageUrl(DESKTOP_VARIANTS.openknowledge16);
     expect(url).toBe('https://github.com/identity16/open-knowledge/releases');
+    expect(releaseUrlFor('0.77.0', url)).toBe(`${url}/tag/v0.77.0`);
     expect(releaseUrlFor('0.76.0-identity16.2', url)).toBe(
       `${url}/tag/identity16-v0.76.0-identity16.2`,
     );

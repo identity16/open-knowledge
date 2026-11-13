@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version, for example 0.76.0-identity16.5'
+        description: 'Release version, for example 0.77.0'
         required: true
         type: string
       resume_run_id:

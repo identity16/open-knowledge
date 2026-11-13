@@ -10,6 +10,9 @@ export function releasesPageUrl(variant: { readonly name: string }): string {
 }
 
 export function releaseUrlFor(version: string, releasesUrl = PUBLIC_RELEASES_URL): string {
-  const prefix = releasesUrl === OPENKNOWLEDGE16_RELEASES_URL ? 'identity16-v' : 'v';
+  const prefix =
+    releasesUrl === OPENKNOWLEDGE16_RELEASES_URL && version.includes('-identity16.')
+      ? 'identity16-v'
+      : 'v';
   return `${releasesUrl}/tag/${prefix}${encodeURIComponent(version)}`;
 }

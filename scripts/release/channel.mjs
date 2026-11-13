@@ -28,9 +28,9 @@ export function releaseIdentity(release) {
   if (
     release.draft ||
     release.prerelease ||
-    !/^identity16-v\d+\.\d+\.\d+-identity16\.\d+$/.test(release.tag_name ?? '')
+    !/^(?:v\d+\.\d+\.\d+|identity16-v\d+\.\d+\.\d+-identity16\.\d+)$/.test(release.tag_name ?? '')
   ) {
-    throw new Error('Latest release is not a stable identity16 web release.');
+    throw new Error('Latest release is not a stable web release.');
   }
   const asset = release.assets?.find((entry) => entry.name === assetName);
   const checksums = release.assets?.find((entry) => entry.name === 'checksums.txt');
@@ -40,7 +40,7 @@ export function releaseIdentity(release) {
       entry.browser_download_url !==
         `https://github.com/${repository}/releases/download/${release.tag_name}/${entry.name}`
     ) {
-      throw new Error('Release assets must come from the identity16 repository.');
+      throw new Error('Release assets must come from this repository.');
     }
   }
   return { tag: release.tag_name, asset, checksums };

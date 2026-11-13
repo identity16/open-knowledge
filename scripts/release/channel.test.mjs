@@ -40,7 +40,8 @@ test('accepts only published releases with both release-owned assets', () => {
   for (const field of ['draft', 'prerelease']) {
     assert.throws(() => releaseIdentity({ ...release(), [field]: true }));
   }
-  assert.throws(() => releaseIdentity({ ...release(), tag_name: 'v0.76.0' }));
+  assert.throws(() => releaseIdentity({ ...release(), tag_name: 'v0.76.0-beta.1' }));
+  assert.throws(() => releaseIdentity({ ...release(), tag_name: 'identity16-v0.77.0' }));
   assert.throws(() => releaseIdentity({ ...release(), assets: [] }));
   const upstream = release();
   upstream.assets[0].browser_download_url = upstream.assets[0].browser_download_url.replace(
@@ -48,6 +49,19 @@ test('accepts only published releases with both release-owned assets', () => {
     'inkeep/open-knowledge',
   );
   assert.throws(() => releaseIdentity(upstream));
+});
+
+test('accepts plain v-tagged releases alongside legacy tags', () => {
+  const tag_name = 'v0.77.0';
+  const plain = {
+    ...release(),
+    tag_name,
+    assets: [assetName, 'checksums.txt'].map((name) => ({
+      name,
+      browser_download_url: `https://github.com/${repository}/releases/download/${tag_name}/${name}`,
+    })),
+  };
+  assert.equal(releaseIdentity(plain).tag, tag_name);
 });
 
 test('rejects damaged packages and missing or invalid checksums', () => {

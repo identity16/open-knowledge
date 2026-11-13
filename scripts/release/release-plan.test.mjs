@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 import { parse, stringify } from 'yaml';
 import { requireNotarizationCredentials } from './build-desktop.mjs';
+import { releaseTag, versionFromTag } from './release-identity.mjs';
 import { releasePlan, releaseFileDigest, stageDesktopRelease } from './release-plan.mjs';
 
 const fixtures = [];
@@ -49,7 +50,6 @@ describe('release inventory', () => {
     expect(releaseFileDigest(path)).toBe(createHash('sha256').update(bytes).digest('hex'));
   });
   test.each([
-    '0.76.0',
     'v0.76.0-identity16.3',
     '0.76.0-beta.3',
     '0.76.0-identity16.03',
@@ -59,6 +59,16 @@ describe('release inventory', () => {
     undefined,
   ])('rejects an invalid release version %j', (version) => {
     expect(() => releasePlan(version)).toThrow(/release version/);
+  });
+
+  test('plain versions get v tags while legacy versions keep their original tags', () => {
+    expect(releasePlan('0.77.0').tag).toBe('v0.77.0');
+    expect(releasePlan('0.77.0').zip).toBe('OpenKnowledge16-0.77.0-arm64-mac.zip');
+    expect(releasePlan('0.76.0-identity16.6').tag).toBe('identity16-v0.76.0-identity16.6');
+    for (const version of ['0.77.0', '0.76.0-identity16.6'])
+      expect(versionFromTag(releaseTag(version))).toBe(version);
+    expect(() => versionFromTag('v0.76.0-identity16.6')).toThrow(/release tag/);
+    expect(() => versionFromTag('identity16-v0.77.0')).toThrow(/release tag/);
   });
 
   test('pins updater downloads to the versioned release and checksums every published file', () => {

@@ -56,8 +56,8 @@ export function buildReleaseAsset({ version, output }) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const version = process.argv[2];
-  if (!/^\d+\.\d+\.\d+-identity16\.\d+$/.test(version ?? '')) {
-    throw new Error('Usage: node scripts/release/build-release.mjs X.Y.Z-identity16.N');
+  if (!/^\d+\.\d+\.\d+(?:-identity16\.\d+)?$/.test(version ?? '')) {
+    throw new Error('Usage: node scripts/release/build-release.mjs X.Y.Z');
   }
   buildReleaseAsset({ version, output: resolve(process.argv[3] ?? `${root}/.release`) });
 }

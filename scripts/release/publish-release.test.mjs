@@ -128,9 +128,7 @@ describe('atomic publication', () => {
   test('refuses an existing tag for different source before modifying the release', () => {
     const f = fixture();
     const g = github(f, false, 'b'.repeat(40));
-    expect(() => publishRelease(f.plan.version, f.path, g.env, g.invoke)).toThrow(
-      /source commit/,
-    );
+    expect(() => publishRelease(f.plan.version, f.path, g.env, g.invoke)).toThrow(/source commit/);
     expect(g.invoke.mock.calls.some(([args]) => args[0] === 'release')).toBe(false);
   });
 
@@ -192,14 +190,7 @@ describe('atomic publication', () => {
     const f = fixture();
     const g = github(f, false, null, 3);
     const pause = vi.fn();
-    const proof = stageRelease(
-      f.plan.version,
-      f.path,
-      g.env.GITHUB_SHA,
-      g.env,
-      g.invoke,
-      pause,
-    );
+    const proof = stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke, pause);
     expect(proof.releaseId).toBe(42);
     expect(pause).toHaveBeenCalledTimes(3);
   });
@@ -230,18 +221,16 @@ describe('atomic publication', () => {
     expect(g.invoke.mock.calls.every(([args]) => args[0] === 'api' && !args.includes('POST'))).toBe(
       true,
     );
-    expect(() =>
-      stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke),
-    ).toThrow(/already published/);
+    expect(() => stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke)).toThrow(
+      /already published/,
+    );
   });
 
   test('rejects incomplete proofs and changed remote files before publishing', () => {
     const f = fixture();
     const g = github(f);
     const proof = stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke);
-    expect(() => promoteRelease({ ...proof, assets: [] }, g.env, g.invoke)).toThrow(
-      /inventory/,
-    );
+    expect(() => promoteRelease({ ...proof, assets: [] }, g.env, g.invoke)).toThrow(/inventory/);
     const altered = { ...proof, assets: proof.assets.map((a) => ({ ...a, size: a.size + 1 })) };
     expect(() => promoteRelease(altered, g.env, g.invoke)).toThrow(/failed verification/);
     expect(g.invoke.mock.calls.some(([args]) => args[1] === 'edit')).toBe(false);
@@ -264,5 +253,13 @@ describe('atomic publication', () => {
     expect(isNewerRelease('0.76.0-identity16.10', '0.76.0-identity16.9')).toBe(true);
     expect(isNewerRelease('0.76.0-identity16.4', '0.76.0-identity16.4')).toBe(false);
     expect(isNewerRelease('0.75.9-identity16.99', '0.76.0-identity16.3')).toBe(false);
+  });
+
+  test('a plain release outranks every legacy-tagged release of the same or an older core', () => {
+    expect(isNewerRelease('0.77.0', '0.76.0-identity16.99')).toBe(true);
+    expect(isNewerRelease('0.76.0', '0.76.0-identity16.6')).toBe(true);
+    expect(isNewerRelease('0.76.0-identity16.6', '0.76.0')).toBe(false);
+    expect(isNewerRelease('0.77.1', '0.77.0')).toBe(true);
+    expect(isNewerRelease('0.77.0', '0.77.0')).toBe(false);
   });
 });
