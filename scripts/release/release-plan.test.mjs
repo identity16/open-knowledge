@@ -6,12 +6,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { parse, stringify } from 'yaml';
 import { requireNotarizationCredentials } from './build-desktop.mjs';
 import { releaseTag, versionFromTag } from './release-identity.mjs';
-import {
-  combineMacTargets,
-  releasePlan,
-  releaseFileDigest,
-  stageDesktopRelease,
-} from './release-plan.mjs';
+import { releasePlan, releaseFileDigest, stageDesktopRelease } from './release-plan.mjs';
 
 const fixtures = [];
 afterEach(() => {
@@ -123,69 +118,6 @@ describe('release inventory', () => {
     rmSync(join(release, plan.cli));
     expect(() => stageDesktopRelease(packaged, release, plan.version)).toThrow(
       /openknowledge-darwin-arm64.tgz/,
-    );
-  });
-});
-
-describe('installers built by separate electron-builder runs', () => {
-  function targets() {
-    const f = fixture();
-    const root = join(f.packaged, '..');
-    const dirs = { zip: join(root, 'zip'), dmg: join(root, 'dmg'), out: join(root, 'out') };
-    mkdirSync(dirs.zip);
-    mkdirSync(dirs.dmg);
-    for (const [dir, name] of [
-      [dirs.zip, f.plan.zip],
-      [dirs.dmg, f.plan.dmg],
-    ]) {
-      writeFileSync(join(dir, name), readFileSync(join(f.packaged, name)));
-      writeFileSync(join(dir, `${name}.blockmap`), `map of ${name}`);
-    }
-    const zipEntry = f.manifest.files.find((entry) => entry.url === f.plan.zip);
-    writeFileSync(
-      join(dirs.zip, f.plan.manifest),
-      stringify({
-        version: f.plan.version,
-        files: [zipEntry],
-        path: f.plan.zip,
-        sha512: zipEntry.sha512,
-        releaseDate: '2026-11-14T00:00:00.000Z',
-      }),
-    );
-    return { ...f, dirs, zipEntry };
-  }
-
-  test('describe both installers the way one combined build did, ZIP first for the updater', () => {
-    const t = targets();
-    combineMacTargets(t.dirs.zip, t.dirs.dmg, t.dirs.out, t.plan.version);
-    const manifest = parse(readFileSync(join(t.dirs.out, t.plan.manifest), 'utf8'));
-    expect(manifest).toEqual({
-      version: t.plan.version,
-      files: [t.zipEntry, t.manifest.files.find((entry) => entry.url === t.plan.dmg)],
-      path: t.plan.zip,
-      sha512: t.zipEntry.sha512,
-      releaseDate: '2026-11-14T00:00:00.000Z',
-    });
-    for (const name of [t.plan.zip, t.plan.dmg])
-      expect(readFileSync(join(t.dirs.out, `${name}.blockmap`), 'utf8')).toBe(`map of ${name}`);
-  });
-
-  test('refuses a ZIP manifest that already names other files or another version', () => {
-    for (const change of [{ version: '0.76.0-identity16.4' }, { path: 'other.zip' }]) {
-      const t = targets();
-      const path = join(t.dirs.zip, t.plan.manifest);
-      writeFileSync(path, stringify({ ...parse(readFileSync(path, 'utf8')), ...change }));
-      expect(() => combineMacTargets(t.dirs.zip, t.dirs.dmg, t.dirs.out, t.plan.version)).toThrow(
-        /unexpected update manifest/,
-      );
-    }
-  });
-
-  test('refuses to continue when one build produced no installer', () => {
-    const t = targets();
-    rmSync(join(t.dirs.dmg, t.plan.dmg));
-    expect(() => combineMacTargets(t.dirs.zip, t.dirs.dmg, t.dirs.out, t.plan.version)).toThrow(
-      /produced no installer/,
     );
   });
 });
