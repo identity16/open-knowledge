@@ -15,6 +15,7 @@ const unitConfigs = { app: ['vitest.config.ts', 'vitest.dom.config.ts'] };
 const lintable = /\.(?:[cm]?[jt]sx?|json|jsonc|css)$/;
 const oxlintable = /\.(?:[cm]?[jt]sx?)$/;
 const biomeScope = /^(?:packages\/|docs\/|[^/]+\.(?:json|jsonc|ts)$)/;
+const appRenderSource = /^packages\/app\/src\/.+\.tsx?$/;
 
 function packageOf(file) {
   const match = /^packages\/([^/]+)\//.exec(file);
@@ -48,6 +49,9 @@ export function planVerify(files) {
     oxlint: files.filter((file) => oxlintable.test(file)),
     typecheck: [...typecheck].sort(),
     tests,
+    reactCompiler: files
+      .filter((file) => appRenderSource.test(file))
+      .map((file) => relative('packages/app', file)),
     releaseScripts: files.some((file) => file.startsWith('scripts/release/')),
   };
 }
@@ -98,6 +102,15 @@ async function main() {
   for (const name of plan.typecheck)
     results.push(
       step(`typecheck ${name}`, 'pnpm', ['--dir', `packages/${name}`, 'run', 'typecheck']),
+    );
+  if (plan.reactCompiler.length > 0)
+    results.push(
+      step(
+        'react compiler app',
+        'node',
+        ['scripts/check-react-compiler.ts', ...plan.reactCompiler],
+        resolve(root, 'packages/app'),
+      ),
     );
   for (const { name, config, sources } of plan.tests)
     results.push(

@@ -12,6 +12,7 @@ test('an app-only change lints, typechecks app and its consumers, and runs relat
     ['vitest.config.ts', 'vitest.dom.config.ts'],
   );
   assert.deepEqual(plan.tests[0].sources, ['src/App.tsx']);
+  assert.deepEqual(plan.reactCompiler, ['src/App.tsx']);
   assert.equal(plan.releaseScripts, false);
 });
 
@@ -32,6 +33,7 @@ test('release tooling changes run the release script tests and skip biome', () =
   assert.deepEqual(plan.biome, []);
   assert.deepEqual(plan.oxlint, ['scripts/release/channel.mjs']);
   assert.deepEqual(plan.typecheck, []);
+  assert.deepEqual(plan.reactCompiler, []);
   assert.equal(plan.releaseScripts, true);
 });
 

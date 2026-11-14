@@ -1,0 +1,21 @@
+{
+  "pid": 47697,
+  "hostname": "sin-wonjun-ui-Macmini.local",
+  "port": 0,
+  "startedAt": "2026-11-14T04:00:47.104Z",
+  "worktreeRoot": "/Users/joon/.paseo/worktrees/3um4dx1d/magical-starfish",
+  "machineId": "dc8267d3-8c53-412d-bc3f-aa5c64795403",
+  "kind": "interactive",
+  "capabilities": [
+    "http",
+    "ws",
+    "ui"
+  ],
+  "protocolVersion": 2,
+  "runtimeVersion": "0.0.0-unknown",
+  "channel": "dev",
+  "processStart": {
+    "startedAtMs": 1794628845000
+  },
+  "draining": true
+}
