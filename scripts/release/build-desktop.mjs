@@ -173,6 +173,25 @@ function replaceFile(path, contents) {
   renameSync(pending, path);
 }
 
+export const OPENKNOWLEDGE16_UPDATE_FEED =
+  'https://github.com/identity16/open-knowledge/releases/latest/download';
+
+export function appUpdateConfigProblem(text) {
+  if (text == null)
+    return 'The packaged application has no Contents/Resources/app-update.yml, so it could never download an update.';
+  let config;
+  try {
+    config = parse(text);
+  } catch {
+    return 'The packaged app-update.yml is not valid YAML.';
+  }
+  if (config?.provider !== 'generic' || config.url !== OPENKNOWLEDGE16_UPDATE_FEED)
+    return `The packaged app-update.yml points at ${config?.provider ?? 'nothing'} ${config?.url ?? ''}, not ${OPENKNOWLEDGE16_UPDATE_FEED}.`;
+  if (config.channel !== 'latest')
+    return 'The packaged app-update.yml is not on the latest channel.';
+  return null;
+}
+
 export async function verifyPackagedApp(app, version, env = process.env, notarized = true) {
   const plist = join(app, 'Contents/Info.plist');
   const values = {
@@ -187,6 +206,11 @@ export async function verifyPackagedApp(app, version, env = process.env, notariz
       throw new Error(`The packaged application has an unexpected ${key}.`);
     }
   }
+  const updateConfigPath = join(app, 'Contents/Resources/app-update.yml');
+  const updateConfigProblem = appUpdateConfigProblem(
+    existsSync(updateConfigPath) ? readFileSync(updateConfigPath, 'utf8') : null,
+  );
+  if (updateConfigProblem) throw new Error(updateConfigProblem);
   const binary = join(app, 'Contents/MacOS/OpenKnowledge16');
   if (readCommand('lipo', ['-archs', binary]).trim() !== 'arm64')
     throw new Error('The app is not arm64-only.');
