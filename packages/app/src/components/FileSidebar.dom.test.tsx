@@ -1,3 +1,7 @@
+import {
+  COMMAND_IDENTITIES,
+  type CommandCheckField,
+} from '@inkeep/open-knowledge-core/commands/command-identity';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
@@ -777,6 +781,27 @@ describe('FileSidebar runtime behavior', () => {
     expect(projectLocalPatch).toHaveBeenCalledWith({
       appearance: { sidebar: { showSkillsSection: false } },
     });
+  });
+
+  test('every checked View command can also be changed from the tree view options menu', async () => {
+    const treeOptionFor: Record<CommandCheckField, string> = {
+      showHiddenFiles: 'tree-options-show-hidden-files',
+      showOkFolders: 'tree-options-show-ok-folders',
+      showOnlyMarkdownFiles: 'tree-options-show-only-markdown-files',
+      showSkillsSection: 'tree-options-show-skills',
+      sortFilesByName: 'tree-options-sort-name',
+      sortFilesByModified: 'tree-options-sort-modified',
+      sortFilesManually: 'tree-options-sort-manual',
+    };
+    await renderSidebar();
+    const menu = screen.getByTestId('tree-options-menu');
+    const checkFields = COMMAND_IDENTITIES.flatMap((command) =>
+      command.checkField ? [command.checkField] : [],
+    );
+    expect(checkFields.length).toBeGreaterThan(0);
+    for (const field of checkFields) {
+      expect(within(menu).queryByTestId(treeOptionFor[field]), field).not.toBeNull();
+    }
   });
 
   test('Sort by radio items show the current order and write a new one', async () => {
