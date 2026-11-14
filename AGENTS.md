@@ -12,6 +12,7 @@ This repository is the source of truth for OpenKnowledge16, a macOS-only product
 | Step | Command | When |
 |---|---|---|
 | Verify | `pnpm verify:changed` | After every change: lint, typecheck and related tests for what changed since `origin/main` |
+| One test | `pnpm test:file <path>` | Run specific test files; picks the config their suffix needs (`.dom.`, `.browser.`, `.node.`, `.uncached.`, `node:test`) |
 | Look | `pnpm preview` | UI changes: phone and desktop screenshots in `/tmp/ok-preview/latest` |
 | Ship locally | `pnpm deploy:local` | Run the change on this Mac's `ok` service at :8080 |
 | Release | `.github/workflows/release.yml` (`build_only` measures without publishing) | Batched changes; versions are plain semver tagged `vX.Y.Z` |

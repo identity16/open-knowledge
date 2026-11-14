@@ -34,6 +34,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test test:uncached",
     "test:uncached": "vitest run --config vitest.uncached.config.ts",
+    "test:file": "node scripts/test-file.mjs",
     "known-reds": "node scripts/known-reds.mjs",
     "test:vitest-selftest": "vitest run",
     "smoke:share-v2": "node --import tsx --conditions=development packages/server/share-v2-smoke.ts",
