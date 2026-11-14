@@ -52,7 +52,14 @@ describe('recoverable release workflow', () => {
       'runner',
     ]);
     expect(workflow.on.workflow_dispatch.inputs.build_only.default).toBe(false);
-    for (const suffix of ['submit', 'wait', 'prepare-package', 'package', 'promote'])
+    for (const suffix of [
+      'notarize-start',
+      'notarize-submitted',
+      'notarize-accepted',
+      'prepare-package',
+      'package',
+      'promote',
+    ])
       expect(stepOf(suffix).if).toContain('!inputs.build_only');
     expect(workflow.on.workflow_dispatch.inputs.version.required).toBe(true);
     expect(workflow.on.workflow_dispatch.inputs.resume_run_id.required).toBe(false);
@@ -71,7 +78,7 @@ describe('recoverable release workflow', () => {
     expect(JSON.stringify(job.env ?? {})).not.toContain('token');
     const holders = steps.filter((s) => s.env?.GH_TOKEN).map((s) => s.run);
     expect(holders).toEqual(
-      ['restore', 'submit', 'prepare-package', 'package', 'promote'].map(
+      ['restore', 'notarize-start', 'prepare-package', 'package', 'promote'].map(
         (suffix) => stepOf(suffix).run,
       ),
     );
@@ -92,13 +99,14 @@ describe('recoverable release workflow', () => {
 
   test('preserves each checkpoint before the stage that could lose it', () => {
     expect(uploadOf('.release/signed/')).toBeGreaterThan(command('sign'));
-    expect(uploadOf('.release/signed/')).toBeLessThan(command('submit'));
-    expect(uploadOf('.release/notary/notary.json')).toBeGreaterThan(command('submit'));
-    expect(uploadOf('.release/notary/notary.json')).toBeLessThan(command('wait'));
+    expect(uploadOf('.release/signed/')).toBeLessThan(command('notarize-submitted'));
+    expect(uploadOf('.release/notary/notary.json')).toBeGreaterThan(command('notarize-submitted'));
+    expect(uploadOf('.release/notary/notary.json')).toBeLessThan(command('notarize-accepted'));
+    expect(stepOf('notarize-submitted').id).toBe('submit');
     expect(uploadOf('.release/ready/ready.json')).toBeGreaterThan(command('package'));
     expect(uploadOf('.release/ready/ready.json')).toBeLessThan(command('promote'));
-    expect(stepOf('submit').if).toContain("steps.restore.outputs.ready_run_id == ''");
-    expect(stepOf('wait').if).toContain("steps.restore.outputs.ready_run_id == ''");
+    for (const suffix of ['notarize-start', 'notarize-submitted', 'notarize-accepted'])
+      expect(stepOf(suffix).if).toContain("steps.restore.outputs.ready_run_id == ''");
   });
 
   test('gives each stage only the secrets it uses', () => {
@@ -107,8 +115,13 @@ describe('recoverable release workflow', () => {
         .filter(([, value]) => String(value).includes('secrets.'))
         .map(([name]) => name)
         .sort();
-    expect(secrets('submit')).toEqual(['APPLE_API_ISSUER', 'APPLE_API_KEY', 'APPLE_API_KEY_ID']);
-    expect(secrets('wait')).toEqual(['APPLE_API_ISSUER', 'APPLE_API_KEY', 'APPLE_API_KEY_ID']);
+    expect(secrets('notarize-start')).toEqual([
+      'APPLE_API_ISSUER',
+      'APPLE_API_KEY',
+      'APPLE_API_KEY_ID',
+    ]);
+    expect(secrets('notarize-submitted')).toEqual([]);
+    expect(secrets('notarize-accepted')).toEqual([]);
     expect(secrets('package')).toEqual(['CSC_KEY_PASSWORD', 'CSC_LINK']);
     expect(secrets('prepare-package')).toEqual([]);
     expect(secrets('promote')).toEqual([]);
@@ -116,11 +129,25 @@ describe('recoverable release workflow', () => {
       expect(JSON.stringify(step.env ?? {}), step.name).not.toContain('secrets.');
   });
 
+  test('runs no dependency code while the Apple key is held by the background notarization', () => {
+    const during = steps.slice(command('notarize-start') + 1, command('notarize-accepted') + 1);
+    for (const step of during)
+      expect(
+        step.uses?.startsWith('actions/upload-artifact@') ||
+          (step.run ?? '').startsWith('node scripts/release/release-workflow.mjs notarize-'),
+        step.name,
+      ).toBe(true);
+    expect(command('notarize-start')).toBeGreaterThan(command('sign'));
+    expect(command('notarize-start')).toBeGreaterThan(
+      steps.findIndex((s) => s.name === 'Test product boundaries'),
+    );
+  });
+
   test('publishes the verified draft from this run or the one that staged it', () => {
     expect(stepOf('promote').env.READY_RUN_ID).toBe(
       '${{ steps.prepare.outputs.ready_run_id || steps.package.outputs.ready_run_id }}',
     );
-    for (const suffix of ['submit', 'prepare-package', 'package', 'promote'])
+    for (const suffix of ['notarize-start', 'prepare-package', 'package', 'promote'])
       expect(stepOf(suffix).env.CANDIDATE_RUN_ID).toBe(
         '${{ steps.restore.outputs.candidate_run_id }}',
       );

@@ -99,6 +99,15 @@ jobs:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: pnpm exec node scripts/release/release-workflow.mjs sign
+      - name: Submit the signed application to Apple in the background
+        if: steps.restore.outputs.ready_run_id == '' && !inputs.build_only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_RUN_ID: ${{ steps.restore.outputs.candidate_run_id }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: node scripts/release/release-workflow.mjs notarize-start
       - name: Preserve signed application before notarization
         if: steps.restore.outputs.reused != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -109,16 +118,10 @@ jobs:
           include-hidden-files: true
           compression-level: 0
           retention-days: 3
-      - name: Restore or submit the identical signed application
+      - name: Wait for the submission ID
         id: submit
         if: steps.restore.outputs.ready_run_id == '' && !inputs.build_only
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CANDIDATE_RUN_ID: ${{ steps.restore.outputs.candidate_run_id }}
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-        run: node scripts/release/release-workflow.mjs submit
+        run: node scripts/release/release-workflow.mjs notarize-submitted
       - name: Preserve submission ID before waiting
         if: steps.submit.outputs.new_notary == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -128,13 +131,9 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 3
-      - name: Wait for the saved submission
+      - name: Wait for Apple to accept the submission
         if: steps.restore.outputs.ready_run_id == '' && !inputs.build_only
-        env:
-          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-        run: node scripts/release/release-workflow.mjs wait
+        run: node scripts/release/release-workflow.mjs notarize-accepted
       - name: Restore signed application and check for a verified draft
         id: prepare
         if: '!inputs.build_only'

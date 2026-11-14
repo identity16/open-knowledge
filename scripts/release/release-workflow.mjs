@@ -1,6 +1,15 @@
-import { appendFileSync, copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import {
+  appendFileSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
 import { submitNotary, waitNotary, withNotaryClient } from './notarize-release.mjs';
 import { preflightRelease, promoteRelease, stageRelease } from './publish-release.mjs';
 import {
@@ -23,6 +32,27 @@ export async function runReleaseStep(command, env = process.env) {
   const notary = join(root, 'notary');
   const ready = join(root, 'ready');
   const store = new CheckpointStore(env);
+  const background = join(root, 'notary-run');
+  const logPath = join(background, 'log');
+  const exitPath = join(background, 'exit-code');
+  const submittedPath = join(background, 'submitted.json');
+  const printedPath = join(background, 'printed');
+  const printNewLog = () => {
+    const from = existsSync(printedPath) ? Number(readFileSync(printedPath, 'utf8')) : 0;
+    const log = existsSync(logPath) ? readFileSync(logPath) : Buffer.alloc(0);
+    process.stdout.write(log.subarray(from));
+    writeFileSync(printedPath, String(log.length));
+  };
+  const backgroundExit = () =>
+    existsSync(exitPath) ? Number(readFileSync(exitPath, 'utf8').trim()) : null;
+  const awaitBackground = async (done) => {
+    const deadline = Date.now() + 50 * 60 * 1000;
+    while (!done() && backgroundExit() === null) {
+      if (Date.now() > deadline) throw new Error('The background notarization never finished.');
+      await delay(1000);
+    }
+    printNewLog();
+  };
   const output = (values) => {
     for (const [key, value] of Object.entries(values)) {
       if (String(value).includes('\n') || String(value).includes('\r'))
@@ -52,18 +82,40 @@ export async function runReleaseStep(command, env = process.env) {
     const { buildDesktop } = await import('./build-desktop.mjs');
     await buildDesktop(version, signed, env, { signOnly: true });
     createCandidate(signed, version, context);
-  } else if (command === 'submit') {
+  } else if (command === 'notarize-start') {
+    restore();
+    mkdirSync(background, { recursive: true });
+    const script = fileURLToPath(import.meta.url);
+    const child = spawn(
+      '/bin/sh',
+      ['-c', 'node "$0" notarize-run > "$1" 2>&1; echo $? > "$2"', script, logPath, exitPath],
+      { detached: true, stdio: 'ignore', env },
+    );
+    child.unref();
+    console.log('Submitting the signed application to Apple in the background.');
+  } else if (command === 'notarize-run') {
     const candidate = restore();
     const existing = store.restoreRecord('notary', candidate, notary);
     const result = await withNotaryClient(env, (client, temp) =>
       submitNotary(candidate, signed, notary, existing, context.sourceRunId, client, temp),
     );
-    output({ new_notary: result.uploaded, notary_name: checkpointName('notary', candidate) });
-  } else if (command === 'wait') {
-    const candidate = readCheckpoint(signed, 'candidate');
+    writeFileSync(
+      submittedPath,
+      JSON.stringify({ uploaded: result.uploaded, name: checkpointName('notary', candidate) }),
+    );
     await withNotaryClient(env, (client) =>
       waitNotary(candidate, readCheckpoint(notary, 'notary'), client),
     );
+  } else if (command === 'notarize-submitted') {
+    await awaitBackground(() => existsSync(submittedPath));
+    if (!existsSync(submittedPath))
+      throw new Error(`The background submission failed (exit ${backgroundExit()}).`);
+    const submitted = JSON.parse(readFileSync(submittedPath, 'utf8'));
+    output({ new_notary: submitted.uploaded, notary_name: submitted.name });
+  } else if (command === 'notarize-accepted') {
+    await awaitBackground(() => false);
+    if (backgroundExit() !== 0)
+      throw new Error(`The background notarization failed (exit ${backgroundExit()}).`);
   } else if (command === 'prepare-package') {
     const candidate = restore();
     const staged = store.restoreRecord('ready', candidate, ready);
