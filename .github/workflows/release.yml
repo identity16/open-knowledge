@@ -76,7 +76,9 @@ jobs:
           restore-keys: release-turbo-${{ runner.os }}-${{ runner.arch }}-
       - name: Install dependencies
         if: steps.restore.outputs.reused != 'true'
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          node scripts/create-turbo-cache-key.mjs
       - name: Test release recovery contracts
         if: steps.restore.outputs.reused != 'true'
         run: |

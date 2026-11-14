@@ -30,6 +30,8 @@ describe('recoverable release workflow', () => {
     const turbo = jobs.build.steps.find((s) => s.uses?.startsWith('actions/cache@'));
     expect(turbo.with.path).toBe('.turbo/cache');
     expect(turbo.if).toContain("inputs.runner != 'macmini'");
+    const install = jobs.build.steps.find((s) => s.run?.startsWith('pnpm install'));
+    expect(install.run).toContain('node scripts/create-turbo-cache-key.mjs');
   });
 
   test('no workflow that can reach the self-hosted runner is triggered by pull requests', () => {
