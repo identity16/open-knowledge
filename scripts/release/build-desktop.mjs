@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import {
   copyFileSync,
@@ -19,13 +19,23 @@ import { verifyFuses } from '../../packages/desktop/scripts/afterSign.mjs';
 import { stampMacUpdateManifests } from '../../packages/desktop/scripts/mac-update-manifest.ts';
 import { targetFuses } from '../../packages/desktop/scripts/target-fuses.mjs';
 import { readCheckpoint, validateCandidate } from './release-checkpoint.mjs';
-import { releasePlan, stageDesktopRelease } from './release-plan.mjs';
+import { combineMacTargets, releasePlan, stageDesktopRelease } from './release-plan.mjs';
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { stdio: 'inherit', ...options });
   if (result.error || result.status !== 0) {
     throw new Error(`${command} failed (${result.status ?? result.error?.code ?? result.signal}).`);
   }
+}
+
+function runConcurrently(label, command, args, options) {
+  return new Promise((resolvePromise, reject) => {
+    const child = spawn(command, args, { stdio: 'inherit', ...options });
+    child.on('error', (error) => reject(new Error(`${label} failed (${error.code}).`)));
+    child.on('exit', (status, signal) =>
+      status === 0 ? resolvePromise() : reject(new Error(`${label} failed (${status ?? signal}).`)),
+    );
+  });
 }
 
 function readCommand(command, args) {
@@ -406,26 +416,35 @@ export async function packageDesktop(version, candidateDir, releaseDir, input = 
       }),
     );
     const artifacts = join(temp, 'artifacts');
-    run(
-      'pnpm',
-      [
-        'exec',
-        'electron-builder',
-        '--config',
-        configPath,
-        '--prepackaged',
-        app,
-        '--mac',
-        '--arm64',
-        '--publish',
-        'never',
-        '-c.mac.notarize=false',
-        '-c.npmRebuild=false',
-        `-c.extraMetadata.version=${version}`,
-        `-c.directories.output=${artifacts}`,
-      ],
-      { cwd: desktop, env },
+    const targetDir = (target) => join(temp, `artifacts-${target}`);
+    const builds = ['zip', 'dmg'].map((target) =>
+      runConcurrently(
+        `electron-builder ${target}`,
+        'pnpm',
+        [
+          'exec',
+          'electron-builder',
+          '--config',
+          configPath,
+          '--prepackaged',
+          app,
+          '--mac',
+          '--arm64',
+          '--publish',
+          'never',
+          `-c.mac.target=${target}`,
+          '-c.mac.notarize=false',
+          '-c.npmRebuild=false',
+          `-c.extraMetadata.version=${version}`,
+          `-c.directories.output=${targetDir(target)}`,
+        ],
+        { cwd: desktop, env },
+      ),
     );
+    const outcomes = await Promise.allSettled(builds);
+    const failed = outcomes.find((outcome) => outcome.status === 'rejected');
+    if (failed) throw failed.reason;
+    combineMacTargets(targetDir('zip'), targetDir('dmg'), artifacts, version);
     await verifyPackagedApp(app, version, env);
     stampMacUpdateManifests(artifacts);
     const plan = releasePlan(version);

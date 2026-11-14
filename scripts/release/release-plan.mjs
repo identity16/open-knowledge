@@ -1,9 +1,45 @@
-import { copyFileSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { releasePlan, releaseFileDigest } from './release-identity.mjs';
 
 export { releasePlan, releaseFileDigest } from './release-identity.mjs';
+
+export function combineMacTargets(zipDir, dmgDir, outDir, version) {
+  const plan = releasePlan(version);
+  mkdirSync(outDir, { recursive: true });
+  for (const [dir, name] of [
+    [zipDir, plan.zip],
+    [dmgDir, plan.dmg],
+  ]) {
+    if (!existsSync(join(dir, name))) throw new Error(`The ${name} build produced no installer.`);
+    copyFileSync(join(dir, name), join(outDir, name));
+    if (existsSync(join(dir, `${name}.blockmap`)))
+      copyFileSync(join(dir, `${name}.blockmap`), join(outDir, `${name}.blockmap`));
+  }
+  const manifest = parse(readFileSync(join(zipDir, plan.manifest), 'utf8'));
+  if (
+    manifest?.version !== version ||
+    manifest.files?.length !== 1 ||
+    manifest.files[0].url !== plan.zip ||
+    manifest.path !== plan.zip
+  )
+    throw new Error('The ZIP build wrote an unexpected update manifest.');
+  const dmg = join(outDir, plan.dmg);
+  manifest.files.push({
+    url: plan.dmg,
+    sha512: releaseFileDigest(dmg, 'sha512', 'base64'),
+    size: statSync(dmg).size,
+  });
+  writeFileSync(join(outDir, plan.manifest), stringify(manifest));
+}
 
 export function stageDesktopRelease(packagedDir, releaseDir, version) {
   const plan = releasePlan(version);
