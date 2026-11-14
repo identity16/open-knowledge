@@ -96,25 +96,22 @@ describe('resumable notarization', () => {
         : { exitCode: 1, body: null },
     );
     await waitNotary(f.candidate, f.receipt, client, { pause: async () => {} });
-    expect(client.mock.calls.map(([args]) => args[0])).toEqual(['info', 'wait', 'info']);
+    expect(client.mock.calls.map(([args]) => args[0])).toEqual(['info', 'info']);
     expect(client.mock.calls.every(([args]) => args[1] === id)).toBe(true);
   });
 
   test('times out with a reusable ID rather than rebuilding or resubmitting', async () => {
     const f = fixture();
     let now = 0;
-    const client = vi.fn((args) => {
-      if (args[0] === 'wait') now += 300000;
-      return ok({ id, status: 'In Progress' });
+    const client = vi.fn(() => ok({ id, status: 'In Progress' }));
+    const pause = vi.fn(async (ms) => {
+      now += ms;
     });
     await expect(
-      waitNotary(f.candidate, f.receipt, client, {
-        maxWaitMs: 600000,
-        now: () => now,
-        pause: async () => {},
-      }),
+      waitNotary(f.candidate, f.receipt, client, { maxWaitMs: 20000, now: () => now, pause }),
     ).rejects.toThrow(id);
-    expect(client.mock.calls.filter(([args]) => args[0] === 'wait')).toHaveLength(2);
+    expect(pause.mock.calls).toEqual([[5000], [5000], [5000], [5000]]);
+    expect(client.mock.calls.map(([args]) => args[0])).toEqual(['info', 'info', 'info', 'info']);
     expect(client.mock.calls.some(([args]) => args[0] === 'submit')).toBe(false);
   });
 

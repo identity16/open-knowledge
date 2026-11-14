@@ -118,11 +118,13 @@ export async function waitNotary(
   candidate,
   receipt,
   client,
-  { maxWaitMs = 45 * 60 * 1000, now = Date.now, pause = delay } = {},
+  { maxWaitMs = 45 * 60 * 1000, pollMs = 5000, now = Date.now, pause = delay } = {},
 ) {
   validateRecord(receipt, 'notary', candidate);
-  const deadline = now() + maxWaitMs;
+  const started = now();
+  const deadline = started + maxWaitMs;
   let failures = 0;
+  console.log(`Waiting for existing notarization submission: ${receipt.submissionId}`);
   while (now() < deadline) {
     const state = client(['info', receipt.submissionId]);
     if (state.exitCode !== 0 || state.body?.id !== receipt.submissionId) {
@@ -132,12 +134,15 @@ export async function waitNotary(
       continue;
     }
     failures = 0;
-    if (state.body.status === 'Accepted') return;
+    if (state.body.status === 'Accepted') {
+      console.log(
+        `Notarization accepted after ${Math.round((now() - started) / 1000)}s of waiting.`,
+      );
+      return;
+    }
     if (state.body.status !== 'In Progress')
       throw new Error(`Notarization ${receipt.submissionId} was rejected: ${state.body.status}.`);
-    console.log(`Waiting for existing notarization submission: ${receipt.submissionId}`);
-    client(['wait', receipt.submissionId, '--timeout', '5m']);
-    await pause(1000);
+    await pause(pollMs);
   }
   throw new Error(
     `Notarization is still processing. Resume the workflow with the same submission ID ${receipt.submissionId}.`,
