@@ -3,7 +3,14 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { linkedCachePaths, preflightProblems, probeCachePaths } from './cache-preflight.mjs';
+import {
+  annotatePrivacyDenials,
+  linkedCachePaths,
+  preflightProblems,
+  privacyDenied,
+  probeCachePaths,
+  volumeOf,
+} from './cache-preflight.mjs';
 
 function withHome(run) {
   const home = mkdtempSync(join(tmpdir(), 'cache-preflight-'));
@@ -42,4 +49,32 @@ test('a probe that outlives the timeout is reported as hung without waiting for 
   assert.deepEqual(results, [{ path: '/somewhere', state: 'hung' }]);
   assert.ok(Date.now() - started < 2_000);
   assert.match(preflightProblems(results)[0], /\/somewhere does not respond/);
+});
+
+const denial =
+  "2026-11-14 11:24:03.507 E  kernel[0:81de2d] [com.apple.sandbox.reporting:violation] System Policy: ls(87062) deny(4) file-read-data /Volumes/Joon's Portable SSD/agent-builds";
+
+test('a hung cache on a volume the kernel just denied is reported as a privacy block', () =>
+  withHome((home) => {
+    symlinkSync("/Volumes/Joon's Portable SSD/agent-builds/pnpm-store", join(home, '.rustup'));
+    const [result] = annotatePrivacyDenials(
+      [{ path: join(home, '.rustup'), state: 'hung' }],
+      denial,
+    );
+    assert.equal(result.volume, "/Volumes/Joon's Portable SSD");
+    assert.equal(result.privacyDenied, true);
+    assert.match(
+      preflightProblems([result])[0],
+      /blocked by macOS privacy \(TCC\), not by the drive/,
+    );
+  }));
+
+test('without a logged denial a hung cache still points at the drive', () => {
+  assert.equal(privacyDenied('', '/Volumes/Other'), false);
+  assert.equal(privacyDenied(denial, '/Volumes/Other'), false);
+  assert.equal(volumeOf('/Users/joon/cache'), null);
+  assert.match(
+    preflightProblems([{ path: '/x', state: 'hung', privacyDenied: false }])[0],
+    /no privacy denial was logged; the drive behind it may be hung/,
+  );
 });
