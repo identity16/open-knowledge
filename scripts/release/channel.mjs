@@ -24,6 +24,15 @@ const base = process.env.OPENKNOWLEDGE16_HOME ?? join(homedir(), '.local/share',
 const cliRelative = 'node_modules/@inkeep/open-knowledge/dist/cli.mjs';
 const current = join(base, 'current');
 
+export function installedPublicDir(label) {
+  return join(base, 'releases', label, dirname(cliRelative), 'public');
+}
+
+export function readChannelState() {
+  const path = join(base, 'state.json');
+  return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null;
+}
+
 export function releaseIdentity(release) {
   if (
     release.draft ||
