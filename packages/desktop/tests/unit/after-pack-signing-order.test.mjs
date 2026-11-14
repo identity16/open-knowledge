@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  writeFileSync,
+} from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -104,8 +111,12 @@ describe.skipIf(process.platform !== 'darwin')('afterPack hands the signer a sea
     await afterPack({
       appOutDir,
       electronPlatformName: 'darwin',
-      packager: { appInfo: { productFilename: 'Fixture' } },
+      packager: {
+        appInfo: { productFilename: 'Fixture', updaterCacheDirName: 'fixture-updater' },
+        config: { publish: [{ provider: 'generic', url: 'https://example.invalid/feed' }] },
+      },
     });
+    expect(existsSync(join(app, 'Contents/Resources/app-update.yml'))).toBe(true);
     await expect(
       electronBuilderOsxSign().signAsync({
         app,

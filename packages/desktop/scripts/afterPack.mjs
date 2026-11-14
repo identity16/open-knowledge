@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { chmodSync, copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { FuseV1Options, FuseVersion, flipFuses } from '@electron/fuses';
+import { ensureAppUpdateConfig } from './app-update-config.mjs';
 import { assertPackagedBundle } from './assert-packaged-bundle.mjs';
 import { ensureNodePtySpawnHelperExecutable } from './ensure-node-pty-exec.mjs';
 import { createFuseFailure } from './packaging-diagnostics.mjs';
@@ -171,6 +172,11 @@ export default async function afterPack(context) {
   const resourcesDir = join(appOutDir, `${appName}.app`, 'Contents', 'Resources');
   const ptyHelpers = ensureNodePtySpawnHelperExecutable(resourcesDir);
   console.log(`[afterPack] node-pty spawn-helper marked executable (${ptyHelpers.length} file(s))`);
+
+  const updateConfig = ensureAppUpdateConfig(resourcesDir, packager);
+  console.log(
+    `[afterPack] ${updateConfig.written ? 'wrote' : 'kept'} ${updateConfig.path} so the signed app can download its own updates`,
+  );
 
   await flipElectronFuses(electronBinary, electronPlatformName);
   assertAdHocSealCoversBundle(join(appOutDir, `${appName}.app`));
