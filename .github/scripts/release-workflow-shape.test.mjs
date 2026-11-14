@@ -11,7 +11,7 @@ describe('recoverable release workflow', () => {
   test('runs the macOS jobs on the self-hosted Mac mini only when a dispatch asks for it', () => {
     const runner = workflow.on.workflow_dispatch.inputs.runner;
     expect(runner.options).toEqual(['github', 'macmini']);
-    expect(runner.default).toBe('github');
+    expect(runner.default).toBe('macmini');
     for (const name of ['build', 'notarize', 'package']) {
       const runsOn = jobs[name]['runs-on'];
       expect(runsOn).toContain("inputs.runner == 'macmini'");

@@ -22,7 +22,7 @@ on:
         options:
           - github
           - macmini
-        default: github
+        default: macmini
 cache-mode: none
 permissions:
   contents: read
