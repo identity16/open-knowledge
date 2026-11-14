@@ -262,6 +262,45 @@ describe('notarization checkpoint binding', () => {
   });
 });
 
+describe('checkpoints produced earlier in the same job', () => {
+  test('reuses the signed files already in place instead of downloading them again', () => {
+    const f = fixture();
+    const g = storeFixture(f);
+    expect(g.store.restoreCandidate(version, '101', f.candidateDir, true)).toEqual(f.candidate);
+    expect(g.invoke).not.toHaveBeenCalled();
+  });
+
+  test('refuses local signed files from another run or with changed bytes', () => {
+    const f = fixture();
+    const g = storeFixture(f);
+    expect(() => g.store.restoreCandidate(version, '202', f.candidateDir, true)).toThrow(
+      /different workflow run/,
+    );
+    writeFileSync(join(f.candidateDir, 'signed-app.zip'), 'changed');
+    expect(() => g.store.restoreCandidate(version, '101', f.candidateDir, true)).toThrow(
+      /Corrupted/,
+    );
+    expect(g.invoke).not.toHaveBeenCalled();
+  });
+
+  test('reuses a local submission record only when it binds the same signed application', () => {
+    const f = fixture();
+    const directory = join(f.root, 'notary');
+    mkdirSync(directory);
+    const record = createSubmission(f.candidate, submissionId, '101');
+    writeFileSync(join(directory, 'notary.json'), JSON.stringify(record));
+    const invoke = vi.fn();
+    const store = new CheckpointStore(env, invoke);
+    expect(store.restoreRecord('notary', f.candidate, directory)).toEqual(record);
+    writeFileSync(
+      join(directory, 'notary.json'),
+      JSON.stringify({ ...record, signedSha256: 'd'.repeat(64) }),
+    );
+    expect(() => store.restoreRecord('notary', f.candidate, directory)).toThrow(/different signed/);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
 describe('verified draft checkpoints', () => {
   test('requires a complete release inventory and preserves original source identity', () => {
     const f = fixture();

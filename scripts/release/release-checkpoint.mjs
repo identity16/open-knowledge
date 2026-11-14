@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { releasePlan, releaseFileDigest, validateReleaseInventory } from './release-identity.mjs';
 
@@ -242,7 +242,22 @@ export class CheckpointStore {
     ]);
   }
 
+  localCandidate(version, runId, directory) {
+    if (!existsSync(join(directory, 'candidate.json'))) return null;
+    const receipt = validateCandidate(readCheckpoint(directory, 'candidate'), directory, version);
+    if (receipt.sourceRunId !== String(runId))
+      throw new Error('The local signed checkpoint belongs to a different workflow run.');
+    return receipt;
+  }
+
+  localRecord(kind, candidate, directory) {
+    if (!existsSync(join(directory, `${kind}.json`))) return null;
+    return validateRecord(readCheckpoint(directory, kind), kind, candidate);
+  }
+
   restoreCandidate(version, runId, directory, required = false) {
+    const local = this.localCandidate(version, runId, directory);
+    if (local) return local;
     const run = this.trustedRun(runId);
     const name = checkpointName('signed', { version });
     const matches = this.artifacts(`actions/runs/${runId}/artifacts?per_page=100`).filter(
@@ -265,6 +280,8 @@ export class CheckpointStore {
   }
 
   restoreRecord(kind, candidate, directory) {
+    const local = this.localRecord(kind, candidate, directory);
+    if (local) return local;
     const name = checkpointName(kind, candidate);
     const matches = this.artifacts(
       `actions/artifacts?name=${encodeURIComponent(name)}&per_page=100`,
