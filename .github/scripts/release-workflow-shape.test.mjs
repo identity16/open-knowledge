@@ -1,21 +1,42 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { parse } from 'yaml';
 
-const workflow = parse(
-  readFileSync(new URL('../workflows/release.yml', import.meta.url), 'utf8'),
-);
+const workflow = parse(readFileSync(new URL('../workflows/release.yml', import.meta.url), 'utf8'));
 const jobs = workflow.jobs;
 const command = (job, suffix) =>
   job.steps.findIndex((step) => step.run?.includes(`release-workflow.mjs ${suffix}`));
 
 describe('recoverable release workflow', () => {
+  test('runs the macOS jobs on the self-hosted Mac mini only when a dispatch asks for it', () => {
+    const runner = workflow.on.workflow_dispatch.inputs.runner;
+    expect(runner.options).toEqual(['github', 'macmini']);
+    expect(runner.default).toBe('github');
+    for (const name of ['build', 'notarize', 'package']) {
+      const runsOn = jobs[name]['runs-on'];
+      expect(runsOn).toContain("inputs.runner == 'macmini'");
+      expect(runsOn).toContain('"self-hosted","ok-macmini"');
+      expect(runsOn).toContain("|| 'macos-26'");
+    }
+    expect(jobs.publish['runs-on']).toBe('ubuntu-latest');
+  });
+
+  test('no workflow that can reach the self-hosted runner is triggered by pull requests', () => {
+    for (const file of readdirSync(new URL('../workflows/', import.meta.url))) {
+      const text = readFileSync(new URL(`../workflows/${file}`, import.meta.url), 'utf8');
+      if (!text.includes('self-hosted')) continue;
+      const triggers = parse(text).on;
+      expect(Object.keys(triggers).filter((name) => name.startsWith('pull_request'))).toEqual([]);
+    }
+  });
+
   test('keeps all release stages on main and exposes only the approved resume input', () => {
     expect(workflow.on.push).toBeUndefined();
     expect(Object.keys(workflow.on.workflow_dispatch.inputs)).toEqual([
       'version',
       'resume_run_id',
       'build_only',
+      'runner',
     ]);
     expect(workflow.on.workflow_dispatch.inputs.build_only.default).toBe(false);
     for (const name of ['notarize', 'package', 'publish'])
