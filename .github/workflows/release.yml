@@ -50,6 +50,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          clean: false
+      - name: Remove earlier run files except installed dependencies and turbo outputs
+        run: git clean -ffdx -e node_modules -e .turbo
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: '.node-version'
@@ -65,7 +68,7 @@ jobs:
           npm install --global pnpm@12.8.1
           rustup toolchain install --no-self-update
       - name: Reuse turbo task outputs from earlier builds
-        if: steps.restore.outputs.reused != 'true'
+        if: steps.restore.outputs.reused != 'true' && inputs.runner != 'macmini'
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: .turbo/cache
@@ -116,6 +119,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          clean: false
+      - name: Remove earlier run files except installed dependencies and turbo outputs
+        run: git clean -ffdx -e node_modules -e .turbo
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: '.node-version'
@@ -159,6 +165,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          clean: false
+      - name: Remove earlier run files except installed dependencies and turbo outputs
+        run: git clean -ffdx -e node_modules -e .turbo
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: '.node-version'
@@ -203,6 +212,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          clean: false
+      - name: Remove earlier run files except installed dependencies and turbo outputs
+        run: git clean -ffdx -e node_modules -e .turbo
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: '.node-version'

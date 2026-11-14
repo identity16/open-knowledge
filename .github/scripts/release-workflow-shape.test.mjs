@@ -21,6 +21,17 @@ describe('recoverable release workflow', () => {
     expect(jobs.publish['runs-on']).toBe('ubuntu-latest');
   });
 
+  test('keeps installs and turbo outputs on the Mac mini instead of round-tripping the GitHub cache', () => {
+    for (const job of Object.values(jobs)) {
+      const checkout = job.steps.findIndex((s) => s.uses?.startsWith('actions/checkout@'));
+      expect(job.steps[checkout].with.clean).toBe(false);
+      expect(job.steps[checkout + 1].run).toBe('git clean -ffdx -e node_modules -e .turbo');
+    }
+    const turbo = jobs.build.steps.find((s) => s.uses?.startsWith('actions/cache@'));
+    expect(turbo.with.path).toBe('.turbo/cache');
+    expect(turbo.if).toContain("inputs.runner != 'macmini'");
+  });
+
   test('no workflow that can reach the self-hosted runner is triggered by pull requests', () => {
     for (const file of readdirSync(new URL('../workflows/', import.meta.url))) {
       const text = readFileSync(new URL(`../workflows/${file}`, import.meta.url), 'utf8');
