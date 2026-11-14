@@ -99,6 +99,10 @@ async function main() {
     );
   if (plan.oxlint.length > 0)
     results.push(step('oxlint', 'pnpm', ['exec', 'oxlint', '--max-warnings', '0', ...plan.oxlint]));
+  if (plan.typecheck.includes('desktop'))
+    results.push(
+      step('build cli types for desktop', 'pnpm', ['--dir', 'packages/cli', 'run', 'build:cli']),
+    );
   for (const name of plan.typecheck)
     results.push(
       step(`typecheck ${name}`, 'pnpm', ['--dir', `packages/${name}`, 'run', 'typecheck']),
