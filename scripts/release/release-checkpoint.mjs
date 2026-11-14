@@ -1,5 +1,17 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import {
+  constants,
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { releasePlan, releaseFileDigest, validateReleaseInventory } from './release-identity.mjs';
 
@@ -189,6 +201,43 @@ export class CheckpointStore {
   constructor(env = process.env, invoke = github) {
     this.context = workflowContext(env);
     this.invoke = invoke;
+    this.shelf = env.RELEASE_CHECKPOINT_DIR || null;
+  }
+
+  shelve(name, directory, files = readdirSync(directory)) {
+    if (!this.shelf) return false;
+    const target = join(this.shelf, this.context.sourceRunId, name);
+    const staging = `${target}.partial`;
+    rmSync(staging, { recursive: true, force: true });
+    mkdirSync(staging, { recursive: true });
+    for (const file of files)
+      copyFileSync(join(directory, file), join(staging, file), constants.COPYFILE_FICLONE);
+    rmSync(target, { recursive: true, force: true });
+    renameSync(staging, target);
+    return true;
+  }
+
+  shelved(name, runId) {
+    if (!this.shelf || !existsSync(this.shelf)) return [];
+    const runs = runId === undefined ? readdirSync(this.shelf) : [String(runId)];
+    return runs
+      .filter((run) => matches(RUN, run) && existsSync(join(this.shelf, run, name)))
+      .sort((a, b) => Number(b) - Number(a))
+      .map((run) => ({ runId: run, path: join(this.shelf, run, name) }));
+  }
+
+  unshelve(path, directory) {
+    mkdirSync(directory, { recursive: true });
+    for (const file of readdirSync(path))
+      copyFileSync(join(path, file), join(directory, file), constants.COPYFILE_FICLONE);
+  }
+
+  pruneShelf(maxAgeMs = 3 * 24 * 60 * 60 * 1000, now = Date.now()) {
+    if (!this.shelf || !existsSync(this.shelf)) return;
+    for (const run of readdirSync(this.shelf)) {
+      const path = join(this.shelf, run);
+      if (now - statSync(path).mtimeMs > maxAgeMs) rmSync(path, { recursive: true, force: true });
+    }
   }
 
   api(path, optional = false) {
@@ -260,19 +309,23 @@ export class CheckpointStore {
     if (local) return local;
     const run = this.trustedRun(runId);
     const name = checkpointName('signed', { version });
-    const matches = this.artifacts(`actions/runs/${runId}/artifacts?per_page=100`).filter(
-      (a) => a.name === name,
-    );
-    if (!matches.length && !required) return null;
-    if (matches.length !== 1)
-      throw new Error('The signed checkpoint is missing, expired or ambiguous.');
-    const artifact = matches[0];
-    if (
-      String(artifact.workflow_run?.id) !== String(runId) ||
-      artifact.workflow_run.head_sha !== run.head_sha
-    )
-      throw new Error('The signed artifact has an unexpected producer.');
-    this.download(artifact, directory);
+    const kept = this.shelved(name, runId)[0];
+    if (kept) this.unshelve(kept.path, directory);
+    else {
+      const matches = this.artifacts(`actions/runs/${runId}/artifacts?per_page=100`).filter(
+        (a) => a.name === name,
+      );
+      if (!matches.length && !required) return null;
+      if (matches.length !== 1)
+        throw new Error('The signed checkpoint is missing, expired or ambiguous.');
+      const artifact = matches[0];
+      if (
+        String(artifact.workflow_run?.id) !== String(runId) ||
+        artifact.workflow_run.head_sha !== run.head_sha
+      )
+        throw new Error('The signed artifact has an unexpected producer.');
+      this.download(artifact, directory);
+    }
     const receipt = validateCandidate(readCheckpoint(directory, 'candidate'), directory, version);
     if (receipt.sourceSha !== run.head_sha || receipt.sourceRunId !== String(runId))
       throw new Error('The signed artifact does not match its source workflow.');
@@ -283,6 +336,15 @@ export class CheckpointStore {
     const local = this.localRecord(kind, candidate, directory);
     if (local) return local;
     const name = checkpointName(kind, candidate);
+    for (const kept of this.shelved(name)) {
+      const run = this.trustedRun(kept.runId);
+      this.ancestor(candidate.sourceSha, run.head_sha);
+      this.unshelve(kept.path, directory);
+      const receipt = validateRecord(readCheckpoint(directory, kind), kind, candidate);
+      if (receipt.producerRunId !== String(run.id))
+        throw new Error('The kept checkpoint producer does not match the checkpoint.');
+      return receipt;
+    }
     const matches = this.artifacts(
       `actions/artifacts?name=${encodeURIComponent(name)}&per_page=100`,
     )

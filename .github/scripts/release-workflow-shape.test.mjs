@@ -34,6 +34,15 @@ describe('recoverable release workflow', () => {
     expect(install.run).toContain('node scripts/create-turbo-cache-key.mjs');
   });
 
+  test('keeps checkpoints on the Mac mini and uploads them as artifacts only from GitHub runners', () => {
+    expect(job.env.RELEASE_CHECKPOINT_DIR).toBe(
+      "${{ inputs.runner == 'macmini' && '/Volumes/OKBuilds/release-checkpoints' || '' }}",
+    );
+    const uploads = steps.filter((s) => s.uses?.startsWith('actions/upload-artifact@'));
+    expect(uploads).toHaveLength(3);
+    for (const upload of uploads) expect(upload.if).toContain("inputs.runner != 'macmini'");
+  });
+
   test('no workflow that can reach the self-hosted runner is triggered by pull requests', () => {
     for (const file of readdirSync(new URL('../workflows/', import.meta.url))) {
       const text = readFileSync(new URL(`../workflows/${file}`, import.meta.url), 'utf8');

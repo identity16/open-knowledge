@@ -1,5 +1,7 @@
 import {
   cpSync,
+  existsSync,
+  utimesSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -298,6 +300,97 @@ describe('checkpoints produced earlier in the same job', () => {
     );
     expect(() => store.restoreRecord('notary', f.candidate, directory)).toThrow(/different signed/);
     expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe('checkpoints kept on the release runner instead of uploaded', () => {
+  const shelfStore = (f, invoke) => {
+    const shelf = join(f.root, 'shelf');
+    const store = new CheckpointStore({ ...env, RELEASE_CHECKPOINT_DIR: shelf }, invoke);
+    return { shelf, store };
+  };
+  const trustedOnly = (runs) =>
+    vi.fn((args) => {
+      if (args[0] === 'run') throw new Error('Unexpected artifact download');
+      const path = args[1].replace(`repos/${RELEASE_REPOSITORY}/`, '');
+      for (const [id, sha] of runs)
+        if (path === `actions/runs/${id}`) return JSON.stringify(run(id, sha));
+      if (path.startsWith('compare/'))
+        return JSON.stringify({ status: 'ahead', merge_base_commit: { sha: source } });
+      throw new Error(`Unexpected GitHub request: ${path}`);
+    });
+
+  test('restores a rerun or resumed build from the runner without downloading it', () => {
+    const f = fixture();
+    const invoke = trustedOnly([['101', source]]);
+    const producer = new CheckpointStore(
+      { ...env, GITHUB_RUN_ID: '101', RELEASE_CHECKPOINT_DIR: join(f.root, 'shelf') },
+      invoke,
+    );
+    expect(producer.shelve(checkpointName('signed', f.candidate), f.candidateDir)).toBe(true);
+    const { store } = shelfStore(f, invoke);
+    const restored = store.restoreCandidate(version, '101', join(f.root, 'restored'), true);
+    expect(restored).toEqual(f.candidate);
+    expect(invoke.mock.calls.some(([args]) => args[0] === 'run')).toBe(false);
+    expect(invoke.mock.calls.some(([args]) => args[1].includes('/artifacts'))).toBe(false);
+  });
+
+  test('refuses kept signed bytes that no longer match their receipt', () => {
+    const f = fixture();
+    const invoke = trustedOnly([['101', source]]);
+    const { shelf, store } = shelfStore(f, invoke);
+    const producer = new CheckpointStore(
+      { ...env, GITHUB_RUN_ID: '101', RELEASE_CHECKPOINT_DIR: shelf },
+      invoke,
+    );
+    const name = checkpointName('signed', f.candidate);
+    producer.shelve(name, f.candidateDir);
+    writeFileSync(join(shelf, '101', name, 'signed-app.zip'), 'changed');
+    expect(() => store.restoreCandidate(version, '101', join(f.root, 'restored'), true)).toThrow(
+      /Corrupted/,
+    );
+  });
+
+  test('finds the newest kept submission for the same signed application', () => {
+    const f = fixture();
+    const invoke = trustedOnly([
+      ['202', current],
+      ['303', current],
+    ]);
+    const { shelf, store } = shelfStore(f, invoke);
+    for (const producerRunId of ['202', '303']) {
+      const directory = join(f.root, `notary-${producerRunId}`);
+      mkdirSync(directory);
+      writeFileSync(
+        join(directory, 'notary.json'),
+        JSON.stringify(createSubmission(f.candidate, submissionId, producerRunId)),
+      );
+      new CheckpointStore(
+        { ...env, GITHUB_RUN_ID: producerRunId, RELEASE_CHECKPOINT_DIR: shelf },
+        invoke,
+      ).shelve(checkpointName('notary', f.candidate), directory, ['notary.json']);
+    }
+    const record = store.restoreRecord('notary', f.candidate, join(f.root, 'restored'));
+    expect(record.producerRunId).toBe('303');
+    expect(invoke.mock.calls.some(([args]) => args[1].includes('/artifacts'))).toBe(false);
+  });
+
+  test('forgets kept checkpoints after the same three days an artifact would last', () => {
+    const f = fixture();
+    const { shelf, store } = shelfStore(f, vi.fn());
+    for (const id of ['101', '202']) mkdirSync(join(shelf, id), { recursive: true });
+    const old = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
+    utimesSync(join(shelf, '101'), old, old);
+    store.pruneShelf();
+    expect(existsSync(join(shelf, '101'))).toBe(false);
+    expect(existsSync(join(shelf, '202'))).toBe(true);
+  });
+
+  test('keeps nothing when the run uploads artifacts instead', () => {
+    const f = fixture();
+    expect(new CheckpointStore(env, vi.fn()).shelve('release-signed-x', f.candidateDir)).toBe(
+      false,
+    );
   });
 });
 

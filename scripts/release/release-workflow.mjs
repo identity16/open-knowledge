@@ -62,6 +62,7 @@ export async function runReleaseStep(command, env = process.env) {
   };
   const restore = () => store.restoreCandidate(version, env.CANDIDATE_RUN_ID, signed, true);
   if (command === 'restore') {
+    store.pruneShelf();
     const candidate = store.restoreCandidate(
       version,
       env.RESUME_RUN_ID || context.sourceRunId,
@@ -82,6 +83,7 @@ export async function runReleaseStep(command, env = process.env) {
     const { buildDesktop } = await import('./build-desktop.mjs');
     await buildDesktop(version, signed, env, { signOnly: true });
     createCandidate(signed, version, context);
+    store.shelve(checkpointName('signed', { version }), signed);
   } else if (command === 'notarize-start') {
     restore();
     mkdirSync(background, { recursive: true });
@@ -99,6 +101,7 @@ export async function runReleaseStep(command, env = process.env) {
     const result = await withNotaryClient(env, (client, temp) =>
       submitNotary(candidate, signed, notary, existing, context.sourceRunId, client, temp),
     );
+    if (result.uploaded) store.shelve(checkpointName('notary', candidate), notary, ['notary.json']);
     writeFileSync(
       submittedPath,
       JSON.stringify({ uploaded: result.uploaded, name: checkpointName('notary', candidate) }),
@@ -137,6 +140,7 @@ export async function runReleaseStep(command, env = process.env) {
     );
     mkdirSync(ready, { recursive: true });
     writeFileSync(join(ready, 'ready.json'), `${JSON.stringify(receipt, null, 2)}\n`);
+    store.shelve(checkpointName('ready', candidate), ready, ['ready.json']);
     output({ ready_name: checkpointName('ready', candidate), ready_run_id: context.sourceRunId });
   } else if (command === 'promote') {
     const candidate = restore();

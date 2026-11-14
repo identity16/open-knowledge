@@ -45,6 +45,8 @@ jobs:
     permissions:
       contents: write
       actions: read
+    env:
+      RELEASE_CHECKPOINT_DIR: ${{ inputs.runner == 'macmini' && '/Volumes/OKBuilds/release-checkpoints' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -109,7 +111,7 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: node scripts/release/release-workflow.mjs notarize-start
       - name: Preserve signed application before notarization
-        if: steps.restore.outputs.reused != 'true'
+        if: steps.restore.outputs.reused != 'true' && inputs.runner != 'macmini'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.restore.outputs.signed_name }}
@@ -123,7 +125,7 @@ jobs:
         if: steps.restore.outputs.ready_run_id == '' && !inputs.build_only
         run: node scripts/release/release-workflow.mjs notarize-submitted
       - name: Preserve submission ID before waiting
-        if: steps.submit.outputs.new_notary == 'true'
+        if: steps.submit.outputs.new_notary == 'true' && inputs.runner != 'macmini'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.submit.outputs.notary_name }}
@@ -156,7 +158,7 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: pnpm exec node scripts/release/release-workflow.mjs package
       - name: Preserve verified draft receipt
-        if: '!inputs.build_only && steps.prepare.outputs.reused != ''true'''
+        if: '!inputs.build_only && steps.prepare.outputs.reused != ''true'' && inputs.runner != ''macmini'''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.package.outputs.ready_name }}
