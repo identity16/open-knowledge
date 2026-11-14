@@ -4,33 +4,33 @@ import { parse } from 'yaml';
 
 const workflow = parse(readFileSync(new URL('../workflows/release.yml', import.meta.url), 'utf8'));
 const jobs = workflow.jobs;
-const command = (job, suffix) =>
-  job.steps.findIndex((step) => step.run?.includes(`release-workflow.mjs ${suffix}`));
+const job = jobs.release;
+const steps = job.steps;
+const command = (suffix) =>
+  steps.findIndex((step) => step.run?.includes(`release-workflow.mjs ${suffix}`));
+const stepOf = (suffix) => steps[command(suffix)];
+const uploadOf = (path) =>
+  steps.findIndex((s) => s.uses?.startsWith('actions/upload-artifact@') && s.with.path === path);
 
 describe('recoverable release workflow', () => {
-  test('runs the macOS jobs on the self-hosted Mac mini only when a dispatch asks for it', () => {
+  test('runs the whole release as one job on the self-hosted Mac mini unless a dispatch asks for GitHub', () => {
+    expect(Object.keys(jobs)).toEqual(['release']);
     const runner = workflow.on.workflow_dispatch.inputs.runner;
     expect(runner.options).toEqual(['github', 'macmini']);
     expect(runner.default).toBe('macmini');
-    for (const name of ['build', 'notarize', 'package']) {
-      const runsOn = jobs[name]['runs-on'];
-      expect(runsOn).toContain("inputs.runner == 'macmini'");
-      expect(runsOn).toContain('"self-hosted","ok-macmini"');
-      expect(runsOn).toContain("|| 'macos-26'");
-    }
-    expect(jobs.publish['runs-on']).toBe('ubuntu-latest');
+    expect(job['runs-on']).toContain("inputs.runner == 'macmini'");
+    expect(job['runs-on']).toContain('"self-hosted","ok-macmini"');
+    expect(job['runs-on']).toContain("|| 'macos-26'");
   });
 
   test('keeps installs and turbo outputs on the Mac mini instead of round-tripping the GitHub cache', () => {
-    for (const job of Object.values(jobs)) {
-      const checkout = job.steps.findIndex((s) => s.uses?.startsWith('actions/checkout@'));
-      expect(job.steps[checkout].with.clean).toBe(false);
-      expect(job.steps[checkout + 1].run).toBe('git clean -ffdx -e node_modules -e .turbo');
-    }
-    const turbo = jobs.build.steps.find((s) => s.uses?.startsWith('actions/cache@'));
+    const checkout = steps.findIndex((s) => s.uses?.startsWith('actions/checkout@'));
+    expect(steps[checkout].with.clean).toBe(false);
+    expect(steps[checkout + 1].run).toBe('git clean -ffdx -e node_modules -e .turbo');
+    const turbo = steps.find((s) => s.uses?.startsWith('actions/cache@'));
     expect(turbo.with.path).toBe('.turbo/cache');
     expect(turbo.if).toContain("inputs.runner != 'macmini'");
-    const install = jobs.build.steps.find((s) => s.run?.startsWith('pnpm install'));
+    const install = steps.find((s) => s.run?.startsWith('pnpm install'));
     expect(install.run).toContain('node scripts/create-turbo-cache-key.mjs');
   });
 
@@ -43,7 +43,7 @@ describe('recoverable release workflow', () => {
     }
   });
 
-  test('keeps all release stages on main and exposes only the approved resume input', () => {
+  test('keeps the release on main and exposes only the approved resume input', () => {
     expect(workflow.on.push).toBeUndefined();
     expect(Object.keys(workflow.on.workflow_dispatch.inputs)).toEqual([
       'version',
@@ -52,58 +52,79 @@ describe('recoverable release workflow', () => {
       'runner',
     ]);
     expect(workflow.on.workflow_dispatch.inputs.build_only.default).toBe(false);
-    for (const name of ['notarize', 'package', 'publish'])
-      expect(jobs[name].if).toContain('!inputs.build_only');
+    for (const suffix of ['submit', 'wait', 'prepare-package', 'package', 'promote'])
+      expect(stepOf(suffix).if).toContain('!inputs.build_only');
     expect(workflow.on.workflow_dispatch.inputs.version.required).toBe(true);
     expect(workflow.on.workflow_dispatch.inputs.resume_run_id.required).toBe(false);
-    expect(workflow.permissions.actions).toBe('read');
+    expect(workflow.permissions).toEqual({ contents: 'read', actions: 'read' });
+    expect(job.permissions).toEqual({ contents: 'write', actions: 'read' });
     expect(workflow.concurrency['cancel-in-progress']).toBe(false);
-    for (const job of Object.values(jobs)) {
-      expect(job.if).toContain("github.repository == 'identity16/open-knowledge'");
-      expect(job.if).toContain("github.ref == 'refs/heads/main'");
-      expect(
-        job.steps.find((step) => step.uses?.startsWith('actions/checkout@')).with[
-          'persist-credentials'
-        ],
-      ).toBe(false);
-    }
+    expect(job.if).toContain("github.repository == 'identity16/open-knowledge'");
+    expect(job.if).toContain("github.ref == 'refs/heads/main'");
+    expect(
+      steps.find((s) => s.uses?.startsWith('actions/checkout@')).with['persist-credentials'],
+    ).toBe(false);
+  });
+
+  test('hands the GitHub token only to the steps that call gh, never to dependency installs', () => {
+    expect(JSON.stringify(workflow.env)).not.toContain('token');
+    expect(JSON.stringify(job.env ?? {})).not.toContain('token');
+    const holders = steps.filter((s) => s.env?.GH_TOKEN).map((s) => s.run);
+    expect(holders).toEqual(
+      ['restore', 'submit', 'prepare-package', 'package', 'promote'].map(
+        (suffix) => stepOf(suffix).run,
+      ),
+    );
+    for (const step of steps.filter((s) => s.run?.includes('install')))
+      expect(step.env?.GH_TOKEN, step.name).toBeUndefined();
   });
 
   test('restores before dependency installation and guards every build mutation', () => {
-    expect(command(jobs.build, 'restore')).toBeLessThan(
-      jobs.build.steps.findIndex((s) => s.run?.includes('pnpm install')),
+    expect(command('restore')).toBeLessThan(
+      steps.findIndex((s) => s.run?.includes('pnpm install')),
     );
-    const sign = jobs.build.steps[command(jobs.build, 'sign')];
-    expect(Object.keys(sign.env).sort()).toEqual(['CSC_KEY_PASSWORD', 'CSC_LINK']);
-    for (const step of jobs.build.steps.filter(
-      (s) => s.run?.includes('pnpm') || s.uses?.startsWith('actions/upload-artifact@'),
-    ))
+    expect(Object.keys(stepOf('sign').env).sort()).toEqual(['CSC_KEY_PASSWORD', 'CSC_LINK']);
+    for (const step of steps
+      .slice(0, command('sign') + 2)
+      .filter((s) => s.run?.includes('pnpm') || s.uses?.startsWith('actions/upload-artifact@')))
       expect(step.if).toContain("steps.restore.outputs.reused != 'true'");
-    expect(jobs.build.permissions).toBeUndefined();
   });
 
-  test('persists the submission ID before Apple waiting without importing signing keys', () => {
-    expect(jobs.notarize.needs).toBe('build');
-    const upload = jobs.notarize.steps.findIndex((s) =>
-      s.uses?.startsWith('actions/upload-artifact@'),
+  test('preserves each checkpoint before the stage that could lose it', () => {
+    expect(uploadOf('.release/signed/')).toBeGreaterThan(command('sign'));
+    expect(uploadOf('.release/signed/')).toBeLessThan(command('submit'));
+    expect(uploadOf('.release/notary/notary.json')).toBeGreaterThan(command('submit'));
+    expect(uploadOf('.release/notary/notary.json')).toBeLessThan(command('wait'));
+    expect(uploadOf('.release/ready/ready.json')).toBeGreaterThan(command('package'));
+    expect(uploadOf('.release/ready/ready.json')).toBeLessThan(command('promote'));
+    expect(stepOf('submit').if).toContain("steps.restore.outputs.ready_run_id == ''");
+    expect(stepOf('wait').if).toContain("steps.restore.outputs.ready_run_id == ''");
+  });
+
+  test('gives each stage only the secrets it uses', () => {
+    const secrets = (suffix) =>
+      Object.entries(stepOf(suffix).env ?? {})
+        .filter(([, value]) => String(value).includes('secrets.'))
+        .map(([name]) => name)
+        .sort();
+    expect(secrets('submit')).toEqual(['APPLE_API_ISSUER', 'APPLE_API_KEY', 'APPLE_API_KEY_ID']);
+    expect(secrets('wait')).toEqual(['APPLE_API_ISSUER', 'APPLE_API_KEY', 'APPLE_API_KEY_ID']);
+    expect(secrets('package')).toEqual(['CSC_KEY_PASSWORD', 'CSC_LINK']);
+    expect(secrets('prepare-package')).toEqual([]);
+    expect(secrets('promote')).toEqual([]);
+    for (const step of steps.filter((s) => s.run?.includes('install')))
+      expect(JSON.stringify(step.env ?? {}), step.name).not.toContain('secrets.');
+  });
+
+  test('publishes the verified draft from this run or the one that staged it', () => {
+    expect(stepOf('promote').env.READY_RUN_ID).toBe(
+      '${{ steps.prepare.outputs.ready_run_id || steps.package.outputs.ready_run_id }}',
     );
-    expect(upload).toBeGreaterThan(command(jobs.notarize, 'submit'));
-    expect(upload).toBeLessThan(command(jobs.notarize, 'wait'));
-    expect(JSON.stringify(jobs.notarize)).not.toContain('CSC_LINK');
-    expect(JSON.stringify(jobs.notarize)).not.toContain('pnpm install');
-    expect(jobs.notarize.if).toContain("needs.build.outputs.ready_run_id == ''");
-  });
-
-  test('separates package verification from publication and scopes retained files', () => {
-    expect(jobs.package.needs).toEqual(['build', 'notarize']);
-    expect(jobs.publish.needs).toEqual(['build', 'package']);
-    expect(jobs.publish.environment).toBeUndefined();
-    expect(JSON.stringify(jobs.publish)).not.toContain('secrets.');
-    expect(JSON.stringify(jobs.publish)).not.toContain('pnpm install');
-    expect(command(jobs.publish, 'promote')).toBeGreaterThan(-1);
-    const uploads = Object.values(jobs)
-      .flatMap((j) => j.steps)
-      .filter((s) => s.uses?.startsWith('actions/upload-artifact@'));
+    for (const suffix of ['submit', 'prepare-package', 'package', 'promote'])
+      expect(stepOf(suffix).env.CANDIDATE_RUN_ID).toBe(
+        '${{ steps.restore.outputs.candidate_run_id }}',
+      );
+    const uploads = steps.filter((s) => s.uses?.startsWith('actions/upload-artifact@'));
     expect(uploads.map((s) => s.with.path)).toEqual([
       '.release/signed/',
       '.release/notary/notary.json',

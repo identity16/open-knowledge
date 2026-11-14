@@ -40,9 +40,7 @@ const OTHER_SECRETS = [
 const SIGNING_ENVIRONMENT = 'release-signing';
 const OTHER_ENVIRONMENTS = [];
 const EXPECTED = {
-  'release.yml#build': SIGNING_ENVIRONMENT,
-  'release.yml#notarize': SIGNING_ENVIRONMENT,
-  'release.yml#package': SIGNING_ENVIRONMENT,
+  'release.yml#release': SIGNING_ENVIRONMENT,
 };
 const WHOLE_CONTEXT = '*';
 const SECRET_READ = /(?<![\w.-])secrets\b(?:\s*\.\s*([A-Za-z_][\w-]*)|\s*\[\s*'([^']*)'\s*\])?/gi;
@@ -128,7 +126,7 @@ describe('release-signing environment', () => {
     const reordered = [...JOBS].reverse();
     expect(contractProblems(reordered)).toEqual([]);
     expect(
-      contractProblems(reordered.filter(({ key }) => key !== 'release.yml#build')),
+      contractProblems(reordered.filter(({ key }) => key !== 'release.yml#release')),
     ).toContainEqual(expect.stringContaining('jobs reading'));
   });
 

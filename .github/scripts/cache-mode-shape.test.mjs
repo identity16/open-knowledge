@@ -16,7 +16,7 @@ import { credentialReasons } from './workflow-credentials.test-helper.mjs';
 const OK_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const WORKFLOWS = join(OK_ROOT, '.github', 'workflows');
 
-const CACHED_RELEASE_BUILDS = ['release.yml#build'];
+const CACHED_RELEASE_BUILDS = ['release.yml#release'];
 
 const workflows = readdirSync(WORKFLOWS)
   .filter((name) => /\.ya?ml$/.test(name))
@@ -40,10 +40,7 @@ describe('credentialed jobs in public/open-knowledge/.github/workflows declare t
         credentialed.map(({ label, workflow, job }) => [label, effectiveMode(workflow, job)]),
       ),
     ).toEqual({
-      'release.yml#build': 'write',
-      'release.yml#notarize': 'none',
-      'release.yml#package': 'none',
-      'release.yml#publish': 'none',
+      'release.yml#release': 'write',
     });
   });
 
@@ -582,20 +579,15 @@ describe('cache-mode sweep self-tests', () => {
     ).toThrow(/not classified/);
   });
 
-  test('the real release jobs turn red at the default or at a wider mode', () => {
-    const { workflow: declared } = workflows.find(
-      ({ file }) => file === 'release.yml',
-    );
+  test('the real release job turns red at the default or at a narrower mode', () => {
+    const { workflow: declared } = workflows.find(({ file }) => file === 'release.yml');
     const { 'cache-mode': _workflowMode, ...workflow } = declared;
-    for (const id of ['notarize', 'package', 'publish']) {
-      const { 'cache-mode': _mode, ...atDefault } = workflow.jobs[id];
-      expect(cacheModeProblems(workflow, atDefault).join('\n'), `${id} at the default`).toMatch(
-        /declares no cache-mode/,
-      );
+    const { 'cache-mode': _mode, ...atDefault } = workflow.jobs.release;
+    expect(cacheModeProblems(workflow, atDefault).join('\n')).toMatch(/declares no cache-mode/);
+    for (const mode of ['none', 'read'])
       expect(
-        cacheModeProblems(workflow, { ...atDefault, 'cache-mode': 'write' }).join('\n'),
-        `${id} at write`,
-      ).toMatch(/need exactly none/);
-    }
+        cacheModeProblems(workflow, { ...atDefault, 'cache-mode': mode }).join('\n'),
+        mode,
+      ).toMatch(/need exactly write/);
   });
 });

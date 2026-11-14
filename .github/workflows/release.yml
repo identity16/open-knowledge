@@ -16,7 +16,7 @@ on:
         type: boolean
         default: false
       runner:
-        description: 'Where the macOS jobs run: github (hosted macos-26) or macmini (self-hosted runner labelled ok-macmini)'
+        description: 'Where the release job runs: github (hosted macos-26) or macmini (self-hosted runner labelled ok-macmini)'
         required: false
         type: choice
         options:
@@ -32,20 +32,19 @@ concurrency:
   cancel-in-progress: false
 env:
   RELEASE_VERSION: ${{ inputs.version }}
-  GH_TOKEN: ${{ github.token }}
   ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
   PUPPETEER_SKIP_DOWNLOAD: '1'
   TURBO_TELEMETRY_DISABLED: '1'
 jobs:
-  build:
+  release:
     if: github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main'
     environment: release-signing
     runs-on: ${{ inputs.runner == 'macmini' && fromJSON('["self-hosted","ok-macmini"]') || 'macos-26' }}
-    timeout-minutes: 45
+    timeout-minutes: 120
     cache-mode: write
-    outputs:
-      candidate_run_id: ${{ steps.restore.outputs.candidate_run_id }}
-      ready_run_id: ${{ steps.restore.outputs.ready_run_id }}
+    permissions:
+      contents: write
+      actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -60,6 +59,7 @@ jobs:
       - name: Restore original signed build or validate a new release
         id: restore
         env:
+          GH_TOKEN: ${{ github.token }}
           RESUME_RUN_ID: ${{ inputs.resume_run_id }}
         run: node scripts/release/release-workflow.mjs restore
       - name: Install build tools
@@ -109,28 +109,12 @@ jobs:
           include-hidden-files: true
           compression-level: 0
           retention-days: 3
-  notarize:
-    needs: build
-    if: github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.outputs.ready_run_id == '' && !inputs.build_only
-    environment: release-signing
-    runs-on: ${{ inputs.runner == 'macmini' && fromJSON('["self-hosted","ok-macmini"]') || 'macos-26' }}
-    timeout-minutes: 60
-    env:
-      CANDIDATE_RUN_ID: ${{ needs.build.outputs.candidate_run_id }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          clean: false
-      - name: Remove earlier run files except installed dependencies and turbo outputs
-        run: git clean -ffdx -e node_modules -e .turbo
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: '.node-version'
-          package-manager-cache: false
       - name: Restore or submit the identical signed application
         id: submit
+        if: steps.restore.outputs.ready_run_id == '' && !inputs.build_only
         env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_RUN_ID: ${{ steps.restore.outputs.candidate_run_id }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
@@ -145,53 +129,35 @@ jobs:
           include-hidden-files: true
           retention-days: 3
       - name: Wait for the saved submission
+        if: steps.restore.outputs.ready_run_id == '' && !inputs.build_only
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: node scripts/release/release-workflow.mjs wait
-  package:
-    needs: [build, notarize]
-    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && (needs.notarize.result == 'success' || needs.notarize.result == 'skipped') && !inputs.build_only
-    environment: release-signing
-    runs-on: ${{ inputs.runner == 'macmini' && fromJSON('["self-hosted","ok-macmini"]') || 'macos-26' }}
-    timeout-minutes: 30
-    permissions:
-      contents: write
-      actions: read
-    outputs:
-      ready_run_id: ${{ steps.restore.outputs.ready_run_id || steps.package.outputs.ready_run_id }}
-    env:
-      CANDIDATE_RUN_ID: ${{ needs.build.outputs.candidate_run_id }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          clean: false
-      - name: Remove earlier run files except installed dependencies and turbo outputs
-        run: git clean -ffdx -e node_modules -e .turbo
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: '.node-version'
-          package-manager-cache: false
       - name: Restore signed application and check for a verified draft
-        id: restore
+        id: prepare
+        if: '!inputs.build_only'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_RUN_ID: ${{ steps.restore.outputs.candidate_run_id }}
         run: node scripts/release/release-workflow.mjs prepare-package
-      - name: Install packaging tools
-        if: steps.restore.outputs.reused != 'true'
-        run: npm install --global pnpm@12.8.1
-      - name: Install the desktop packaging dependencies
-        if: steps.restore.outputs.reused != 'true'
-        run: pnpm install --frozen-lockfile --filter . --filter @inkeep/open-knowledge-desktop
+      - name: Install the desktop packaging dependencies for a restored build
+        if: '!inputs.build_only && steps.prepare.outputs.reused != ''true'' && steps.restore.outputs.reused == ''true'''
+        run: |
+          npm install --global pnpm@12.8.1
+          pnpm install --frozen-lockfile --filter . --filter @inkeep/open-knowledge-desktop
       - name: Staple, package, verify and stage installers
         id: package
-        if: steps.restore.outputs.reused != 'true'
+        if: '!inputs.build_only && steps.prepare.outputs.reused != ''true'''
         env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_RUN_ID: ${{ steps.restore.outputs.candidate_run_id }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: pnpm exec node scripts/release/release-workflow.mjs package
       - name: Preserve verified draft receipt
-        if: steps.restore.outputs.reused != 'true'
+        if: '!inputs.build_only && steps.prepare.outputs.reused != ''true'''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.package.outputs.ready_name }}
@@ -199,27 +165,10 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 3
-  publish:
-    needs: [build, package]
-    if: always() && github.repository == 'identity16/open-knowledge' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && needs.package.result == 'success' && !inputs.build_only
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: write
-      actions: read
-    env:
-      CANDIDATE_RUN_ID: ${{ needs.build.outputs.candidate_run_id }}
-      READY_RUN_ID: ${{ needs.package.outputs.ready_run_id }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          clean: false
-      - name: Remove earlier run files except installed dependencies and turbo outputs
-        run: git clean -ffdx -e node_modules -e .turbo
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: '.node-version'
-          package-manager-cache: false
       - name: Verify remote files and publish the original build
+        if: '!inputs.build_only'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_RUN_ID: ${{ steps.restore.outputs.candidate_run_id }}
+          READY_RUN_ID: ${{ steps.prepare.outputs.ready_run_id || steps.package.outputs.ready_run_id }}
         run: node scripts/release/release-workflow.mjs promote
