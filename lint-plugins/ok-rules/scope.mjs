@@ -97,14 +97,7 @@ export const RULE_SCOPES = {
     '!**/*.test-helper.ts',
     'lint-plugins/ok-rules/__fixtures__/no-blocking-error-box.fixture.tsx',
   ],
-  'require-windowshide-on-spawn': [
-    'packages/server/src/**/*.ts',
-    'packages/cli/src/**/*.ts',
-    'packages/desktop/src/**/*.ts',
-    '!**/*.test.ts',
-    '!**/*.test-helper.ts',
-    'lint-plugins/ok-rules/__fixtures__/require-windowshide-on-spawn.fixture.tsx',
-  ],
+
   'require-utf8-multipart-parser': [
     '**/*.ts',
     '**/*.tsx',

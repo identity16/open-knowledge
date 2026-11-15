@@ -464,7 +464,6 @@ async function discoverRealInteractivePath(
   const spawn = opts.spawn ?? defaultSpawn;
   const logger = opts.logger ?? DEFAULT_LOGGER;
   try {
-    // oxlint-disable-next-line ok/require-windowshide-on-spawn -- injected command-runner seam; defaultSpawn owns child_process options
     const result = await spawn(shell, ['-ilc', 'printf %s "$PATH"'], { timeoutMs: 2000, env });
     if (result.code !== 0 || result.timedOut || !result.stdout) {
       logger.event({

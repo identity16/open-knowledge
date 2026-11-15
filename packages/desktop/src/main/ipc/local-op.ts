@@ -194,7 +194,6 @@ function runCoalescedAuthQuery<T>(
   if (inFlight.size >= MAX_CONCURRENT_AUTH_QUERIES) {
     return Promise.resolve(tooManyError(host));
   }
-  // oxlint-disable-next-line ok/require-windowshide-on-spawn -- callback starts a request; it is not node:child_process.spawn
   const promise = spawn().finally(() => {
     inFlight.delete(host);
   });

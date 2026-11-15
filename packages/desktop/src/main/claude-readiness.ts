@@ -56,7 +56,6 @@ function runInjectedProbe(spec: InjectedProbeSpec): Promise<number | null> {
     }
     let child: ProbeChild;
     try {
-      // oxlint-disable-next-line ok/require-windowshide-on-spawn -- injected probe seam; the production child_process adapter owns its spawn options
       child = spawn(file, args);
     } catch (err) {
       recordSettled(null, { err, failurePhase: 'spawn' });
