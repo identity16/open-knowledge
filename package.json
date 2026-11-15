@@ -24,6 +24,7 @@
     "deploy:local": "node scripts/release/deploy-local.mjs",
     "preview": "node scripts/release/preview.mjs",
     "verify:changed": "node scripts/release/verify.mjs",
+    "review:tests": "node scripts/test-changes.mjs",
     "build:desktop:dir": "turbo run build:desktop:dir",
     "check:desktop": "turbo run lint typecheck test --filter=@inkeep/open-knowledge-desktop && pnpm run test:uncached",
     "check:types": "pnpm run typecheck",
