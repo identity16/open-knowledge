@@ -60,6 +60,10 @@ describe('resolveDesktopProductName', () => {
     ).toBe('stable');
   });
 
+  it('reads the pre-rename OK_CHANNEL=identity16 as openknowledge16', () => {
+    expect(resolveDesktopProductName({ OK_CHANNEL: 'identity16' }, '')).toBe('openknowledge16');
+  });
+
   it('rejects an unknown OK_CHANNEL instead of guessing', () => {
     expect(() => resolveDesktopProductName({ OK_CHANNEL: 'nightly' }, '')).toThrow(/OK_CHANNEL/);
   });

@@ -56,7 +56,7 @@ function buildUnixChain(name: PackagedDesktopProductName): string {
   const product = DESKTOP_PRODUCTS[name];
   if (name === 'openknowledge16') {
     return `${unixChainSentinel(product)}
-export ${OK_CHANNEL_ENV}=identity16
+export ${OK_CHANNEL_ENV}=${name}
 for bundle in "$HOME/Applications/${product.productName}.app" "/Applications/${product.productName}.app"; do
   wrapper="$bundle/Contents/Resources/cli/bin/ok.sh"
   [ -f "$wrapper" ] && [ -x "$wrapper" ] && exec "$wrapper" mcp
