@@ -5743,9 +5743,6 @@ msgstr "Nieprawidłowy YAML"
 msgid "It also adds any display-connection errors OpenKnowledge wrote to your user journal in the past week, each message cut to 200 characters."
 msgstr "Dodaje też błędy połączenia z ekranem, które OpenKnowledge zapisało w ostatnim tygodniu w Twoim dzienniku użytkownika, przycinając każdy komunikat do 200 znaków."
 
-msgid "It also adds the crash and hang records Windows logged for OpenKnowledge in the past week, without file paths, and the times of every shutdown, restart, power loss, and low-memory warning on this computer in that week, whatever caused them."
-msgstr "Dodaje też zapisane przez Windows w ostatnim tygodniu awarie i zawieszenia OpenKnowledge, bez ścieżek plików, a także godziny każdego wyłączenia, ponownego uruchomienia, utraty zasilania i ostrzeżenia o małej ilości pamięci na tym komputerze w tym tygodniu, niezależnie od przyczyny."
-
 msgid "It also adds the crash reports macOS recorded for OpenKnowledge and its helper processes, never another app's report, though ours do name the processes they were running alongside. Each one carries machine details macOS puts in every report: your account uid, the Mac model, and the name of the process that launched the app. On a managed machine, that launching process can be internal tooling. The identifiers that would link the bug reports you file to each other are replaced first, so a collected report is not byte-identical to the one macOS wrote."
 msgstr "Dodaje także raporty awaryjne zapisane przez macOS dla OpenKnowledge i jego procesów pomocniczych, nigdy raportu innej aplikacji — choć nasze zawierają nazwy procesów, obok których działały. Każdy zawiera dane komputera, które macOS umieszcza w każdym raporcie: uid Twojego konta, model Maca i nazwę procesu, który uruchomił aplikację. Na komputerze zarządzanym tym procesem uruchamiającym może być narzędzie wewnętrzne. Identyfikatory, które łączyłyby Twoje zgłoszenia błędów ze sobą, są najpierw zastępowane, dlatego zebrany raport nie jest bajt w bajt identyczny z tym, który zapisał macOS."
 
@@ -6488,9 +6485,6 @@ msgstr "Przenieś do nowego panelu po lewej"
 
 msgid "Move to new pane right"
 msgstr "Przenieś do nowego panelu po prawej"
-
-msgid "Move to Recycle Bin"
-msgstr "Przenieś do Kosza"
 
 msgid "Move to right panel"
 msgstr "Przenieś do prawego panelu"
@@ -7560,15 +7554,6 @@ msgstr "OpenKnowledge nie znalazło tego agenta na tym komputerze."
 msgid "OpenKnowledge couldn't finish setting up this project. The worktree was created but not opened."
 msgstr "OpenKnowledge nie zakończyło przygotowywania tego projektu. Worktree zostało utworzone, ale nie otwarte."
 
-msgid "OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead."
-msgstr "OpenKnowledge nie odczytało terminal.shell w .ok/local/config.yml. Zamiast tego używana jest dostępna powłoka Windows."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge nie mogło zapisać ustawień uruchamiania w .ok/local/terminal, ponieważ folder nie jest bezpiecznie zawarty w tym projekcie. Upewnij się, że jest to prawdziwy folder w projekcie, a nie link. Claude poprosi Cię o zatwierdzenie OpenKnowledge."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge nie mogło w tej chwili zapisać ustawień uruchamiania w .ok/local/terminal. Upewnij się, że folder jest zapisywalny. Claude poprosi Cię o zatwierdzenie OpenKnowledge."
-
 msgid "OpenKnowledge created a share link"
 msgstr "OpenKnowledge utworzyło link udostępniania"
 
@@ -8495,9 +8480,6 @@ msgstr "Ponowne łączenie…"
 msgid "Recovered content"
 msgstr "Odzyskana treść"
 
-msgid "Recycle Bin"
-msgstr "Kosz"
-
 msgid "Redo"
 msgstr "Ponów"
 
@@ -9000,9 +8982,6 @@ msgstr "Używa jednej karty podczas przechodzenia między panelami bocznymi. Wy�
 
 msgid "Reused if it already exists, created if not."
 msgstr "Wykorzystane, jeśli już istnieje; utworzone w przeciwnym razie."
-
-msgid "Reveal in File Explorer"
-msgstr "Pokaż w Eksploratorze plików"
 
 msgid "Reveal in Finder"
 msgstr "Pokaż w Finderze"
@@ -10449,15 +10428,6 @@ msgstr "Ustawienia terminala jeszcze się nie wczytały — spróbuj ponownie za
 msgid "Terminal settings not yet loaded — try again in a moment"
 msgstr "Ustawienia terminala jeszcze się nie wczytały — spróbuj ponownie za chwilę"
 
-msgid "terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead."
-msgstr "terminal.shell w .ok/local/config.yml musi być ciągiem znaków. Zamiast tego używam dostępnej powłoki Windows."
-
-msgid "terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead."
-msgstr "terminal.shell w .ok/local/config.yml musi być bezwzględną ścieżką Windows. Zamiast tego używam dostępnej powłoki Windows."
-
-msgid "terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it."
-msgstr "terminal.shell w .ok/local/config.yml obsługuje PowerShell, cmd.exe lub Git Bash dla uruchomień zarządzanych przez OpenKnowledge i ścieżek upuszczanych plików. Ta powłoka otwiera wyłącznie zwykły terminal; uruchomienia agenta i poleceń nie są w niej wykonywane."
-
 msgid "Test connection"
 msgstr "Testuj połączenie"
 
@@ -10708,9 +10678,6 @@ msgstr "Podgląd blokuje zasoby niezgodne z jego zasadami bezpieczeństwa (na pr
 msgid "The project's server is on a different branch than this window — content can't load."
 msgstr "Serwer projektu działa na innej gałęzi niż to okno — nie można wczytać zawartości."
 
-msgid "The prompt was pasted but not submitted automatically. Review it, then press Enter to send it."
-msgstr "Podpowiedź została wklejona, ale nie wysłana automatycznie. Sprawdź ją, a następnie naciśnij Enter, aby wysłać."
-
 msgid "The properties block at the top of this doc has a formatting error. Switch to source mode to fix it."
 msgstr "Blok właściwości na górze tego dokumentu zawiera błąd formatowania. Przełącz się w tryb źródłowy, aby go poprawić."
 
@@ -10807,9 +10774,6 @@ msgstr "Usługa terminala w tle nie jest uruchomiona."
 msgid "The terminal background service stopped before the shell could start."
 msgstr "Usługa terminala w tle zatrzymała się, zanim powłoka zdążyła się uruchomić."
 
-msgid "The terminal can't run this command in the configured shell."
-msgstr "Terminal nie może wykonać tego polecenia w skonfigurowanej powłoce."
-
 msgid "The terminal couldn't start."
 msgstr "Nie udało się uruchomić terminala."
 
@@ -10827,9 +10791,6 @@ msgstr "Sesja terminala zakończyła się."
 
 msgid "The terminal stopped unexpectedly."
 msgstr "Terminal zatrzymał się nieoczekiwanie."
-
-msgid "The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead."
-msgstr "Nie znaleziono pliku wykonywalnego terminal.shell w .ok/local/config.yml. Zamiast tego używam dostępnej powłoki Windows."
 
 msgid "The token needs the repo and read:user scopes."
 msgstr "Token wymaga zakresów repo oraz read:user."
@@ -12170,9 +12131,6 @@ msgstr "Możesz dołączyć do {MAX_ATTACHMENTS} obrazów."
 
 msgid "You can change this later in <0>Settings → Sync</0>."
 msgstr "Możesz to później zmienić w <0>Ustawienia → Synchronizacja</0>."
-
-msgid "You can restore this file from the Recycle Bin."
-msgstr "Możesz przywrócić ten plik z Kosza."
 
 msgid "You can restore this file from the Trash."
 msgstr "Możesz przywrócić ten plik z Kosza."

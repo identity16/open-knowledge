@@ -5743,9 +5743,6 @@ msgstr "YAML non valide"
 msgid "It also adds any display-connection errors OpenKnowledge wrote to your user journal in the past week, each message cut to 200 characters."
 msgstr "Il ajoute aussi les erreurs de connexion à l'affichage qu'OpenKnowledge a écrites dans votre journal utilisateur la semaine dernière, chaque message étant tronqué à 200 caractères."
 
-msgid "It also adds the crash and hang records Windows logged for OpenKnowledge in the past week, without file paths, and the times of every shutdown, restart, power loss, and low-memory warning on this computer in that week, whatever caused them."
-msgstr "Il ajoute aussi les plantages et blocages qu'a consignés Windows pour OpenKnowledge la semaine dernière, sans chemins de fichiers, ainsi que les heures de chaque arrêt, redémarrage, coupure de courant et alerte de mémoire insuffisante de cet ordinateur pendant cette semaine, quelle qu'en soit la cause."
-
 msgid "It also adds the crash reports macOS recorded for OpenKnowledge and its helper processes, never another app's report, though ours do name the processes they were running alongside. Each one carries machine details macOS puts in every report: your account uid, the Mac model, and the name of the process that launched the app. On a managed machine, that launching process can be internal tooling. The identifiers that would link the bug reports you file to each other are replaced first, so a collected report is not byte-identical to the one macOS wrote."
 msgstr "Ajoute également les rapports de plantage que macOS a enregistrés pour OpenKnowledge et ses processus auxiliaires, jamais le rapport d'une autre application, même si les nôtres nomment les processus qui s'exécutaient à leurs côtés. Chacun contient des informations sur la machine que macOS inscrit dans tous les rapports : l'uid de votre compte, le modèle de Mac et le nom du processus qui a lancé l'application. Sur une machine gérée, ce processus de lancement peut être un outil interne. Les identifiants qui relieraient entre eux les rapports de bug que vous envoyez sont d'abord remplacés, de sorte qu'un rapport collecté n'est pas identique octet pour octet à celui écrit par macOS."
 
@@ -6488,9 +6485,6 @@ msgstr "Déplacer vers un nouveau volet à gauche"
 
 msgid "Move to new pane right"
 msgstr "Déplacer vers un nouveau volet à droite"
-
-msgid "Move to Recycle Bin"
-msgstr "Mettre à la Corbeille"
 
 msgid "Move to right panel"
 msgstr "Déplacer vers le panneau de droite"
@@ -7560,15 +7554,6 @@ msgstr "OpenKnowledge n'a pas trouvé cet agent sur cette machine."
 msgid "OpenKnowledge couldn't finish setting up this project. The worktree was created but not opened."
 msgstr "OpenKnowledge n’a pas pu terminer la configuration de ce projet. Le worktree a été créé, mais pas ouvert."
 
-msgid "OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead."
-msgstr "OpenKnowledge n’a pas pu lire terminal.shell dans .ok/local/config.yml. Un shell Windows disponible sera utilisé à la place."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge n’a pas pu écrire les paramètres de lancement dans .ok/local/terminal, car le dossier n’est pas contenu de manière sûre dans ce projet. Vérifiez qu’il s’agit d’un vrai dossier du projet, et non d’un lien. Claude vous demandera d’approuver OpenKnowledge."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge n’a pas pu écrire les paramètres de lancement dans .ok/local/terminal cette fois-ci. Vérifiez que le dossier est accessible en écriture. Claude vous demandera d’approuver OpenKnowledge."
-
 msgid "OpenKnowledge created a share link"
 msgstr "OpenKnowledge a créé un lien de partage"
 
@@ -8495,9 +8480,6 @@ msgstr "Reconnexion…"
 msgid "Recovered content"
 msgstr "Contenu récupéré"
 
-msgid "Recycle Bin"
-msgstr "Corbeille"
-
 msgid "Redo"
 msgstr "Rétablir"
 
@@ -9000,9 +8982,6 @@ msgstr "Réutiliser un même onglet lors des clics dans les barres latérales. D
 
 msgid "Reused if it already exists, created if not."
 msgstr "Réutilisé s'il existe déjà, créé sinon."
-
-msgid "Reveal in File Explorer"
-msgstr "Afficher dans l'Explorateur de fichiers"
 
 msgid "Reveal in Finder"
 msgstr "Afficher dans le Finder"
@@ -10449,15 +10428,6 @@ msgstr "Les paramètres du terminal ne sont pas encore chargés — réessayez d
 msgid "Terminal settings not yet loaded — try again in a moment"
 msgstr "Les paramètres du terminal ne sont pas encore chargés — réessayez dans un instant"
 
-msgid "terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead."
-msgstr "terminal.shell dans .ok/local/config.yml doit être une chaîne. Un shell Windows disponible sera utilisé à la place."
-
-msgid "terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead."
-msgstr "terminal.shell dans .ok/local/config.yml doit être un chemin Windows absolu. Un shell Windows disponible sera utilisé à la place."
-
-msgid "terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it."
-msgstr "terminal.shell dans .ok/local/config.yml prend en charge PowerShell, cmd.exe ou Git Bash pour les lancements gérés par OpenKnowledge et les chemins des fichiers déposés. Ce shell ouvre uniquement un terminal simple ; les lancements d’agents et de commandes ne s’y exécutent pas."
-
 msgid "Test connection"
 msgstr "Tester la connexion"
 
@@ -10708,9 +10678,6 @@ msgstr "L'aperçu bloque les ressources qui ne respectent pas ses règles de sé
 msgid "The project's server is on a different branch than this window — content can't load."
 msgstr "Le serveur de ce projet est sur une branche différente de cette fenêtre — le contenu ne peut pas se charger."
 
-msgid "The prompt was pasted but not submitted automatically. Review it, then press Enter to send it."
-msgstr "Le prompt a été collé, mais pas envoyé automatiquement. Vérifiez-le, puis appuyez sur Entrée pour l’envoyer."
-
 msgid "The properties block at the top of this doc has a formatting error. Switch to source mode to fix it."
 msgstr "Le bloc de propriétés en haut de ce document contient une erreur de mise en forme. Passez en mode source pour la corriger."
 
@@ -10807,9 +10774,6 @@ msgstr "Le service d'arrière-plan du terminal n'est pas en cours d'exécution."
 msgid "The terminal background service stopped before the shell could start."
 msgstr "Le service d'arrière-plan du terminal s'est arrêté avant que le shell puisse démarrer."
 
-msgid "The terminal can't run this command in the configured shell."
-msgstr "Le terminal ne peut pas exécuter cette commande dans le shell configuré."
-
 msgid "The terminal couldn't start."
 msgstr "Le terminal n'a pas pu démarrer."
 
@@ -10827,9 +10791,6 @@ msgstr "La session de terminal s'est terminée."
 
 msgid "The terminal stopped unexpectedly."
 msgstr "Le terminal s'est arrêté de façon inattendue."
-
-msgid "The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead."
-msgstr "L’exécutable terminal.shell indiqué dans .ok/local/config.yml est introuvable. Un shell Windows disponible sera utilisé à la place."
 
 msgid "The token needs the repo and read:user scopes."
 msgstr "Le jeton doit avoir les portées repo et read:user."
@@ -12170,9 +12131,6 @@ msgstr "Vous pouvez joindre jusqu'à {MAX_ATTACHMENTS} images."
 
 msgid "You can change this later in <0>Settings → Sync</0>."
 msgstr "Vous pourrez changer cela plus tard dans <0>Paramètres → Synchronisation</0>."
-
-msgid "You can restore this file from the Recycle Bin."
-msgstr "Vous pouvez restaurer ce fichier depuis la Corbeille."
 
 msgid "You can restore this file from the Trash."
 msgstr "Vous pouvez restaurer ce fichier depuis la corbeille."

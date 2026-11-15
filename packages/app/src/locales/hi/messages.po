@@ -5739,9 +5739,6 @@ msgstr "अमान्य YAML"
 msgid "It also adds any display-connection errors OpenKnowledge wrote to your user journal in the past week, each message cut to 200 characters."
 msgstr "यह पिछले सप्ताह OpenKnowledge द्वारा आपके उपयोगकर्ता जर्नल में लिखी गई डिस्प्ले कनेक्शन की त्रुटियाँ भी जोड़ता है, हर संदेश को 200 वर्णों तक छोटा करके।"
 
-msgid "It also adds the crash and hang records Windows logged for OpenKnowledge in the past week, without file paths, and the times of every shutdown, restart, power loss, and low-memory warning on this computer in that week, whatever caused them."
-msgstr "यह पिछले सप्ताह Windows द्वारा OpenKnowledge के लिए दर्ज क्रैश और अटकने के रिकॉर्ड, फ़ाइल पाथ के बिना, और उस सप्ताह इस कंप्यूटर पर हर शटडाउन, रीस्टार्ट, बिजली जाने और कम मेमोरी चेतावनी का समय भी जोड़ता है, कारण चाहे जो हो।"
-
 msgid "It also adds the crash reports macOS recorded for OpenKnowledge and its helper processes, never another app's report, though ours do name the processes they were running alongside. Each one carries machine details macOS puts in every report: your account uid, the Mac model, and the name of the process that launched the app. On a managed machine, that launching process can be internal tooling. The identifiers that would link the bug reports you file to each other are replaced first, so a collected report is not byte-identical to the one macOS wrote."
 msgstr "यह macOS द्वारा OpenKnowledge और उसकी सहायक प्रक्रियाओं के लिए दर्ज की गई क्रैश रिपोर्ट भी जोड़ता है, किसी दूसरे ऐप की रिपोर्ट कभी नहीं, हालाँकि हमारी रिपोर्ट उन प्रक्रियाओं के नाम बताती हैं जो साथ-साथ चल रही थीं। हर रिपोर्ट में मशीन का वह विवरण होता है जो macOS हर रिपोर्ट में डालता है: आपका खाता uid, Mac मॉडल, और उस प्रक्रिया का नाम जिसने ऐप शुरू किया। प्रबंधित मशीन पर वह शुरू करने वाली प्रक्रिया आंतरिक टूल हो सकती है। जो पहचानकर्ता आपकी भेजी गई बग रिपोर्टों को आपस में जोड़ सकते हैं उन्हें पहले बदल दिया जाता है, इसलिए एकत्र की गई रिपोर्ट macOS द्वारा लिखी गई रिपोर्ट से बाइट-दर-बाइट समान नहीं होती।"
 
@@ -6484,9 +6481,6 @@ msgstr "बाईं ओर नए फलक में ले जाएँ"
 
 msgid "Move to new pane right"
 msgstr "दाईं ओर नए फलक में ले जाएँ"
-
-msgid "Move to Recycle Bin"
-msgstr "रीसायकल बिन में ले जाएँ"
 
 msgid "Move to right panel"
 msgstr "दाएँ पैनल में ले जाएँ"
@@ -7556,15 +7550,6 @@ msgstr "OpenKnowledge को इस मशीन पर यह एजेंट �
 msgid "OpenKnowledge couldn't finish setting up this project. The worktree was created but not opened."
 msgstr "OpenKnowledge इस प्रोजेक्ट का सेटअप पूरा नहीं कर सका। वर्कट्री बनाई गई, लेकिन खोली नहीं गई।"
 
-msgid "OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead."
-msgstr "OpenKnowledge .ok/local/config.yml में terminal.shell नहीं पढ़ सका। इसके बजाय उपलब्ध Windows शेल का उपयोग किया जा रहा है।"
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge .ok/local/terminal में लॉन्च सेटिंग्स नहीं लिख सका, क्योंकि फ़ोल्डर इस प्रोजेक्ट के अंदर सुरक्षित रूप से मौजूद नहीं है। जाँचें कि यह प्रोजेक्ट के अंदर एक वास्तविक फ़ोल्डर है, लिंक नहीं। Claude आपसे OpenKnowledge को मंज़ूरी देने के लिए कहेगा।"
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge इस बार .ok/local/terminal में लॉन्च सेटिंग्स नहीं लिख सका। जाँचें कि फ़ोल्डर में लिखा जा सकता है। Claude आपसे OpenKnowledge को मंज़ूरी देने के लिए कहेगा।"
-
 msgid "OpenKnowledge created a share link"
 msgstr "OpenKnowledge ने साझा लिंक बनाया"
 
@@ -8491,9 +8476,6 @@ msgstr "फिर से जोड़ा जा रहा है…"
 msgid "Recovered content"
 msgstr "पुनर्प्राप्त सामग्री"
 
-msgid "Recycle Bin"
-msgstr "रीसायकल बिन"
-
 msgid "Redo"
 msgstr "फिर से करें"
 
@@ -8996,9 +8978,6 @@ msgstr "साइडबार से क्लिक करते समय ए�
 
 msgid "Reused if it already exists, created if not."
 msgstr "यदि पहले से मौजूद है तो पुन: उपयोग किया जाता है, वरना बना दिया जाता है।"
-
-msgid "Reveal in File Explorer"
-msgstr "File Explorer में दिखाएँ"
 
 msgid "Reveal in Finder"
 msgstr "Finder में दिखाएँ"
@@ -10445,15 +10424,6 @@ msgstr "टर्मिनल सेटिंग अभी लोड नही�
 msgid "Terminal settings not yet loaded — try again in a moment"
 msgstr "टर्मिनल सेटिंग अभी लोड नहीं हुईं — कुछ देर बाद फिर कोशिश करें"
 
-msgid "terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml में terminal.shell एक स्ट्रिंग होना चाहिए। इसके बजाय उपलब्ध Windows शेल का उपयोग किया जा रहा है।"
-
-msgid "terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml में terminal.shell एक निरपेक्ष Windows पथ होना चाहिए। इसके बजाय उपलब्ध Windows शेल का उपयोग किया जा रहा है।"
-
-msgid "terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it."
-msgstr ".ok/local/config.yml में terminal.shell, OpenKnowledge द्वारा प्रबंधित लॉन्च और ड्रॉप की गई फ़ाइलों के पाथ के लिए PowerShell, cmd.exe या Git Bash का समर्थन करता है। यह शेल केवल एक सामान्य टर्मिनल खोलता है; एजेंट और कमांड लॉन्च इसमें नहीं चलते।"
-
 msgid "Test connection"
 msgstr "कनेक्शन जाँचें"
 
@@ -10704,9 +10674,6 @@ msgstr "पूर्वावलोकन उन संसाधनों को
 msgid "The project's server is on a different branch than this window — content can't load."
 msgstr "इस प्रोजेक्ट का सर्वर इस विंडो से अलग ब्रांच पर है — सामग्री लोड नहीं हो सकती।"
 
-msgid "The prompt was pasted but not submitted automatically. Review it, then press Enter to send it."
-msgstr "प्रॉम्प्ट पेस्ट किया गया, लेकिन अपने आप सबमिट नहीं हुआ। इसकी समीक्षा करें, फिर भेजने के लिए Enter दबाएँ।"
-
 msgid "The properties block at the top of this doc has a formatting error. Switch to source mode to fix it."
 msgstr "इस दस्तावेज़ के ऊपर मौजूद प्रॉपर्टी ब्लॉक में एक फ़ॉर्मैटिंग त्रुटि है। इसे ठीक करने के लिए स्रोत मोड पर जाएँ।"
 
@@ -10803,9 +10770,6 @@ msgstr "टर्मिनल की बैकग्राउंड सेवा
 msgid "The terminal background service stopped before the shell could start."
 msgstr "शेल शुरू होने से पहले ही टर्मिनल की बैकग्राउंड सेवा रुक गई।"
 
-msgid "The terminal can't run this command in the configured shell."
-msgstr "टर्मिनल कॉन्फ़िगर किए गए शेल में यह कमांड नहीं चला सकता।"
-
 msgid "The terminal couldn't start."
 msgstr "टर्मिनल शुरू नहीं हो सका।"
 
@@ -10823,9 +10787,6 @@ msgstr "टर्मिनल सत्र समाप्त हो गया�
 
 msgid "The terminal stopped unexpectedly."
 msgstr "टर्मिनल अप्रत्याशित रूप से रुक गया।"
-
-msgid "The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml में terminal.shell एक्ज़ीक्यूटेबल नहीं मिला। इसके बजाय उपलब्ध Windows शेल का उपयोग किया जा रहा है।"
 
 msgid "The token needs the repo and read:user scopes."
 msgstr "टोकन को repo और read:user स्कोप चाहिए।"
@@ -12166,9 +12127,6 @@ msgstr "आप {MAX_ATTACHMENTS} तक छवियाँ संलग्न �
 
 msgid "You can change this later in <0>Settings → Sync</0>."
 msgstr "आप इसे बाद में <0>Settings → Sync</0> में बदल सकते हैं।"
-
-msgid "You can restore this file from the Recycle Bin."
-msgstr "आप इस फ़ाइल को रीसायकल बिन से पुनर्स्थापित कर सकते हैं।"
 
 msgid "You can restore this file from the Trash."
 msgstr "आप इस फ़ाइल को ट्रैश से पुनर्स्थापित कर सकते हैं।"

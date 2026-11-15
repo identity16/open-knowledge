@@ -5739,9 +5739,6 @@ msgstr "YAML tidak valid"
 msgid "It also adds any display-connection errors OpenKnowledge wrote to your user journal in the past week, each message cut to 200 characters."
 msgstr "Ini juga menambahkan galat koneksi layar yang ditulis OpenKnowledge ke jurnal pengguna Anda dalam seminggu terakhir, dengan setiap pesan dipotong menjadi 200 karakter."
 
-msgid "It also adds the crash and hang records Windows logged for OpenKnowledge in the past week, without file paths, and the times of every shutdown, restart, power loss, and low-memory warning on this computer in that week, whatever caused them."
-msgstr "Ini juga menambahkan catatan crash dan macet yang dicatat Windows untuk OpenKnowledge dalam seminggu terakhir, tanpa jalur file, serta waktu setiap pematian, mulai ulang, listrik padam, dan peringatan memori rendah di komputer ini selama minggu itu, apa pun penyebabnya."
-
 msgid "It also adds the crash reports macOS recorded for OpenKnowledge and its helper processes, never another app's report, though ours do name the processes they were running alongside. Each one carries machine details macOS puts in every report: your account uid, the Mac model, and the name of the process that launched the app. On a managed machine, that launching process can be internal tooling. The identifiers that would link the bug reports you file to each other are replaced first, so a collected report is not byte-identical to the one macOS wrote."
 msgstr "Juga menambahkan laporan kerusakan yang dicatat macOS untuk OpenKnowledge dan proses pembantunya, tidak pernah laporan aplikasi lain, meskipun laporan kami menyebutkan proses-proses yang berjalan berdampingan dengannya. Masing-masing memuat detail mesin yang dicantumkan macOS di setiap laporan: uid akun Anda, model Mac, dan nama proses yang meluncurkan aplikasi. Pada mesin terkelola, proses peluncur itu bisa berupa perkakas internal. Pengidentifikasi yang akan menghubungkan laporan bug yang Anda kirim satu sama lain diganti terlebih dahulu, sehingga laporan yang dikumpulkan tidak identik byte per byte dengan yang ditulis macOS."
 
@@ -6484,9 +6481,6 @@ msgstr "Pindahkan ke panel baru di kiri"
 
 msgid "Move to new pane right"
 msgstr "Pindahkan ke panel baru di kanan"
-
-msgid "Move to Recycle Bin"
-msgstr "Pindahkan ke Recycle Bin"
 
 msgid "Move to right panel"
 msgstr "Pindahkan ke panel kanan"
@@ -7556,15 +7550,6 @@ msgstr "OpenKnowledge tidak menemukan agen ini di mesin ini."
 msgid "OpenKnowledge couldn't finish setting up this project. The worktree was created but not opened."
 msgstr "OpenKnowledge tidak dapat menyelesaikan penyiapan proyek ini. Worktree dibuat, tetapi tidak dibuka."
 
-msgid "OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead."
-msgstr "OpenKnowledge tidak dapat membaca terminal.shell di .ok/local/config.yml. Shell Windows yang tersedia akan digunakan sebagai gantinya."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge tidak dapat menulis pengaturan peluncuran di .ok/local/terminal karena folder tersebut tidak berada dengan aman di dalam proyek ini. Pastikan folder tersebut adalah folder nyata di dalam proyek, bukan tautan. Claude akan meminta Anda menyetujui OpenKnowledge."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge tidak dapat menulis pengaturan peluncuran di .ok/local/terminal kali ini. Pastikan folder tersebut dapat ditulisi. Claude akan meminta Anda menyetujui OpenKnowledge."
-
 msgid "OpenKnowledge created a share link"
 msgstr "OpenKnowledge membuat tautan berbagi"
 
@@ -8491,9 +8476,6 @@ msgstr "Menyambung ulang…"
 msgid "Recovered content"
 msgstr "Konten yang dipulihkan"
 
-msgid "Recycle Bin"
-msgstr "Recycle Bin"
-
 msgid "Redo"
 msgstr "Ulangi"
 
@@ -8996,9 +8978,6 @@ msgstr "Pakai ulang satu tab saat Anda mengeklik lewat bilah sisi. Bila mati, se
 
 msgid "Reused if it already exists, created if not."
 msgstr "Dipakai ulang jika sudah ada, dibuat jika belum."
-
-msgid "Reveal in File Explorer"
-msgstr "Tampilkan di Penjelajah Berkas"
 
 msgid "Reveal in Finder"
 msgstr "Tampilkan di Finder"
@@ -10445,15 +10424,6 @@ msgstr "Pengaturan terminal belum dimuat — coba lagi sebentar."
 msgid "Terminal settings not yet loaded — try again in a moment"
 msgstr "Pengaturan terminal belum dimuat — coba lagi sebentar"
 
-msgid "terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead."
-msgstr "terminal.shell di .ok/local/config.yml harus berupa string. Shell Windows yang tersedia akan digunakan sebagai gantinya."
-
-msgid "terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead."
-msgstr "terminal.shell di .ok/local/config.yml harus berupa jalur Windows absolut. Shell Windows yang tersedia akan digunakan sebagai gantinya."
-
-msgid "terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it."
-msgstr "terminal.shell di .ok/local/config.yml mendukung PowerShell, cmd.exe, atau Git Bash untuk peluncuran yang dikelola OpenKnowledge dan jalur file yang diletakkan. Shell ini hanya membuka terminal biasa; peluncuran agen dan perintah tidak berjalan di dalamnya."
-
 msgid "Test connection"
 msgstr "Uji koneksi"
 
@@ -10704,9 +10674,6 @@ msgstr "Pratinjau memblokir sumber daya yang tidak memenuhi aturan keamanannya (
 msgid "The project's server is on a different branch than this window — content can't load."
 msgstr "Server proyek ini berada di branch yang berbeda dari jendela ini — konten tidak dapat dimuat."
 
-msgid "The prompt was pasted but not submitted automatically. Review it, then press Enter to send it."
-msgstr "Prompt telah ditempel, tetapi tidak dikirim secara otomatis. Tinjau prompt tersebut, lalu tekan Enter untuk mengirimnya."
-
 msgid "The properties block at the top of this doc has a formatting error. Switch to source mode to fix it."
 msgstr "Blok properti di bagian atas dokumen ini punya galat format. Beralihlah ke mode sumber untuk memperbaikinya."
 
@@ -10803,9 +10770,6 @@ msgstr "Layanan latar belakang terminal tidak berjalan."
 msgid "The terminal background service stopped before the shell could start."
 msgstr "Layanan latar belakang terminal berhenti sebelum shell sempat dimulai."
 
-msgid "The terminal can't run this command in the configured shell."
-msgstr "Terminal tidak dapat menjalankan perintah ini di shell yang dikonfigurasi."
-
 msgid "The terminal couldn't start."
 msgstr "Terminal tidak dapat dimulai."
 
@@ -10823,9 +10787,6 @@ msgstr "Sesi terminal berakhir."
 
 msgid "The terminal stopped unexpectedly."
 msgstr "Terminal berhenti tak terduga."
-
-msgid "The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead."
-msgstr "Executable terminal.shell di .ok/local/config.yml tidak ditemukan. Shell Windows yang tersedia akan digunakan sebagai gantinya."
 
 msgid "The token needs the repo and read:user scopes."
 msgstr "Token itu memerlukan cakupan repo dan read:user."
@@ -12166,9 +12127,6 @@ msgstr "Anda bisa melampirkan hingga {MAX_ATTACHMENTS} gambar."
 
 msgid "You can change this later in <0>Settings → Sync</0>."
 msgstr "Anda bisa mengubah ini nanti di <0>Pengaturan → Sinkronisasi</0>."
-
-msgid "You can restore this file from the Recycle Bin."
-msgstr "Anda dapat memulihkan berkas ini dari Recycle Bin."
 
 msgid "You can restore this file from the Trash."
 msgstr "Anda dapat memulihkan berkas ini dari Tempat Sampah."

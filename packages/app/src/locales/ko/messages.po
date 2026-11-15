@@ -5743,9 +5743,6 @@ msgstr "잘못된 YAML"
 msgid "It also adds any display-connection errors OpenKnowledge wrote to your user journal in the past week, each message cut to 200 characters."
 msgstr "또한 지난 한 주 동안 OpenKnowledge가 사용자 저널에 기록한 디스플레이 연결 오류를 각 메시지를 200자로 줄여 추가합니다."
 
-msgid "It also adds the crash and hang records Windows logged for OpenKnowledge in the past week, without file paths, and the times of every shutdown, restart, power loss, and low-memory warning on this computer in that week, whatever caused them."
-msgstr "또한 지난 한 주 동안 Windows가 OpenKnowledge에 대해 기록한 충돌 및 응답 없음 기록을 파일 경로 없이 추가하고, 그 주에 이 컴퓨터에서 발생한 모든 종료, 다시 시작, 전원 손실, 메모리 부족 경고의 시각을 원인과 관계없이 추가합니다."
-
 msgid "It also adds the crash reports macOS recorded for OpenKnowledge and its helper processes, never another app's report, though ours do name the processes they were running alongside. Each one carries machine details macOS puts in every report: your account uid, the Mac model, and the name of the process that launched the app. On a managed machine, that launching process can be internal tooling. The identifiers that would link the bug reports you file to each other are replaced first, so a collected report is not byte-identical to the one macOS wrote."
 msgstr "macOS가 OpenKnowledge와 그 보조 프로세스에 대해 기록한 충돌 보고서도 추가합니다. 다른 앱의 보고서는 절대 포함하지 않지만, 우리 보고서에는 함께 실행 중이던 프로세스의 이름이 담깁니다. 각 보고서에는 macOS가 모든 보고서에 기록하는 머신 정보가 담깁니다: 계정 uid, Mac 모델, 앱을 실행한 프로세스 이름입니다. 관리되는 기기에서는 그 실행 프로세스가 내부 도구일 수 있습니다. 사용자가 보내는 버그 신고들을 서로 연결할 수 있는 식별자는 먼저 대체되므로, 수집된 보고서는 macOS가 작성한 것과 바이트 단위로 동일하지 않습니다."
 
@@ -6488,9 +6485,6 @@ msgstr "새 패널 왼쪽으로 이동"
 
 msgid "Move to new pane right"
 msgstr "새 패널 오른쪽으로 이동"
-
-msgid "Move to Recycle Bin"
-msgstr "휴지통으로 이동"
 
 msgid "Move to right panel"
 msgstr "오른쪽 패널로 이동"
@@ -7560,15 +7554,6 @@ msgstr "OpenKnowledge가 이 컴퓨터에서 이 에이전트를 찾지 못했�
 msgid "OpenKnowledge couldn't finish setting up this project. The worktree was created but not opened."
 msgstr "OpenKnowledge가 이 프로젝트 설정을 완료하지 못했습니다. 워크트리는 생성되었지만 열리지 않았습니다."
 
-msgid "OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead."
-msgstr "OpenKnowledge가 .ok/local/config.yml의 terminal.shell을 읽을 수 없습니다. 대신 사용 가능한 Windows 셸을 사용합니다."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge."
-msgstr "폴더가 이 프로젝트 안에 안전하게 포함되어 있지 않아 OpenKnowledge가 .ok/local/terminal 아래에 실행 설정을 쓸 수 없습니다. 프로젝트 내부의 실제 폴더이며 링크가 아닌지 확인하세요. Claude가 OpenKnowledge 승인을 요청합니다."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge."
-msgstr "이번에는 OpenKnowledge가 .ok/local/terminal 아래에 실행 설정을 쓸 수 없습니다. 폴더에 쓰기 권한이 있는지 확인하세요. Claude가 OpenKnowledge 승인을 요청합니다."
-
 msgid "OpenKnowledge created a share link"
 msgstr "OpenKnowledge에서 공유 링크 생성"
 
@@ -8495,9 +8480,6 @@ msgstr "다시 연결 중…"
 msgid "Recovered content"
 msgstr "복구된 콘텐츠"
 
-msgid "Recycle Bin"
-msgstr "휴지통"
-
 msgid "Redo"
 msgstr "다시 실행"
 
@@ -9000,9 +8982,6 @@ msgstr "사이드바를 클릭할 때 탭 하나를 재사용합니다. 끄면 �
 
 msgid "Reused if it already exists, created if not."
 msgstr "이미 있으면 재사용하고, 없으면 생성합니다."
-
-msgid "Reveal in File Explorer"
-msgstr "파일 탐색기에서 보기"
 
 msgid "Reveal in Finder"
 msgstr "Finder에서 보기"
@@ -10449,15 +10428,6 @@ msgstr "터미널 설정 미로드 상태. 잠시 후 다시 시도하세요."
 msgid "Terminal settings not yet loaded — try again in a moment"
 msgstr "터미널 설정을 아직 불러오지 못했습니다. 잠시 후 다시 시도합니다."
 
-msgid "terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml의 terminal.shell은 문자열이어야 합니다. 대신 사용 가능한 Windows 셸을 사용합니다."
-
-msgid "terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml의 terminal.shell은 Windows 절대 경로여야 합니다. 대신 사용 가능한 Windows 셸을 사용합니다."
-
-msgid "terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it."
-msgstr ".ok/local/config.yml의 terminal.shell은 OpenKnowledge 관리 실행 및 드롭된 파일 경로에 PowerShell, cmd.exe 또는 Git Bash를 지원합니다. 이 셸에서는 일반 터미널만 열리며, 에이전트 및 명령 실행은 여기서 작동하지 않습니다."
-
 msgid "Test connection"
 msgstr "연결 테스트"
 
@@ -10708,9 +10678,6 @@ msgstr "미리보기는 보안 규칙을 충족하지 않는 리소스를 차단
 msgid "The project's server is on a different branch than this window — content can't load."
 msgstr "이 프로젝트의 서버가 이 창과 다른 브랜치에 있어 콘텐츠를 불러올 수 없습니다."
 
-msgid "The prompt was pasted but not submitted automatically. Review it, then press Enter to send it."
-msgstr "프롬프트를 붙여 넣었지만 자동으로 제출하지 않았습니다. 내용을 검토한 다음 Enter를 눌러 전송하세요."
-
 msgid "The properties block at the top of this doc has a formatting error. Switch to source mode to fix it."
 msgstr "이 문서 위쪽의 속성 블록에 서식 오류가 있습니다. 소스 모드로 전환하여 수정하세요."
 
@@ -10807,9 +10774,6 @@ msgstr "터미널 백그라운드 서비스가 실행되고 있지 않습니다.
 msgid "The terminal background service stopped before the shell could start."
 msgstr "셸이 시작되기 전에 터미널 백그라운드 서비스가 중지되었습니다."
 
-msgid "The terminal can't run this command in the configured shell."
-msgstr "터미널이 구성된 셸에서 이 명령을 실행할 수 없습니다."
-
 msgid "The terminal couldn't start."
 msgstr "터미널을 시작하지 못했습니다."
 
@@ -10827,9 +10791,6 @@ msgstr "터미널 세션 종료."
 
 msgid "The terminal stopped unexpectedly."
 msgstr "터미널 예기치 않게 중지됨."
-
-msgid "The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml의 terminal.shell 실행 파일을 찾을 수 없습니다. 대신 사용 가능한 Windows 셸을 사용합니다."
 
 msgid "The token needs the repo and read:user scopes."
 msgstr "토큰에 repo 및 read:user 범위가 필요합니다."
@@ -12170,9 +12131,6 @@ msgstr "{MAX_ATTACHMENTS}개 이미지를 첨부할 수 있습니다."
 
 msgid "You can change this later in <0>Settings → Sync</0>."
 msgstr "나중에 <0>설정 → 동기화</0>에서 변경할 수 있습니다."
-
-msgid "You can restore this file from the Recycle Bin."
-msgstr "휴지통에서 이 파일을 복원할 수 있습니다."
 
 msgid "You can restore this file from the Trash."
 msgstr "휴지통에서 이 파일을 복원할 수 있습니다."

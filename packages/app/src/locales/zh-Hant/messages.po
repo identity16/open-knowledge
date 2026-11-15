@@ -5743,9 +5743,6 @@ msgstr "無效的 YAML"
 msgid "It also adds any display-connection errors OpenKnowledge wrote to your user journal in the past week, each message cut to 200 characters."
 msgstr "它還會加入 OpenKnowledge 在過去一週內寫入你的使用者日誌的顯示連線錯誤，每則訊息截斷為 200 個字元。"
 
-msgid "It also adds the crash and hang records Windows logged for OpenKnowledge in the past week, without file paths, and the times of every shutdown, restart, power loss, and low-memory warning on this computer in that week, whatever caused them."
-msgstr "它還會加入 Windows 在過去一週內為 OpenKnowledge 記錄的當機與沒有回應記錄（不含檔案路徑），以及這台電腦在那一週內每次關機、重新啟動、斷電和記憶體不足警告的時間，無論原因為何。"
-
 msgid "It also adds the crash reports macOS recorded for OpenKnowledge and its helper processes, never another app's report, though ours do name the processes they were running alongside. Each one carries machine details macOS puts in every report: your account uid, the Mac model, and the name of the process that launched the app. On a managed machine, that launching process can be internal tooling. The identifiers that would link the bug reports you file to each other are replaced first, so a collected report is not byte-identical to the one macOS wrote."
 msgstr "還會加入 macOS 為 OpenKnowledge 及其輔助處理程序記錄的當機報告，絕不包含其他應用程式的報告，不過我們自己的報告會列出與之同時執行的處理程序。每份報告都含有 macOS 寫入所有報告的機器資訊：你的帳戶 uid、Mac 機型，以及啟動該應用程式的處理程序名稱。在受管理的裝置上，該啟動處理程序可能是內部工具。會先替換掉可能將你提交的多份問題報告相互關聯的識別碼，因此收集到的報告與 macOS 寫入的原文並非逐位元組相同。"
 
@@ -6488,9 +6485,6 @@ msgstr "移動到左側新窗格"
 
 msgid "Move to new pane right"
 msgstr "移動到右側新窗格"
-
-msgid "Move to Recycle Bin"
-msgstr "移到資源回收筒"
 
 msgid "Move to right panel"
 msgstr "移到右側面板"
@@ -7560,15 +7554,6 @@ msgstr "OpenKnowledge 未在此裝置上找到該代理程式。"
 msgid "OpenKnowledge couldn't finish setting up this project. The worktree was created but not opened."
 msgstr "OpenKnowledge 無法完成此專案的設定。工作樹已建立，但未開啟。"
 
-msgid "OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead."
-msgstr "OpenKnowledge 無法讀取 .ok/local/config.yml 中的 terminal.shell，將改用可用的 Windows shell。"
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge 無法在 .ok/local/terminal 下寫入啟動設定，因為該資料夾未安全地包含在此專案中。請確認它是專案內的真實資料夾，而不是連結。Claude 將要求你核准 OpenKnowledge。"
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge."
-msgstr "OpenKnowledge 此次無法在 .ok/local/terminal 下寫入啟動設定。請確認該資料夾可寫入。Claude 將要求你核准 OpenKnowledge。"
-
 msgid "OpenKnowledge created a share link"
 msgstr "OpenKnowledge 建立了分享連結"
 
@@ -8495,9 +8480,6 @@ msgstr "正在重新連線…"
 msgid "Recovered content"
 msgstr "已復原的內容"
 
-msgid "Recycle Bin"
-msgstr "資源回收筒"
-
 msgid "Redo"
 msgstr "重做"
 
@@ -9000,9 +8982,6 @@ msgstr "在側邊欄中一路點下去時重複使用同一個分頁。關掉之
 
 msgid "Reused if it already exists, created if not."
 msgstr "如果已經存在就重複使用，否則就建立。"
-
-msgid "Reveal in File Explorer"
-msgstr "在檔案總管中顯示"
 
 msgid "Reveal in Finder"
 msgstr "在 Finder 中顯示"
@@ -10449,15 +10428,6 @@ msgstr "終端機設定尚未載入——請稍候再試。"
 msgid "Terminal settings not yet loaded — try again in a moment"
 msgstr "終端機設定尚未載入——請稍候再試"
 
-msgid "terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml 中的 terminal.shell 必須是字串，將改用可用的 Windows shell。"
-
-msgid "terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead."
-msgstr ".ok/local/config.yml 中的 terminal.shell 必須是 Windows 絕對路徑，將改用可用的 Windows shell。"
-
-msgid "terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it."
-msgstr ".ok/local/config.yml 中的 terminal.shell 支援使用 PowerShell、cmd.exe 或 Git Bash 執行 OpenKnowledge 管理的啟動以及插入拖放檔案的路徑。此 shell 僅開啟一般終端；代理程式和命令啟動無法在其中執行。"
-
 msgid "Test connection"
 msgstr "測試連線"
 
@@ -10708,9 +10678,6 @@ msgstr "預覽會擋掉不符合它安全性規則的資源（例如純 http:// 
 msgid "The project's server is on a different branch than this window — content can't load."
 msgstr "該專案的伺服器所在分支與此視窗不一致，內容無法載入。"
 
-msgid "The prompt was pasted but not submitted automatically. Review it, then press Enter to send it."
-msgstr "提示詞已貼上，但未自動提交。請檢查內容，然後按 Enter 傳送。"
-
 msgid "The properties block at the top of this doc has a formatting error. Switch to source mode to fix it."
 msgstr "這份文件最上面的屬性區塊有格式錯誤。請切換到原始碼模式修正。"
 
@@ -10807,9 +10774,6 @@ msgstr "終端機背景服務未在執行。"
 msgid "The terminal background service stopped before the shell could start."
 msgstr "終端機背景服務在 shell 啟動前就已停止。"
 
-msgid "The terminal can't run this command in the configured shell."
-msgstr "終端機無法在設定的 shell 中執行此命令。"
-
 msgid "The terminal couldn't start."
 msgstr "終端機無法啟動。"
 
@@ -10827,9 +10791,6 @@ msgstr "終端機工作階段已結束。"
 
 msgid "The terminal stopped unexpectedly."
 msgstr "終端機非預期地停止了。"
-
-msgid "The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead."
-msgstr "找不到 .ok/local/config.yml 中指定的 terminal.shell 執行檔，將改用可用的 Windows shell。"
 
 msgid "The token needs the repo and read:user scopes."
 msgstr "這個權杖需要 repo 和 read:user 權限範圍。"
@@ -12170,9 +12131,6 @@ msgstr "你最多可以附加 {MAX_ATTACHMENTS} 張圖片。"
 
 msgid "You can change this later in <0>Settings → Sync</0>."
 msgstr "之後可以在<0>「設定 → 同步」</0>中變更。"
-
-msgid "You can restore this file from the Recycle Bin."
-msgstr "你可以從資源回收筒還原此檔案。"
 
 msgid "You can restore this file from the Trash."
 msgstr "你可以從垃圾桶還原此檔案。"
