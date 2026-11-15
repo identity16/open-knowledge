@@ -63,10 +63,6 @@ describe('detectDesktop — platform gate (FR10)', () => {
 });
 
 describe('detectDesktop — Linux install resolution', () => {
-  const _WIN_EXE =
-    'C:\\Users\\u\\AppData\\Local\\Programs\\@inkeepopen-knowledge-desktop\\OpenKnowledge.exe';
-  const _BETA_WIN_EXE =
-    'C:\\Users\\u\\AppData\\Local\\Programs\\openknowledge-beta-desktop\\OpenKnowledge Beta.exe';
   const DEB_EXE = '/opt/OpenKnowledge/openknowledge';
   const BETA_DEB_EXE = '/opt/OpenKnowledge Beta/openknowledge-beta';
 
@@ -317,9 +313,6 @@ describe('detectDesktop — dev channel', () => {
 });
 
 describe('detectDesktop — headless gate (FR9 — CI is intentionally NOT a trigger)', () => {
-  const _WIN_EXE =
-    'C:\\Users\\u\\AppData\\Local\\Programs\\@inkeepopen-knowledge-desktop\\OpenKnowledge.exe';
-
   test('isTTY=false → headless', () => {
     const result = detectDesktop(baseDeps({ isTTY: false, statSync: statForFile(APP_EXEC) }));
     expect(result.available).toBe(false);

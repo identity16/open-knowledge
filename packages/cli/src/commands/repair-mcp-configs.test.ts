@@ -28,6 +28,19 @@ const BUNDLE_ABSOLUTE = {
 const SYMLINK = { command: '/usr/local/bin/ok', args: ['mcp'] };
 
 describe('repairMcpConfigs', () => {
+  it('preserves recognized legacy launcher configuration without clobbering it', () => {
+    const configPath = writeClaude({
+      command: 'powershell',
+      args: ['-NoProfile', '-NonInteractive', '-Command', '# ok-mcp-win-v1\nlegacy launcher'],
+    });
+    const before = readFileSync(configPath, 'utf-8');
+
+    const result = repairMcpConfigs({ projectDir, home: fakeHome });
+
+    expect(result.repairedCount).toBe(0);
+    expect(result.outcomes.find((o) => o.editorId === 'claude')?.outcome).toBe('canonical');
+    expect(readFileSync(configPath, 'utf-8')).toBe(before);
+  });
   let testDir: string;
   let fakeHome: string;
   let projectDir: string;

@@ -224,13 +224,37 @@ describe('repairSkills — project sweep (AC-A1, AC-A2, AC-A3)', () => {
 });
 
 describe('repairSkills — project sweep create-if-wired gate', () => {
+  it('creates a project SKILL.md for a host wired with the legacy launcher sentinel', async () => {
+    writeFileSync(join(scratch.project, '.mcp.json'), LEGACY_WIRED_MCP_JSON);
+
+    const written: Array<{ home: string; version: string }> = [];
+    const result = await repairSkills({
+      projectDir: scratch.project,
+      home: scratch.home,
+      logger: (event) => logEvents.push(event),
+      deps: depsBuilder({
+        projectBundleDir,
+        discoveryBundleDir,
+        bundledVersion: '9.9.9',
+        recordedVersion: '9.9.9',
+        writtenVersions: written,
+      }),
+    });
+
+    if (result.status !== 'done' || result.project.outcome !== 'done')
+      throw new Error('unreachable');
+    expect(result.project.entries.find((e) => e.editorId === 'claude')?.outcome).toBe('created');
+    expect(
+      existsSync(join(scratch.project, '.claude', 'skills', PROJECT_SKILL_DIR_NAME, 'SKILL.md')),
+    ).toBe(true);
+  });
   let scratch: ReturnType<typeof mkScratch>;
   let projectBundleDir: string;
   let discoveryBundleDir: string;
   let logEvents: RepairSkillsLogEvent[];
 
   const UNWIRED_MCP_JSON = JSON.stringify({ mcpServers: { other: { command: 'node' } } });
-  const _OK_WIRED_MCP_JSON_WIN = JSON.stringify({
+  const LEGACY_WIRED_MCP_JSON = JSON.stringify({
     mcpServers: {
       'open-knowledge': {
         command: 'powershell',

@@ -486,6 +486,33 @@ describe('stopServerForRemoval', () => {
     expect(warnings[0]).not.toHaveProperty('nativeFailures');
   });
 
+  test('does not signal or warn when the holder exits between inspection and the stop signal', async () => {
+    const pid = await startServer(`
+      process.send('ready');
+      setInterval(() => {}, 1000);
+    `);
+    const start = readHolderProcessStart(pid);
+    if (start === null) throw new Error('Could not read fixture process start time');
+    const readProcessStart = vi
+      .fn<(pid: number) => ProcessStart | null>()
+      .mockReturnValueOnce(start)
+      .mockReturnValue(null);
+    const isAlive = vi
+      .fn()
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(true)
+      .mockReturnValueOnce(false);
+
+    expect(await stopServerForRemoval(dir, { readProcessStart, isAlive })).toEqual({
+      stopped: 0,
+      failed: [],
+    });
+    expect(readProcessStart).toHaveBeenCalledTimes(2);
+    expect(warnings).toEqual([]);
+    expect(isAlive).toHaveBeenCalledTimes(3);
+    expect(isProcessAlive(pid)).toBe(true);
+  });
+
   test('skips the lock when its holder exits while inspection reads its start', async () => {
     const pid = await startServer(`
       process.send('ready');

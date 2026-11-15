@@ -423,6 +423,17 @@ describe('CHAIN_V2', () => {
   });
 });
 
+describe('POSIX launcher platform selection', () => {
+  it('produces the Unix chain shape for any non-win32 platformName', () => {
+    for (const platformName of ['darwin', 'linux'] as const) {
+      expect(buildManagedServerEntry({ mode: 'published', platformName })).toEqual({
+        command: '/bin/sh',
+        args: ['-l', '-c', CHAIN_V2],
+      });
+    }
+  });
+});
+
 describe('buildManagedServerEntry', () => {
   const originalArgv1 = process.argv[1];
   beforeEach(() => {
@@ -628,6 +639,41 @@ describe('isOwnManagedEntry (MCP pre-approval trust gate)', () => {
   });
 });
 
+describe('MCP pre-approval boundaries', () => {
+  it('rejects an injected environment on the POSIX canonical', () => {
+    expect(
+      isOwnManagedEntry({
+        command: '/bin/sh',
+        args: ['-l', '-c', CHAIN_V2],
+        env: { HOST: '127.0.0.1' },
+      }),
+    ).toBe(false);
+  });
+  it('false for the OpenCode array-command shapes (outside the pre-approved set by design)', () => {
+    expect(
+      isOwnManagedEntry({
+        type: 'local',
+        enabled: true,
+        command: ['/bin/sh', '-l', '-c', CHAIN_V2],
+      }),
+    ).toBe(false);
+    expect(
+      isOwnManagedEntry({
+        type: 'local',
+        enabled: true,
+        command: [
+          'powershell',
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          LEGACY_LAUNCHER_ENTRY.args[3],
+        ],
+        environment: { HOST: '127.0.0.1' },
+      }),
+    ).toBe(false);
+  });
+});
+
 describe('JSON encoding round-trip', () => {
   it('chain entry survives JSON.stringify/parse losslessly', () => {
     const entry = buildManagedServerEntry({ mode: 'published' });
@@ -652,12 +698,66 @@ describe('resolveEditorTargets', () => {
   });
 });
 
-const _WIN_CANONICAL = {
+const LEGACY_LAUNCHER_ENTRY = {
   command: 'powershell',
   args: ['-NoProfile', '-NonInteractive', '-Command', '# ok-mcp-win-v1\n'],
 };
 
-describe('isEntryUpToDate (Windows shapes, recognized on every platform)', () => {
+describe('legacy launcher configuration recognition', () => {
+  it('recognizes a legacy launcher without executing it', () => {
+    expect(isEntryUpToDate(LEGACY_LAUNCHER_ENTRY)).toBe(true);
+  });
+  it('true when the body drifts but keeps the Windows sentinel', () => {
+    expect(
+      isEntryUpToDate({
+        command: 'powershell',
+        args: [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          `${LEGACY_LAUNCHER_ENTRY.args[3]}\n# drift tolerated\nexit 127`,
+        ],
+      }),
+    ).toBe(true);
+  });
+  it('true for the OpenCode Windows entry shape (array command, no args key)', () => {
+    expect(
+      isEntryUpToDate({
+        type: 'local',
+        enabled: true,
+        command: [
+          'powershell',
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          LEGACY_LAUNCHER_ENTRY.args[3],
+        ],
+      }),
+    ).toBe(true);
+  });
+  it('false for stale or malformed Windows-shaped entries', () => {
+    for (const bad of [
+      {
+        command: 'powershell',
+        args: ['-NonInteractive', '-NoProfile', '-Command', LEGACY_LAUNCHER_ENTRY.args[3]],
+      },
+      { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-Command'] },
+      { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-Command', 'echo hi'] },
+      {
+        command: 'pwsh',
+        args: ['-NoProfile', '-NonInteractive', '-Command', LEGACY_LAUNCHER_ENTRY.args[3]],
+      },
+      { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-Command', CHAIN_V2] },
+      { command: '/bin/sh', args: ['-l', '-c', LEGACY_LAUNCHER_ENTRY.args[3]] },
+      {
+        type: 'local',
+        command: ['powershell', '-NoProfile', '-Command', LEGACY_LAUNCHER_ENTRY.args[3]],
+      },
+      { type: 'local', command: ['powershell', '-NoProfile', '-NonInteractive', '-Command'] },
+    ]) {
+      expect(isEntryUpToDate(bad)).toBe(false);
+    }
+  });
   it('false for the hand-fixed cmd workaround shape (gets migrated forward)', () => {
     expect(
       isEntryUpToDate({
