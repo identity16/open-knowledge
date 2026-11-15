@@ -568,8 +568,7 @@ function ReportBugDialog({
                               It also adds any display-connection errors OpenKnowledge wrote to your
                               user journal in the past week, each message cut to 200 characters.
                             </Trans>
-                          )}
-                          {false}{' '}
+                          )}{' '}
                           {isMacOS && (
                             <Trans>
                               It also adds the crash reports macOS recorded for OpenKnowledge and

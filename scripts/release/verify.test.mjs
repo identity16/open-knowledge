@@ -9,7 +9,7 @@ test('an app-only change lints, typechecks app and its consumers, and runs relat
   assert.deepEqual(plan.typecheck, ['app', 'cli', 'desktop']);
   assert.deepEqual(
     plan.tests.map((entry) => entry.config),
-    ['vitest.config.ts', 'vitest.dom.config.ts'],
+    ['vitest.unit.config.ts', 'vitest.dom.config.ts'],
   );
   assert.deepEqual(plan.tests[0].sources, ['src/App.tsx']);
   assert.deepEqual(plan.reactCompiler, ['src/App.tsx']);

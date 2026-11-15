@@ -279,7 +279,7 @@ describe('ReportBugDialog', () => {
   });
 
   test('omits the macOS crash-report sentence off macOS', async () => {
-    installBridge({ platform: 'win32' });
+    installBridge({ platform: 'linux' });
     await renderDialog();
     await userEvent.click(screen.getByRole('button', { name: "What's included" }));
 
@@ -294,7 +294,6 @@ describe('ReportBugDialog', () => {
   test.each([
     ['darwin', /low-memory reports macOS wrote/],
     ['linux', /out-of-memory kills of OpenKnowledge that the system journal recorded/],
-    [/crash and hang records Windows logged/],
   ])('shows only the %s operating-system records sentence', async (platform, own) => {
     installBridge({ platform });
     await renderDialog();
@@ -303,7 +302,6 @@ describe('ReportBugDialog', () => {
     const sentences = [
       /low-memory reports macOS wrote/,
       /out-of-memory kills of OpenKnowledge that the system journal recorded/,
-      /crash and hang records Windows logged/,
     ];
     for (const sentence of sentences) {
       if (sentence.source === own.source) expect(screen.getByText(sentence)).not.toBeNull();
