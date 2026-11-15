@@ -77,6 +77,50 @@ function step(label, command, args, cwd = root) {
   return { label, ok, seconds };
 }
 
+export function verificationCommands(plan) {
+  const commands = [];
+  const add = (label, command, args, cwd = root) => commands.push({ label, command, args, cwd });
+  if (plan.biome.length > 0)
+    add('biome', 'pnpm', ['exec', 'biome', 'check', '--error-on-warnings', ...plan.biome]);
+  if (plan.oxlint.length > 0)
+    add('oxlint', 'pnpm', ['exec', 'oxlint', '--max-warnings', '0', ...plan.oxlint]);
+  if (plan.typecheck.includes('desktop')) {
+    add('build cli types for desktop', 'pnpm', ['--dir', 'packages/cli', 'run', 'build:cli']);
+    add('build cli skill assets for desktop', 'pnpm', [
+      '--dir',
+      'packages/cli',
+      'run',
+      'build:skill-asset',
+    ]);
+  }
+  for (const name of plan.typecheck)
+    add(`typecheck ${name}`, 'pnpm', ['--dir', `packages/${name}`, 'run', 'typecheck']);
+  if (plan.reactCompiler.length > 0)
+    add(
+      'react compiler app',
+      'node',
+      ['scripts/check-react-compiler.ts', ...plan.reactCompiler],
+      resolve(root, 'packages/app'),
+    );
+  for (const { name, config, sources } of plan.tests)
+    add(
+      `tests ${name} ${config}`,
+      'pnpm',
+      ['exec', 'vitest', 'related', '--run', '--config', config, '--passWithNoTests', ...sources],
+      resolve(root, `packages/${name}`),
+    );
+  if (plan.releaseScripts)
+    add('release script tests', 'node', [
+      '--test',
+      'scripts/release/cache-preflight.test.mjs',
+      'scripts/release/channel.test.mjs',
+      'scripts/release/deploy-local.test.mjs',
+      'scripts/release/verify.test.mjs',
+      'scripts/release/preview.test.mjs',
+    ]);
+  return commands;
+}
+
 async function main() {
   await assertCachesRespond();
   const base =
@@ -93,58 +137,8 @@ async function main() {
   const plan = planVerify(files);
   console.log(`Verifying ${files.length} changed files against ${base.slice(0, 12)}.`);
   const results = [];
-  if (plan.biome.length > 0)
-    results.push(
-      step('biome', 'pnpm', ['exec', 'biome', 'check', '--error-on-warnings', ...plan.biome]),
-    );
-  if (plan.oxlint.length > 0)
-    results.push(step('oxlint', 'pnpm', ['exec', 'oxlint', '--max-warnings', '0', ...plan.oxlint]));
-  if (plan.typecheck.includes('desktop')) {
-    results.push(
-      step('build cli types for desktop', 'pnpm', ['--dir', 'packages/cli', 'run', 'build:cli']),
-    );
-    results.push(
-      step('build cli skill assets for desktop', 'pnpm', [
-        '--dir',
-        'packages/cli',
-        'run',
-        'build:skill-asset',
-      ]),
-    );
-  }
-  for (const name of plan.typecheck)
-    results.push(
-      step(`typecheck ${name}`, 'pnpm', ['--dir', `packages/${name}`, 'run', 'typecheck']),
-    );
-  if (plan.reactCompiler.length > 0)
-    results.push(
-      step(
-        'react compiler app',
-        'node',
-        ['scripts/check-react-compiler.ts', ...plan.reactCompiler],
-        resolve(root, 'packages/app'),
-      ),
-    );
-  for (const { name, config, sources } of plan.tests)
-    results.push(
-      step(
-        `tests ${name} ${config}`,
-        'pnpm',
-        ['exec', 'vitest', 'related', '--run', '--config', config, '--passWithNoTests', ...sources],
-        resolve(root, `packages/${name}`),
-      ),
-    );
-  if (plan.releaseScripts)
-    results.push(
-      step('release script tests', 'node', [
-        '--test',
-        'scripts/release/cache-preflight.test.mjs',
-        'scripts/release/channel.test.mjs',
-        'scripts/release/deploy-local.test.mjs',
-        'scripts/release/verify.test.mjs',
-        'scripts/release/preview.test.mjs',
-      ]),
-    );
+  for (const command of verificationCommands(plan))
+    results.push(step(command.label, command.command, command.args, command.cwd));
   console.log('\nSummary');
   for (const result of results)
     console.log(`  ${result.ok ? '✓' : '✗'} ${result.label} ${result.seconds}s`);
