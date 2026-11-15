@@ -4,14 +4,15 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   isNewerRelease,
-  publishRelease,
-  stageRelease,
-  promoteRelease,
   preflightRelease,
+  promoteRelease,
+  publishRelease,
   stagedReleaseInventory,
+  stageRelease,
   verifyUploadedInventory,
 } from './publish-release.mjs';
-import { releasePlan, releaseFileDigest } from './release-plan.mjs';
+import { releaseFileDigest, releasePlan } from './release-plan.mjs';
+import { verificationGithub } from './verification.test-helper.mjs';
 
 const fixtures = [];
 afterEach(() => {
@@ -26,7 +27,7 @@ function fixture() {
   for (const name of files) writeFileSync(join(path, name), `content:${name}`);
   writeFileSync(
     join(path, 'checksums.txt'),
-    files.map((name) => `${releaseFileDigest(join(path, name))}  ${name}`).join('\n') + '\n',
+    `${files.map((name) => `${releaseFileDigest(join(path, name))}  ${name}`).join('\n')}\n`,
   );
   writeFileSync(join(path, 'release-assets.json'), JSON.stringify([...files, 'checksums.txt']));
   return { path, plan, inventory: stagedReleaseInventory(path, plan.version) };
@@ -34,11 +35,14 @@ function fixture() {
 
 function github(f, corrupt = false, tagSha = null, listingLag = 0) {
   const sha = 'a'.repeat(40);
+  const verification = verificationGithub(sha);
   let draft = null;
   let hiddenListings = 0;
   let latest = { tag_name: 'identity16-v0.76.0-identity16.3' };
   const invoke = vi.fn((args) => {
     const [command, operation] = args;
+    if ((command === 'api' && operation.includes('/actions/')) || command === 'run')
+      return verification.invoke(args);
     if (command === 'api') {
       if (operation.includes('/compare/'))
         return JSON.stringify({ status: 'ahead', merge_base_commit: { sha } });
@@ -93,6 +97,7 @@ function github(f, corrupt = false, tagSha = null, listingLag = 0) {
   });
   return {
     invoke,
+    verification,
     setLatest: (value) => {
       latest = { tag_name: `identity16-v${value}` };
     },
@@ -105,6 +110,28 @@ function github(f, corrupt = false, tagSha = null, listingLag = 0) {
 }
 
 describe('atomic publication', () => {
+  test('does not create or upload a release without completed verification for its source', () => {
+    const f = fixture();
+    const g = github(f);
+    g.verification.receipt.status = 'running';
+    expect(() => publishRelease(f.plan.version, f.path, g.env, g.invoke)).toThrow('receipt');
+    expect(g.invoke.mock.calls.some(([args]) => args[0] === 'release')).toBe(false);
+  });
+
+  test('keeps the draft unpublished if verification is revoked after staging', () => {
+    const f = fixture();
+    const g = github(f);
+    const proof = stageRelease(f.plan.version, f.path, g.env.GITHUB_SHA, g.env, g.invoke);
+    g.verification.run.conclusion = 'failure';
+    expect(() => promoteRelease(proof, g.env, g.invoke)).toThrow('Wait for successful');
+    expect(g.invoke.mock.calls.some(([args]) => args[0] === 'release' && args[1] === 'edit')).toBe(
+      false,
+    );
+    expect(g.invoke.mock.calls.some(([args]) => args[0] === 'api' && args.includes('POST'))).toBe(
+      false,
+    );
+  });
+
   test('publishes only after uploaded hashes and sizes match the staged inventory', () => {
     const f = fixture();
     const g = github(f);
@@ -163,9 +190,13 @@ describe('atomic publication', () => {
     const f = fixture();
     const g = github(f);
     expect(preflightRelease(f.plan.version, g.env.GITHUB_SHA, g.env, g.invoke)).toBeNull();
-    expect(g.invoke.mock.calls.every(([args]) => args[0] === 'api' && !args.includes('POST'))).toBe(
-      true,
-    );
+    expect(
+      g.invoke.mock.calls.every(
+        ([args]) =>
+          (args[0] === 'api' && !args.includes('POST')) ||
+          (args[0] === 'run' && args[1] === 'download'),
+      ),
+    ).toBe(true);
     g.setLatest('0.76.0-identity16.5');
     expect(() => preflightRelease(f.plan.version, g.env.GITHUB_SHA, g.env, g.invoke)).toThrow(
       /newer/,

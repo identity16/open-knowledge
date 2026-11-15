@@ -30,6 +30,10 @@ A red is yours when it is in a test you added or edited or names a file you chan
 - `scripts/release`: release, local deploy, verify and preview tooling
 - Upstream changes come in only through the `upstream-sync` skill.
 
+## Review
+
+Before reviewing a change, read [CODING_STANDARDS.md](./CODING_STANDARDS.md).
+
 ## Comment policy
 
 Write no comments: put explanation in names, types, tests, the commit message or a doc. `pnpm run lint` enforces this and its diagnostic names the allowed forms (tool directives, `@deprecated`, `STOP:`/`WARN:`/`UPSTREAM(...)` markers, precedent citations). The full policy is [`lint-plugins/no-comments/README.md`](./lint-plugins/no-comments/README.md).

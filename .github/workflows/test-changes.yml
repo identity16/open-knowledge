@@ -1,0 +1,41 @@
+name: Test changes
+on:
+  pull_request:
+    branches: [main]
+cache-mode: none
+permissions:
+  contents: read
+concurrency:
+  group: test-changes-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: '.node-version'
+          package-manager-cache: false
+      - name: Install the inventory dependencies without lifecycle scripts
+        run: |
+          npm install --global pnpm@12.8.1
+          pnpm --filter open-knowledge install --frozen-lockfile --ignore-scripts
+      - name: Compare test definitions for review
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          TEST_BASE_SHA=$(git merge-base "$BASE_SHA" "$HEAD_SHA")
+          pnpm exec node scripts/test-changes.mjs "$TEST_BASE_SHA" "$HEAD_SHA" "$RUNNER_TEMP/test-changes.json" "$GITHUB_STEP_SUMMARY"
+      - name: Test the inventory scanner
+        run: pnpm exec vitest run --config vitest.scripts.config.ts scripts/test-changes.test.mjs
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: test-definition-changes
+          path: ${{ runner.temp }}/test-changes.json
+          if-no-files-found: error
