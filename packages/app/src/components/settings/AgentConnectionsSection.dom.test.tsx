@@ -892,7 +892,7 @@ describe('AgentConnectionsSection', () => {
 });
 
 describe('AgentConnectionsSection: external apps on the host OS', () => {
-  function setHostPlatform(platform: 'darwin' | 'win32' | 'linux' | undefined): void {
+  function setHostPlatform(platform: 'darwin' | 'linux' | undefined): void {
     (window as { okDesktop?: unknown }).okDesktop =
       platform === undefined ? undefined : { platform };
   }
@@ -903,7 +903,7 @@ describe('AgentConnectionsSection: external apps on the host OS', () => {
   }
 
   beforeEach(() => {
-    restrictHandoffTargetPlatforms({ codex: ['darwin', 'win32'] });
+    restrictHandoffTargetPlatforms({ codex: ['darwin'] });
     states = {
       'claude-code': { installed: false },
       codex: { installed: false },

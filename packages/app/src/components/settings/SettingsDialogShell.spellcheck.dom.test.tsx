@@ -88,7 +88,7 @@ vi.doMock('@/lib/handoff/use-claude-desktop-integration', () => ({
 const { SettingsDialogShell } = await import('./SettingsDialogShell');
 const { TooltipProvider } = await import('@/components/ui/tooltip');
 
-function setHost(platform: 'darwin' | 'win32' | 'linux' | null) {
+function setHost(platform: 'darwin' | 'linux' | null) {
   const w = window as unknown as { okDesktop?: unknown };
   w.okDesktop = platform === null ? undefined : { platform, config: { ptyAvailable: false } };
 }
@@ -101,7 +101,7 @@ async function searchSpellcheck(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('SettingsDialogShell spelling search entries', () => {
-  test.each(['darwin', 'win32', 'linux', null] as const)(
+  test.each(['darwin', 'linux', null] as const)(
     'Escape from settings search closes Settings on %s',
     async (platform) => {
       setHost(platform);
@@ -125,7 +125,7 @@ describe('SettingsDialogShell spelling search entries', () => {
       Object.defineProperty(window, 'okDesktop', {
         configurable: true,
         value: {
-          platform: 'win32',
+          platform: 'linux',
           config: { ptyAvailable: false },
           spellcheck: {
             languages: async () => ({
@@ -186,7 +186,7 @@ describe('SettingsDialogShell spelling search entries', () => {
     setHost(null);
   });
 
-  test.each(['win32', 'linux'] as const)(
+  test.each(['linux'] as const)(
     'searching spellcheck on %s reaches both spelling controls in user Preferences',
     async (platform) => {
       setHost(platform);
@@ -203,7 +203,7 @@ describe('SettingsDialogShell spelling search entries', () => {
   );
 
   test('navigating to the languages entry anchors its block, not just the page', async () => {
-    setHost('win32');
+    setHost('linux');
     const user = userEvent.setup();
     render(<SettingsDialogShell open={true} onOpenChange={() => {}} />);
 
@@ -244,7 +244,7 @@ describe('SettingsDialogShell spelling search entries', () => {
   });
 
   test('the spelling entries stay search-only and leave the user sidebar items unchanged', () => {
-    setHost('win32');
+    setHost('linux');
     render(<SettingsDialogShell open={true} onOpenChange={() => {}} />);
 
     expect(screen.queryByTestId('settings-sidebar-item-spellcheck')).toBeNull();

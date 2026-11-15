@@ -5,7 +5,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 const html = readFileSync(resolve(import.meta.dirname, '../../index.html'), 'utf8');
 const originalMatchMedia = window.matchMedia;
 
-const PLATFORMS = ['darwin', 'win32', 'linux', undefined] as const;
+const PLATFORMS = ['darwin', 'linux', undefined] as const;
 const THEME_STATES = [
   { theme: 'dark', osDark: false, dark: true },
   { theme: 'light', osDark: true, dark: false },

@@ -65,7 +65,7 @@ describe('AppMenubar Help menu', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test.each(['win32', 'linux'] as const)(
+  test.each(['linux'] as const)(
     'returns null in a %s note window, where app-wide menu chrome is intentionally absent',
     async (platform) => {
       installBridge(platform, 'note');
@@ -76,7 +76,7 @@ describe('AppMenubar Help menu', () => {
   );
 
   test('Send feedback dispatches the send-feedback menu action', async () => {
-    const dispatch = installBridge('win32');
+    const dispatch = installBridge('linux');
     await openHelpMenu();
 
     await userEvent.click(screen.getByRole('menuitem', { name: 'Send feedback…' }));
@@ -85,7 +85,7 @@ describe('AppMenubar Help menu', () => {
   });
 
   test('Report a bug dispatches the report-bug menu action', async () => {
-    const dispatch = installBridge('win32');
+    const dispatch = installBridge('linux');
     await openHelpMenu();
 
     await userEvent.click(screen.getByRole('menuitem', { name: /^Report a bug…/ }));
@@ -94,7 +94,7 @@ describe('AppMenubar Help menu', () => {
   });
 
   test('the open Help menu is marked as a bug-report launcher', async () => {
-    installBridge('win32');
+    installBridge('linux');
     await openHelpMenu();
 
     expect(screen.getByRole('menu').hasAttribute('data-bug-report-launcher')).toBe(true);
@@ -110,7 +110,7 @@ describe('AppMenubar Help menu', () => {
   });
 
   test('lists the resource links after GitHub and ends with About', async () => {
-    installBridge('win32');
+    installBridge('linux');
     await openHelpMenu();
 
     const labels = within(screen.getByRole('menu'))
@@ -122,7 +122,7 @@ describe('AppMenubar Help menu', () => {
       'Join us on Discord',
       'Report a bug…Ctrl+Shift+D',
       'Send feedback…',
-      'About OpenKnowledge',
+      'About',
     ]);
   });
 
@@ -130,7 +130,7 @@ describe('AppMenubar Help menu', () => {
     ['Documentation', 'open-docs'],
     ['Join us on Discord', 'open-discord'],
   ] as const)('%s dispatches the %s command', async (name, command) => {
-    const dispatch = installBridge('win32');
+    const dispatch = installBridge('linux');
     await openHelpMenu();
 
     await userEvent.click(screen.getByRole('menuitem', { name }));
@@ -138,17 +138,17 @@ describe('AppMenubar Help menu', () => {
     expect(dispatch).toHaveBeenCalledWith({ kind: 'command', command });
   });
 
-  test.each([
-    ['win32', 'About OpenKnowledge'],
-    ['linux', 'About'],
-  ] as const)('About on %s reads "%s" and dispatches the about role', async (platform, name) => {
-    const dispatch = installBridge(platform);
-    await openHelpMenu();
+  test.each([['linux', 'About']] as const)(
+    'About on %s reads "%s" and dispatches the about role',
+    async (platform, name) => {
+      const dispatch = installBridge(platform);
+      await openHelpMenu();
 
-    await userEvent.click(screen.getByRole('menuitem', { name }));
+      await userEvent.click(screen.getByRole('menuitem', { name }));
 
-    expect(dispatch).toHaveBeenCalledWith({ kind: 'role', role: 'about' });
-  });
+      expect(dispatch).toHaveBeenCalledWith({ kind: 'role', role: 'about' });
+    },
+  );
 });
 
 describe('AppMenubar View navigation history', () => {
@@ -161,7 +161,7 @@ describe('AppMenubar View navigation history', () => {
     (window as unknown as { okDesktop?: unknown }).okDesktop = undefined;
   });
 
-  test('does not add a standalone Go menu on Windows/Linux', async () => {
+  test('does not add a standalone Go menu on Linux', async () => {
     installBridge('linux');
     const { AppMenubar } = await import('./AppMenubar');
     render(<AppMenubar />);
@@ -173,7 +173,7 @@ describe('AppMenubar View navigation history', () => {
   });
 
   test('starts View with Back then Forward and Alt-arrow shortcut hints', async () => {
-    installBridge('win32');
+    installBridge('linux');
     await openMenu('View');
 
     const rows = within(screen.getByRole('menu')).getAllByRole('menuitem');
@@ -290,7 +290,7 @@ describe('AppMenubar View terminal toggle', () => {
   });
 
   test('a single-file window offers no editor toggle', async () => {
-    const dispatch = installBridge('win32', 'editor', { queryResult: snapshot(false) });
+    const dispatch = installBridge('linux', 'editor', { queryResult: snapshot(false) });
     const bridge = (window as unknown as { okDesktop: { config: Record<string, unknown> } })
       .okDesktop;
     bridge.config.singleFile = true;
@@ -301,8 +301,8 @@ describe('AppMenubar View terminal toggle', () => {
     expect(dispatch).not.toHaveBeenCalledWith({ kind: 'menu-action', action: 'toggle-editor' });
   });
 
-  test('Windows keeps the terminal toggle absent while PTYs are unavailable', async () => {
-    installBridge('win32', 'editor', {
+  test('Linux keeps the terminal toggle absent while PTYs are unavailable', async () => {
+    installBridge('linux', 'editor', {
       ptyAvailable: false,
       queryResult: snapshot(false),
     });
@@ -312,8 +312,8 @@ describe('AppMenubar View terminal toggle', () => {
     expect(screen.queryByRole('menuitem', { name: /Hide Terminal/ })).toBeNull();
   });
 
-  test('Windows exposes the terminal toggle when the build supports PTYs', async () => {
-    installBridge('win32', 'editor', {
+  test('Linux exposes the terminal toggle when the build supports PTYs', async () => {
+    installBridge('linux', 'editor', {
       ptyAvailable: true,
       queryResult: snapshot(false),
     });
@@ -330,7 +330,7 @@ describe('AppMenubar drag-suspension attributes', () => {
   });
 
   test('open menu content matches the globals.css drag-suspension selector', async () => {
-    installBridge('win32');
+    installBridge('linux');
     await openMenu('View');
 
     const content = document.querySelector('[data-slot="menubar-content"]');

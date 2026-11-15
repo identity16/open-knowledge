@@ -352,7 +352,7 @@ afterEach(() => {
 describe('AppHeader', () => {
   test('a single-file window keeps global actions and the component selector above its cards', async () => {
     shell.singleFile = true;
-    setElectronHost(true, { platform: 'win32', menu: { dispatch: async () => null } });
+    setElectronHost(true, { platform: 'linux', menu: { dispatch: async () => null } });
     act(() => {
       paneVisibilityStore.publish({
         editor: { open: true, onScreen: true },
@@ -381,7 +381,7 @@ describe('AppHeader', () => {
 
   test('a narrow single-file header folds secondary actions while keeping the selector visible', async () => {
     shell.singleFile = true;
-    setElectronHost(true, { platform: 'win32' });
+    setElectronHost(true, { platform: 'linux' });
     publishPanes();
     const restoreMetrics = mockHeaderMetrics(CRAMPED);
     try {
@@ -489,8 +489,8 @@ describe('AppHeader', () => {
     }
   });
 
-  test('reserves the Windows caption-button inset at its trailing edge on Electron', () => {
-    setElectronHost(true, { platform: 'win32' });
+  test('reserves the trailing inset at its trailing edge on Electron', () => {
+    setElectronHost(true, { platform: 'linux' });
     renderHeader();
 
     const trailing = screen.getByRole('banner').querySelector('[data-app-header-trailing]');
@@ -574,13 +574,13 @@ describe('AppHeader', () => {
       },
     );
 
-    test('on Windows the app menu leads the header, before search and the badges, and opens from it', async () => {
+    test('on Linux the app menu leads the header, before search and the badges, and opens from it', async () => {
       const user = userEvent.setup();
       const dispatch = vi.fn((request: { kind: string }) =>
         Promise.resolve(request.kind === 'query' ? null : undefined),
       );
       setElectronHost(true, {
-        platform: 'win32',
+        platform: 'linux',
         channel: 'beta',
         instanceLabel: 'wt-header',
         menu: { dispatch },
@@ -781,7 +781,7 @@ describe('AppHeader', () => {
   describe('collapse', () => {
     test('when the trailing group does not fit, its five controls go behind "More actions" and the leading group keeps everything but the BETA and instance badges', async () => {
       setElectronHost(true, {
-        platform: 'win32',
+        platform: 'linux',
         channel: 'beta',
         instanceLabel: 'wt-header',
         menu: { dispatch: () => Promise.resolve(null) },
@@ -869,7 +869,7 @@ describe('AppHeader', () => {
       }
     });
 
-    test.each(['win32', 'linux'] as const)(
+    test.each(['linux'] as const)(
       'on %s a folded header moves the BETA and instance badges into "More actions", and they return to the leading group when room returns',
       async (platform) => {
         setElectronHost(true, { platform, channel: 'beta', instanceLabel: 'wt-header' });
@@ -948,7 +948,7 @@ describe('AppHeader', () => {
     ])(
       'with the badges folded out of the leading group $path, the fold holds though the leading group got narrower',
       async ({ widths }) => {
-        setElectronHost(true, { platform: 'win32', channel: 'beta', instanceLabel: 'wt-header' });
+        setElectronHost(true, { platform: 'linux', channel: 'beta', instanceLabel: 'wt-header' });
         const observer = captureResizeObserver();
         let headerWidth = 1_280;
         const restoreMetrics = mockHeaderMetrics(() => ({
@@ -1075,8 +1075,8 @@ describe('AppHeader', () => {
       }
     });
 
-    test('counts the Windows caption-button inset against the room', () => {
-      setElectronHost(true, { platform: 'win32' });
+    test('counts the trailing inset against the room', () => {
+      setElectronHost(true, { platform: 'linux' });
       const realGetComputedStyle = window.getComputedStyle.bind(window);
       const computedStyle = vi
         .spyOn(window, 'getComputedStyle')
@@ -1096,7 +1096,7 @@ describe('AppHeader', () => {
 
         expect(
           overflowTrigger(),
-          '420px of controls plus a 138px caption-button inset does not fit in 540px',
+          '420px of controls plus a 138px trailing inset does not fit in 540px',
         ).not.toBeNull();
       } finally {
         restoreMetrics();

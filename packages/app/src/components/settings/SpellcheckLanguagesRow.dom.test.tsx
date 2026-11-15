@@ -63,7 +63,7 @@ function render(ui: ReactNode) {
 }
 
 interface BridgeOptions {
-  readonly platform?: 'darwin' | 'win32' | 'linux';
+  readonly platform?: 'darwin' | 'linux';
   readonly languages?: () => Promise<OkSpellingLanguagesQueryResult>;
   readonly setLanguages?: (languages: readonly string[]) => Promise<OkSpellingLanguagesSetResult>;
 }
@@ -71,7 +71,7 @@ interface BridgeOptions {
 function installBridge(options: BridgeOptions = {}) {
   const submitted: string[][] = [];
   const bridge = {
-    platform: options.platform ?? 'win32',
+    platform: options.platform ?? 'linux',
     spellcheck: {
       languages:
         options.languages ??

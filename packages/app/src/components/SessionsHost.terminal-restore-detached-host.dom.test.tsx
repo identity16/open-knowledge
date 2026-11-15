@@ -243,7 +243,7 @@ function makeThread(overrides: Partial<ThreadInfo> & { threadId: string }): Thre
 
 function makeRestartBridge(): OkDesktopBridge {
   return {
-    platform: 'win32',
+    platform: 'linux',
     config: { ptyAvailable: true, mode: 'editor' },
     terminal: {
       create: vi.fn(async () => ({ ptyId: 'pty-new' })),

@@ -324,7 +324,7 @@ afterEach(async () => {
   dirs = [];
 });
 
-describe.skipIf(process.platform === 'win32')('crash-recovered transcript', () => {
+describe('crash-recovered transcript', () => {
   test('replays every historical warning across several frames without announcing any', async () => {
     const { threadId, spoken } = await openCrashedThread();
 
