@@ -44,7 +44,6 @@ import type {
   OkOnboardingToastPayload,
   OkPtyData,
   OkPtyExit,
-  OkPtyNotice,
   OkRecentRemovedMissingInfo,
   OkServerRestartedInfo,
   OkServerVersionDriftInfo,
@@ -945,12 +944,6 @@ const bridge: OkDesktopBridge = {
       // oxlint-disable-next-line ok/no-loosely-typed-webcontents-ipc -- preload-side subscription wrapper (precedent #14)
       ipcRenderer.on('ok:pty:exit', listener);
       return () => ipcRenderer.removeListener('ok:pty:exit', listener);
-    },
-    onNotice(cb) {
-      const listener = (_event: IpcRendererEvent, msg: OkPtyNotice) => cb(msg);
-      // oxlint-disable-next-line ok/no-loosely-typed-webcontents-ipc -- preload-side subscription wrapper (precedent #14)
-      ipcRenderer.on('ok:pty:notice', listener);
-      return () => ipcRenderer.removeListener('ok:pty:notice', listener);
     },
     claudePreflight: () => invoke('ok:terminal:claude-assist', { action: 'preflight' }),
     cliPreflight: (cli) => invoke('ok:terminal:cli-preflight', { cli }),

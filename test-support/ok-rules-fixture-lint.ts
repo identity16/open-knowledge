@@ -50,7 +50,7 @@ function lintOkRulesFixtures(): OkRulesFixtureLint {
   const result = spawnSync(
     process.execPath,
     [oxlintBin(), '-f', 'json', '-c', OK_RULES_FIXTURE_CONFIG, OK_RULES_FIXTURES],
-    { cwd: OK_ROOT, encoding: 'utf-8', windowsHide: true, maxBuffer: 256 * 1024 * 1024 },
+    { cwd: OK_ROOT, encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 },
   );
   const output = `stdout: ${clip(result.stdout)}\nstderr: ${clip(result.stderr)}`;
   const run = `oxlint over ${OK_RULES_FIXTURES} with ${OK_RULES_FIXTURE_CONFIG}`;

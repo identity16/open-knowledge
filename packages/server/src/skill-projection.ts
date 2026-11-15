@@ -203,7 +203,7 @@ export function linkOrCopySkillDir(
 }
 
 export function linksNotPermittedWarning(locations: readonly string[]): string {
-  return `This system does not allow creating symlinks, so ${locations.join(', ')} got a copy instead of a link. On Windows, creating symlinks needs administrator rights or Developer Mode.`;
+  return `This system does not allow creating symlinks, so ${locations.join(', ')} got a copy instead of a link.`;
 }
 
 function skillLinkTarget(cwd: string, hostRoot: string, skillDir: string): string {

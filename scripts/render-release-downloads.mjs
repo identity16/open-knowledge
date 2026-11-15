@@ -6,8 +6,6 @@ export const DOWNLOADS_END = '<!-- ok-downloads:end -->';
 
 const ROWS = [
   { platform: 'macOS', arch: 'Apple Silicon', match: (n) => n === 'OpenKnowledge-arm64.dmg' },
-  { platform: 'Windows', arch: 'x64', match: (n) => n === 'OpenKnowledge-Setup-x64.exe' },
-  { platform: 'Windows', arch: 'arm64', match: (n) => n === 'OpenKnowledge-Setup-arm64.exe' },
   { platform: 'Debian / Ubuntu', arch: 'x64', match: (n) => n === 'OpenKnowledge-amd64.deb' },
   { platform: 'Debian / Ubuntu', arch: 'arm64', match: (n) => n === 'OpenKnowledge-arm64.deb' },
   { platform: 'Fedora / RHEL', arch: 'x64', match: (n) => n === 'OpenKnowledge-x86_64.rpm' },

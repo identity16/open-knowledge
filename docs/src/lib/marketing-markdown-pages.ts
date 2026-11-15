@@ -16,7 +16,7 @@ export const MARKETING_MARKDOWN_PAGES: readonly MarketingMarkdownPage[] = [
     path: '/download.md',
     section: 'Product',
     name: 'Download',
-    description: 'Direct installer URLs for every macOS, Windows, and Linux build.',
+    description: 'Direct installer URLs for the macOS and Linux builds.',
   },
   {
     path: '/team.md',

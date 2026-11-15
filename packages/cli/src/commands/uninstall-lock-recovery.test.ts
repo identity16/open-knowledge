@@ -27,7 +27,7 @@ import {
 } from './removal-plan.ts';
 import { runUninstall } from './uninstall.ts';
 
-describe.skipIf(process.platform === 'win32')('uninstall lock recovery in an isolated home', () => {
+describe('uninstall lock recovery in an isolated home', () => {
   let root: string;
   const children: ChildProcess[] = [];
   let observedScan:

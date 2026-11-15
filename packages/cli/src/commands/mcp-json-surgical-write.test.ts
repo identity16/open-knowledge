@@ -140,19 +140,16 @@ describe('surgical JSON MCP write', () => {
     expect(servers['open-knowledge']).toEqual(PUBLISHED_CHAIN_ENTRY);
   });
 
-  it.skipIf(process.platform === 'win32')(
-    'preserves a user-tightened file mode (0600) on an in-place rewrite',
-    () => {
-      const configPath = tempFile('config.json');
-      writeFileSync(configPath, '{\n  "mcpServers": {}\n}\n');
-      chmodSync(configPath, 0o600);
+  it('preserves a user-tightened file mode (0600) on an in-place rewrite', () => {
+    const configPath = tempFile('config.json');
+    writeFileSync(configPath, '{\n  "mcpServers": {}\n}\n');
+    chmodSync(configPath, 0o600);
 
-      const result = write('claude', configPath);
-      expect(result.action).toBe('written');
+    const result = write('claude', configPath);
+    expect(result.action).toBe('written');
 
-      expect(statSync(configPath).mode & 0o777).toBe(0o600);
-    },
-  );
+    expect(statSync(configPath).mode & 0o777).toBe(0o600);
+  });
 
   it('preserves a leading UTF-8 BOM byte-for-byte', () => {
     const configPath = tempFile('config.json');

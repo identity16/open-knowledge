@@ -122,7 +122,6 @@ export async function createWorktree(args: CreateWorktreeArgs): Promise<Worktree
     await execFileAsync('git', addArgs, {
       cwd: args.anchorPath,
       env: gitSpawnEnv(),
-      windowsHide: true,
     });
   } catch (err) {
     const classified = classifyAddError(err);
@@ -281,7 +280,7 @@ async function resolveCommit(anchorPath: string, ref: string): Promise<string | 
     const { stdout } = await execFileAsync(
       'git',
       ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`],
-      { cwd: anchorPath, env: gitSpawnEnv(), timeout: 5_000, windowsHide: true },
+      { cwd: anchorPath, env: gitSpawnEnv(), timeout: 5_000 },
     );
     const commit = String(stdout).trim();
     return /^[0-9a-f]{40,64}$/u.test(commit) ? commit : null;
@@ -327,7 +326,6 @@ async function setOriginUpstream(anchorPath: string, branch: string): Promise<vo
         cwd: anchorPath,
         env: gitSpawnEnv(),
         timeout: 5_000,
-        windowsHide: true,
       });
     } catch (err) {
       getLogger('worktree').warn(
@@ -344,7 +342,6 @@ async function refExists(anchorPath: string, ref: string): Promise<boolean> {
       cwd: anchorPath,
       env: gitSpawnEnv(),
       timeout: 5_000,
-      windowsHide: true,
     });
     return true;
   } catch (err) {
@@ -368,7 +365,6 @@ async function fetchShareBranch(
       cwd: anchorPath,
       env: fetchGitEnv(),
       timeout: timeoutMs,
-      windowsHide: true,
     });
     return null;
   } catch (err) {
@@ -446,7 +442,6 @@ async function readRefSnapshot(anchorPath: string): Promise<RefSnapshot> {
         env: gitSpawnEnv(),
         maxBuffer: REF_LIST_MAX_BUFFER_BYTES,
         timeout: REF_LIST_TIMEOUT_MS,
-        windowsHide: true,
       },
     );
     stdout = String(result.stdout);
@@ -504,7 +499,6 @@ async function countCommitsInRange(anchorPath: string, range: string): Promise<n
       cwd: anchorPath,
       env: gitSpawnEnv(),
       timeout: BEHIND_COUNT_TIMEOUT_MS,
-      windowsHide: true,
     });
     const n = Number.parseInt(String(stdout).trim(), 10);
     return Number.isFinite(n) && n >= 0 ? n : null;
@@ -574,7 +568,6 @@ async function repoHasAnyRef(cwd: string): Promise<boolean> {
     const { stdout } = await execFileAsync('git', ['for-each-ref', '--count=1', 'refs/'], {
       cwd,
       env: gitSpawnEnv(),
-      windowsHide: true,
     });
     return stdout.trim().length > 0;
   } catch {
@@ -584,9 +577,7 @@ async function repoHasAnyRef(cwd: string): Promise<boolean> {
 
 function execFileSyncTrim(cmd: string, cmdArgs: string[], cwd: string): string | null {
   try {
-    return String(
-      execFileSync(cmd, cmdArgs, { cwd, env: gitSpawnEnv(), windowsHide: true }),
-    ).trim();
+    return String(execFileSync(cmd, cmdArgs, { cwd, env: gitSpawnEnv() })).trim();
   } catch {
     return null;
   }

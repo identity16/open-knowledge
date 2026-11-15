@@ -31,7 +31,7 @@ export function spawnDetachedInteractiveChild(
     ...DETACHED_SPAWN_OPTIONS,
     stdio: 'ignore',
     shell: false,
-    windowsHide: true,
+
     env,
   });
 }

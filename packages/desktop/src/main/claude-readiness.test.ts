@@ -4,7 +4,6 @@ import {
   type ProbeChild,
   type ProbeTimers,
   runLoginShellProbe,
-  runWindowsPathProbe,
 } from './claude-readiness.ts';
 
 const probeLog = vi.hoisted(() => {
@@ -207,26 +206,5 @@ describe('probe settle observability (a not-found must be distinguishable from a
     signalled.emitExit(null);
     await signalledProbe;
     expect(unknownSettleRecords()).toHaveLength(1);
-  });
-
-  test('the where.exe probe settles under its own label, naming the binary it probed', async () => {
-    const { child, emitExit } = makeFakeChild();
-    const { timers } = makeFakeTimers();
-    const probe = runWindowsPathProbe(
-      () => child,
-      'C:\\Windows\\System32\\where.exe',
-      'claude',
-      timers,
-    );
-    emitExit(0);
-    expect(await probe).toBe(0);
-    const [record] = settleRecords();
-    expect(record).toEqual({
-      label: 'where.exe',
-      bin: 'claude',
-      args: ['$PATH:claude'],
-      outcome: 'present',
-      exitCode: 0,
-    });
   });
 });

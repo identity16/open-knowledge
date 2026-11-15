@@ -261,56 +261,6 @@ describe('issue #351 — re-adopting a surviving session is edge-correct across 
     expect(replay).toContain('hi');
   });
 
-  test('adoption retains the resolved Windows shell family for path escaping', () => {
-    const h = makeManager();
-    const created = createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    const ptyId = (created as { ok: true; ptyId: string }).ptyId;
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId,
-      notice: 'shell-resolved',
-      shellFamily: 'powershell',
-    });
-
-    const outcome = adoptViaManager(h.mgr, {
-      windowId: 1,
-      ptyId,
-      webContents: makeWebContents(),
-    });
-    expect(outcome).toMatchObject({ ok: true, shellFamily: 'powershell' });
-  });
-
-  test('adoption retains a standing unsupported-shell capability notice', () => {
-    const h = makeManager();
-    const created = createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    const ptyId = (created as { ok: true; ptyId: string }).ptyId;
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId,
-      notice: 'invalid-shell-override',
-      reason: 'unsupported-family',
-    });
-
-    const outcome = adoptViaManager(h.mgr, {
-      windowId: 1,
-      ptyId,
-      webContents: makeWebContents(),
-    });
-    expect(outcome).toMatchObject({ ok: true, shellNoticeReason: 'unsupported-family' });
-  });
-
   test('adopt clears the stale outbound buffer so replayed bytes are not also delivered live (no duplicate)', () => {
     const timers: Array<() => void> = [];
     const delivered: string[] = [];

@@ -189,18 +189,15 @@ describe('surgical YAML MCP write', () => {
     expect(parseYaml(after).mcp_servers['open-knowledge']).toEqual(PUBLISHED_CHAIN_ENTRY);
   });
 
-  it.skipIf(process.platform === 'win32')(
-    'preserves a user-tightened file mode (0600) on an in-place rewrite',
-    () => {
-      const configPath = tempFile('config.yaml');
-      writeFileSync(configPath, '# my hermes config\nmodel: hermes-4\n');
-      chmodSync(configPath, 0o600);
+  it('preserves a user-tightened file mode (0600) on an in-place rewrite', () => {
+    const configPath = tempFile('config.yaml');
+    writeFileSync(configPath, '# my hermes config\nmodel: hermes-4\n');
+    chmodSync(configPath, 0o600);
 
-      const result = writeHermes(configPath);
-      expect(result.action).toBe('written');
-      expect(statSync(configPath).mode & 0o777).toBe(0o600);
-    },
-  );
+    const result = writeHermes(configPath);
+    expect(result.action).toBe('written');
+    expect(statSync(configPath).mode & 0o777).toBe(0o600);
+  });
 
   it('declines a present, unparseable config (left byte-unchanged)', () => {
     const configPath = tempFile('config.yaml');

@@ -30,19 +30,6 @@ describe('desktopUserDataDir', () => {
         env: { XDG_CONFIG_HOME: '/cfg' },
       }),
     ).toBe('/cfg/OpenKnowledge');
-    expect(
-      desktopUserDataDir({
-        home: 'C:\\Users\\x',
-        platformName: 'win32',
-        env: { APPDATA: 'C:\\Users\\x\\AppData\\Roaming' },
-      }),
-    ).toBe('C:\\Users\\x\\AppData\\Roaming\\OpenKnowledge');
-    expect(desktopUserDataDir({ home: 'C:\\Users\\x', platformName: 'win32', env: {} })).toBe(
-      'C:\\Users\\x\\AppData\\Roaming\\OpenKnowledge',
-    );
-    expect(
-      desktopUserDataDir({ home: 'C:\\Users\\x', platformName: 'win32', env: { APPDATA: '' } }),
-    ).toBe('C:\\Users\\x\\AppData\\Roaming\\OpenKnowledge');
   });
 
   test('the legacy product name resolves the space-named macOS dir', () => {
@@ -79,23 +66,6 @@ describe('desktopUpdaterCacheDir', () => {
         env: { XDG_CACHE_HOME: '/cache' },
       }),
     ).toBe(`/cache/${DESKTOP_UPDATER_CACHE_DIR_NAME}`);
-    expect(
-      desktopUpdaterCacheDir({
-        home: 'C:\\Users\\x',
-        platformName: 'win32',
-        env: { LOCALAPPDATA: 'D:\\Local' },
-      }),
-    ).toBe(`D:\\Local\\${DESKTOP_UPDATER_CACHE_DIR_NAME}`);
-    expect(desktopUpdaterCacheDir({ home: 'C:\\Users\\x', platformName: 'win32', env: {} })).toBe(
-      `C:\\Users\\x\\AppData\\Local\\${DESKTOP_UPDATER_CACHE_DIR_NAME}`,
-    );
-    expect(
-      desktopUpdaterCacheDir({
-        home: 'C:\\Users\\x',
-        platformName: 'win32',
-        env: { LOCALAPPDATA: '' },
-      }),
-    ).toBe(`C:\\Users\\x\\AppData\\Local\\${DESKTOP_UPDATER_CACHE_DIR_NAME}`);
   });
 });
 

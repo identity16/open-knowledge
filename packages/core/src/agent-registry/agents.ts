@@ -836,9 +836,7 @@ const opencode = defineAgent({
     userMcpEntry({
       agent: 'opencode',
       strictness: ['reclaim-permissive', 'injection-functional'],
-      attestation: attestVerified([
-        read(CODE.cliEditors, 'XDG config dir; the win32 location is by analogy and unverified'),
-      ]),
+      attestation: attestVerified([read(CODE.cliEditors, 'XDG config directory')]),
     }),
     projectMcpEntry({
       agent: 'opencode',

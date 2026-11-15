@@ -61,7 +61,6 @@ export function hasCommandOnPath(
       shell: true,
       stdio: 'ignore',
       timeout: timeoutMs,
-      windowsHide: true,
     });
     return result.error == null && result.status === 0;
   } catch (err) {

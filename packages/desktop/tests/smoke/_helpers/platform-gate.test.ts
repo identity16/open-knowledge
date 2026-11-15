@@ -457,14 +457,14 @@ describe('deriveGates — predicate bindings', () => {
 });
 
 describe('shared predicates — meaning', () => {
-  test('the terminal platform set is the three desktop targets', () => {
+  test('the terminal platform set is the supported POSIX desktop targets', () => {
     expect(isTerminalPlatform('darwin')).toBe(true);
     expect(isTerminalPlatform('linux')).toBe(true);
-    expect(isTerminalPlatform('win32')).toBe(true);
+    expect(isTerminalPlatform('win32')).toBe(false);
   });
 
-  test('the harness-supported platform set is the three desktop targets', () => {
-    expect([...SUPPORTED_PLATFORMS].sort()).toEqual(['darwin', 'linux', 'win32']);
+  test('the harness-supported platform set is the supported POSIX desktop targets', () => {
+    expect([...SUPPORTED_PLATFORMS].sort()).toEqual(['darwin', 'linux']);
   });
 });
 

@@ -32,9 +32,7 @@ export function desktopUpdaterCacheDir(options: AppSupportOptions = {}): string 
   const pathApi = pathApiForPlatform(platformName);
 
   let base: string;
-  if (platformName === 'win32') {
-    base = env.LOCALAPPDATA || pathApi.join(home, 'AppData', 'Local');
-  } else if (platformName === 'darwin') {
+  if (platformName === 'darwin') {
     base = pathApi.join(home, 'Library', 'Caches');
   } else {
     base = env.XDG_CACHE_HOME || pathApi.join(home, '.cache');

@@ -33,7 +33,7 @@ function statfsFrom(table: Record<string, FsSpace | Error>) {
 describe('decideDevShmPosture', () => {
   test('non-linux platforms never apply the switch and never touch the filesystem', () => {
     const { statfs, calls } = statfsFrom({});
-    for (const platform of ['darwin', 'win32'] as const) {
+    for (const platform of ['darwin'] as const) {
       const posture = decideDevShmPosture({ platform, statfs, tmpDir: TMP });
       expect(posture.decision).toBe('not-linux');
     }
@@ -220,7 +220,7 @@ describe('applyDevShmPosture', () => {
     expect(posture.decision).toBe('redirect-to-tmpdir');
   });
 
-  test.each(['darwin', 'win32'] as const)(
+  test.each(['darwin'] as const)(
     '%s performs no measurement, switch change, or logging',
     (platform) => {
       const { statfs, calls } = statfsFrom({});

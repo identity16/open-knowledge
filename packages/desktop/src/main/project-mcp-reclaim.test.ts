@@ -111,10 +111,7 @@ describe('checkAndRepairProjectMcpOnProjectOpen', () => {
     expect(r.status).toBe('skipped');
   });
 
-  for (const [platform, exe] of [
-    ['linux', '/opt/OpenKnowledge/openknowledge'],
-    ['win32', 'C:\\Users\\u\\AppData\\Local\\Programs\\OpenKnowledge\\OpenKnowledge.exe'],
-  ] as const) {
+  for (const [platform, exe] of [['linux', '/opt/OpenKnowledge/openknowledge']] as const) {
     test(`${platform} packaged install runs the repair cycle to done`, async () => {
       const { cli } = buildCli({
         claude: {

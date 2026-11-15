@@ -1,6 +1,6 @@
 import { realpathSync } from 'node:fs';
 import { homedir as nodeHomedir } from 'node:os';
-import { posix, resolve, win32 } from 'node:path';
+import { posix, resolve } from 'node:path';
 import { currentCliCommandName } from '@inkeep/open-knowledge-core';
 
 export class HomeProjectRootError extends Error {
@@ -50,7 +50,7 @@ export function isFilesystemRoot(
   dir: string,
   platform: NodeJS.Platform = process.platform,
 ): boolean {
-  const path = platform === 'win32' ? win32 : posix;
+  const path = posix;
   const resolved = path.resolve(dir);
   const abs = platform === process.platform ? canonicalizeForCompare(resolved) : resolved;
   return path.dirname(abs) === abs || (platform === 'darwin' && abs === MACOS_DATA_VOLUME);

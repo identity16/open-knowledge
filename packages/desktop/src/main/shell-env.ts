@@ -22,13 +22,12 @@ export async function harvestShellAuthSock(
   opts: HarvestShellAuthSockOpts = {},
 ): Promise<string | null> {
   const platform = opts.platform ?? process.platform;
-  if (platform === 'win32') return null;
+
   const env = opts.env ?? process.env;
   const shell = env.SHELL ?? (platform === 'linux' ? '/bin/bash' : '/bin/zsh');
   const spawn = opts.spawn ?? defaultSpawn;
   const logger = opts.logger ?? DEFAULT_LOGGER;
   try {
-    // oxlint-disable-next-line ok/require-windowshide-on-spawn -- injected command-runner seam; defaultSpawn owns child_process options
     const result = await spawn(shell, ['-ilc', `printf %s "${MARK}$SSH_AUTH_SOCK${MARK}"`], {
       timeoutMs: opts.timeoutMs ?? 2000,
       env,

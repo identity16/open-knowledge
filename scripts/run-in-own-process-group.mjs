@@ -20,14 +20,9 @@ export function relayToHeldGroup(child, signal, send = process.kill.bind(process
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const [command, ...args] = process.argv.slice(2);
-  const onWindows = process.platform === 'win32';
-  const child = onWindows
-    ? spawn([command, ...args].join(' '), { shell: true, stdio: 'inherit' })
-    : spawn(command, args, { detached: true, stdio: 'inherit' });
+  const child = spawn(command, args, { detached: true, stdio: 'inherit' });
   const relay = (signal) => relayToHeldGroup(child, signal);
-  if (!onWindows) {
-    for (const signal of RELAYED_SIGNALS) process.on(signal, relay);
-  }
+  for (const signal of RELAYED_SIGNALS) process.on(signal, relay);
   child.on('exit', (code, signal) => {
     for (const relayed of RELAYED_SIGNALS) process.off(relayed, relay);
     process.exitCode = signal === null ? code : 128 + constants.signals[signal];

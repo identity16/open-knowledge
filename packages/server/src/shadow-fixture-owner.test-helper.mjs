@@ -168,7 +168,7 @@ function request(job) {
     {
       cwd: job.options.cwd,
       env: environmentFor(job.options.env),
-      windowsHide: job.options.windowsHide,
+
       stdio: ['pipe', 'pipe', 'pipe'],
     },
     emit,

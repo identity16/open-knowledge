@@ -92,26 +92,18 @@ describe('VISIBLE_TARGETS (UI render allow-list)', () => {
 });
 
 describe('isTargetOfferedOnHost', () => {
-  const macAndWindowsOnly = { platforms: ['darwin', 'win32'] as const };
+  const macOnly = { platforms: ['darwin'] as const };
 
   test('withholds an app the host OS has no build for', () => {
-    expect(isTargetOfferedOnHost(macAndWindowsOnly, { platform: 'linux', installed: false })).toBe(
-      false,
-    );
-    expect(isTargetOfferedOnHost(macAndWindowsOnly, { platform: 'linux', installed: null })).toBe(
-      false,
-    );
+    expect(isTargetOfferedOnHost(macOnly, { platform: 'linux', installed: false })).toBe(false);
+    expect(isTargetOfferedOnHost(macOnly, { platform: 'linux', installed: null })).toBe(false);
   });
 
   test('offers an app detected on the host whatever its declared platforms', () => {
-    expect(isTargetOfferedOnHost(macAndWindowsOnly, { platform: 'linux', installed: true })).toBe(
-      true,
-    );
+    expect(isTargetOfferedOnHost(macOnly, { platform: 'linux', installed: true })).toBe(true);
   });
 
   test('offers every app when the host OS is unknown', () => {
-    expect(
-      isTargetOfferedOnHost(macAndWindowsOnly, { platform: undefined, installed: false }),
-    ).toBe(true);
+    expect(isTargetOfferedOnHost(macOnly, { platform: undefined, installed: false })).toBe(true);
   });
 });

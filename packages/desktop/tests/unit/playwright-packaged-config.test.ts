@@ -9,7 +9,7 @@ const platformDescriptor = Object.getOwnPropertyDescriptor(process, 'platform');
 const DESKTOP_ROOT = resolve(import.meta.dirname, '../..');
 const UNPACKAGED_JSON_REPORT = resolve(DESKTOP_ROOT, 'test-results/desktop-smoke-results.json');
 const PACKAGED_REPORT = resolve(DESKTOP_ROOT, PACKAGED_JSON_REPORT_PATH);
-const CONFIG_STATES = (['darwin', 'win32', 'linux'] as const).flatMap((platform) =>
+const CONFIG_STATES = (['darwin', 'linux'] as const).flatMap((platform) =>
   [false, true].map((ci) => ({ platform, ci })),
 );
 

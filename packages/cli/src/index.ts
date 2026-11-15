@@ -36,7 +36,6 @@ export {
   isOwnManagedEntry,
   type McpInstallOptions,
 } from './commands/editors.ts';
-export { registerWindowsProcessStartReader } from './commands/holder-process-start.ts';
 export {
   classifyExistingMcpEntry,
   detectInstalledEditors,

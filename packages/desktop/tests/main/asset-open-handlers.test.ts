@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  extractPathExtension,
   openAssetOrReveal,
   openAssetSafely,
   revealAssetSafely,
@@ -35,28 +34,6 @@ function makeStatKind(
     return 'missing';
   };
 }
-
-describe('extractPathExtension', () => {
-  test('lowercases simple extension', () => {
-    expect(extractPathExtension('/tmp/x/meeting.PDF')).toBe('pdf');
-  });
-
-  test('returns empty string for extensionless', () => {
-    expect(extractPathExtension('/tmp/x/README')).toBe('');
-  });
-
-  test('returns empty string for dotfiles (.gitignore → no ext)', () => {
-    expect(extractPathExtension('/tmp/x/.gitignore')).toBe('');
-  });
-
-  test('handles multi-dot like tarball archive.tar.gz → gz', () => {
-    expect(extractPathExtension('/tmp/x/archive.tar.gz')).toBe('gz');
-  });
-
-  test('handles Windows-style backslash path', () => {
-    expect(extractPathExtension('C:\\Users\\me\\Desktop\\file.PDF')).toBe('pdf');
-  });
-});
 
 describe('openAssetSafely (FR-A6 + D-A5 + D-A9)', () => {
   test('happy path: contained + exists + non-blocklist → openPath fires', async () => {

@@ -127,7 +127,7 @@ it('removes Pi trust from the configured agent directory without changing other 
   expect(readFileSync(defaultTrustPath, 'utf8')).toBe(defaultTrust);
 });
 
-it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+it.skipIf(process.getuid?.() === 0)(
   'logs the reason for a failed Pi removal and preserves its bridge and trust for retry',
   async () => {
     loggerFactory.configure({

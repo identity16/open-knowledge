@@ -12,7 +12,6 @@ import type { DownloadCta } from '@/lib/site';
 
 const OS_NOUN: Record<DetectedOs, string> = {
   macos: 'for Mac',
-  windows: 'for Windows',
   linux: 'for Linux',
   unknown: '',
 };

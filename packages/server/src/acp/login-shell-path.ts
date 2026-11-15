@@ -85,12 +85,10 @@ function hasExited(child: ChildProcess): boolean {
 function killProbeTree(child: ChildProcess): void {
   const pid = child.pid;
   if (pid === undefined || hasExited(child)) return;
-  if (process.platform !== 'win32') {
-    try {
-      process.kill(-pid, 'SIGKILL');
-      return;
-    } catch {}
-  }
+  try {
+    process.kill(-pid, 'SIGKILL');
+    return;
+  } catch {}
   child.kill('SIGKILL');
 }
 
@@ -134,8 +132,7 @@ const spawnLoginShellProbe: RunLoginShellProbe = (shell, args, timeoutMs) =>
     try {
       child = spawn(shell, [...args], {
         stdio: ['ignore', output, 'ignore'],
-        detached: process.platform !== 'win32',
-        windowsHide: true,
+        detached: true,
       });
     } catch {
       closeSync(output);
@@ -189,7 +186,6 @@ async function captureShellPath(
 export function createLoginShellPathProvider(
   deps: LoginShellPathDeps,
 ): () => Promise<string | null> {
-  const platform = deps.platform ?? process.platform;
   const shell = deps.shell ?? process.env.SHELL;
   const timeoutMs = deps.timeoutMs ?? LOGIN_SHELL_PROBE_TIMEOUT_MS;
   const runProbe = deps.runProbe ?? spawnLoginShellProbe;
@@ -198,7 +194,6 @@ export function createLoginShellPathProvider(
   let retryFailedAfter = 0;
 
   const probe = async (): Promise<string | null> => {
-    if (platform === 'win32') return null;
     if (shell === undefined || shell === '') {
       deps.log.debug({}, '[login-shell-path] no $SHELL; skipping probe');
       return null;

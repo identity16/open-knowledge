@@ -129,94 +129,89 @@ const TEARDOWNS = [
 
 const CASES = SITES.flatMap((site) => TEARDOWNS.map((teardown) => ({ ...site, ...teardown })));
 
-describe.skipIf(process.platform === 'win32')(
-  'tearing down a thread whose agent child is still installing its npx package',
-  () => {
-    test.each(CASES)(
-      'the npx cache entry ends complete or rolled back when $teardown while $site is installing',
-      async ({ open, run }) => {
-        expect(
-          () => descendantsOf(process.pid),
-          'this test reads the process table with ps',
-        ).not.toThrow();
-        await withHeldInstallRegistry(async (held) => {
-          const agentName = held.npmPackage.slice(0, held.npmPackage.lastIndexOf('@'));
-          const preexisting = new Set(descendantsOf(process.pid));
-          const started = new Set<number>();
-          const liveSinceStart = (): number[] => {
-            const live = descendantsOf(process.pid).filter((pid) => !preexisting.has(pid));
-            for (const pid of live) started.add(pid);
-            return live;
-          };
-          const everyStartedProcessEnded = (): boolean =>
-            liveSinceStart().length === 0 && [...started].every(processEnded);
-          const manager = heldManager(held);
-          const path = process.env.PATH;
-          try {
-            const { threadId, dependencyRequests } = await open(manager, held);
-            await waitWithinTestBudget(
-              'npm to request the held dependency tarball mid-install',
-              () => {
-                liveSinceStart();
-                const status = manager.getInfo(threadId)?.status;
-                if (status === 'error' || status === 'exited') {
-                  throw new Error(`the thread settled as ${status} before npm reached the tarball`);
-                }
-                return held.requested('npm-dependency') === dependencyRequests;
-              },
-              WAIT,
-            );
-            const entries = npxEntries(held.home);
-            expect(entries).toHaveLength(1);
-            const entry = String(entries[0]);
-            expect(hasManifest(entry), 'npm is still installing when the teardown begins').toBe(
-              false,
-            );
+describe('tearing down a thread whose agent child is still installing its npx package', () => {
+  test.each(CASES)(
+    'the npx cache entry ends complete or rolled back when $teardown while $site is installing',
+    async ({ open, run }) => {
+      expect(
+        () => descendantsOf(process.pid),
+        'this test reads the process table with ps',
+      ).not.toThrow();
+      await withHeldInstallRegistry(async (held) => {
+        const agentName = held.npmPackage.slice(0, held.npmPackage.lastIndexOf('@'));
+        const preexisting = new Set(descendantsOf(process.pid));
+        const started = new Set<number>();
+        const liveSinceStart = (): number[] => {
+          const live = descendantsOf(process.pid).filter((pid) => !preexisting.has(pid));
+          for (const pid of live) started.add(pid);
+          return live;
+        };
+        const everyStartedProcessEnded = (): boolean =>
+          liveSinceStart().length === 0 && [...started].every(processEnded);
+        const manager = heldManager(held);
+        const path = process.env.PATH;
+        try {
+          const { threadId, dependencyRequests } = await open(manager, held);
+          await waitWithinTestBudget(
+            'npm to request the held dependency tarball mid-install',
+            () => {
+              liveSinceStart();
+              const status = manager.getInfo(threadId)?.status;
+              if (status === 'error' || status === 'exited') {
+                throw new Error(`the thread settled as ${status} before npm reached the tarball`);
+              }
+              return held.requested('npm-dependency') === dependencyRequests;
+            },
+            WAIT,
+          );
+          const entries = npxEntries(held.home);
+          expect(entries).toHaveLength(1);
+          const entry = String(entries[0]);
+          expect(hasManifest(entry), 'npm is still installing when the teardown begins').toBe(
+            false,
+          );
 
-            let teardownSettled = false;
-            const teardownStartedAt = Date.now();
-            const teardown = run(manager, threadId);
-            teardown.then(
-              () => {
-                teardownSettled = true;
-              },
-              () => {
-                teardownSettled = true;
-              },
-            );
-            await waitWithinTestBudget(
-              'the teardown to settle or the held tarball to outlast every teardown grace',
-              () => {
-                liveSinceStart();
-                return (
-                  teardownSettled || Date.now() - teardownStartedAt >= TARBALL_ARRIVES_AFTER_MS
-                );
-              },
-              { timeoutMs: TARBALL_ARRIVES_AFTER_MS + 5_000 },
-            );
-            held.release('npm-dependency');
-            await teardown;
-            await waitWithinTestBudget(
-              'every process the thread started to exit',
-              everyStartedProcessEnded,
-              WAIT,
-            );
+          let teardownSettled = false;
+          const teardownStartedAt = Date.now();
+          const teardown = run(manager, threadId);
+          teardown.then(
+            () => {
+              teardownSettled = true;
+            },
+            () => {
+              teardownSettled = true;
+            },
+          );
+          await waitWithinTestBudget(
+            'the teardown to settle or the held tarball to outlast every teardown grace',
+            () => {
+              liveSinceStart();
+              return teardownSettled || Date.now() - teardownStartedAt >= TARBALL_ARRIVES_AFTER_MS;
+            },
+            { timeoutMs: TARBALL_ARRIVES_AFTER_MS + 5_000 },
+          );
+          held.release('npm-dependency');
+          await teardown;
+          await waitWithinTestBudget(
+            'every process the thread started to exit',
+            everyStartedProcessEnded,
+            WAIT,
+          );
 
-            const outcome = entryOutcome(entry, agentName);
-            expect(['complete', 'rolled-back'], JSON.stringify(outcome)).toContain(outcome.state);
-          } finally {
-            process.env.PATH = path;
-            held.release('npm-dependency');
-            await manager.destroy();
-            await waitWithinTestBudget(
-              'every process the test started to exit',
-              everyStartedProcessEnded,
-              WAIT,
-            );
-          }
-        });
-      },
-      150_000,
-    );
-  },
-);
+          const outcome = entryOutcome(entry, agentName);
+          expect(['complete', 'rolled-back'], JSON.stringify(outcome)).toContain(outcome.state);
+        } finally {
+          process.env.PATH = path;
+          held.release('npm-dependency');
+          await manager.destroy();
+          await waitWithinTestBudget(
+            'every process the test started to exit',
+            everyStartedProcessEnded,
+            WAIT,
+          );
+        }
+      });
+    },
+    150_000,
+  );
+});

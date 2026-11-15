@@ -89,13 +89,6 @@ describe('resolveUrlOpenInvocation — per-platform protocol-URL opener', () => 
     });
   });
 
-  test('Windows → rundll32.exe url.dll,FileProtocolHandler <url> (no cmd, no shell parse)', () => {
-    expect(resolveUrlOpenInvocation(CLAUDE_URL, 'win32')).toEqual({
-      exec: 'rundll32.exe',
-      args: ['url.dll,FileProtocolHandler', CLAUDE_URL],
-    });
-  });
-
   test('Linux → xdg-open <url>', () => {
     expect(resolveUrlOpenInvocation(CLAUDE_URL, 'linux')).toEqual({
       exec: 'xdg-open',
@@ -109,150 +102,9 @@ describe('resolveUrlOpenInvocation — per-platform protocol-URL opener', () => 
       args: [CLAUDE_URL],
     });
   });
-
-  test('a literal & in the URL stays a single inert argv element on Windows', () => {
-    const urlWithAmp = 'claude://cowork/new?folder=%2Fx&q=hi';
-    expect(resolveUrlOpenInvocation(urlWithAmp, 'win32')).toEqual({
-      exec: 'rundll32.exe',
-      args: ['url.dll,FileProtocolHandler', urlWithAmp],
-    });
-  });
-});
-
-describe('handleHandoffDispatch — app-bundle cross-platform (Windows / Linux)', () => {
-  test('Windows claude-cowork, scheme registered → single rundll32 URL fire; no osascript/open -a', async () => {
-    const calls: Array<{ exec: string; args: ReadonlyArray<string> }> = [];
-    const spawnDetached = vi.fn(async (exec: string, args: ReadonlyArray<string>) => {
-      calls.push({ exec, args: [...args] });
-      return { ok: true } as SpawnOutcome;
-    });
-    const isSchemeRegistered = vi.fn(async () => true);
-    const sleep = vi.fn(async (_ms: number) => undefined);
-    const { res, captured } = makeRes();
-    await handleHandoffDispatch(
-      makeReq('POST', { target: 'claude-cowork', url: CLAUDE_URL }),
-      res,
-      makeDeps({ platform: 'win32', spawnDetached, isSchemeRegistered, sleep }),
-    );
-    expect(captured.status).toBe(200);
-    expect(captured.body).toEqual({});
-    expect(isSchemeRegistered).toHaveBeenCalledWith('claude');
-    expect(calls).toEqual([
-      { exec: 'rundll32.exe', args: ['url.dll,FileProtocolHandler', CLAUDE_URL] },
-    ]);
-    expect(sleep).not.toHaveBeenCalled();
-  });
-
-  test('Windows codex, scheme registered → rundll32 URL fire; quitFirst does NOT spawn osascript off-darwin', async () => {
-    const calls: Array<{ exec: string; args: ReadonlyArray<string> }> = [];
-    const spawnDetached = vi.fn(async (exec: string, args: ReadonlyArray<string>) => {
-      calls.push({ exec, args: [...args] });
-      return { ok: true } as SpawnOutcome;
-    });
-    const isSchemeRegistered = vi.fn(async () => true);
-    const { res, captured } = makeRes();
-    await handleHandoffDispatch(
-      makeReq('POST', { target: 'codex', url: CODEX_URL }),
-      res,
-      makeDeps({ platform: 'win32', spawnDetached, isSchemeRegistered }),
-    );
-    expect(captured.status).toBe(200);
-    expect(isSchemeRegistered).toHaveBeenCalledWith('codex');
-    expect(calls).toEqual([
-      { exec: 'rundll32.exe', args: ['url.dll,FileProtocolHandler', CODEX_URL] },
-    ]);
-  });
-
-  test('Linux claude-code, scheme registered → single xdg-open URL fire', async () => {
-    const calls: Array<{ exec: string; args: ReadonlyArray<string> }> = [];
-    const spawnDetached = vi.fn(async (exec: string, args: ReadonlyArray<string>) => {
-      calls.push({ exec, args: [...args] });
-      return { ok: true } as SpawnOutcome;
-    });
-    const { res, captured } = makeRes();
-    await handleHandoffDispatch(
-      makeReq('POST', { target: 'claude-code', url: CLAUDE_URL }),
-      res,
-      makeDeps({ platform: 'linux', spawnDetached, isSchemeRegistered: async () => true }),
-    );
-    expect(captured.status).toBe(200);
-    expect(calls).toEqual([{ exec: 'xdg-open', args: [CLAUDE_URL] }]);
-  });
-
-  test('Windows claude-cowork, scheme NOT registered → 422 handoff-target-not-installed; no spawn', async () => {
-    const spawnDetached = vi.fn(async () => ({ ok: true }) as SpawnOutcome);
-    const { res, captured } = makeRes();
-    await handleHandoffDispatch(
-      makeReq('POST', { target: 'claude-cowork', url: CLAUDE_URL }),
-      res,
-      makeDeps({ platform: 'win32', spawnDetached, isSchemeRegistered: async () => false }),
-    );
-    expectProblem(captured, 422, 'urn:ok:error:handoff-target-not-installed');
-    expect(captured.body).toMatchObject({ target: 'claude-cowork' });
-    expect(spawnDetached).not.toHaveBeenCalled();
-  });
-
-  test('Linux codex, scheme NOT registered → 422 handoff-target-not-installed; no spawn', async () => {
-    const spawnDetached = vi.fn(async () => ({ ok: true }) as SpawnOutcome);
-    const { res, captured } = makeRes();
-    await handleHandoffDispatch(
-      makeReq('POST', { target: 'codex', url: CODEX_URL }),
-      res,
-      makeDeps({ platform: 'linux', spawnDetached, isSchemeRegistered: async () => false }),
-    );
-    expectProblem(captured, 422, 'urn:ok:error:handoff-target-not-installed');
-    expect(captured.body).toMatchObject({ target: 'codex' });
-    expect(spawnDetached).not.toHaveBeenCalled();
-  });
-
-  test('Windows app-bundle URL-spawn failure (spawn-error) → 502 handoff-spawn-failed', async () => {
-    const spawnDetached = vi.fn(async () => ({ ok: false, reason: 'spawn-error' }) as SpawnOutcome);
-    const { res, captured } = makeRes();
-    await handleHandoffDispatch(
-      makeReq('POST', { target: 'claude-cowork', url: CLAUDE_URL }),
-      res,
-      makeDeps({ platform: 'win32', spawnDetached, isSchemeRegistered: async () => true }),
-    );
-    expectProblem(captured, 502, 'urn:ok:error:handoff-spawn-failed');
-    expect(captured.body).toMatchObject({ target: 'claude-cowork' });
-  });
 });
 
 describe('handleHandoffDispatch — cursor cross-platform (cli-binary)', () => {
-  test('Windows cursor: .cmd shim via cmd.exe /d /c → sleep → rundll32 URL fire', async () => {
-    const winContentDir = 'C:\\Users\\who\\dragons';
-    const winWorkspace = 'C:\\Users\\who\\dragons\\specs';
-    const cmdPath =
-      'C:\\Users\\who\\AppData\\Local\\Programs\\cursor\\resources\\app\\bin\\cursor.cmd';
-    const calls: Array<{ exec: string; args: ReadonlyArray<string> }> = [];
-    const spawnDetached = vi.fn(async (exec: string, args: ReadonlyArray<string>) => {
-      calls.push({ exec, args: [...args] });
-      return { ok: true } as SpawnOutcome;
-    });
-    const sleep = vi.fn(async (_ms: number) => undefined);
-    const { res, captured } = makeRes();
-    await handleHandoffDispatch(
-      makeReq('POST', { target: 'cursor', url: CURSOR_URL, workspacePath: winWorkspace }),
-      res,
-      makeDeps({
-        platform: 'win32',
-        contentDir: winContentDir,
-        spawnDetached,
-        sleep,
-        resolveCursorBinary: async () => cmdPath,
-      }),
-    );
-    expect(captured.status).toBe(200);
-    expect(calls.length).toBe(2);
-    expect(calls[0]?.exec.toLowerCase().endsWith('cmd.exe')).toBe(true);
-    expect(calls[0]?.args).toEqual(['/d', '/c', cmdPath, winWorkspace]);
-    expect(calls[1]).toEqual({
-      exec: 'rundll32.exe',
-      args: ['url.dll,FileProtocolHandler', CURSOR_URL],
-    });
-    expect(sleep).toHaveBeenCalledTimes(1);
-  });
-
   test('Linux cursor: cursor <path> → sleep → xdg-open URL fire', async () => {
     const linuxContentDir = '/home/who/dragons';
     const linuxWorkspace = '/home/who/dragons/specs';
@@ -684,7 +536,7 @@ describe('handleHandoffDispatch — readiness observation', () => {
       makeReq('POST', { target: 'claude-cowork', url: CLAUDE_URL }),
       res,
       makeDeps({
-        platform: 'win32',
+        platform: 'linux',
         isSchemeRegistered: async () => false,
         spawnDetached: vi.fn(async () => ({ ok: true }) as SpawnOutcome),
         hostSnapshot,
@@ -709,5 +561,35 @@ describe('handleHandoffDispatch — readiness observation', () => {
 
     expectProblem(captured, 400, 'urn:ok:error:invalid-request');
     expect(hostSnapshot).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleHandoffDispatch — Linux app-bundle dispatch', () => {
+  test('Linux claude-code, scheme registered → single xdg-open URL fire', async () => {
+    const calls: Array<{ exec: string; args: ReadonlyArray<string> }> = [];
+    const spawnDetached = vi.fn(async (exec: string, args: ReadonlyArray<string>) => {
+      calls.push({ exec, args: [...args] });
+      return { ok: true } as SpawnOutcome;
+    });
+    const { res, captured } = makeRes();
+    await handleHandoffDispatch(
+      makeReq('POST', { target: 'claude-code', url: CLAUDE_URL }),
+      res,
+      makeDeps({ platform: 'linux', spawnDetached, isSchemeRegistered: async () => true }),
+    );
+    expect(captured.status).toBe(200);
+    expect(calls).toEqual([{ exec: 'xdg-open', args: [CLAUDE_URL] }]);
+  });
+  test('Linux codex, scheme NOT registered → 422 handoff-target-not-installed; no spawn', async () => {
+    const spawnDetached = vi.fn(async () => ({ ok: true }) as SpawnOutcome);
+    const { res, captured } = makeRes();
+    await handleHandoffDispatch(
+      makeReq('POST', { target: 'codex', url: CODEX_URL }),
+      res,
+      makeDeps({ platform: 'linux', spawnDetached, isSchemeRegistered: async () => false }),
+    );
+    expectProblem(captured, 422, 'urn:ok:error:handoff-target-not-installed');
+    expect(captured.body).toMatchObject({ target: 'codex' });
+    expect(spawnDetached).not.toHaveBeenCalled();
   });
 });

@@ -143,7 +143,7 @@ describe('reading terminal scrollback upward', () => {
     },
   );
 
-  test.each(['win32', 'linux'] as const)(
+  test.each(['linux'] as const)(
     'does not count the echoed %s scroll command as the lines it prints',
     async (platform) => {
       const terminal = renderedTerminal(transcript(platform, []), DOCK_ROWS);

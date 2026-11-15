@@ -16,9 +16,6 @@ describe('revealMenuLabel — platform-specific Reveal text', () => {
   test('macOS → Reveal in Finder', () => {
     expect(revealMenuLabel('darwin')).toBe('Reveal in Finder');
   });
-  test('Windows → Reveal in File Explorer', () => {
-    expect(revealMenuLabel('win32')).toBe('Reveal in File Explorer');
-  });
   test('Linux → Open containing folder', () => {
     expect(revealMenuLabel('linux')).toBe('Open containing folder');
   });

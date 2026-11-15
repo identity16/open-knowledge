@@ -19,26 +19,6 @@ describe('quoteStopCommandPath', () => {
       expect(quoteStopCommandPath(p, 'linux')).toBe(quoteStopCommandPath(p, 'darwin'));
     });
   });
-
-  describe('win32', () => {
-    test.each([
-      ['plain', 'C:\\Users\\me\\notes'],
-      ['space', 'C:\\Users\\First Last\\notes'],
-      ['ampersand', 'C:\\Users\\me\\Work & Personal'],
-      ['apostrophe', "C:\\Users\\O'Brien\\notes"],
-    ])('%s wraps in double quotes with nothing escaped', (_label, input) => {
-      expect(quoteStopCommandPath(input, 'win32')).toBe(`"${input}"`);
-    });
-
-    test.each([
-      ['drive root', 'C:\\', '"C:\\\\"'],
-      ['trailing backslash', 'C:\\Users\\me\\notes\\', '"C:\\Users\\me\\notes\\\\"'],
-      ['two trailing', 'C:\\a\\\\', '"C:\\a\\\\\\\\"'],
-      ['interior only', 'C:\\a\\b', '"C:\\a\\b"'],
-    ])('%s doubles only a trailing backslash run', (_label, input, expected) => {
-      expect(quoteStopCommandPath(input, 'win32')).toBe(expected);
-    });
-  });
 });
 
 describe('stopCommandLine', () => {
@@ -50,9 +30,6 @@ describe('stopCommandLine', () => {
     vi.stubEnv('OK_CHANNEL', 'stable');
     expect(stopCommandLine("/Users/bob/Bob's Notes", 'darwin')).toBe(
       "ok stop '/Users/bob/Bob'\\''s Notes'",
-    );
-    expect(stopCommandLine('C:\\notes\\', 'win32', { force: true })).toBe(
-      'ok stop --force "C:\\notes\\\\"',
     );
   });
 

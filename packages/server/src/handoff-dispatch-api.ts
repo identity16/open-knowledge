@@ -296,9 +296,7 @@ export function resolveUrlOpenInvocation(
   platform: NodeJS.Platform,
 ): { exec: string; args: ReadonlyArray<string> } {
   if (platform === 'darwin') return { exec: '/usr/bin/open', args: [url] };
-  if (platform === 'win32') {
-    return { exec: 'rundll32.exe', args: ['url.dll,FileProtocolHandler', url] };
-  }
+
   return { exec: 'xdg-open', args: [url] };
 }
 

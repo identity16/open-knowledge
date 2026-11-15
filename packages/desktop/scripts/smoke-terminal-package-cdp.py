@@ -286,7 +286,7 @@ def evaluate_pty_echo(socket_url: str) -> Dict[str, object]:
                 '',
               )
               .replace(/\\u001b\\[[0-?]*[ -/]*[@-~]/g, '');
-            // Windows bakes the marker command into shell startup. POSIX types
+            // POSIX types
             // it only after creation, where the echoed input includes `echo `.
             // Requiring a marker-only output line rejects that input echo on
             // both paths and rejects partial writes.
@@ -323,29 +323,17 @@ def evaluate_pty_echo(socket_url: str) -> Dict[str, object]:
               if (endings.length === 0) markPhase?.('first-exit', 'point', message.ptyId);
               endings.push({{ ...message, atMs: sinceStart(performance.now()) }});
             }}));
-            releases.push(bridge.terminal.onNotice((message) => {{
-              if (notices.length === 0) markPhase?.('first-notice', 'point', message.ptyId);
-              notices.push({{ ...message, atMs: sinceStart(performance.now()) }});
-            }}));
+
           }} catch (error) {{
             await finish(error);
             return;
           }}
-          const isWindows = bridge.platform === 'win32';
           markPhase?.('create', 'begin');
           let created;
           try {{
             created = await bridge.terminal.create({{
             cols: 80,
             rows: 24,
-            ...(isWindows
-              ? {{
-                  launchCommand: {{
-                    executable: 'cmd.exe',
-                    args: ['/d', '/c', 'echo', marker],
-                  }},
-                }}
-              : {{}}),
           }});
           }} catch (error) {{
             markPhase?.('create', 'error');
@@ -371,7 +359,7 @@ def evaluate_pty_echo(socket_url: str) -> Dict[str, object]:
             await finish(new Error(`PTY attach failed: ${{attached.reason}}`));
             return;
           }}
-          if (!isWindows) bridge.terminal.input(ptyId, `echo ${{marker}}\\r`);
+          bridge.terminal.input(ptyId, `echo ${{marker}}\\r`);
         }});
       }})()
     """

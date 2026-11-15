@@ -542,7 +542,7 @@ export function createSkillsInstallRoutes(deps: SkillsInstallRouteDeps): ApiRout
                   res,
                   403,
                   'urn:ok:error:links-not-permitted',
-                  'This system does not allow creating symlinks, so that location was left as a copy. On Windows, creating symlinks needs administrator rights or Developer Mode.',
+                  'This system does not allow creating symlinks, so that location was left as a copy.',
                   { handler: 'skill-install', detail: target },
                 );
                 return;

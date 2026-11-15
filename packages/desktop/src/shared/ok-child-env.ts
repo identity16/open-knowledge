@@ -5,7 +5,6 @@ import {
   OK_HOSTED_AGENT_ENV,
   posixOkManagedBinDir,
 } from '@inkeep/open-knowledge-core';
-import { windowsPathKey } from './windows-env.ts';
 
 const STRIPPED_ENV_MARKERS = [
   'OK_ELECTRON_PROTOCOL_HOST',
@@ -22,11 +21,10 @@ export interface OkManagedBinDirsOptions {
 }
 
 export function okPackagedCliBinDir(
-  platform: NodeJS.Platform,
-  resourcesPath: string | undefined,
+  _platform: NodeJS.Platform,
+  _resourcesPath: string | undefined,
 ): string | undefined {
-  if (platform !== 'win32' || !resourcesPath) return undefined;
-  return `${resourcesPath}\\cli\\bin`;
+  return undefined;
 }
 
 export function okChildHome(parentEnv: Record<string, string | undefined>): string | undefined {
@@ -56,27 +54,26 @@ export function okChildEnvOptionsFromProcess(): OkManagedBinDirsOptions {
 }
 
 export function okManagedBinDirs(options: OkManagedBinDirsOptions): readonly string[] {
-  if (options.platform === 'win32') return options.cliBinDir ? [options.cliBinDir] : [];
   return options.home ? [posixOkManagedBinDir(options.home)] : [];
 }
 
 export function hasNoResolvableOkHome(options: OkManagedBinDirsOptions): boolean {
-  return options.platform !== 'win32' && !options.home;
+  return !options.home;
 }
 
-export function okPathDelimiter(platform: NodeJS.Platform): string {
-  return platform === 'win32' ? ';' : ':';
+export function okPathDelimiter(_platform: NodeJS.Platform): string {
+  return ':';
 }
 
-function entryMatchesDir(entry: string, dir: string, platform: NodeJS.Platform): boolean {
-  return platform === 'win32' ? entry.toLowerCase() === dir.toLowerCase() : entry === dir;
+function entryMatchesDir(entry: string, dir: string, _platform: NodeJS.Platform): boolean {
+  return entry === dir;
 }
 
 export function okChildPathEntries(
   env: Record<string, string | undefined>,
   options: OkManagedBinDirsOptions,
 ): readonly string[] {
-  return (env[windowsPathKey(env)] ?? '').split(okPathDelimiter(options.platform)).filter(Boolean);
+  return (env.PATH ?? '').split(okPathDelimiter(options.platform)).filter(Boolean);
 }
 
 export function hasOkManagedBinDirsOnPath(
@@ -101,7 +98,7 @@ function prependOkManagedBinDirs(
   );
   if (additions.length === 0) return { ...env };
   const joined = [...additions, ...entries].join(okPathDelimiter(options.platform));
-  return { ...env, [windowsPathKey(env)]: joined };
+  return { ...env, PATH: joined };
 }
 
 export function composeOkChildEnv(

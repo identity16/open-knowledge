@@ -41,6 +41,6 @@ export function resolveSyncWorkspace(
   if (!okDesktop) return null;
   return {
     contentDir: okDesktop.config.projectPath,
-    pathSeparator: okDesktop.platform === 'win32' ? '\\' : '/',
+    pathSeparator: '/',
   };
 }

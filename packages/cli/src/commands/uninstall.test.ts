@@ -95,48 +95,6 @@ describe('detectInstallMethods', () => {
     ).toEqual(expected);
   });
 
-  test('detects the Windows NSIS install and points at Settings → Apps', () => {
-    const localAppData = 'C:\\Users\\Jane\\AppData\\Local';
-    const exe = join(
-      localAppData,
-      'Programs',
-      '@inkeepopen-knowledge-desktop',
-      'OpenKnowledge.exe',
-    );
-    const methods = detectInstallMethods(
-      'C:\\Users\\Jane',
-      undefined,
-      () => null,
-      (p) => p === exe,
-      {
-        platform: 'win32',
-        env: { LOCALAPPDATA: localAppData },
-      },
-    );
-    expect(methods.map((m) => m.method)).toEqual(['app']);
-    expect(methods[0]?.instruction).toContain('Settings');
-  });
-
-  test('reports Stable and Beta Windows installs separately', () => {
-    const localAppData = 'C:\\Users\\Jane\\AppData\\Local';
-    const installed = new Set([
-      join(localAppData, 'Programs', '@inkeepopen-knowledge-desktop', 'OpenKnowledge.exe'),
-      join(localAppData, 'Programs', 'openknowledge-beta-desktop', 'OpenKnowledge Beta.exe'),
-    ]);
-    const methods = detectInstallMethods(
-      'C:\\Users\\Jane',
-      undefined,
-      () => null,
-      (path) => installed.has(path),
-      { platform: 'win32', env: { LOCALAPPDATA: localAppData } },
-    );
-    expect(methods).toHaveLength(2);
-    expect(methods.map((method) => method.label)).toEqual([
-      expect.stringContaining('OpenKnowledge ('),
-      expect.stringContaining('OpenKnowledge Beta ('),
-    ]);
-  });
-
   test('detects the Linux deb/rpm install and names both package managers', () => {
     const methods = detectInstallMethods(
       '/home/jane',

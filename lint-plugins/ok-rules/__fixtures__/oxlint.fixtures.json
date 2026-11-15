@@ -4,7 +4,11 @@
   "rules": {
     "react/jsx-curly-brace-presence": [
       "error",
-      { "children": "never", "props": "never", "propElementValues": "ignore" }
+      {
+        "children": "never",
+        "props": "never",
+        "propElementValues": "ignore"
+      }
     ],
     "ok/class-proof-registration-discipline": "error",
     "ok/cst-pm-handler-todo-stub": "error",
@@ -38,7 +42,6 @@
     "ok/no-unwrapped-user-facing-string": "error",
     "ok/path-conditional-map-driven-origin": "error",
     "ok/playwright-prefer-to-have-count": "error",
-    "ok/require-utf8-multipart-parser": "error",
-    "ok/require-windowshide-on-spawn": "error"
+    "ok/require-utf8-multipart-parser": "error"
   }
 }

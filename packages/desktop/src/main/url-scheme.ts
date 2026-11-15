@@ -10,13 +10,12 @@
  * delivery path is silently dead. The call site is `packages/desktop/src/main/index.ts`.
  */
 
-import { extname, isAbsolute, resolve } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 import { parseGitHubShareUrl } from '@inkeep/open-knowledge';
 import {
   type CandidateSelection,
   decodeShareUrl,
   InvalidShareUrlError,
-  SUPPORTED_DOC_EXTENSIONS,
   UnsupportedShareVersionError,
 } from '@inkeep/open-knowledge-core';
 import type {
@@ -888,24 +887,12 @@ export function registerProtocolHandler(deps: ProtocolHandlerDeps): ProtocolHand
 
   const ingestArgv = (argv: readonly string[]): number => {
     let urlArguments = 0;
-    let fileArguments = 0;
-    let unencodableArguments = 0;
+    const fileArguments = 0;
+    const unencodableArguments = 0;
     for (const arg of argv) {
       if (arg.startsWith(`${protocolScheme}://`)) {
         urlArguments += 1;
         enqueueOrRoute(arg);
-      } else if (
-        platform === 'win32' &&
-        deps.app.isPackaged &&
-        isAbsolute(arg) &&
-        (SUPPORTED_DOC_EXTENSIONS as readonly string[]).includes(extname(arg).toLowerCase())
-      ) {
-        if (!arg.isWellFormed()) {
-          unencodableArguments += 1;
-          continue;
-        }
-        fileArguments += 1;
-        enqueueOrRoute(`${protocolScheme}://open?file=${encodeURIComponent(arg)}`);
       }
     }
     deps.log?.info?.(

@@ -38,7 +38,7 @@ const WRITER_PUBLISH_ROUNDS = 3;
 const COMPOSER_PATH = fileURLToPath(new URL('./build-skill-bundles.ts', import.meta.url));
 const STAGING_ROOT_PREFIX = '.ok-skill-publish-';
 const STALE_STAGING_MTIME = new Date('2001-01-01T00:00:00Z');
-const PERMISSION_BITS_UNENFORCED = process.platform === 'win32' || process.getuid?.() === 0;
+const PERMISSION_BITS_UNENFORCED = process.getuid?.() === 0;
 
 const cleanup: string[] = [];
 const children = new Map<ChildProcess, Promise<Error | undefined>>();

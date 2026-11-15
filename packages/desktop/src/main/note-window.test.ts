@@ -270,12 +270,9 @@ describe('noteWindowNativeChromeOptions', () => {
     });
   });
 
-  test.each(['win32', 'linux'] as const)(
-    'leaves %s chrome to the shared WCO policy',
-    (platform) => {
-      expect(noteWindowNativeChromeOptions(platform)).toEqual({});
-    },
-  );
+  test.each(['linux'] as const)('leaves %s chrome to the shared WCO policy', (platform) => {
+    expect(noteWindowNativeChromeOptions(platform)).toEqual({});
+  });
 });
 
 describe('createNoteWindow', () => {

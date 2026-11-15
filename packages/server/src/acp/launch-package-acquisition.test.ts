@@ -400,46 +400,43 @@ describe('hermetic package acquisition and native dispatch', () => {
     });
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'an install reports the output it wrote without leaving an output file in its working directory',
-    async () => {
-      await withAcquisitionHome(async (home) => {
-        const bin = join(home, 'bin');
-        mkdirSync(bin);
-        installNodeFixture(bin);
-        const listing = join(home, 'npx-cwd-listing.json');
-        writeExecutable(
-          join(bin, 'npx'),
-          `const fs = require('node:fs');
+  test('an install reports the output it wrote without leaving an output file in its working directory', async () => {
+    await withAcquisitionHome(async (home) => {
+      const bin = join(home, 'bin');
+      mkdirSync(bin);
+      installNodeFixture(bin);
+      const listing = join(home, 'npx-cwd-listing.json');
+      writeExecutable(
+        join(bin, 'npx'),
+        `const fs = require('node:fs');
           fs.writeFileSync(${JSON.stringify(listing)}, JSON.stringify(fs.readdirSync(process.cwd())));
           process.stderr.write('npm error fixture install output\\n');
           process.exit(1);`,
-        );
-        writeExecutable(
-          join(bin, 'npm'),
-          `process.stdout.write(${JSON.stringify(JSON.stringify([{ name: 'is-number', version: '7.0.0' }]))});`,
-        );
-        await expect(
-          resolveRegistryLaunch(
-            registryPackage('is-number@7.0.0', 'npx', { PATH: bin }),
-            null,
-            log,
-            undefined,
-            async (launch) => launch,
-            { install: true },
-          ),
-        ).rejects.toMatchObject({
-          code: 'install-failed',
-          message: 'Could not install is-number@7.0.0.',
-          machineDetail: 'npm error fixture install output',
-        });
-        expect(JSON.parse(readFileSync(listing, 'utf8'))).toEqual(['package.json']);
-        expect(readdirSync(join(okUserHomeDir(home), 'acp-npx-cwd'))).toEqual(['package.json']);
+      );
+      writeExecutable(
+        join(bin, 'npm'),
+        `process.stdout.write(${JSON.stringify(JSON.stringify([{ name: 'is-number', version: '7.0.0' }]))});`,
+      );
+      await expect(
+        resolveRegistryLaunch(
+          registryPackage('is-number@7.0.0', 'npx', { PATH: bin }),
+          null,
+          log,
+          undefined,
+          async (launch) => launch,
+          { install: true },
+        ),
+      ).rejects.toMatchObject({
+        code: 'install-failed',
+        message: 'Could not install is-number@7.0.0.',
+        machineDetail: 'npm error fixture install output',
       });
-    },
-  );
+      expect(JSON.parse(readFileSync(listing, 'utf8'))).toEqual(['package.json']);
+      expect(readdirSync(join(okUserHomeDir(home), 'acp-npx-cwd'))).toEqual(['package.json']);
+    });
+  });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'an install whose working directory refuses its output file fails as an install naming the cause',
     async () => {
       await withAcquisitionHome(async (home) => {

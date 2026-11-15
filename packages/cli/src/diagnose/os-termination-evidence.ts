@@ -1,12 +1,7 @@
 import { type ExecFileException, execFile } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, win32 } from 'node:path';
-import {
-  DESKTOP_PRODUCTS,
-  desktopWindowsExecutableName,
-  PACKAGED_DESKTOP_PRODUCT_NAMES,
-} from '@inkeep/open-knowledge-core';
+import { join } from 'node:path';
 import { okUserHomeDir } from '@inkeep/open-knowledge-core/server';
 import {
   DIAGNOSTIC_REPORT_WINDOW_DAYS,
@@ -26,11 +21,7 @@ const MACOS_SYSTEM_DIAGNOSTIC_REPORTS_DIR = '/Library/Logs/DiagnosticReports';
 
 const OWNED_NAME = /openknowledge/i;
 
-const WINDOWS_EXECUTABLES = PACKAGED_DESKTOP_PRODUCT_NAMES.map((name) =>
-  desktopWindowsExecutableName(DESKTOP_PRODUCTS[name]),
-);
-
-type OsTerminationSource = 'macos-jetsam' | 'linux-journal' | 'windows-event-log';
+type OsTerminationSource = 'macos-jetsam' | 'linux-journal';
 
 interface JetsamProcess {
   name: string;
@@ -61,17 +52,7 @@ interface JournalEvidenceEvent {
   detail?: string;
 }
 
-interface WindowsEvidenceEvent {
-  kind: 'windows-event';
-  at: string;
-  log: 'System' | 'Application';
-  provider: string;
-  eventId: number;
-  mentionsOpenKnowledge: boolean;
-  data: string[];
-}
-
-type OsTerminationEvent = JetsamEvidenceEvent | JournalEvidenceEvent | WindowsEvidenceEvent;
+type OsTerminationEvent = JetsamEvidenceEvent | JournalEvidenceEvent;
 
 export interface OsTerminationEvidence {
   schemaVersion: 1;
@@ -127,7 +108,6 @@ export function createRunCommand(
             encoding: 'utf8',
             timeout: options.timeoutMs ?? COMMAND_TIMEOUT_MS,
             maxBuffer: options.maxBuffer ?? COMMAND_MAX_BUFFER,
-            windowsHide: true,
           },
           (error: ExecFileException | null, stdout, stderr) => {
             resolvePromise({ ...describeExit(error), stdout, stderr });
@@ -729,134 +709,6 @@ async function collectLinuxJournal(
   return settle(evidence);
 }
 
-const WINDOWS_SYSTEM_PROVIDERS: Record<number, string> = {
-  41: 'Microsoft-Windows-Kernel-Power',
-  1074: 'User32',
-  2004: 'Microsoft-Windows-Resource-Exhaustion-Detector',
-  6008: 'EventLog',
-};
-
-const WINDOWS_APPLICATION_PROVIDERS: Record<number, string> = {
-  1000: 'Application Error',
-  1001: 'Windows Error Reporting',
-  1002: 'Application Hang',
-};
-
-type WindowsLog = 'System' | 'Application';
-
-function providersFor(log: WindowsLog): Record<number, string> {
-  return log === 'System' ? WINDOWS_SYSTEM_PROVIDERS : WINDOWS_APPLICATION_PROVIDERS;
-}
-
-function windowsQuery(log: WindowsLog): string {
-  const ids = Object.keys(providersFor(log))
-    .map((id) => `EventID=${id}`)
-    .join(' or ');
-  const system = `System[(${ids}) and TimeCreated[timediff(@SystemTime) <= ${WINDOW_MS}]]`;
-  if (log === 'System') return `*[${system}]`;
-  const names = WINDOWS_EXECUTABLES.map((exe) => `Data='${exe}'`).join(' or ');
-  return `*[${system} and EventData[${names}]]`;
-}
-
-export function windowsEventLogArgs(log: WindowsLog): string[] {
-  return ['qe', log, `/q:${windowsQuery(log)}`, '/f:xml', '/rd:true', '/c:200'];
-}
-
-export function windowsEventLogExecutable(systemRoot: string | undefined): string {
-  return win32.join(systemRoot ?? 'C:\\Windows', 'System32', 'wevtutil.exe');
-}
-
-function decodeXml(value: string): string {
-  return value
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&');
-}
-
-function looksLikePath(value: string): boolean {
-  return /[\\/]/.test(value) || /^[a-z]:/i.test(value);
-}
-
-function elementTexts(record: string, element: string): string[] {
-  const pattern = new RegExp(`<${element}(?:\\s[^>]*)?>([\\s\\S]*?)</${element}>`, 'g');
-  return [...record.matchAll(pattern)].map((m) => decodeXml(m[1] ?? '').trim());
-}
-
-function parseWindowsEventXml(
-  log: WindowsLog,
-  xml: string,
-): { events: WindowsEvidenceEvent[]; foreignIgnored: number; unparseable: number } {
-  const providers = providersFor(log);
-  const events: WindowsEvidenceEvent[] = [];
-  let foreignIgnored = 0;
-  let unparseable = 0;
-  for (const record of xml.match(/<Event[\s>][\s\S]*?<\/Event>/g) ?? []) {
-    const provider = /<Provider\s+Name=['"]([^'"]+)['"]/.exec(record)?.[1];
-    const eventId = Number(/<EventID[^>]*>(\d+)<\/EventID>/.exec(record)?.[1]);
-    const at = /<TimeCreated\s+SystemTime=['"]([^'"]+)['"]/.exec(record)?.[1];
-    if (provider === undefined || !Number.isInteger(eventId) || at === undefined) {
-      unparseable += 1;
-      continue;
-    }
-    if (providers[eventId] !== provider) {
-      foreignIgnored += 1;
-      continue;
-    }
-    const values = elementTexts(record, 'Data');
-    const processNames = elementTexts(record, 'Name');
-    const mentionsOpenKnowledge = [...values, ...processNames].some((v) => OWNED_NAME.test(v));
-    if (log === 'Application' && !mentionsOpenKnowledge) {
-      foreignIgnored += 1;
-      continue;
-    }
-    events.push({
-      kind: 'windows-event',
-      at,
-      log,
-      provider,
-      eventId,
-      mentionsOpenKnowledge,
-      data: log === 'Application' ? values.filter((v) => v !== '' && !looksLikePath(v)) : [],
-    });
-  }
-  return { events, foreignIgnored, unparseable };
-}
-
-async function collectWindowsEventLog(
-  run: RunCommand,
-  systemRoot: string | undefined,
-): Promise<OsTerminationEvidence> {
-  const executable = windowsEventLogExecutable(systemRoot);
-  const logs = ['System', 'Application'] as const;
-  const evidence = base(
-    'win32',
-    'windows-event-log',
-    logs.map((log) => `${executable} ${windowsEventLogArgs(log).join(' ')}`),
-  );
-  const results = await Promise.all(
-    logs.map(async (log) => ({ log, result: await run(executable, windowsEventLogArgs(log)) })),
-  );
-  const failures: string[] = [];
-  for (const { log, result } of results) {
-    if (result.status !== 0) {
-      failures.push(`${log}: ${describeFailure(result)}`);
-      continue;
-    }
-    const parsed = parseWindowsEventXml(log, result.stdout);
-    evidence.droppedOverCap += Math.max(0, parsed.events.length - MAX_EVENTS);
-    evidence.events.push(...parsed.events.slice(0, MAX_EVENTS));
-    evidence.foreignIgnored += parsed.foreignIgnored;
-    evidence.unparseable += parsed.unparseable;
-  }
-  if (failures.length === logs.length) return unavailable(evidence, failures.join('; '));
-  if (failures.length > 0) {
-    return { ...evidence, outcome: 'partial', unavailableReason: failures.join('; ') };
-  }
-  return settle(evidence);
-}
-
 export async function collectOsTerminationEvidence(
   deps: OsTerminationEvidenceDeps = {},
 ): Promise<OsTerminationEvidence> {
@@ -868,8 +720,7 @@ export async function collectOsTerminationEvidence(
       return collectMacosJetsam(deps.macosReportsDir ?? MACOS_SYSTEM_DIAGNOSTIC_REPORTS_DIR, now);
     case 'linux':
       return collectLinuxJournal(run, now, deps.desktopLogsDir ?? join(okUserHomeDir(), 'logs'));
-    case 'win32':
-      return collectWindowsEventLog(run, deps.systemRoot ?? process.env.SystemRoot);
+
     default:
       return { ...base(platform, null, []), outcome: 'unsupported' };
   }
@@ -885,7 +736,6 @@ export function renderOsTerminationEvidence(evidence: OsTerminationEvidence | un
 const SOURCE_NAMES: Record<OsTerminationSource, string> = {
   'macos-jetsam': 'macOS low-memory reports',
   'linux-journal': 'system and user journals',
-  'windows-event-log': 'Windows event logs',
 };
 
 export function describeOsTerminationEvidence(evidence: OsTerminationEvidence): string {

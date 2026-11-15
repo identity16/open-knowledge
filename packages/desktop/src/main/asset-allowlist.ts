@@ -1,6 +1,5 @@
 import { realpathSync, statSync } from 'node:fs';
 import * as pathPosix from 'node:path/posix';
-import * as pathWin32 from 'node:path/win32';
 import { EXECUTABLE_BLOCKLIST_EXTENSIONS } from '@inkeep/open-knowledge-core';
 import {
   assetOpenRefusalRevealsInstead,
@@ -49,7 +48,7 @@ function resolveAndContain(
 ):
   | { ok: true; canonical: string; kind: 'file' | 'other' }
   | { ok: false; reason: 'path-escape' | 'not-found' | 'resolve-error' } {
-  const p = platform === 'win32' ? pathWin32 : pathPosix;
+  const p = pathPosix;
   if (p.isAbsolute(relPath)) {
     return { ok: false, reason: 'path-escape' };
   }

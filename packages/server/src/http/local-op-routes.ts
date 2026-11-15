@@ -30,10 +30,6 @@ import {
   type ProblemType,
 } from '@inkeep/open-knowledge-core';
 import { resolveGitDirDetailed } from '@inkeep/open-knowledge-core/shadow-repo-layout';
-import {
-  LOCAL_OP_PIPE_STDIO_OPTIONS,
-  withHiddenWindowsConsole,
-} from '../child-process-windows-hide.ts';
 import { getLocalDir } from '../config/paths.ts';
 import { EmbeddingsCredentialStoreError } from '../embeddings/embedder.ts';
 import {
@@ -67,6 +63,7 @@ import { LocalOpSubprocessLifetime } from '../local-ops/subprocess-lifetime.ts';
 import type { PinoLogger } from '../logger.ts';
 import { readDeclaredGitHubHosts, resolveGitHubAuthHost } from '../share/git-context.ts';
 import { redactShareSubprocessStderr } from '../share/publish.ts';
+import { LOCAL_OP_PIPE_STDIO_OPTIONS } from '../subprocess-options.ts';
 import type { SyncEngine } from '../sync-engine.ts';
 import { resolveUiRedirectPort } from '../ui-redirect-port.ts';
 import { type ApiRouteGroup, type ApiRouteRecord, createApiRouteGroup } from './api-pipeline.ts';
@@ -318,16 +315,12 @@ export function createLocalOpRoutes(
     if ('refused' in startInvocation) return { error: startInvocation.refused };
 
     const spawnAndAwaitServer = async (): Promise<{ port: number } | { error: string }> => {
-      const child = spawn(
-        startInvocation.command,
-        startInvocation.args,
-        withHiddenWindowsConsole({
-          ...LOCAL_OP_STDERR_ONLY_OPTIONS,
-          cwd: absDir,
-          detached: true,
-          env: startInvocation.env,
-        }),
-      );
+      const child = spawn(startInvocation.command, startInvocation.args, {
+        ...LOCAL_OP_STDERR_ONLY_OPTIONS,
+        cwd: absDir,
+        detached: true,
+        env: startInvocation.env,
+      });
 
       const stderrChunks: Buffer[] = [];
       child.stderr?.on('data', (chunk: Buffer) => {
@@ -861,15 +854,11 @@ export function createLocalOpRoutes(
 
         const output = await new Promise<string>((resolve, reject) => {
           const child = subprocessLifetime.spawn(() =>
-            spawn(
-              invocation.command,
-              invocation.args,
-              withHiddenWindowsConsole({
-                ...LOCAL_OP_PIPE_STDIO_OPTIONS,
-                env: invocation.env,
-                cwd: authProjectDir,
-              }),
-            ),
+            spawn(invocation.command, invocation.args, {
+              ...LOCAL_OP_PIPE_STDIO_OPTIONS,
+              env: invocation.env,
+              cwd: authProjectDir,
+            }),
           );
           let settled = false;
           const killTimer = setTimeout(() => {
@@ -1139,15 +1128,11 @@ export function createLocalOpRoutes(
     const child = (() => {
       try {
         return subprocessLifetime.spawn(() =>
-          spawn(
-            invocation.command,
-            invocation.args,
-            withHiddenWindowsConsole({
-              ...LOCAL_OP_PIPE_STDIO_OPTIONS,
-              env: invocation.env,
-              cwd: authProjectDir,
-            }),
-          ),
+          spawn(invocation.command, invocation.args, {
+            ...LOCAL_OP_PIPE_STDIO_OPTIONS,
+            env: invocation.env,
+            cwd: authProjectDir,
+          }),
         );
       } catch (err) {
         finish();
@@ -1287,15 +1272,11 @@ export function createLocalOpRoutes(
 
         await new Promise<void>((resolve, reject) => {
           const child = subprocessLifetime.spawn(() =>
-            spawn(
-              invocation.command,
-              invocation.args,
-              withHiddenWindowsConsole({
-                ...LOCAL_OP_IGNORED_STDIO_OPTIONS,
-                env: invocation.env,
-                cwd: authProjectDir,
-              }),
-            ),
+            spawn(invocation.command, invocation.args, {
+              ...LOCAL_OP_IGNORED_STDIO_OPTIONS,
+              env: invocation.env,
+              cwd: authProjectDir,
+            }),
           );
           let settled = false;
           const killTimer = setTimeout(() => {

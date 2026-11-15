@@ -109,10 +109,7 @@ export function applyThemeToWindow(
   try {
     win.setBackgroundColor(bg);
   } catch {}
-  if (
-    (platform === 'win32' || platform === 'linux') &&
-    typeof win.setTitleBarOverlay === 'function'
-  ) {
+  if (platform === 'linux' && typeof win.setTitleBarOverlay === 'function') {
     const height = titleBarOverlayHeightForKind(windowChromeKindOf(win));
     try {
       win.setTitleBarOverlay(computeTitleBarOverlay(isDark, live, height));

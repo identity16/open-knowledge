@@ -20,7 +20,7 @@ describe('decideAllWindowsClosed', () => {
     },
   );
 
-  describe.each<NodeJS.Platform>(['linux', 'win32'])('on %s', (platform) => {
+  describe.each<NodeJS.Platform>(['linux'])('on %s', (platform) => {
     test('closing the last project or note window opens the Project Navigator', () => {
       expect(
         decideAllWindowsClosed({ platform, lastClosedWasNavigator: false, sessionEnding: false }),

@@ -97,6 +97,11 @@ function writeProvenance(files: RunEvidenceFiles, identity: RunIdentity): void {
   );
 }
 
+function isRelatedRun(vitest: Vitest): boolean {
+  const { related } = vitest.config;
+  return Array.isArray(related) && related.length > 0;
+}
+
 function evidenceReporter(
   vitest: Vitest,
   script: string | null,
@@ -111,6 +116,7 @@ function evidenceReporter(
       const identity = runIdentity(vitest, script);
       writeProvenance(evidence, identity);
       if (process.env.GITHUB_ACTIONS !== 'true') return;
+      if (isRelatedRun(vitest)) return;
       const { root, testNamePattern } = vitest.config;
       const files = tallyVitestRun(testModules, root, started);
       if (sumAcrossFiles(files, executed) > 0) return;

@@ -325,13 +325,10 @@ export function refusedNpxPackage(args: readonly string[]): string | undefined {
 async function npmCommand(launch: ResolvedLaunch): Promise<string | null> {
   let npx = launch.cmd;
   if (!isPathQualified(npx)) {
-    if (process.platform === 'win32') npx = resolveWindowsCommand(npx, envPath(launch.env));
-    else {
-      for (const dir of (envPath(launch.env) ?? '').split(delimiter)) {
-        if (dir !== '' && (await isExecutableFile(join(dir, npx)))) {
-          npx = join(dir, npx);
-          break;
-        }
+    for (const dir of (envPath(launch.env) ?? '').split(delimiter)) {
+      if (dir !== '' && (await isExecutableFile(join(dir, npx)))) {
+        npx = join(dir, npx);
+        break;
       }
     }
   }
@@ -483,10 +480,12 @@ async function installNpmPackage(
       rawStderr = `${rawStderr}${rawLine}\n`.slice(-ACQUISITION_DETAIL_MAX_CHARS);
     },
   );
-  const { code, signal, spawnFailure } =
-    process.platform === 'win32'
-      ? await runPipedInstall(installLaunch, acquired, stderrCapture, log)
-      : await runFileBackedInstall(installLaunch, acquired, stderrCapture, log);
+  const { code, signal, spawnFailure } = await runFileBackedInstall(
+    installLaunch,
+    acquired,
+    stderrCapture,
+    log,
+  );
   if (spawnFailure === undefined && code === 0) {
     log.info(
       { package: acquired, elapsedMs: Date.now() - startedAt },
@@ -578,23 +577,6 @@ async function replayInstallStderr(fd: number, capture: DiagnosticStderrCapture)
     capture.end();
     closeSync(fd);
   }
-}
-
-/* UPSTREAM(libuv/libuv#1659, microsoft/terminal#12464): an inherited stdio descriptor drops
-   CREATE_NO_WINDOW and Windows Terminal may show the console cmd.exe then opens. */
-function runPipedInstall(
-  launch: ResolvedLaunch & { kind: 'npx' },
-  acquired: string,
-  capture: DiagnosticStderrCapture,
-  log: PinoLogger,
-): Promise<InstallExit> {
-  const child = spawnAcpAgent(launch);
-  child.stdin?.end();
-  child.stdout?.resume();
-  child.stderr?.setEncoding('utf8');
-  child.stderr?.on('data', capture.write);
-  child.stderr?.on('end', capture.end);
-  return awaitInstallExit(child, acquired, log);
 }
 
 function heldNpmPackage(entry: AcquiredNpmPackage | undefined): HeldNpmPackage | null {
@@ -1076,12 +1058,8 @@ export function probeInterpreterHealth(
   timeoutMs = 5_000,
   log?: PinoLogger,
 ): Promise<string | null> {
-  const win = process.platform === 'win32';
-  const resolved = win ? resolveWindowsCommand(launch.cmd, envPath(launch.env)) : launch.cmd;
-  const wrap = win && /\.(cmd|bat)$/i.test(resolved);
-  const { cmd, args } = wrap
-    ? windowsCmdWrap(resolved, ['--version'])
-    : { cmd: resolved, args: ['--version'] };
+  const resolved = launch.cmd;
+  const { cmd, args } = { cmd: resolved, args: ['--version'] };
   return new Promise((settleProbe) => {
     let child: ChildProcess;
     try {
@@ -1089,9 +1067,7 @@ export function probeInterpreterHealth(
         env: launch.env,
         stdio: ['ignore', 'ignore', 'pipe'],
         shell: false,
-        detached: !win,
-        windowsHide: true,
-        windowsVerbatimArguments: wrap,
+        detached: true,
       });
     } catch (err) {
       settleProbe(err instanceof Error ? err.message : String(err));
@@ -1143,8 +1119,7 @@ export function probeNpxNodeCompatibility(
   timeoutMs = 5_000,
   log?: PinoLogger,
 ): Promise<string | null> {
-  const win = process.platform === 'win32';
-  const resolved = resolveNpxNodeCommand(launch);
+  const resolved = 'node';
   return new Promise((settleProbe) => {
     let child: ChildProcess;
     try {
@@ -1152,8 +1127,7 @@ export function probeNpxNodeCompatibility(
         env: launch.env,
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: false,
-        detached: !win,
-        windowsHide: true,
+        detached: true,
       });
     } catch (err) {
       settleProbe(
@@ -1238,29 +1212,15 @@ export function envPath(env: Record<string, string>): string | undefined {
 }
 
 export function isPathQualified(cmd: string): boolean {
-  const win = process.platform === 'win32';
-  return isAbsolute(cmd) || cmd.includes('/') || (win && cmd.includes('\\'));
+  return isAbsolute(cmd) || cmd.includes('/');
 }
 
 async function isLaunchable(cmd: string, pathEnv: string | undefined): Promise<boolean> {
-  const win = process.platform === 'win32';
   if (isPathQualified(cmd)) {
     return isExecutableFile(cmd);
   }
-  const exts = win
-    ? [
-        '',
-        ...(process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD')
-          .split(';')
-          .map((e) => e.trim())
-          .filter((e) => e !== ''),
-      ]
-    : [''];
   for (const dir of (pathEnv ?? '').split(delimiter)) {
-    if (dir === '') continue;
-    for (const ext of exts) {
-      if (await isExecutableFile(join(dir, cmd + ext))) return true;
-    }
+    if (dir !== '' && (await isExecutableFile(join(dir, cmd)))) return true;
   }
   return false;
 }
@@ -1269,61 +1229,12 @@ async function isExecutableFile(candidate: string): Promise<boolean> {
   try {
     const st = await stat(candidate);
     if (!st.isFile()) return false;
-    if (process.platform === 'win32') return true;
+
     await access(candidate, constants.X_OK);
     return true;
   } catch {
     return false;
   }
-}
-
-export function resolveWindowsCommand(cmd: string, pathEnv: string | undefined): string {
-  if (isAbsolute(cmd) || cmd.includes('\\') || cmd.includes('/')) return cmd;
-  const exts = (process.env.PATHEXT ?? '.COM;.EXE;.BAT;.CMD')
-    .split(';')
-    .map((e) => e.trim())
-    .filter((e) => e !== '');
-  for (const dir of (pathEnv ?? '').split(delimiter)) {
-    if (dir === '') continue;
-    for (const ext of exts) {
-      const candidate = join(dir, cmd + ext);
-      try {
-        if (statSync(candidate).isFile()) return candidate;
-      } catch {}
-    }
-  }
-  return cmd;
-}
-
-export function resolveNpxNodeCommand(
-  launch: ResolvedLaunch,
-  platform: NodeJS.Platform = process.platform,
-): string {
-  if (platform !== 'win32') return 'node';
-  const pathEnv = envPath(launch.env);
-  const resolvedNpx = resolveWindowsCommand(launch.cmd, pathEnv);
-  const npxWasResolved =
-    resolvedNpx !== launch.cmd ||
-    isAbsolute(resolvedNpx) ||
-    resolvedNpx.includes('/') ||
-    resolvedNpx.includes('\\');
-  if (npxWasResolved) {
-    const siblingNode = join(dirname(resolvedNpx), 'node.exe');
-    try {
-      if (statSync(siblingNode).isFile()) return siblingNode;
-    } catch {}
-  }
-  return resolveWindowsCommand('node', pathEnv);
-}
-
-function quoteCmdArg(arg: string): string {
-  if (arg === '') return '""';
-  return /[\s"&()<>^|%]/.test(arg) ? `"${arg.replace(/"/g, '""')}"` : arg;
-}
-
-export function windowsCmdWrap(cmd: string, args: string[]): { cmd: string; args: string[] } {
-  const inner = [`"${cmd}"`, ...args.map(quoteCmdArg)].join(' ');
-  return { cmd: process.env.ComSpec ?? 'cmd.exe', args: ['/d', '/s', '/c', `"${inner}"`] };
 }
 
 function acpNpxIsolatedCwd(): string {
@@ -1360,20 +1271,14 @@ function spawnLaunch(
     throw new Error(`spawnAcpAgent requires an absolute cwd, got: ${projectCwd}`);
   }
   const cwd = launch.kind === 'npx' ? acpNpxIsolatedCwd() : projectCwd;
-  const win = process.platform === 'win32';
-  const resolved = win ? resolveWindowsCommand(launch.cmd, envPath(launch.env)) : launch.cmd;
-  const wrap = win && /\.(cmd|bat)$/i.test(resolved);
-  const { cmd, args } = wrap
-    ? windowsCmdWrap(resolved, launch.args)
-    : { cmd: resolved, args: launch.args };
+  const resolved = launch.cmd;
+  const { cmd, args } = { cmd: resolved, args: launch.args };
   return spawn(cmd, args, {
     cwd,
     env: withHostedAgentMarker(launch.env),
     stdio,
     shell: false,
-    detached: !win,
-    windowsHide: true,
-    windowsVerbatimArguments: wrap,
+    detached: true,
   });
 }
 
@@ -1415,22 +1320,7 @@ export async function terminateAgentTree(
 ): Promise<boolean> {
   const forceWaitMs = opts.forceWaitMs ?? 2_000;
   if (hasExited(child)) return true;
-  if (process.platform === 'win32') {
-    if (child.pid !== undefined) {
-      try {
-        spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
-          stdio: 'ignore',
-          shell: false,
-          windowsHide: true,
-        }).unref();
-      } catch {
-        try {
-          child.kill('SIGKILL');
-        } catch {}
-      }
-    }
-    return awaitExit(child, Math.max(opts.graceMs, forceWaitMs));
-  }
+
   signalAgentGroup(child, 'SIGTERM');
   if (await awaitExit(child, opts.graceMs)) return true;
   signalAgentGroup(child, 'SIGKILL');

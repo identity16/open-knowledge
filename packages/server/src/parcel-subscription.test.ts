@@ -11,9 +11,8 @@ import {
 } from './parcel-watcher-double.test-helper.ts';
 
 const POSIX_PLATFORMS = ['linux', 'darwin'] as const satisfies readonly NodeJS.Platform[];
-const PLATFORMS = ['win32', ...POSIX_PLATFORMS] as const satisfies readonly NodeJS.Platform[];
+const PLATFORMS = [...POSIX_PLATFORMS] as const satisfies readonly NodeJS.Platform[];
 const NATIVE_RELEASES_PER_RELEASE = [
-  ['win32', 0],
   ['linux', 1],
   ['darwin', 1],
 ] as const satisfies readonly (readonly [NodeJS.Platform, number])[];
@@ -108,8 +107,6 @@ describe('releasing a subscription taken through subscribeParcel', () => {
 
     await subscription.unsubscribe();
 
-    expect(native.nativeReleases(), 'native unsubscribe calls').toBe(
-      process.platform === 'win32' ? 0 : 1,
-    );
+    expect(native.nativeReleases(), 'native unsubscribe calls').toBe(1);
   });
 });

@@ -3798,7 +3798,7 @@ html.electron-mode {
     re-declaring the literal. The AppHeader adds 10px to it, so on darwin
     back and forward start 12px after the window buttons at x=16, and on
     the web the first button's icon lines up with the file list, 16px from
-    the edge. Windows and Linux re-declare it as 0px inside the AppHeader for
+    the edge. Linux re-declares it as 0px inside the AppHeader for
     the same alignment (see the rule after the reduced-transparency block).
     Web hosts (no `window.okDesktop`) never gain the `electron-mode` class,
     so the variable is undefined there. Consumers MUST always supply a
@@ -3814,12 +3814,12 @@ html.electron-mode {
 }
 
 /*
-  Windows/Linux chrome (electron-platform-* classes come from the FOUC
+  Linux chrome (electron-platform-* classes come from the FOUC
   script alongside electron-mode, read off `window.okDesktop.platform`).
   No traffic lights on these platforms — collapse the left reserve back to
   the 1rem base padding. The OS window controls instead float via Electron's
   titleBarOverlay (Window Controls Overlay), so reserve the chrome row's edge
-  for them. Windows always places them top-right; Linux follows the desktop
+  for them. Linux follows the desktop
   environment's own title-bar layout, so a DE configured to put them on the
   left gets only the 1rem base reserve and can crowd whatever sits leftmost
   in the row. Verify on a packaged build before assuming the left edge is
@@ -3828,7 +3828,6 @@ html.electron-mode {
   web, and any WCO-less window. Consumers use the precedent-#49 fallback
   form `mr-[var(--ok-titlebar-reserve-right,0px)]`.
 */
-html.electron-mode.electron-platform-win32,
 html.electron-mode.electron-platform-linux {
   --ok-titlebar-reserve-left: 1rem;
   --ok-titlebar-reserve-right: calc(
@@ -3913,7 +3912,6 @@ html.electron-mode [data-slot="sidebar-inner"] {
   }
 }
 
-html.electron-mode.electron-platform-win32 [data-app-header],
 html.electron-mode.electron-platform-linux [data-app-header] {
   --ok-titlebar-reserve-left: 0px;
 }

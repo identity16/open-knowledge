@@ -18,7 +18,6 @@ export function runBrowserRelay(
   const child = childProcess.spawn(command, args, {
     cwd,
     stdio: ['pipe', 'pipe', 'inherit'],
-    windowsHide: true,
   });
   const input = child.stdin;
   const output = child.stdout;

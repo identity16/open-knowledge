@@ -176,7 +176,7 @@ describe('stopServerThenRemoveGitFolder', () => {
     return { info, warn, stopCalls, deps };
   }
 
-  test('removes .git after a refused stop, logging the holder, its lock, the cause and the native failures', async () => {
+  test('removes .git after a refused stop, logging the holder, its lock and the cause', async () => {
     const lockPath = join(lockDir, 'server.lock');
     const { info, warn, stopCalls, deps } = harness(async () => ({
       stopped: [],
@@ -189,7 +189,6 @@ describe('stopServerThenRemoveGitFolder', () => {
             pid: 4242,
             lockPath,
             platform: 'win32',
-            nativeFailures: [{ kind: 'query-failed', reason: 'Access is denied. (os error 5)' }],
           },
         },
       ],
@@ -207,7 +206,6 @@ describe('stopServerThenRemoveGitFolder', () => {
           lockPid: 4242,
           lockPath,
           cause: 'process-start-unreadable',
-          nativeFailures: [{ kind: 'query-failed', reason: 'Access is denied. (os error 5)' }],
           error: 'Could not read when process 4242 started',
         },
         message: notStopped,

@@ -9,8 +9,8 @@ export interface SlidevResolveProbes {
   isOnLoginPath: (bin: string) => Promise<boolean>;
 }
 
-export function projectLocalSlidevBin(projectRoot: string, platform: NodeJS.Platform): string {
-  return join(projectRoot, 'node_modules', '.bin', platform === 'win32' ? 'slidev.cmd' : 'slidev');
+export function projectLocalSlidevBin(projectRoot: string, _platform: NodeJS.Platform): string {
+  return join(projectRoot, 'node_modules', '.bin', 'slidev');
 }
 
 export async function resolveSlidev(

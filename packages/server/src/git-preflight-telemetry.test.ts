@@ -86,31 +86,18 @@ describe('emitPreflightFailureSpan — GitTooOldError', () => {
     expect(span?.attributes['ok.preflight.git.reason']).toBe('too_old');
     expect(span?.attributes['ok.preflight.git.detected_version']).toBe('2.20.0');
   });
-
-  test('Windows variant: ok.platform=win32', () => {
-    const err = new GitTooOldError(
-      'win32',
-      '2.20.0',
-      '2.31.0',
-      'C\\Program Files\\Git\\cmd\\git.exe',
-      makeGuidance(),
-    );
-    emitPreflightFailureSpan(err);
-    const [span] = exporter.getFinishedSpans();
-    expect(span?.attributes['ok.platform']).toBe('win32');
-  });
 });
 
 describe('emitPreflightFailureSpan — GitProbeTimeoutError', () => {
   test('emits reason=probe_timeout', () => {
-    const err = new GitProbeTimeoutError('win32', makeGuidance(), {
+    const err = new GitProbeTimeoutError('darwin', makeGuidance(), {
       path: 'timeout',
       fallback: 'timeout',
     });
     emitPreflightFailureSpan(err);
 
     const [span] = exporter.getFinishedSpans();
-    expect(span?.attributes['ok.platform']).toBe('win32');
+    expect(span?.attributes['ok.platform']).toBe('darwin');
     expect(span?.attributes['ok.preflight.git.reason']).toBe('probe_timeout');
     expect(span?.attributes['ok.preflight.git.detected_version']).toBe('');
   });

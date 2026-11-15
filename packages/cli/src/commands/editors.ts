@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { basename, dirname, join, posix, resolve, sep, win32 } from 'node:path';
+import { basename, dirname, join, posix, resolve, sep } from 'node:path';
 import {
   CHECKOUT_CLI_COMMAND,
   ALL_EDITOR_IDS as CORE_ALL_EDITOR_IDS,
@@ -81,44 +81,6 @@ echo "OpenKnowledge: install OK Desktop or Node.js 24+, then restart your editor
 exit 127`;
 }
 
-function buildWinChain(name: PackagedDesktopProductName): string {
-  const product = DESKTOP_PRODUCTS[name];
-  if (name === 'openknowledge16') {
-    return `${winChainSentinel(product)}
-[Console]::Error.WriteLine('OpenKnowledge16 currently supports macOS Apple Silicon only')
-exit 127`;
-  }
-  const npxSpec = `${OK_PACKAGE_SPEC}@${product.npmDistTag}`;
-  const cmd = `${product.cliCommandNames[0]}.cmd`;
-  const installSpec = product.npmDistTag === 'latest' ? OK_PACKAGE_SPEC : npxSpec;
-  const channelLine = name === 'stable' ? '' : `\n$env:${OK_CHANNEL_ENV} = '${name}'`;
-  return `${winChainSentinel(product)}${channelLine}
-if ($env:PATHEXT -notmatch 'CMD') { $env:PATHEXT = '.COM;.EXE;.BAT;.CMD;' + $env:PATHEXT }
-if ($env:APPDATA) {
-  $shim = Join-Path $env:APPDATA 'npm\\${cmd}'
-  if (Test-Path -LiteralPath $shim -PathType Leaf) { & $shim mcp; exit $LASTEXITCODE }
-}
-$ok = Get-Command ${cmd} -CommandType Application -ErrorAction SilentlyContinue
-if ($ok) { & $ok.Source mcp; exit $LASTEXITCODE }
-$npx = Get-Command npx.cmd -CommandType Application -ErrorAction SilentlyContinue
-if ($npx) { & $npx.Source -y '${npxSpec}' mcp; exit $LASTEXITCODE }
-$dirs = @()
-if ($env:ProgramFiles) { $dirs += Join-Path $env:ProgramFiles 'nodejs' }
-if ($env:NVM_SYMLINK) { $dirs += $env:NVM_SYMLINK }
-if ($env:LOCALAPPDATA) {
-  $dirs += Join-Path $env:LOCALAPPDATA 'fnm\\aliases\\default'
-  $dirs += Join-Path $env:LOCALAPPDATA 'Volta\\bin'
-  $dirs += Join-Path $env:LOCALAPPDATA 'pnpm'
-}
-if ($env:USERPROFILE) { $dirs += Join-Path $env:USERPROFILE 'scoop\\shims' }
-foreach ($d in $dirs) {
-  $probe = Join-Path $d 'npx.cmd'
-  if (Test-Path -LiteralPath $probe -PathType Leaf) { & $probe -y '${npxSpec}' mcp; exit $LASTEXITCODE }
-}
-[Console]::Error.WriteLine('OpenKnowledge: install Node.js 24+ (npm i -g ${installSpec}), then restart your editor')
-exit 127`;
-}
-
 export const DEV_CHANNEL_LAUNCHER_REFUSAL = `A dev build writes no MCP launcher for an installed OpenKnowledge channel, because that launcher runs a released CLI. Register this checkout by running \`${CHECKOUT_CLI_COMMAND} init --dev-mcp\` in the project, or set OK_CHANNEL=stable.`;
 
 function launcherChannel(): PackagedDesktopProductName {
@@ -130,10 +92,6 @@ function launcherChannel(): PackagedDesktopProductName {
 export const CHAIN_VERSION_SENTINEL = unixChainSentinel(DESKTOP_PRODUCTS.stable);
 
 export const CHAIN_V2 = buildUnixChain('stable');
-
-export const CHAIN_WIN_VERSION_SENTINEL = winChainSentinel(DESKTOP_PRODUCTS.stable);
-
-export const CHAIN_WIN_V1 = buildWinChain('stable');
 
 export function piExtensionOwnershipMarker(product: DesktopProduct): string {
   return `// ok-pi-bridge${product.mcpChainTag}`;
@@ -248,13 +206,8 @@ export function buildManagedServerEntry(options: McpInstallOptions = {}): Record
     };
   }
 
-  const platformName = options.platformName ?? process.platform;
-  if (platformName === 'win32') {
-    return {
-      command: 'powershell',
-      args: ['-NoProfile', '-NonInteractive', '-Command', buildWinChain(launcherChannel())],
-    };
-  }
+  const _platformName = options.platformName ?? process.platform;
+
   return {
     command: '/bin/sh',
     args: ['-l', '-c', buildUnixChain(launcherChannel())],
@@ -271,20 +224,8 @@ function buildOpenCodeEntry(options: McpInstallOptions = {}): Record<string, unk
     };
   }
 
-  const platformName = options.platformName ?? process.platform;
-  if (platformName === 'win32') {
-    return {
-      type: 'local',
-      enabled: true,
-      command: [
-        'powershell',
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        buildWinChain(launcherChannel()),
-      ],
-    };
-  }
+  const _platformName = options.platformName ?? process.platform;
+
   return {
     type: 'local',
     enabled: true,
@@ -295,15 +236,9 @@ function buildOpenCodeEntry(options: McpInstallOptions = {}): Record<string, unk
 export function isOwnManagedEntry(entry: unknown): boolean {
   if (typeof entry !== 'object' || entry === null || isDevChannel()) return false;
   const e = entry as Record<string, unknown>;
-  return (
-    matchesCanonicalExactly(
-      e,
-      buildManagedServerEntry({ mode: 'published', platformName: 'darwin' }),
-    ) ||
-    matchesCanonicalExactly(
-      e,
-      buildManagedServerEntry({ mode: 'published', platformName: 'win32' }),
-    )
+  return matchesCanonicalExactly(
+    e,
+    buildManagedServerEntry({ mode: 'published', platformName: 'darwin' }),
   );
 }
 
@@ -443,8 +378,8 @@ export interface AppSupportOptions {
   env?: NodeJS.ProcessEnv;
 }
 
-export function pathApiForPlatform(platformName: NodeJS.Platform) {
-  return platformName === 'win32' ? win32 : posix;
+export function pathApiForPlatform(_platformName: NodeJS.Platform) {
+  return posix;
 }
 
 export function resolveAppSupportPath(options: AppSupportOptions = {}): string {
@@ -455,10 +390,6 @@ export function resolveAppSupportPath(options: AppSupportOptions = {}): string {
 
   if (platformName === 'darwin') {
     return pathApi.join(home, 'Library', 'Application Support');
-  }
-
-  if (platformName === 'win32') {
-    return env.APPDATA || pathApi.join(home, 'AppData', 'Roaming');
   }
 
   return env.XDG_CONFIG_HOME || pathApi.join(home, '.config');
@@ -473,7 +404,7 @@ export function resolveClaudeCodeConfigPath(options: AppSupportOptions = {}): st
 export function resolveClaudeDesktopConfigPath(options: AppSupportOptions = {}): string {
   const platformName = options.platformName ?? process.platform;
   const home = options.home ?? homedir();
-  const env = options.env ?? process.env;
+  const _env = options.env ?? process.env;
 
   if (platformName === 'darwin') {
     return posix.join(
@@ -485,12 +416,7 @@ export function resolveClaudeDesktopConfigPath(options: AppSupportOptions = {}):
     );
   }
 
-  if (platformName === 'win32') {
-    const appData = env.APPDATA ?? win32.join(home, 'AppData', 'Roaming');
-    return win32.join(appData, 'Claude', 'claude_desktop_config.json');
-  }
-
-  throw new Error(`Claude Desktop is not available on ${platformName}. Supported: macOS, Windows.`);
+  throw new Error(`Claude Desktop is not available on ${platformName}. Supported: macOS.`);
 }
 
 export function resolveCursorConfigPath(options: AppSupportOptions = {}): string {
@@ -524,10 +450,7 @@ function resolveOpenCodeConfigDir(options: AppSupportOptions = {}): string {
   const home = options.home ?? homedir();
   const env = options.env ?? process.env;
   const pathApi = pathApiForPlatform(platformName);
-  if (platformName === 'win32') {
-    const appData = env.APPDATA ?? pathApi.join(home, 'AppData', 'Roaming');
-    return pathApi.join(appData, 'opencode');
-  }
+
   const xdgConfigHome = env.XDG_CONFIG_HOME ?? pathApi.join(home, '.config');
   return pathApi.join(xdgConfigHome, 'opencode');
 }

@@ -192,7 +192,7 @@ describe('bootServer git-preflight', () => {
       return true;
     }) as never;
 
-    const thrown = new GitProbeTimeoutError('win32', makeGuidance(), {
+    const thrown = new GitProbeTimeoutError('darwin', makeGuidance(), {
       path: 'timeout',
       fallback: 'timeout',
     });
@@ -226,7 +226,7 @@ describe('bootServer git-preflight', () => {
     expect(entries).toHaveLength(1);
     const [entry] = entries;
     expect(entry?.fields.event).toBe('git_preflight_fail');
-    expect(entry?.fields.platform).toBe('win32');
+    expect(entry?.fields.platform).toBe('darwin');
     expect(entry?.fields.reason).toBe('probe_timeout');
     expect(entry?.fields.detectedVersion).toBe('');
     expect(entry?.msg).toBe('git probe timed out');

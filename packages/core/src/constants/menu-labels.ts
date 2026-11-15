@@ -83,16 +83,15 @@ export const MENU_LABELS = {
 
 export type MenuLabelKey = keyof typeof MENU_LABELS;
 
-export const PLATFORM_MENU_LABELS: Partial<
-  Record<MenuLabelKey, Partial<Record<'win32' | 'linux', string>>>
-> = {
-  revealInFinder: { win32: 'Reveal in File Explorer', linux: 'Open containing folder' },
-  moveToTrash: { win32: 'Move to Recycle Bin' },
-};
+export const PLATFORM_MENU_LABELS: Partial<Record<MenuLabelKey, Partial<Record<'linux', string>>>> =
+  {
+    revealInFinder: { linux: 'Open containing folder' },
+    moveToTrash: {},
+  };
 
 export function menuLabelForPlatform(key: MenuLabelKey, platform: string): string {
   const overrides = PLATFORM_MENU_LABELS[key];
-  if (overrides && (platform === 'win32' || platform === 'linux')) {
+  if (overrides && platform === 'linux') {
     const override = overrides[platform];
     if (override !== undefined) return override;
   }

@@ -13,7 +13,6 @@ import {
   toPathspec,
 } from '@inkeep/open-knowledge-core';
 import { discoverGitRepository } from '@inkeep/open-knowledge-core/git-repository';
-import { withHiddenWindowsConsole } from '@inkeep/open-knowledge-server';
 import { ALL_EDITOR_IDS, EDITOR_TARGETS } from '../commands/editors.ts';
 
 const CLAUDE_LAUNCH_JSON = '.claude/launch.json';
@@ -257,14 +256,10 @@ export function probeTrackedOkPaths(
     const abs = resolve(projectRoot, p);
     if (!existsSync(abs)) continue;
     try {
-      execFileSync(
-        'git',
-        ['ls-files', '--error-unmatch', ...pathspecArgs([p])],
-        withHiddenWindowsConsole({
-          cwd: projectRoot,
-          stdio: ['ignore', 'ignore', 'ignore'],
-        }),
-      );
+      execFileSync('git', ['ls-files', '--error-unmatch', ...pathspecArgs([p])], {
+        cwd: projectRoot,
+        stdio: ['ignore', 'ignore', 'ignore'],
+      });
       tracked.push(p);
     } catch {}
   }
@@ -274,7 +269,6 @@ export function probeTrackedOkPaths(
 const SHELL_AND_PATHSPEC_SAFE = /^[\w.\-/]+$/;
 
 function shellQuote(value: string): string {
-  if (process.platform === 'win32') return `"${value.replaceAll('"', '')}"`;
   return `'${value.replaceAll("'", "'\\''")}'`;
 }
 

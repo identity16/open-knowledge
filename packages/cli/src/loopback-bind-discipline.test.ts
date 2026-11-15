@@ -85,16 +85,15 @@ export function findAmbiguousLocalhostDials(
 }
 
 describe('loopback bind discipline (cli test sources)', () => {
+  test('win32 path semantics still yield the /-separated sanity key', () => {
+    const win32Files = listScannedTestFiles(win32.relative);
+    expect(win32Files.some((f) => f.path.endsWith('commands/start.test.ts'))).toBe(true);
+  });
   const files = listScannedTestFiles();
 
   test('there are test files to scan (sanity)', () => {
     expect(files.length).toBeGreaterThan(0);
     expect(files.some((f) => f.path.endsWith('commands/start.test.ts'))).toBe(true);
-  });
-
-  test('win32 path semantics still yield the /-separated sanity key', () => {
-    const win32Files = listScannedTestFiles(win32.relative);
-    expect(win32Files.some((f) => f.path.endsWith('commands/start.test.ts'))).toBe(true);
   });
 
   test('every .listen( call binds an explicit loopback host literal', () => {

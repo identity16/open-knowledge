@@ -9,12 +9,7 @@ import {
   type SpawnPty,
   setupPtyHost,
 } from '../../src/utility/pty-host.ts';
-import { createWindowsPtyStartupCoordinator } from './pty-startup-trace.test-helper.ts';
 import { harnessScenarioTitles } from './real-io-harness-roster.test-helper.ts';
-import {
-  WINDOWS_OS_MAX_BUDGET_MS,
-  type WindowsOsStateOptions,
-} from './windows-os-state.test-helper.ts';
 
 export interface PtyStream {
   read(): string;
@@ -39,11 +34,7 @@ export interface PtyHostProbeOptions {
   platform?: NodeJS.Platform;
   shellExists?: (path: string) => boolean;
   logger?: SetupPtyHostDeps['logger'];
-  startupTrace?:
-    | (NonNullable<SetupPtyHostDeps['startupTrace']> & { native?: never })
-    | { native: boolean; aroundSpawn?: never };
-  osCaptureDeadlineAt?: () => number;
-  spawnQuery?: WindowsOsStateOptions['spawnQuery'];
+  startupTrace?: SetupPtyHostDeps['startupTrace'];
 }
 
 export function createPtyHostProbe(options: PtyHostProbeOptions): PtyHostProbe {
@@ -51,14 +42,6 @@ export function createPtyHostProbe(options: PtyHostProbeOptions): PtyHostProbe {
   const data = new Map<string, string>();
   const exits = new Map<string, { exitCode: number | undefined; signal: number | null }>();
   const errors = new Map<string, string>();
-  const coordinator = options.startupTrace?.native
-    ? createWindowsPtyStartupCoordinator({
-        platform: options.platform ?? process.platform,
-        deadlineAt:
-          options.osCaptureDeadlineAt ?? (() => performance.now() + WINDOWS_OS_MAX_BUDGET_MS),
-        ...(options.spawnQuery === undefined ? {} : { spawnQuery: options.spawnQuery }),
-      })
-    : null;
   const handle = setupPtyHost({
     parentPort: {
       on(_event, h) {
@@ -73,12 +56,12 @@ export function createPtyHostProbe(options: PtyHostProbeOptions): PtyHostProbe {
             msg.ptyId,
             msg.shellNeverAttached === true
               ? `shell never attached (exit code ${msg.exitCode ?? 'none'})`
-              : (msg.message ?? msg.launchFailure),
+              : msg.message,
           );
       },
     },
     spawn: options.spawn,
-    startupTrace: coordinator?.trace ?? options.startupTrace,
+    startupTrace: options.startupTrace,
     env: options.env,
     ...(options.platform === undefined ? {} : { platform: options.platform }),
     shellExists: options.shellExists,
@@ -94,10 +77,8 @@ export function createPtyHostProbe(options: PtyHostProbeOptions): PtyHostProbe {
     exitOf,
     errorOf,
     snapshotStartup: () => handle.snapshotStartup?.(),
-    captureFailure: async () => {
-      await coordinator?.captureFailure();
-    },
-    cancelCapture: () => coordinator?.cancelCapture(),
+    captureFailure: async () => {},
+    cancelCapture: () => {},
     killActive: () => handle.killActive(),
     streamOf: (ptyId) => ({
       read: () => dataOf(ptyId),
@@ -159,14 +140,9 @@ const DEFAULT_QUIET_SAMPLES = 20;
 const DEFAULT_READY_STALL_MS = 12_000;
 const RECEIVED_EXCERPT_CHARS = 400;
 const DEFAULT_INPUT_READY_STALL_MS = 16_000;
-const BUNDLED_CONPTY_ATTACH_SEQUENCES = [
+const TERMINAL_CONTROL_SEQUENCES = [
   '\u001b[1t',
   '\u001b[c',
-  '\u001b[?1004h',
-  '\u001b[?9001h',
-] as const;
-const INBOX_CONPTY_ATTACH_SEQUENCES = [
-  '\u001b[?9001h',
   '\u001b[?1004h',
   '\u001b[?25l',
   '\u001b[?25h',
@@ -174,28 +150,15 @@ const INBOX_CONPTY_ATTACH_SEQUENCES = [
   '\u001b[m',
   '\u001b[H',
 ] as const;
-const CONPTY_ATTACH_SEQUENCES = [
-  ...BUNDLED_CONPTY_ATTACH_SEQUENCES,
-  ...INBOX_CONPTY_ATTACH_SEQUENCES,
-] as const;
-const INBOX_CONPTY_ATTACH_SEQUENCE_SET: ReadonlySet<string> = new Set(
-  INBOX_CONPTY_ATTACH_SEQUENCES,
-);
-const ONLY_THE_BUNDLED_CONPTY_WRITES: ReadonlySet<string> = new Set(
-  BUNDLED_CONPTY_ATTACH_SEQUENCES.filter(
-    (sequence) => !INBOX_CONPTY_ATTACH_SEQUENCE_SET.has(sequence),
-  ),
-);
-const CONPTY_TITLE_INTRODUCER = '\u001b]0;';
-const CONPTY_TITLE_TERMINATORS = ['\u0007', '\u001b\\'] as const;
+const TERMINAL_TITLE_INTRODUCER = '\u001b]0;';
+const TERMINAL_TITLE_TERMINATORS = ['\u0007', '\u001b\\'] as const;
 
-const HARNESS_BUDGET_MS_BY_TIER = { win32: 85_000, default: 30_000 } as const;
-const HARNESS_VERDICT_GRACE_MS_BY_TIER = { win32: 5_000, default: 15_000 } as const;
+const HARNESS_BUDGET_MS = 30_000;
+const HARNESS_VERDICT_GRACE_MS = 15_000;
 const HARNESS_TEARDOWN_GRACE_MS = 15_000;
 export const HARNESS_VERDICT_POLL_INTERVAL_MS = 25;
 export const HARNESS_CHILD_KILL_WAIT_MS = 2_000;
 export const HARNESS_REPORT_RESERVE_MS = 1_000;
-export const HARNESS_WINDOWS_LAUNCH_STALL_MS = 20_000;
 export const HARNESS_EXIT_AFTER_KILL_STALL_MS = 12_000;
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
@@ -239,7 +202,7 @@ function createShellOutputObservation(): ShellOutputObservation {
     observe(stream, now) {
       const text = stream.read();
       if (leadingAttachChars === null) {
-        const beyondAttach = shellOutputBeyondAttach(text);
+        const beyondAttach = shellOutputBeyondTerminalControls(text);
         if (beyondAttach.length === 0) return;
         leadingAttachChars = text.length - beyondAttach.length;
       }
@@ -515,10 +478,9 @@ export interface HarnessTimeouts {
   testTimeoutMs: number;
 }
 
-export function harnessTimeouts(platform: NodeJS.Platform): HarnessTimeouts {
-  const tier = platform === 'win32' ? 'win32' : 'default';
-  const budgetMs = HARNESS_BUDGET_MS_BY_TIER[tier];
-  const verdictDeadlineMs = budgetMs + HARNESS_VERDICT_GRACE_MS_BY_TIER[tier];
+export function harnessTimeouts(_platform: NodeJS.Platform): HarnessTimeouts {
+  const budgetMs = HARNESS_BUDGET_MS;
+  const verdictDeadlineMs = budgetMs + HARNESS_VERDICT_GRACE_MS;
   return {
     budgetMs,
     verdictDeadlineMs,
@@ -588,11 +550,13 @@ type AttachMatch =
   | { kind: 'cut-mid-attach' }
   | { kind: 'shell' };
 
-function conptyTitleMatch(text: string): AttachMatch {
-  if (CONPTY_TITLE_INTRODUCER.startsWith(text)) return { kind: 'cut-mid-attach' };
-  if (!text.startsWith(CONPTY_TITLE_INTRODUCER)) return { kind: 'shell' };
-  for (let at = CONPTY_TITLE_INTRODUCER.length; at < text.length; at += 1) {
-    const terminator = CONPTY_TITLE_TERMINATORS.find((candidate) => text.startsWith(candidate, at));
+function terminalTitleMatch(text: string): AttachMatch {
+  if (TERMINAL_TITLE_INTRODUCER.startsWith(text)) return { kind: 'cut-mid-attach' };
+  if (!text.startsWith(TERMINAL_TITLE_INTRODUCER)) return { kind: 'shell' };
+  for (let at = TERMINAL_TITLE_INTRODUCER.length; at < text.length; at += 1) {
+    const terminator = TERMINAL_TITLE_TERMINATORS.find((candidate) =>
+      text.startsWith(candidate, at),
+    );
     if (terminator !== undefined) return { kind: 'attach', length: at + terminator.length };
     const char = text[at] as string;
     if (char < '\u0020' && char !== '\u001b') return { kind: 'attach', length: at };
@@ -600,22 +564,23 @@ function conptyTitleMatch(text: string): AttachMatch {
   return { kind: 'cut-mid-attach' };
 }
 
-function attachMatch(text: string, host: { paintsTitles: boolean }): AttachMatch {
-  const sequence = CONPTY_ATTACH_SEQUENCES.find((candidate) => text.startsWith(candidate));
+function attachMatch(text: string): AttachMatch {
+  const sequence = TERMINAL_CONTROL_SEQUENCES.find((candidate) => text.startsWith(candidate));
   if (sequence !== undefined) return { kind: 'attach', length: sequence.length };
-  if (CONPTY_ATTACH_SEQUENCES.some((candidate) => candidate.startsWith(text)) && text.length > 0) {
+  if (
+    TERMINAL_CONTROL_SEQUENCES.some((candidate) => candidate.startsWith(text)) &&
+    text.length > 0
+  ) {
     return { kind: 'cut-mid-attach' };
   }
-  return host.paintsTitles ? conptyTitleMatch(text) : { kind: 'shell' };
+  return terminalTitleMatch(text);
 }
 
-export function shellOutputBeyondAttach(text: string): string {
+export function shellOutputBeyondTerminalControls(text: string): string {
   let rest = text;
-  let bundledConptyAttached = false;
   for (;;) {
-    const match = attachMatch(rest, { paintsTitles: !bundledConptyAttached });
+    const match = attachMatch(rest);
     if (match.kind === 'attach') {
-      bundledConptyAttached ||= ONLY_THE_BUNDLED_CONPTY_WRITES.has(rest.slice(0, match.length));
       rest = rest.slice(match.length);
       continue;
     }
@@ -632,7 +597,7 @@ async function waitForShellFirstOutput(
   const intervalMs = options.intervalMs ?? DEFAULT_INTERVAL_MS;
   const deadline = startedAt + options.timeoutMs;
   for (;;) {
-    const beyondAttach = shellOutputBeyondAttach(stream.read());
+    const beyondAttach = shellOutputBeyondTerminalControls(stream.read());
     if (beyondAttach.length > 0) {
       return {
         firstOutputMs: performance.now() - startedAt,
@@ -757,14 +722,14 @@ function createReadinessObserver(
           const startedAt = performance.now();
           await waitForReadinessCondition(
             stream,
-            () => shellOutputBeyondAttach(stream.read()).length > 0,
+            () => shellOutputBeyondTerminalControls(stream.read()).length > 0,
             label,
             readiness,
             { stallMs: DEFAULT_INPUT_READY_STALL_MS, ...interval },
           );
           return {
             firstOutputMs: performance.now() - startedAt,
-            firstOutput: describeLeading(shellOutputBeyondAttach(stream.read())),
+            firstOutput: describeLeading(shellOutputBeyondTerminalControls(stream.read())),
           };
         },
         (_firstOutputMs, predicate) => {
@@ -780,18 +745,14 @@ function createReadinessObserver(
   };
 }
 
-export function buildCwdFileProofCommand(platform: NodeJS.Platform, fileName: string): string {
+export function buildCwdFileProofCommand(_platform: NodeJS.Platform, fileName: string): string {
   if (!/^[A-Za-z0-9._-]+$/u.test(fileName) || fileName === '.' || fileName === '..') {
     throw new Error(`invalid cwd proof file name: ${fileName}`);
-  }
-  if (platform === 'win32') {
-    return `Write-Output "CWD_PROOF=$(Get-Content -Raw -LiteralPath './${fileName}')"`;
   }
   return `printf 'CWD_PROOF=%s\\n' "$(cat './${fileName}')"`;
 }
 
 const HARNESS = fileURLToPath(new URL('../utility/pty-host.real-io-harness.ts', import.meta.url));
-const TRACE_PRELOAD = new URL('./pty-startup-trace-preload.test-helper.mjs', import.meta.url).href;
 const HARNESS_TIMEOUTS = harnessTimeouts(process.platform);
 const SUCCESS_RESULT = `HARNESS_RESULT ok=${harnessScenarioTitles(process.platform).length} fail=0 refused=0`;
 
@@ -813,7 +774,7 @@ export async function runHarness(
   const outputFd = openSync(outputPath, 'w');
   const child = (() => {
     try {
-      return spawnChild(process.execPath, ['--import', TRACE_PRELOAD, HARNESS], {
+      return spawnChild(process.execPath, [HARNESS], {
         env: {
           ...process.env,
           TEMP: outputDir,
@@ -822,7 +783,6 @@ export async function runHarness(
           ...extraEnv,
         },
         stdio: ['ignore', outputFd, outputFd],
-        windowsHide: true,
       });
     } finally {
       closeSync(outputFd);

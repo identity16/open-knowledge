@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 import { okProjectLogsDir } from '@inkeep/open-knowledge-core/server';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { z } from 'zod';
-import { withHiddenWindowsConsole } from './child-process-windows-hide.ts';
 import { prepareProjectLogsDir } from './project-logs-retention.ts';
 import {
   acquireServerAuthority,
@@ -159,24 +158,20 @@ function claim(scope: ContentScope, serverInstanceId = randomUUID()) {
 async function startWorker(scope: ContentScope) {
   let pending = Promise.withResolvers<z.infer<typeof replySchema>>();
   let stderr = '';
-  const child = spawn(
-    process.execPath,
-    ['--import', 'tsx', '--input-type=module', '-e', driver],
-    withHiddenWindowsConsole({
-      cwd: fileURLToPath(new URL('..', import.meta.url)),
-      stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
-      env: {
-        ...process.env,
-        AUTHORITY_MODULE: new URL('./server-authority.ts', import.meta.url).href,
-        AUTHORITY_OPTIONS: JSON.stringify({
-          scope,
-          projectDir: join(directory, randomUUID()),
-          serverInstanceId: randomUUID(),
-          registryPath,
-        }),
-      },
-    }),
-  );
+  const child = spawn(process.execPath, ['--import', 'tsx', '--input-type=module', '-e', driver], {
+    cwd: fileURLToPath(new URL('..', import.meta.url)),
+    stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
+    env: {
+      ...process.env,
+      AUTHORITY_MODULE: new URL('./server-authority.ts', import.meta.url).href,
+      AUTHORITY_OPTIONS: JSON.stringify({
+        scope,
+        projectDir: join(directory, randomUUID()),
+        serverInstanceId: randomUUID(),
+        registryPath,
+      }),
+    },
+  });
   child.stderr?.on('data', (chunk: Buffer) => {
     stderr += chunk.toString();
   });
@@ -615,7 +610,7 @@ describe('acquireServerAuthority', () => {
 
   test('the registry is owner-only on filesystems supporting POSIX modes', () => {
     claim(tree());
-    if (process.platform !== 'win32') expect(statSync(registryPath).mode & 0o777).toBe(0o600);
+    expect(statSync(registryPath).mode & 0o777).toBe(0o600);
   });
 
   test('legacy rows without lifetime leases fail closed even when their old PID is gone', async () => {

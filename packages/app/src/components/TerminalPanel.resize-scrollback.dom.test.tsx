@@ -90,19 +90,6 @@ interface ScreenModel {
   readonly cursorCol: number;
 }
 
-const conptyHost: ModelledHost = {
-  platform: 'win32',
-  prompt: 'PS C:\\Users\\runneradmin\\project> ',
-  repaintAfterResize(previous, next, screen) {
-    if (next.rows <= previous.rows) return '';
-    let repaint = '\x1b[H';
-    for (let row = 0; row < next.rows; row += 1) {
-      repaint += `\x1b[${row + 1};1H${screen.rows[row] ?? ''}\x1b[K`;
-    }
-    return `${repaint}\x1b[${screen.cursorRow + 1};${screen.cursorCol + 1}H`;
-  },
-};
-
 const unixPtyHost = (platform: 'darwin' | 'linux'): ModelledHost => ({
   platform,
   prompt: 'user@host project % ',
@@ -164,7 +151,6 @@ function hostSession(host: ModelledHost, token: string) {
       return () => {};
     }),
     onExit: vi.fn(() => () => {}),
-    onNotice: vi.fn(() => () => {}),
     claudePreflight: vi.fn(async () => ({ claude: 'present' as const })),
     cliPreflight: vi.fn(async () => ({ onPath: 'present' as const })),
   };
@@ -322,12 +308,12 @@ async function mountTerminalWithHistory(host: ModelledHost, establishment: Sessi
 describe.each([
   { growth: 'the dock dragged taller', grown: TALLER_DOCK_GEOMETRY },
   { growth: 'a move to the right column', grown: COLUMN_GEOMETRY },
-])('TerminalPanel row growth on a ConPTY-hosted shell (win32, $growth)', ({ grown }) => {
+])('TerminalPanel row growth on a macOS shell (darwin, $growth)', ({ grown }) => {
   test.each([{ establishment: 'created' as const }, { establishment: 'adopted' as const }])(
-    'growing the terminal keeps every scrollback line exactly once, in order, after the host repaints its view ($establishment session)',
+    'growing the terminal keeps every scrollback line exactly once, in order, after the resize ($establishment session)',
     async ({ establishment }) => {
       const { history, historyLine, term, layOut } = await mountTerminalWithHistory(
-        conptyHost,
+        unixPtyHost('darwin'),
         establishment,
       );
 
@@ -344,18 +330,21 @@ describe.each([
 
       expect(
         bufferLines(term).filter((line) => historyLine.test(line)),
-        'a row-growing resize on a ConPTY host lost or duplicated scrollback',
+        'a row-growing resize on a macOS host lost or duplicated scrollback',
       ).toEqual(history);
     },
   );
 });
 
-describe('TerminalPanel line wrapping on a ConPTY-hosted shell (win32)', () => {
+describe('TerminalPanel line wrapping on a macOS shell (darwin)', () => {
   test('narrowing the terminal reflows a line longer than the new width into wrapped rows', async () => {
-    const { term, session, layOut } = await mountTerminalWithHistory(conptyHost, 'created');
+    const { term, session, layOut } = await mountTerminalWithHistory(
+      unixPtyHost('darwin'),
+      'created',
+    );
     const label = `REFLOW_${randomUUID().replaceAll('-', '')}_`;
     const longLine = filledLine(label, DOCK_GEOMETRY.cols - 1);
-    await session.print(`\r\n${longLine}\r\n${conptyHost.prompt}`);
+    await session.print(`\r\n${longLine}\r\n${unixPtyHost('darwin').prompt}`);
     expect(
       bufferRows(term).filter((row) => row.text.startsWith(label)),
       'the dock-width terminal holds the long line on one unwrapped row',
@@ -373,7 +362,7 @@ describe('TerminalPanel line wrapping on a ConPTY-hosted shell (win32)', () => {
         text,
         wrapped: index > 0,
       })),
-      { text: conptyHost.prompt, wrapped: false },
+      { text: unixPtyHost('darwin').prompt, wrapped: false },
     ];
     expect(
       rows.slice(firstRow, firstRow + reflowed.length),
@@ -382,11 +371,11 @@ describe('TerminalPanel line wrapping on a ConPTY-hosted shell (win32)', () => {
   });
 
   test('a full-width line followed by a line break leaves the next row unwrapped', async () => {
-    const { term, session } = await mountTerminalWithHistory(conptyHost, 'created');
+    const { term, session } = await mountTerminalWithHistory(unixPtyHost('darwin'), 'created');
     const token = randomUUID().replaceAll('-', '');
     const fullWidthLine = filledLine(`FULL_${token}_`, term.cols);
     const nextLine = `NEXT_${token}`;
-    await session.print(`\r\n${fullWidthLine}\r\n${nextLine}\r\n${conptyHost.prompt}`);
+    await session.print(`\r\n${fullWidthLine}\r\n${nextLine}\r\n${unixPtyHost('darwin').prompt}`);
 
     const rows = bufferRows(term);
     const fullWidthRow = rows.findIndex((row) => row.text === fullWidthLine);

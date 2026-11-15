@@ -42,8 +42,11 @@ function stubPty(pid: number) {
   };
 }
 
-function createSession(options: { traced: boolean; platform: 'win32' | 'linux'; spawn: SpawnPty }) {
-  const windows = options.platform === 'win32';
+function createSession(options: {
+  traced: boolean;
+  platform: 'darwin' | 'linux';
+  spawn: SpawnPty;
+}) {
   const records: PtyPhaseRecord[] = [];
   const posted: PtyHostOutgoingMessage[] = [];
   const timeline: string[] = [];
@@ -57,7 +60,7 @@ function createSession(options: { traced: boolean; platform: 'win32' | 'linux'; 
           }),
         }
       : {}),
-    env: windows ? { SystemRoot: 'C:\\Windows' } : { SHELL: '/bin/bash', PATH: '/usr/bin' },
+    env: { SHELL: '/bin/bash', PATH: '/usr/bin' },
     platform: options.platform,
     parentPort: {
       on(_event, callback) {
@@ -75,10 +78,10 @@ function createSession(options: { traced: boolean; platform: 'win32' | 'linux'; 
     data: {
       type: 'create',
       ptyId: SESSION,
-      cwd: windows ? 'C:\\project' : '/project',
+      cwd: '/project',
       cols: 80,
       rows: 24,
-      shell: windows ? 'C:\\Windows\\System32\\cmd.exe' : '/bin/bash',
+      shell: '/bin/bash',
     },
   });
   return { records, posted, timeline };
@@ -105,8 +108,8 @@ test('attributes a controlled slow shell lookup to the shell-resolution phase', 
     phaseTrace: createPtyPhaseTrace({ OK_PTY_PHASE_TRACE: '1' }, 'utility', (record) =>
       phases.push(record),
     ),
-    env: { SystemRoot: 'C:\\Windows' },
-    platform: 'win32',
+    env: { SHELL: '/bin/bash' },
+    platform: 'linux',
     parentPort: {
       on(_event, callback) {
         receive = callback;
@@ -128,14 +131,7 @@ test('attributes a controlled slow shell lookup to the shell-resolution phase', 
       cwd: 'C:\\project',
       cols: 80,
       rows: 24,
-      shell: 'C:\\Windows\\System32\\cmd.exe',
     },
-  });
-  expect(posted).toContainEqual({
-    type: 'shell-notice',
-    ptyId: 'phase-session',
-    notice: 'shell-resolved',
-    shellFamily: 'cmd',
   });
   const durations = phases
     .filter((record) => record.edge === 'end')
@@ -164,8 +160,8 @@ test('reports an exceptional shell lookup without changing the thrown value', ()
     phaseTrace: createPtyPhaseTrace({ OK_PTY_PHASE_TRACE: '1' }, 'utility', (record) =>
       records.push(record),
     ),
-    env: {},
-    platform: 'win32',
+    env: { SHELL: '/bin/bash' },
+    platform: 'linux',
     parentPort: {
       on(_event, callback) {
         receive = callback;
@@ -192,7 +188,6 @@ test('reports an exceptional shell lookup without changing the thrown value', ()
         cwd: 'C:\\project',
         cols: 80,
         rows: 24,
-        shell: 'C:\\Windows\\System32\\cmd.exe',
       },
     });
   } catch (error) {
@@ -215,7 +210,7 @@ test('brackets the native spawn of a created terminal as a completed pty-spawn s
   const session = stubPty(4321);
   const { records } = createSession({
     traced: true,
-    platform: 'win32',
+    platform: 'linux',
     spawn: () => {
       clock += SPAWN_DELAY_MS;
       return session.pty;
@@ -230,36 +225,11 @@ test('brackets the native spawn of a created terminal as a completed pty-spawn s
   ]);
 });
 
-test('brackets each conpty attempt when the bundled spawn falls back to the inbox console', () => {
-  const session = stubPty(4321);
-  const { records, posted } = createSession({
-    traced: true,
-    platform: 'win32',
-    spawn: (_file, _args, options) => {
-      if (options.useConptyDll) {
-        throw new Error('Cannot find conpty.dll at C:\\fixture\\conpty.dll, error code: 2');
-      }
-      return session.pty;
-    },
-  });
-  expect(
-    records
-      .filter((record) => record.phase === 'pty-spawn')
-      .map(({ edge, ptyId, backend, attempt }) => ({ edge, ptyId, backend, attempt })),
-  ).toEqual([
-    { edge: 'begin', ptyId: SESSION, backend: 'bundled', attempt: 1 },
-    { edge: 'error', ptyId: SESSION, backend: 'bundled', attempt: 1 },
-    { edge: 'begin', ptyId: SESSION, backend: 'inbox', attempt: 2 },
-    { edge: 'end', ptyId: SESSION, backend: 'inbox', attempt: 2 },
-  ]);
-  expect(posted.filter((message) => message.type === 'spawn-error')).toEqual([]);
-});
-
 test('marks the first output the host sees and its first forward to main exactly once', () => {
   const session = stubPty(4321);
   const { records, posted, timeline } = createSession({
     traced: true,
-    platform: 'win32',
+    platform: 'linux',
     spawn: () => session.pty,
   });
   const created = timeline.length;
@@ -284,7 +254,7 @@ test('marks a terminal that exits before producing any output', () => {
   const session = stubPty(4321);
   const { records, posted } = createSession({
     traced: true,
-    platform: 'win32',
+    platform: 'linux',
     spawn: () => session.pty,
   });
   session.exit(-1);
@@ -320,7 +290,7 @@ test('reports a failed posix spawn while posting the same spawn-error as an untr
 test('an unset trace reads no clock and leaves posted messages and data listeners unchanged', () => {
   const run = (traced: boolean) => {
     const session = stubPty(4321);
-    const host = createSession({ traced, platform: 'win32', spawn: () => session.pty });
+    const host = createSession({ traced, platform: 'linux', spawn: () => session.pty });
     session.output('first chunk');
     session.output('second chunk');
     session.exit(0);

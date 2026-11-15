@@ -135,12 +135,6 @@ describe('harvestShellAuthSock', () => {
     expect(events).toContain('shell-authsock-harvest-failed');
   });
 
-  it('skips win32 without spawning', async () => {
-    const { spawn, calls } = fakeSpawn({ code: 0, stdout: `${MARK}/tmp/x${MARK}` });
-    expect(await harvestShellAuthSock({ env: {}, platform: 'win32', spawn })).toBeNull();
-    expect(calls).toHaveLength(0);
-  });
-
   it('spawns $SHELL as an interactive login shell', async () => {
     const { spawn, calls } = fakeSpawn({ code: 0, stdout: `${MARK}/tmp/x${MARK}` });
     await harvestShellAuthSock({

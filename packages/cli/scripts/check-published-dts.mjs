@@ -11,12 +11,7 @@ const PACKAGE_ROOT_SOURCE = process.env.OK_PUBLISHED_DTS_ROOT ? 'OK_PUBLISHED_DT
 const PUBLISHED_DECLARATION_NAME = 'dist/index.d.mts';
 const PUBLISHED_DECLARATION = join(PACKAGE_ROOT, PUBLISHED_DECLARATION_NAME);
 const CHECK_PROJECT = 'tsconfig.check.json';
-const TSC_BIN = join(
-  PACKAGE_ROOT,
-  'node_modules',
-  '.bin',
-  process.platform === 'win32' ? 'tsc.cmd' : 'tsc',
-);
+const TSC_BIN = join(PACKAGE_ROOT, 'node_modules', '.bin', 'tsc');
 
 export const PINNED_THIRD_PARTY_INLINING_ARTIFACTS = [
   {
@@ -503,7 +498,6 @@ function main() {
   const tsc = spawnSync(TSC_BIN, ['-p', CHECK_PROJECT, '--pretty', 'false'], {
     cwd: PACKAGE_ROOT,
     encoding: 'utf8',
-    shell: process.platform === 'win32',
   });
 
   if (tsc.error) {

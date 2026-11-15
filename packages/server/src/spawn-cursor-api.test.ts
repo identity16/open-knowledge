@@ -296,33 +296,6 @@ describe('handleSpawnCursor — Cursor binary discovery (per-platform)', () => {
     expect(whichCalled).toBe(true);
   });
 
-  test('windows: .cmd shim is routed through cmd.exe (shell:false cannot exec .cmd — CVE-2024-27980)', async () => {
-    const cmdPath =
-      'C:\\Users\\who\\AppData\\Local\\Programs\\cursor\\resources\\app\\bin\\cursor.cmd';
-    let capturedExec = '';
-    let capturedArgs: ReadonlyArray<string> = [];
-    const spawnDetached = vi.fn(async (exec: string, args: ReadonlyArray<string>) => {
-      capturedExec = exec;
-      capturedArgs = [...args];
-      return { ok: true } as SpawnCursorOutcome;
-    });
-    const { res, captured } = makeRes();
-    await handleSpawnCursor(
-      makeReq('POST', { path: 'C:\\Users\\who\\dragons' }),
-      res,
-      makeDeps({
-        platform: 'win32',
-        contentDir: 'C:\\Users\\who\\dragons',
-        resolveCursorBinary: async () => cmdPath,
-        spawnDetached,
-      }),
-    );
-    expect(captured.status).toBe(200);
-    expect(captured.body).toEqual({});
-    expect(capturedExec.toLowerCase().endsWith('cmd.exe')).toBe(true);
-    expect(capturedArgs).toEqual(['/d', '/c', cmdPath, 'C:\\Users\\who\\dragons']);
-  });
-
   test('linux: PATH lookup is the only viable strategy (no bundle paths registered)', async () => {
     const spawnDetached = vi.fn(
       async (_exec: string, _args: ReadonlyArray<string>) => ({ ok: true }) as SpawnCursorOutcome,
@@ -369,11 +342,5 @@ describe('isPathWithinDir', () => {
 
   test('rejects cross-drive paths on Windows', () => {
     expect(isPathWithinDir('D:\\foo', 'C:\\Users\\who\\dragons', 'win32')).toBe(false);
-  });
-
-  test('accepts same-drive descendants on Windows', () => {
-    expect(
-      isPathWithinDir('C:\\Users\\who\\dragons\\specs', 'C:\\Users\\who\\dragons', 'win32'),
-    ).toBe(true);
   });
 });

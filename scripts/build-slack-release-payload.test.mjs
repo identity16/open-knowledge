@@ -167,7 +167,11 @@ describe('buildSlackReleasePayload', () => {
 
   test('degrades to the header + link message when notes are unavailable', () => {
     for (const notes of ['', undefined]) {
-      const payload = buildSlackReleasePayload({ version: '0.38.4', releaseUrl: RELEASE_URL, notes });
+      const payload = buildSlackReleasePayload({
+        version: '0.38.4',
+        releaseUrl: RELEASE_URL,
+        notes,
+      });
       expect(payload.blocks).toHaveLength(2);
       expect(payload.blocks[0].type).toBe('header');
       expect(payload.blocks[1].text.text).toBe(`*<${RELEASE_URL}|Release notes & downloads>*`);

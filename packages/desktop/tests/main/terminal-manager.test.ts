@@ -1,8 +1,3 @@
-import { WINDOWS_SHELL_FAMILIES } from '@inkeep/open-knowledge-core';
-import {
-  TERMINAL_SHELL_NOTICE_REASONS,
-  TERMINAL_SUPPORT_FILE_NOTICE_REASONS,
-} from '@inkeep/open-knowledge-core/desktop-bridge';
 import { describe, expect, test, vi } from 'vitest';
 import {
   clampPtyDimension,
@@ -86,12 +81,6 @@ function makeManager(over?: Partial<TerminalManagerDeps>) {
     },
     sendExit: (_wc, payload) => {
       sent.push({ channel: 'ok:pty:exit', payload: payload as unknown as Record<string, unknown> });
-    },
-    sendNotice: (_wc, payload) => {
-      sent.push({
-        channel: 'ok:pty:notice',
-        payload: payload as unknown as Record<string, unknown>,
-      });
     },
     newPtyId: () => `pty-${++idn}`,
     setTimer: (cb, ms) => {
@@ -552,7 +541,7 @@ describe('createTerminalManager — create', () => {
     ]);
   });
 
-  test('forwards configured and invalid shell override state to the host resolver', () => {
+  test('forwards an explicit shell override to the host resolver', () => {
     const h = makeManager();
     const wc = makeWebContents();
     createStartedTerminal(h.mgr, {
@@ -561,8 +550,7 @@ describe('createTerminalManager — create', () => {
       projectRoot: PROJECT,
       cols: 80,
       rows: 24,
-      shell: 'C:\\Tools\\pwsh.exe',
-      shellInvalidReason: 'invalid-value',
+      shell: '/bin/bash',
     });
 
     expect(h.forked[0]?.posted[0]).toEqual({
@@ -571,223 +559,8 @@ describe('createTerminalManager — create', () => {
       cwd: PROJECT,
       cols: 80,
       rows: 24,
-      shell: 'C:\\Tools\\pwsh.exe',
-      shellInvalidReason: 'invalid-value',
+      shell: '/bin/bash',
     });
-  });
-
-  test('forwards an invalid-override notice only to the addressed renderer session', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'invalid-shell-override',
-      reason: 'not-found',
-    });
-
-    expect(h.sent).toContainEqual({
-      channel: 'ok:pty:notice',
-      payload: { ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' },
-    });
-  });
-
-  test('does not mark a shell notice as PTY data received, and marks the data that follows it', () => {
-    const trace = tracedRecords();
-    const h = makeManager({ phaseTrace: trace.phaseTrace });
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'shell-resolved',
-      shellFamily: 'bash',
-    });
-
-    expect(trace.records.some((record) => record.phase === 'utility-data-received')).toBe(false);
-
-    h.forked[0]?.emitMessage({ type: 'data', ptyId: 'pty-1', data: 'prompt$ ' });
-
-    expect(trace.stable().filter((record) => record.phase === 'utility-data-received')).toEqual([
-      mainPhase('utility-data-received', 'point', {
-        windowId: 1,
-        ptyId: 'pty-1',
-        currentSession: true,
-      }),
-    ]);
-  });
-
-  test('forwards the resolved Windows shell family to the addressed renderer session', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'shell-resolved',
-      shellFamily: 'bash',
-    });
-
-    expect(h.sent).toContainEqual({
-      channel: 'ok:pty:notice',
-      payload: { ptyId: 'pty-1', notice: 'shell-resolved', shellFamily: 'bash' },
-    });
-  });
-
-  test.each([...TERMINAL_SHELL_NOTICE_REASONS])(
-    'forwards the shared invalid-override reason %s to the renderer',
-    (reason) => {
-      const h = makeManager();
-      createStartedTerminal(h.mgr, {
-        windowId: 1,
-        webContents: makeWebContents(),
-        projectRoot: PROJECT,
-        cols: 80,
-        rows: 24,
-      });
-
-      h.forked[0]?.emitMessage({
-        type: 'shell-notice',
-        ptyId: 'pty-1',
-        notice: 'invalid-shell-override',
-        reason,
-      });
-
-      expect(h.sent).toContainEqual({
-        channel: 'ok:pty:notice',
-        payload: { ptyId: 'pty-1', notice: 'invalid-shell-override', reason },
-      });
-    },
-  );
-
-  test.each([...WINDOWS_SHELL_FAMILIES])(
-    'forwards the shared resolved shell family %s to the renderer',
-    (shellFamily) => {
-      const h = makeManager();
-      createStartedTerminal(h.mgr, {
-        windowId: 1,
-        webContents: makeWebContents(),
-        projectRoot: PROJECT,
-        cols: 80,
-        rows: 24,
-      });
-
-      h.forked[0]?.emitMessage({
-        type: 'shell-notice',
-        ptyId: 'pty-1',
-        notice: 'shell-resolved',
-        shellFamily,
-      });
-
-      expect(h.sent).toContainEqual({
-        channel: 'ok:pty:notice',
-        payload: { ptyId: 'pty-1', notice: 'shell-resolved', shellFamily },
-      });
-    },
-  );
-
-  test.each([...TERMINAL_SUPPORT_FILE_NOTICE_REASONS])(
-    'forwards the support-file degradation reason %s to the renderer',
-    (reason) => {
-      const h = makeManager();
-      createStartedTerminal(h.mgr, {
-        windowId: 1,
-        webContents: makeWebContents(),
-        projectRoot: PROJECT,
-        cols: 80,
-        rows: 24,
-      });
-
-      h.forked[0]?.emitMessage({
-        type: 'shell-notice',
-        ptyId: 'pty-1',
-        notice: 'support-file-degraded',
-        reason,
-      });
-
-      expect(h.sent).toContainEqual({
-        channel: 'ok:pty:notice',
-        payload: { ptyId: 'pty-1', notice: 'support-file-degraded', reason },
-      });
-    },
-  );
-
-  test('drops a shell notice whose reason or family is outside the shared sets', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'invalid-shell-override',
-      reason: 'not-found-ish',
-    });
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'shell-resolved',
-      shellFamily: 'zsh',
-    });
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'support-file-degraded',
-      reason: 'escaped',
-    });
-
-    expect(h.sent.filter((s) => s.channel === 'ok:pty:notice')).toEqual([]);
-    expect(h.warns.length).toBeGreaterThan(0);
-  });
-
-  test('drops a shell notice when the addressed WebContents is already destroyed', () => {
-    const sendNotice = vi.fn((wc: SendableWebContents) => {
-      if (wc.isDestroyed?.()) throw new Error('send on destroyed WebContents');
-    });
-    const h = makeManager({ sendNotice });
-    const wc = makeWebContents();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: wc,
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    wc.destroyed = true;
-
-    expect(() =>
-      h.forked[0]?.emitMessage({
-        type: 'shell-notice',
-        ptyId: 'pty-1',
-        notice: 'invalid-shell-override',
-        reason: 'not-found',
-      }),
-    ).not.toThrow();
-    expect(sendNotice).not.toHaveBeenCalled();
   });
 
   test('a window with no project root gets no terminal and no fork', () => {
@@ -1353,27 +1126,6 @@ describe('createTerminalManager — exit + crash surfacing', () => {
     expect(line?.exitCode).toBeNull();
   });
 
-  test('the exit line carries the shell family the host resolved for that session', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'shell-resolved',
-      shellFamily: 'powershell',
-    });
-    h.forked[0]?.emitMessage({ type: 'exit', ptyId: 'pty-1', exitCode: 0, signal: null });
-
-    const line = [...h.infos, ...h.warns].find((w) => w.event === 'terminal-manager-session-exit');
-    expect(line?.shellFamily).toBe('powershell');
-  });
-
   test('an app shutdown names its cause, so an update install is not read as a quit', () => {
     const h = makeManager();
     createStartedTerminal(h.mgr, {
@@ -1411,33 +1163,6 @@ describe('createTerminalManager — exit + crash surfacing', () => {
     });
   });
 
-  test('maps a launch-composition failure to a structured reason, never to prose', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    h.forked[0]?.emitMessage({
-      type: 'spawn-error',
-      ptyId: 'pty-1',
-      launchFailure: 'unsafe-argument',
-    });
-    expect(h.exits()[0]).toEqual({
-      ptyId: 'pty-1',
-      launchFailure: 'unsafe-argument',
-      neverStarted: true,
-    });
-    expect(h.warns).toContainEqual(
-      expect.objectContaining({
-        event: 'terminal-manager-spawn-error',
-        launchFailure: 'unsafe-argument',
-      }),
-    );
-  });
-
   test('reports a pty that ended before its shell attached as a start failure, keeping the exit code in the log', () => {
     const h = makeManager();
     createStartedTerminal(h.mgr, {
@@ -1467,7 +1192,6 @@ describe('createTerminalManager — exit + crash surfacing', () => {
   test.each([
     { failure: 'the shell never attached', reported: { shellNeverAttached: true, exitCode: -1 } },
     { failure: 'the host reports a message', reported: { message: 'EMFILE: too many open files' } },
-    { failure: 'the launch could not be composed', reported: { launchFailure: 'unsafe-argument' } },
   ])(
     'logs how long a start took to fail when $failure, so a readiness timeout reads apart from an immediate failure',
     ({ reported }) => {
@@ -1504,10 +1228,6 @@ describe('createTerminalManager — exit + crash surfacing', () => {
         failure: 'the host reports a message',
         reported: { message: 'EMFILE: too many open files' },
       },
-      {
-        failure: 'the launch could not be composed',
-        reported: { launchFailure: 'unsafe-argument' },
-      },
     ].flatMap((row) => [
       { ...row, killRequested: true },
       { ...row, killRequested: false },
@@ -1539,7 +1259,7 @@ describe('createTerminalManager — exit + crash surfacing', () => {
     },
   );
 
-  test('rejects a spawn-error that carries neither a message nor a known launch reason', () => {
+  test('rejects a spawn-error that carries no valid message', () => {
     const h = makeManager();
     createStartedTerminal(h.mgr, {
       windowId: 1,
@@ -1548,7 +1268,7 @@ describe('createTerminalManager — exit + crash surfacing', () => {
       cols: 80,
       rows: 24,
     });
-    h.forked[0]?.emitMessage({ type: 'spawn-error', ptyId: 'pty-1', launchFailure: 'made-up' });
+    h.forked[0]?.emitMessage({ type: 'spawn-error', ptyId: 'pty-1', message: 42 });
     expect(h.exits()).toEqual([{ ptyId: 'pty-1', neverStarted: true }]);
     expect(h.warns).toContainEqual(
       expect.objectContaining({
@@ -1560,55 +1280,8 @@ describe('createTerminalManager — exit + crash surfacing', () => {
     );
   });
 
-  test('rejects a spawn-error carrying both a message and a launch reason', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    h.forked[0]?.emitMessage({
-      type: 'spawn-error',
-      ptyId: 'pty-1',
-      message: 'EACCES',
-      launchFailure: 'unsafe-argument',
-    });
-    expect(h.exits()).toEqual([{ ptyId: 'pty-1', neverStarted: true }]);
-    expect(h.warns).toContainEqual(
-      expect.objectContaining({ event: 'pty-host-unexpected-message', reaped: true }),
-    );
-  });
-
-  test('rejects a spawn-error whose message rides an out-of-vocabulary launch reason', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    h.forked[0]?.emitMessage({
-      type: 'spawn-error',
-      ptyId: 'pty-1',
-      message: 'spawn ENOENT',
-      launchFailure: 'made-up',
-    });
-    expect(h.exits()).toEqual([{ ptyId: 'pty-1', neverStarted: true }]);
-    expect(h.forked[0]?.posted).toContainEqual({ type: 'kill', ptyId: 'pty-1' });
-    expect(h.warns).toContainEqual(
-      expect.objectContaining({ event: 'pty-host-unexpected-message', reaped: true }),
-    );
-  });
-
   test.each([
     { shape: 'also carries a message', extra: { exitCode: -1, message: 'EACCES' } },
-    {
-      shape: 'also carries a launch reason',
-      extra: { exitCode: -1, launchFailure: 'unsafe-argument' },
-    },
     { shape: 'carries a non-numeric exit code', extra: { exitCode: '-1' } },
   ])('rejects a never-attached spawn-error that $shape', ({ extra }) => {
     const h = makeManager();
@@ -1649,7 +1322,7 @@ describe('createTerminalManager — exit + crash surfacing', () => {
     if (!utility) throw new Error('missing host');
     utility.throwOnPost = new Error('injected post failure');
     try {
-      utility.emitMessage({ type: 'spawn-error', ptyId: 'pty-1', launchFailure: 'made-up' });
+      utility.emitMessage({ type: 'spawn-error', ptyId: 'pty-1', message: 42 });
     } catch (err) {
       if (err !== utility.throwOnPost) throw err;
     }
@@ -1700,7 +1373,7 @@ describe('createTerminalManager — exit + crash surfacing', () => {
     h.forked[0]?.emitMessage({
       type: 'spawn-error',
       ptyId: 'pty-absent',
-      launchFailure: 'made-up',
+      message: 42,
     });
     expect(h.exits()).toEqual([]);
     expect(h.forked[0]?.posted).not.toContainEqual({ type: 'kill', ptyId: 'pty-absent' });
@@ -2428,16 +2101,6 @@ describe('createTerminalManager — telemetry', () => {
     expect(h.shellExits).toEqual([]);
   });
 
-  test('killAll counts only the windows that ran a command', () => {
-    const h = makeTelemetryManager();
-    h.start(1);
-    h.start(2);
-    h.mgr.input({ windowId: 1, ptyId: 'pty-1', data: 'build\r' });
-    h.mgr.killAll('quit');
-    expect(h.sessions).toHaveLength(1);
-    expect(h.shellExits).toEqual([]);
-  });
-
   test('each PTY lifecycle is one session: a post-restart shell with no command is not counted', () => {
     const h = makeTelemetryManager();
     h.start(1);
@@ -2561,6 +2224,16 @@ describe('createTerminalManager — telemetry', () => {
     h.start(1);
     expect(h.concurrent.every((c) => Object.keys(c).join(',') === 'count')).toBe(true);
     expect(h.concurrent.map((c) => c.count)).toEqual([1, 2]);
+  });
+
+  test('killAll counts only the windows that ran a command', () => {
+    const h = makeTelemetryManager();
+    h.start(1);
+    h.start(2);
+    h.mgr.input({ windowId: 1, ptyId: 'pty-1', data: 'build\r' });
+    h.mgr.killAll('quit');
+    expect(h.sessions).toHaveLength(1);
+    expect(h.shellExits).toEqual([]);
   });
 });
 

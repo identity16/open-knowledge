@@ -15,7 +15,7 @@ vi.mock('@parcel/watcher', async () => {
 });
 
 const POSIX_PLATFORMS = ['linux', 'darwin'] as const satisfies readonly NodeJS.Platform[];
-const PLATFORMS = ['win32', ...POSIX_PLATFORMS] as const satisfies readonly NodeJS.Platform[];
+const PLATFORMS = [...POSIX_PLATFORMS] as const satisfies readonly NodeJS.Platform[];
 const LIVENESS = { timeout: 10_000 };
 
 type HeadWatcherOptions = NonNullable<Parameters<typeof startHeadWatcher>[3]>;
@@ -69,14 +69,6 @@ async function beginLiveBatch(watched: WatchedHead): Promise<void> {
 }
 
 describe('releasing the HEAD watcher on the parcel backend', () => {
-  test('on win32, releasing the HEAD watcher never asks the addon to unsubscribe natively', async () => {
-    const { handle, subscription } = await watchHead('win32');
-
-    await handle.unsubscribe();
-
-    expect(subscription.nativeReleases(), 'native unsubscribe calls').toBe(0);
-  });
-
   test.each(PLATFORMS)(
     'on %s, a HEAD change the addon delivers after the HEAD watcher is released begins no batch',
     async (platform) => {

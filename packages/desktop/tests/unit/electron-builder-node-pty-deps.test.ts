@@ -65,20 +65,6 @@ describe('node-pty desktop packaging config', () => {
     ).toBe(true);
   });
 
-  test('asarUnpack covers node-pty lib/ and package.json (conout worker runs off the real filesystem)', () => {
-    const patterns = readBuilderConfig().asarUnpack ?? [];
-    expect(
-      patterns,
-      "Add '**/node-pty/lib/**' to asarUnpack: node-pty reads ConPTY output on a worker thread " +
-        '(lib/worker/conoutSocketWorker.js), and worker_threads cannot load JS from inside an asar.',
-    ).toContain('**/node-pty/lib/**');
-    expect(
-      patterns,
-      "Add '**/node-pty/package.json' to asarUnpack: the conout worker's CJS require() resolution " +
-        "needs node-pty's package.json on the real filesystem beside the unpacked lib/.",
-    ).toContain('**/node-pty/package.json');
-  });
-
   test('afterPack makes the unpacked spawn-helper executable (unpack rule + chmod move together)', () => {
     const src = readFileSync(afterPack, 'utf8');
     expect(

@@ -48,7 +48,6 @@ function call(
 describe('GET /updates/[channel]/[...path]', () => {
   test.each([
     ['beta', 'beta-mac.yml', 'beta-mac.yml'],
-    ['beta', 'OpenKnowledge-Setup-x64.exe', 'beta.yml'],
     ['beta', 'OpenKnowledge-arm64.deb', 'beta-linux-arm64.yml'],
     ['beta', 'OpenKnowledge-x86_64.rpm', 'beta-linux.yml'],
     ['beta-product', 'OpenKnowledge-Beta-aarch64.rpm', 'beta-product-linux-arm64.yml'],
@@ -210,22 +209,6 @@ describe('GET /updates/[channel]/[...path]', () => {
     _betaRedirect = { kind: 'fresh', url: BETA_DMG_URL };
   });
 
-  test('Windows stable manifest (latest.yml) 302s to the latest alias, NOT counted', async () => {
-    _lastCapture = null;
-    const res = await call('stable', ['latest.yml']);
-    expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe(`${REL}/latest/download/latest.yml`);
-    expect(_lastCapture).toBeNull();
-  });
-
-  test('Windows beta manifest (beta.yml) 302s to the resolved beta tag, NOT counted', async () => {
-    _lastCapture = null;
-    const res = await call('beta', ['beta.yml']);
-    expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe(`${REL}/download/v0.20.0-beta.4/beta.yml`);
-    expect(_lastCapture).toBeNull();
-  });
-
   test('Linux manifests (x64 + arm64-suffixed, both channels) 302 and are NOT counted', async () => {
     _lastCapture = null;
     const stable = await call('stable', ['latest-linux-arm64.yml']);
@@ -237,23 +220,9 @@ describe('GET /updates/[channel]/[...path]', () => {
     expect(_lastCapture).toBeNull();
   });
 
-  test('Windows stable exe counts with artifact_type=exe and no to_version when the updater sends no header', async () => {
-    _lastCapture = null;
-    const file = 'OpenKnowledge-Setup-x64.exe';
-    const res = await call('stable', [file], { 'x-ok-from-version': '0.19.1' });
-    expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe(`${REL}/latest/download/${file}`);
-    expect(_lastCapture?.event).toBe('app_update_downloaded');
-    expect(_lastCapture?.properties?.artifact_type).toBe('exe');
-    expect(_lastCapture?.properties?.to_version).toBeUndefined();
-    expect(_lastCapture?.properties?.from_version).toBe('0.19.1');
-    expect(_lastCapture?.properties?.os).toBe('windows');
-    expect(_lastCapture?.properties?.arch).toBe('x64');
-  });
-
   test('a versionless stable installer takes to_version from the updater header', async () => {
     _lastCapture = null;
-    const res = await call('stable', ['OpenKnowledge-Setup-arm64.exe'], {
+    const res = await call('stable', ['OpenKnowledge-arm64.deb'], {
       'x-ok-from-version': '0.19.1',
       'x-ok-to-version': '0.20.0',
     });
@@ -310,7 +279,6 @@ describe('GET /updates/[channel]/[...path]', () => {
 
   test('every packager arch spelling normalizes onto one analytics vocabulary', async () => {
     const cases: ReadonlyArray<readonly [string, string, string]> = [
-      ['OpenKnowledge-Setup-arm64.exe', 'windows', 'arm64'],
       ['OpenKnowledge-amd64.deb', 'linux', 'x64'],
       ['OpenKnowledge-aarch64.rpm', 'linux', 'arm64'],
       ['OpenKnowledge-0.20.0-universal-mac.zip', 'macos', 'universal'],
@@ -337,4 +305,13 @@ describe('GET /updates/[channel]/[...path]', () => {
     expect((await call('stable', ['latest-windows.yml'])).status).toBe(404);
     expect((await call('stable', ['builder-debug.yml'])).status).toBe(404);
   });
+});
+
+test.each([
+  'latest.yml',
+  'beta.yml',
+  'OpenKnowledge-Setup-x64.exe',
+  'OpenKnowledge-Setup-arm64.exe.blockmap',
+])('refuses removed Windows update artifacts: %s', async (filename) => {
+  expect((await call('stable', [filename])).status).toBe(404);
 });

@@ -36,7 +36,7 @@ describe('resolveRemovalFilePath', () => {
     expect(resolveRemovalFilePath(path)).toEqual({ kind: 'declined', reason: 'not-a-file' });
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'reports inaccessible parent-directory permissions without treating the file as absent',
     () => {
       const parent = join(dir, 'private');
@@ -55,7 +55,7 @@ describe('resolveRemovalFilePath', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32')('resolves a relative symlink chain', () => {
+  test('resolves a relative symlink chain', () => {
     const path = join(dir, 'config');
     const target = join(dir, 'target');
     writeFileSync(target, 'settings');
@@ -65,16 +65,13 @@ describe('resolveRemovalFilePath', () => {
     expect(lstatSync(path).isSymbolicLink()).toBe(true);
   });
 
-  test.skipIf(process.platform === 'win32').each(['dangling', 'cycle'])(
-    'declines a %s symlink without replacing it',
-    (kind) => {
-      const path = join(dir, 'config');
-      symlinkSync(kind === 'cycle' ? 'config' : 'missing', path);
-      expect(resolveRemovalFilePath(path)).toEqual({
-        kind: 'declined',
-        reason: kind === 'cycle' ? 'unresolved-symlink' : 'missing-symlink-target',
-      });
-      expect(lstatSync(path).isSymbolicLink()).toBe(true);
-    },
-  );
+  test.each(['dangling', 'cycle'])('declines a %s symlink without replacing it', (kind) => {
+    const path = join(dir, 'config');
+    symlinkSync(kind === 'cycle' ? 'config' : 'missing', path);
+    expect(resolveRemovalFilePath(path)).toEqual({
+      kind: 'declined',
+      reason: kind === 'cycle' ? 'unresolved-symlink' : 'missing-symlink-target',
+    });
+    expect(lstatSync(path).isSymbolicLink()).toBe(true);
+  });
 });

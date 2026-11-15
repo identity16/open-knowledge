@@ -277,21 +277,6 @@ describe('createOsProbe', () => {
     expect(calls[0]?.args).toEqual(['-e', 'id of app "Codex"']);
   });
 
-  test('Windows probe uses reg query HKCR\\<scheme> (merged user+machine view)', async () => {
-    const { exec, calls } = makeExecFake({ reg: {} });
-    const probe = createOsProbe('win32', exec);
-    expect(await probe('cursor')).toBe(true);
-    expect(calls[0]?.cmd).toBe('reg');
-    expect(calls[0]?.args).toEqual(['query', 'HKCR\\cursor', '/ve']);
-  });
-
-  test('Windows probe returns false when reg query non-zero exit', async () => {
-    const err = Object.assign(new Error('exit 1'), { code: 1 });
-    const { exec } = makeExecFake({ reg: { err } });
-    const probe = createOsProbe('win32', exec);
-    expect(await probe('claude')).toBe(false);
-  });
-
   test('Linux probe uses xdg-mime query default x-scheme-handler/<scheme>', async () => {
     const { exec, calls } = makeExecFake({
       'xdg-mime': { stdout: 'anthropic-claude.desktop' },

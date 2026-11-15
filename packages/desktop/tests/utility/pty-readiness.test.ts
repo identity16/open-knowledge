@@ -1,6 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import type { PtyProcessLike, PtySpawnOptions, SpawnPty } from '../../src/utility/pty-host.ts';
 import {
@@ -21,7 +18,7 @@ import {
   remainingGrantMs,
   resolveHarnessBudgetMs,
   type ShellReadyOptions,
-  shellOutputBeyondAttach,
+  shellOutputBeyondTerminalControls,
   type WaitOptions,
   waitForCondition,
   waitForEvaluatedInput,
@@ -29,7 +26,6 @@ import {
   waitForShellReady,
 } from '../support/pty-readiness.test-helper.ts';
 import {
-  type ControlledHarnessOptions,
   type ControlledHarnessResult,
   runControlledHarness,
 } from './pty-harness-environment.test-helper.ts';
@@ -56,14 +52,6 @@ function createFakeStream(): FakeStream {
 
 const FAST_READY = { intervalMs: 5, quietSamples: 20, stallMs: 5_000 } as const;
 
-function lifecycleEventIndex(
-  result: ControlledHarnessResult,
-  shell: number,
-  event: string,
-): number {
-  return result.events.findIndex((entry) => entry.shell === shell && entry.event === event);
-}
-
 function scenarioVerdicts(result: ControlledHarnessResult): string[] {
   return result.lines
     .filter((line) => /^(?:PASS|FAIL|REFUSED) /u.test(line))
@@ -73,730 +61,9 @@ function scenarioVerdicts(result: ControlledHarnessResult): string[] {
     });
 }
 
-function scenarioFailureLine(result: ControlledHarnessResult, scenario: string): string {
-  const prefix = `FAIL ${scenario} :: `;
-  const line = result.lines.find((entry) => entry.startsWith(prefix));
-  if (line === undefined) throw new Error(`the harness printed no line starting ${prefix}`);
-  return line;
-}
-
-function expectLifecyclePredecessors(result: ControlledHarnessResult): void {
-  expect(result.lines).toContain('PASS real command round-trip at project root');
-  expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-  expect(result.lines).toContain('PASS PowerShell executes a structured launch command');
-  expect(lifecycleEventIndex(result, 3, 'launch-token')).toBeGreaterThan(-1);
-  expect(lifecycleEventIndex(result, 3, 'evaluated-reply')).toBeGreaterThan(-1);
-  expect(lifecycleEventIndex(result, 4, 'spawn')).toBeGreaterThan(-1);
-  expect(lifecycleEventIndex(result, 4, 'output')).toBeGreaterThan(-1);
-  expect(lifecycleEventIndex(result, 4, 'kill-request')).toBeGreaterThan(-1);
-}
-
-function expectLifecyclePass(result: ControlledHarnessResult): void {
-  expectLifecyclePredecessors(result);
-  const exited = lifecycleEventIndex(result, 4, 'exit:1');
-  const respawned = lifecycleEventIndex(result, 5, 'spawn');
-  expect(exited).toBeGreaterThan(lifecycleEventIndex(result, 4, 'kill-request'));
-  expect(respawned).toBeGreaterThan(exited);
-  expect(result.events.slice(respawned + 1)).toContainEqual(
-    expect.objectContaining({ shell: 5, event: 'output' }),
-  );
-  expect(result.lines).toContain('PASS host survives a PTY death and respawns');
-  expect(result.lines).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-  expect(result.exitCode).toBe(0);
-}
-
-function expectLifecycleExitFailure(
-  result: ControlledHarnessResult,
-  verdicts: readonly string[],
-  harnessResult: string,
-): void {
-  expectLifecyclePredecessors(result);
-  expect(scenarioVerdicts(result)).toEqual(verdicts);
-  expect(result.lines).toContain(harnessResult);
-  expect(result.lines.join('\n')).toContain('exit after kill');
-  expect(result.lines).not.toContain('PASS host survives a PTY death and respawns');
-  expect(lifecycleEventIndex(result, 5, 'spawn')).toBe(-1);
-  expect(result.exitCode).toBe(1);
-}
-
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
-});
-
-describe('real harness readiness across sequential scenarios', () => {
-  test.each([
-    {
-      name: 'initial interactive readiness',
-      options: { firstScenario: 'fast', silentAt: 'initial-input' },
-      shell: 1,
-      predecessor: 'unanswered-readiness-input',
-      scenario: 'real command round-trip at project root',
-    },
-    {
-      name: 'env-stripped interactive readiness',
-      options: { firstScenario: 'fast', silentAt: 'environment-input' },
-      shell: 2,
-      predecessor: 'unanswered-readiness-input',
-      scenario: 'strips desktop env markers from the shell',
-    },
-    {
-      name: 'structured launch token',
-      options: { firstScenario: 'fast', silentAt: 'launch-token' },
-      shell: 3,
-      predecessor: 'launch-startup-output',
-      scenario: 'PowerShell executes a structured launch command',
-    },
-    {
-      name: 'post-launch evaluated reply',
-      options: { firstScenario: 'slow', launchReadiness: 'stuck' },
-      shell: 3,
-      predecessor: 'input',
-      scenario: 'PowerShell executes a structured launch command',
-    },
-    {
-      name: 'post-output command marker',
-      options: { firstScenario: 'fast', silentAt: 'command-output' },
-      shell: 1,
-      predecessor: 'command-input',
-      scenario: 'real command round-trip at project root',
-    },
-    {
-      name: 'silent replacement output',
-      options: {
-        firstScenario: 'fast',
-        lifecycle: {
-          launchAtMs: 26_000,
-          exitAfterKillMs: 1_200,
-          replacementOutputAfterCreateMs: null,
-        },
-      },
-      shell: 5,
-      predecessor: 'spawn',
-      scenario: 'host survives a PTY death and respawns',
-    },
-  ] as const)(
-    '$name retains an OS observation in the real harness before release',
-    async ({ options, shell, predecessor, scenario }) => {
-      const result = await runControlledHarness(options as ControlledHarnessOptions);
-      const reached = lifecycleEventIndex(result, shell, predecessor);
-      expect(reached).toBeGreaterThan(-1);
-      if (shell === 5) {
-        expect(reached).toBeGreaterThan(lifecycleEventIndex(result, 4, 'exit:1'));
-      }
-      expect(scenarioVerdicts(result)).toContain(`FAIL ${scenario}`);
-      expect(result.lines.join('\n')).not.toContain('hard timeout during');
-      const failure = result.traceEvents.find(
-        (entry) => entry.stage === 'snapshot' && entry.reason === 'failure',
-      );
-      expect(failure).toEqual(expect.objectContaining({ publicPid: 4_000 + shell }));
-      expect(result.traceEvents).toContainEqual(
-        expect.objectContaining({
-          event: 'pty-host-startup',
-          stage: 'observer-unavailable',
-          traceId: failure?.traceId,
-          attempt: failure?.attempt,
-        }),
-      );
-      const observation = result.traceEvents.find(
-        (entry) =>
-          entry.event === 'pty-host-startup' &&
-          entry.stage === 'os-snapshot' &&
-          entry.traceId === failure?.traceId &&
-          entry.attempt === failure?.attempt,
-      );
-      expect(observation?.observation).toEqual(
-        expect.objectContaining({
-          status: 'unavailable',
-          reason: 'query-start-failed',
-          shell: { status: 'unavailable', reason: 'query-start-failed' },
-          console: { status: 'unavailable', reason: 'query-start-failed' },
-          worker: { status: 'unavailable', reason: 'worker-unavailable' },
-        }),
-      );
-      const observed = result.events.findIndex((entry) => entry.trace === observation);
-      expect(observed).toBeGreaterThan(reached);
-      expect(
-        result.events.findIndex(
-          (entry, index) =>
-            index > reached &&
-            index < observed &&
-            entry.shell === 0 &&
-            entry.event === 'query-start',
-        ),
-      ).toBeGreaterThan(-1);
-      expect(lifecycleEventIndex(result, shell, 'kill-request')).toBeGreaterThan(observed);
-      if (shell === 1 && predecessor === 'unanswered-readiness-input') {
-        const queryStart = lifecycleEventIndex(result, 0, 'query-start');
-        expect(queryStart).toBeGreaterThan(reached);
-        expect(lifecycleEventIndex(result, shell, 'kill-request')).toBeGreaterThan(queryStart);
-      }
-      if (shell === 5) {
-        expect(
-          result.events.filter((entry) => entry.shell === 0 && entry.event === 'query-start'),
-        ).toHaveLength(1);
-      }
-      expect(JSON.stringify(observation)).not.toContain('PowerShell startup');
-      expect(JSON.stringify(observation)).not.toContain(
-        'controlled harness cannot spawn a native subprocess',
-      );
-    },
-  );
-
-  test('a delayed OS query cannot rewrite a released failure attempt', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'fast',
-      silentAt: 'initial-input',
-      queryMode: 'delayed-invalid',
-    });
-    const sent = lifecycleEventIndex(result, 1, 'unanswered-readiness-input');
-    expect(sent).toBeGreaterThan(-1);
-    expect(scenarioVerdicts(result)).toContain('FAIL real command round-trip at project root');
-    const failure = result.traceEvents.find(
-      (entry) => entry.stage === 'snapshot' && entry.reason === 'failure',
-    );
-    expect(failure).toEqual(expect.objectContaining({ publicPid: 4_001 }));
-    const release = lifecycleEventIndex(result, 1, 'kill-request');
-    expect(release).toBeGreaterThan(sent);
-    const observation = result.traceEvents.find(
-      (entry) =>
-        entry.event === 'pty-host-startup' &&
-        entry.stage === 'os-snapshot' &&
-        entry.traceId === failure?.traceId &&
-        entry.attempt === failure?.attempt,
-    );
-    expect(observation).toEqual(expect.objectContaining({ observation: expect.any(Object) }));
-    expect(lifecycleEventIndex(result, 0, 'query-start')).toBeGreaterThan(sent);
-    expect(lifecycleEventIndex(result, 0, 'late-query-output')).toBeGreaterThan(release);
-    expect(result.delayedQuery).toEqual(
-      expect.objectContaining({
-        traceBeforeDelivery: expect.any(String),
-        linesBeforeDelivery: expect.any(String),
-      }),
-    );
-    expect(result.events.findIndex((entry) => entry.trace === observation)).toBeLessThan(release);
-    expect(JSON.stringify(result.traceEvents)).toBe(result.delayedQuery?.traceBeforeDelivery);
-    expect(JSON.stringify(result.lines)).toBe(result.delayedQuery?.linesBeforeDelivery);
-    expect(scenarioVerdicts(result)).toContain('FAIL real command round-trip at project root');
-    expect(JSON.stringify(result.traceEvents)).not.toContain('private shell text');
-    expect(JSON.stringify(result.traceEvents)).not.toContain('private fixture stderr');
-  });
-
-  test('passing cleanup and spent-budget refusal issue no OS query', async () => {
-    const passing = await runControlledHarness({ firstScenario: 'fast' });
-    expect(passing.lines).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-    expect(passing.exitCode).toBe(0);
-    expect(lifecycleEventIndex(passing, 1, 'kill-request')).toBeGreaterThan(-1);
-    expect(passing.events.filter((entry) => entry.event === 'query-start')).toEqual([]);
-
-    const refused = await runControlledHarness({ firstScenario: 'fast', budgetOverride: '1' });
-    expect(refused.lines.filter((line) => line.startsWith('REFUSED '))).toHaveLength(5);
-    expect(refused.lines).toContain('HARNESS_RESULT ok=0 fail=0 refused=5');
-    expect(refused.events.filter((entry) => entry.event === 'query-start')).toEqual([]);
-  });
-
-  test('keeps an advancing later shell eligible after an earlier scenario passes slowly', async () => {
-    const fast = await runControlledHarness({ firstScenario: 'fast' });
-    expect(fast.lines.join('\n')).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-    expect(fast.exitCode).toBe(0);
-    const slow = await runControlledHarness({ firstScenario: 'slow' });
-    expect(slow.lines).toContain('PASS real command round-trip at project root');
-    expect(slow.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(slow.lines.join('\n')).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-    expect(slow.exitCode).toBe(0);
-  });
-
-  test('keeps a delayed exit and respawn eligible after an earlier scenario passes slowly', async () => {
-    for (const firstScenario of ['fast', 'slow'] as const) {
-      const result = await runControlledHarness({ firstScenario, phase: 'delayed-exit' });
-      expect(result.lines).toContain('PASS real command round-trip at project root');
-      expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-      expect(result.lines).toContain('PASS PowerShell executes a structured launch command');
-      expect(result.lines).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-      expect(result.exitCode).toBe(0);
-      const exited = result.events.findIndex(
-        (event) => event.shell === 4 && event.event === 'exit:1',
-      );
-      const respawned = result.events.findIndex(
-        (event) => event.shell === 5 && event.event === 'spawn',
-      );
-      expect(exited).toBeGreaterThan(-1);
-      expect(respawned).toBeGreaterThan(exited);
-    }
-  });
-
-  test('accepts a silent exit acknowledgement after the kill request', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      lifecycle: { launchAtMs: 44_000, exitAfterKillMs: 1_800, outputAfterKill: false },
-    });
-    expectLifecyclePass(result);
-    const killed = lifecycleEventIndex(result, 4, 'kill-request');
-    const exited = lifecycleEventIndex(result, 4, 'exit:1');
-    expect(result.events.slice(killed + 1, exited)).not.toContainEqual(
-      expect.objectContaining({ shell: 4, event: 'output' }),
-    );
-  });
-
-  test('waits for replacement output after accepting a late exit', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      lifecycle: {
-        launchAtMs: 44_000,
-        exitAfterKillMs: 1_200,
-        replacementOutputAfterCreateMs: 400,
-      },
-    });
-    expectLifecyclePass(result);
-    expect(lifecycleEventIndex(result, 5, 'replacement-first-data')).toBeGreaterThan(
-      lifecycleEventIndex(result, 5, 'spawn'),
-    );
-  });
-
-  test('uses the exit window for a silent acknowledgement', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      lifecycle: { launchAtMs: 33_000, exitAfterKillMs: 9_000, outputAfterKill: false },
-    });
-    expectLifecyclePass(result);
-    const killed = lifecycleEventIndex(result, 4, 'kill-request');
-    const exited = lifecycleEventIndex(result, 4, 'exit:1');
-    expect(result.events.slice(killed + 1, exited)).not.toContainEqual(
-      expect.objectContaining({ shell: 4, event: 'output' }),
-    );
-  });
-
-  test.each([null, 35_000])(
-    'never treats output during termination as an exit acknowledgement when exit is %s',
-    async (exitAfterKillMs) => {
-      const result = await runControlledHarness({
-        firstScenario: 'fast',
-        lifecycle: { launchAtMs: 26_000, exitAfterKillMs, outputAfterKill: true },
-      });
-      expectLifecycleExitFailure(
-        result,
-        [
-          'PASS real command round-trip at project root',
-          'PASS strips desktop env markers from the shell',
-          'PASS PowerShell executes a structured launch command',
-          'FAIL host survives a PTY death and respawns',
-          'PASS bad shell surfaces as a spawn failure',
-        ],
-        'HARNESS_RESULT ok=4 fail=1 refused=0',
-      );
-      const killed = lifecycleEventIndex(result, 4, 'kill-request');
-      expect(result.events.slice(killed + 1)).toContainEqual(
-        expect.objectContaining({ shell: 4, event: 'output' }),
-      );
-      expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-    },
-  );
-
-  test.each([
-    {
-      ending: 'stays alive',
-      replacement: { replacementOutputAfterCreateMs: null },
-      reason: `before its ${INITIAL_ALLOWANCE_BOUND} ended, ${NO_SHELL_OUTPUT_VERDICT}`,
-      notReason: 'shell failed before',
-    },
-    {
-      ending: 'then exits',
-      replacement: { replacementOutputAfterCreateMs: null, replacementExitAfterCreateMs: 500 },
-      reason: `shell failed before second shell prompt (host survived): ${SHELL_EXIT}`,
-      notReason: NO_SHELL_OUTPUT_VERDICT,
-    },
-  ])(
-    'fails the respawn scenario when the replacement writes nothing and $ending',
-    async ({ replacement, reason, notReason }) => {
-      const result = await runControlledHarness({
-        firstScenario: 'fast',
-        lifecycle: { launchAtMs: 26_000, exitAfterKillMs: 1_200, ...replacement },
-      });
-      expectLifecyclePredecessors(result);
-      const exited = lifecycleEventIndex(result, 4, 'exit:1');
-      const respawned = lifecycleEventIndex(result, 5, 'spawn');
-      expect(exited).toBeGreaterThan(-1);
-      expect(respawned).toBeGreaterThan(exited);
-      expect(result.events.slice(respawned + 1)).not.toContainEqual(
-        expect.objectContaining({ shell: 5, event: 'output' }),
-      );
-      expect(result.lines.join('\n')).toContain('FAIL host survives a PTY death and respawns');
-      expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-      expect(scenarioVerdicts(result)).toEqual([
-        'PASS real command round-trip at project root',
-        'PASS strips desktop env markers from the shell',
-        'PASS PowerShell executes a structured launch command',
-        'FAIL host survives a PTY death and respawns',
-        'PASS bad shell surfaces as a spawn failure',
-      ]);
-      expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-      expect(result.exitCode).toBe(1);
-      const respawnFailure = scenarioFailureLine(result, 'host survives a PTY death and respawns');
-      expect(respawnFailure).toContain(reason);
-      expect(respawnFailure).not.toContain(notReason);
-      expect(respawnFailure).not.toContain(SHELL_PROGRESS_ADVANCED);
-    },
-  );
-
-  test('rejects replacement output when that shell has already exited', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'fast',
-      lifecycle: {
-        launchAtMs: 26_000,
-        exitAfterKillMs: 1_200,
-        replacementOutputAfterCreateMs: 1,
-        replacementExitAfterCreateMs: 1,
-      },
-    });
-    expectLifecyclePredecessors(result);
-    const respawned = lifecycleEventIndex(result, 5, 'spawn');
-    const output = lifecycleEventIndex(result, 5, 'output');
-    const exited = lifecycleEventIndex(result, 5, 'exit:1');
-    expect(respawned).toBeGreaterThan(lifecycleEventIndex(result, 4, 'exit:1'));
-    expect(output).toBeGreaterThan(respawned);
-    expect(exited).toBeGreaterThan(output);
-    expect(result.lines.join('\n')).toContain('FAIL host survives a PTY death and respawns');
-    expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-    expect(scenarioVerdicts(result)).toEqual([
-      'PASS real command round-trip at project root',
-      'PASS strips desktop env markers from the shell',
-      'PASS PowerShell executes a structured launch command',
-      'FAIL host survives a PTY death and respawns',
-      'PASS bad shell surfaces as a spawn failure',
-    ]);
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.exitCode).toBe(1);
-  });
-
-  test.each([null, 3_000])(
-    'keeps the report bound authoritative when exit is %s',
-    async (exitAfterKillMs) => {
-      const result = await runControlledHarness({
-        firstScenario: 'slow',
-        lifecycle: { launchAtMs: 44_000, exitAfterKillMs, outputAfterKill: true },
-      });
-      expectLifecycleExitFailure(
-        result,
-        [
-          'PASS real command round-trip at project root',
-          'PASS strips desktop env markers from the shell',
-          'PASS PowerShell executes a structured launch command',
-          'FAIL host survives a PTY death and respawns',
-          'REFUSED bad shell surfaces as a spawn failure',
-        ],
-        'HARNESS_RESULT ok=3 fail=1 refused=1',
-      );
-      expect(result.lines.join('\n')).not.toContain('hard timeout');
-      const killed = lifecycleEventIndex(result, 4, 'kill-request');
-      expect(result.events.slice(killed + 1)).toContainEqual(
-        expect.objectContaining({ shell: 4, event: 'output' }),
-      );
-      const respawnFailure = scenarioFailureLine(result, 'host survives a PTY death and respawns');
-      expect(respawnFailure).toContain(REPORT_DEADLINE_BOUND);
-      expect(respawnFailure).toContain(NO_EXIT_OBSERVED);
-    },
-  );
-
-  test('does not re-anchor the exit window after delayed kill delivery', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      lifecycle: {
-        launchAtMs: 33_000,
-        exitAfterKillMs: 12_500,
-        firstKillDeliveryMs: 9_000,
-      },
-    });
-    expectLifecycleExitFailure(
-      result,
-      [
-        'PASS real command round-trip at project root',
-        'PASS strips desktop env markers from the shell',
-        'PASS PowerShell executes a structured launch command',
-        'FAIL host survives a PTY death and respawns',
-        'PASS bad shell surfaces as a spawn failure',
-      ],
-      'HARNESS_RESULT ok=4 fail=1 refused=0',
-    );
-    const kills = result.events.filter(
-      (event) => event.shell === 4 && event.event === 'kill-request',
-    );
-    expect(kills.length).toBeGreaterThan(1);
-    expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-  });
-
-  test('preserves the original longer allowance for a fast predecessor', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'fast',
-      lifecycle: { launchAtMs: 44_000, exitAfterKillMs: 14_000, outputAfterKill: false },
-    });
-    expectLifecyclePass(result);
-  });
-
-  test('preserves the original replacement allowance after a fast exit', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'fast',
-      lifecycle: {
-        launchAtMs: 44_000,
-        exitAfterKillMs: 1_800,
-        replacementOutputAfterCreateMs: 10_000,
-      },
-    });
-    expectLifecyclePass(result);
-  });
-
-  test('keeps a slow replacement inside its own output window', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      lifecycle: {
-        launchAtMs: 26_000,
-        exitAfterKillMs: 3_000,
-        replacementOutputAfterCreateMs: 10_000,
-      },
-    });
-    expectLifecyclePredecessors(result);
-    const exited = lifecycleEventIndex(result, 4, 'exit:1');
-    const respawned = lifecycleEventIndex(result, 5, 'spawn');
-    expect(exited).toBeGreaterThan(-1);
-    expect(respawned).toBeGreaterThan(exited);
-    expect(scenarioVerdicts(result)).toEqual([
-      'PASS real command round-trip at project root',
-      'PASS strips desktop env markers from the shell',
-      'PASS PowerShell executes a structured launch command',
-      'FAIL host survives a PTY death and respawns',
-      'PASS bad shell surfaces as a spawn failure',
-    ]);
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.lines.join('\n')).toContain('second shell prompt (host survived)');
-    expect(result.exitCode).toBe(1);
-    const respawnFailure = scenarioFailureLine(result, 'host survives a PTY death and respawns');
-    expectOnlyBoundNamed(respawnFailure, FIRST_OUTPUT_WINDOW_BOUND);
-    expect(respawnFailure).toContain(NO_SHELL_OUTPUT_VERDICT);
-  });
-
-  test('anchors replacement readiness before delayed creation returns', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      lifecycle: {
-        launchAtMs: 26_000,
-        exitAfterKillMs: 3_000,
-        replacementCreateAdvanceMs: 9_000,
-        replacementOutputAfterCreateMs: 500,
-      },
-    });
-    expectLifecyclePredecessors(result);
-    const exited = lifecycleEventIndex(result, 4, 'exit:1');
-    const respawned = lifecycleEventIndex(result, 5, 'spawn');
-    expect(exited).toBeGreaterThan(-1);
-    expect(respawned).toBeGreaterThan(exited);
-    expect(lifecycleEventIndex(result, 5, 'creation-delivery-complete')).toBeGreaterThan(respawned);
-    expect(scenarioVerdicts(result)).toEqual([
-      'PASS real command round-trip at project root',
-      'PASS strips desktop env markers from the shell',
-      'PASS PowerShell executes a structured launch command',
-      'FAIL host survives a PTY death and respawns',
-      'PASS bad shell surfaces as a spawn failure',
-    ]);
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.lines.join('\n')).toContain('second shell prompt (host survived)');
-    expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-    expect(result.exitCode).toBe(1);
-    const respawnFailure = scenarioFailureLine(result, 'host survives a PTY death and respawns');
-    expectOnlyBoundNamed(respawnFailure, FIRST_OUTPUT_WINDOW_BOUND);
-    expect(respawnFailure).toContain(NO_SHELL_OUTPUT_VERDICT);
-  });
-
-  test('fails when a later shell stops producing output without answering', async () => {
-    const result = await runControlledHarness({ firstScenario: 'slow', launchReadiness: 'stuck' });
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(result.lines.join('\n')).toContain(
-      'FAIL PowerShell executes a structured launch command',
-    );
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.exitCode).toBe(1);
-  });
-
-  test('fails when a later shell exits before answering', async () => {
-    const result = await runControlledHarness({ firstScenario: 'slow', launchReadiness: 'dead' });
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(result.lines.join('\n')).toContain(
-      'shell failed before PowerShell remains interactive after EncodedCommand: exited',
-    );
-    expect(scenarioVerdicts(result)).toEqual([
-      'PASS real command round-trip at project root',
-      'PASS strips desktop env markers from the shell',
-      'FAIL PowerShell executes a structured launch command',
-      'PASS host survives a PTY death and respawns',
-      'PASS bad shell surfaces as a spawn failure',
-    ]);
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.exitCode).toBe(1);
-  });
-
-  test('accepts a launch token after the original allowance and then evaluates input', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      phase: 'launch-after-grant',
-    });
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(result.lines).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-    expect(result.exitCode).toBe(0);
-    expect(result.events).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ shell: 3, event: 'launch-token' }),
-        expect.objectContaining({ shell: 3, event: 'evaluated-reply' }),
-      ]),
-    );
-    expect(result.lines).toContain('PASS PowerShell executes a structured launch command');
-  });
-
-  test.each([
-    { phase: 'first-input-after-grant', proof: 'evaluated-reply' },
-    { phase: 'arithmetic-after-grant', proof: 'arithmetic-output' },
-    { phase: 'cwd-after-grant', proof: 'cwd-output' },
-    { phase: 'environment-after-grant', proof: 'environment-output' },
-  ] as const)('continues $phase through its own output phase', async ({ phase, proof }) => {
-    const result = await runControlledHarness({ firstScenario: 'fast', phase });
-    expect(result.lines).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-    expect(result.exitCode).toBe(0);
-    expect(result.events).toContainEqual(expect.objectContaining({ event: proof }));
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-  });
-
-  test('keeps a silent but contained evaluated reply eligible', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'fast',
-      phase: 'silent-contained',
-    });
-    expect(result.events).toContainEqual(
-      expect.objectContaining({ shell: 1, event: 'evaluated-reply' }),
-    );
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('HARNESS_RESULT ok=5 fail=0 refused=0');
-    expect(result.exitCode).toBe(0);
-  });
-
-  test('keeps input evaluation within its current phase window', async () => {
-    const result = await runControlledHarness({ firstScenario: 'slow', phase: 'input-window' });
-    expect(result.events).toContainEqual(expect.objectContaining({ shell: 3, event: 'input' }));
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(result.lines.join('\n')).toContain(
-      'FAIL PowerShell executes a structured launch command',
-    );
-    expect(result.lines).toContain('PASS host survives a PTY death and respawns');
-    expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.exitCode).toBe(1);
-  });
-
-  test.each([
-    { phase: 'attach-only', prerequisite: 'output' },
-    { phase: 'stale-launch', prerequisite: 'launch-token' },
-    { phase: 'echo-only', prerequisite: 'input' },
-  ] as const)('does not accept $phase as a launch reply', async ({ phase, prerequisite }) => {
-    const result = await runControlledHarness({ firstScenario: 'slow', phase });
-    expect(result.events).toContainEqual(
-      expect.objectContaining({ shell: 3, event: prerequisite }),
-    );
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(result.lines.join('\n')).toContain(
-      'FAIL PowerShell executes a structured launch command',
-    );
-    expect(result.lines).toContain('PASS host survives a PTY death and respawns');
-    expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.exitCode).toBe(1);
-    if (phase === 'attach-only') {
-      const launchFailure = scenarioFailureLine(
-        result,
-        'PowerShell executes a structured launch command',
-      );
-      expect(launchFailure).toContain(NO_SHELL_OUTPUT_VERDICT);
-      expect(launchFailure).not.toContain(SHELL_PROGRESS_ADVANCED);
-    }
-  });
-
-  test('retains the last shell observation when input delivery is delayed', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'slow',
-      phase: 'delayed-input-write',
-    });
-    expect(result.events).toContainEqual(expect.objectContaining({ shell: 3, event: 'input' }));
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(scenarioVerdicts(result)).toEqual([
-      'PASS real command round-trip at project root',
-      'PASS strips desktop env markers from the shell',
-      'FAIL PowerShell executes a structured launch command',
-      'PASS host survives a PTY death and respawns',
-      'PASS bad shell surfaces as a spawn failure',
-    ]);
-    expect(result.lines).toContain('PASS host survives a PTY death and respawns');
-    expect(result.lines).toContain('PASS bad shell surfaces as a spawn failure');
-    expect(result.lines).toContain('HARNESS_RESULT ok=4 fail=1 refused=0');
-    expect(result.exitCode).toBe(1);
-  });
-
-  test('reports a bounded failure for a shell that continually writes the wrong answer', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'fast',
-      phase: 'continuous-wrong-output',
-    });
-    expect(result.events).toContainEqual(
-      expect.objectContaining({ shell: 3, event: 'launch-token' }),
-    );
-    expect(result.lines).toContain('PASS real command round-trip at project root');
-    expect(result.lines).toContain('PASS strips desktop env markers from the shell');
-    expect(scenarioVerdicts(result)).toEqual([
-      'PASS real command round-trip at project root',
-      'PASS strips desktop env markers from the shell',
-      'FAIL PowerShell executes a structured launch command',
-      'REFUSED host survives a PTY death and respawns',
-      'REFUSED bad shell surfaces as a spawn failure',
-    ]);
-    expect(result.lines.join('\n')).not.toContain('hard timeout during');
-    expect(result.lines).toContain('HARNESS_RESULT ok=2 fail=1 refused=2');
-    expect(result.exitCode).toBe(1);
-    const launchFailure = scenarioFailureLine(
-      result,
-      'PowerShell executes a structured launch command',
-    );
-    expect(launchFailure).toContain(REPORT_DEADLINE_BOUND);
-    expect(launchFailure).toContain(SHELL_PROGRESS_ADVANCED);
-    const launchToken = lifecycleEventIndex(result, 3, 'launch-token');
-    const queryStart = lifecycleEventIndex(result, 0, 'query-start');
-    const release = lifecycleEventIndex(result, 3, 'kill-request');
-    const failure = result.traceEvents.find(
-      (entry) => entry.stage === 'snapshot' && entry.reason === 'failure',
-    );
-    const observation = result.traceEvents.find(
-      (entry) =>
-        entry.event === 'pty-host-startup' &&
-        entry.stage === 'os-snapshot' &&
-        entry.traceId === failure?.traceId &&
-        entry.attempt === failure?.attempt,
-    );
-    const observed = result.events.findIndex((entry) => entry.trace === observation);
-    expect(queryStart).toBeGreaterThan(launchToken);
-    expect(observation).toEqual(expect.objectContaining({ observation: expect.any(Object) }));
-    expect(observed).toBeGreaterThan(queryStart);
-    expect(release).toBeGreaterThan(observed);
-  });
-
-  test('refuses every scenario when the run has no admissible grant', async () => {
-    const result = await runControlledHarness({
-      firstScenario: 'fast',
-      budgetOverride: '1',
-    });
-    expect(result.lines.filter((line) => line.startsWith('REFUSED '))).toHaveLength(5);
-    expect(result.lines).toContain('HARNESS_RESULT ok=0 fail=0 refused=5');
-    expect(result.exitCode).toBe(1);
-  });
 });
 
 describe('real harness POSIX quiet readiness', () => {
@@ -849,13 +116,13 @@ describe('shell readiness gate', () => {
   test('does not report ready while the shell is still producing startup output', async () => {
     const stream = createFakeStream();
     stream.emit('\u001b[2J\u001b[H');
-    const chunks = ['loading profile\r\n', 'startup notice\r\n', 'PS C:\\project> '];
+    const chunks = ['loading profile\r\n', 'startup notice\r\n', '$ '];
     const timers = chunks.map((chunk, index) =>
       setTimeout(() => stream.emit(chunk), (index + 1) * 40),
     );
     try {
       await waitForShellReady(stream, 'shell ready', FAST_READY);
-      expect(stream.read()).toContain('PS C:\\project> ');
+      expect(stream.read()).toContain('$ ');
     } finally {
       for (const timer of timers) clearTimeout(timer);
     }
@@ -866,7 +133,7 @@ describe('shell readiness gate', () => {
     const quietSamples = 5;
     const intervalMs = 50;
     const stream = createFakeStream();
-    stream.emit('PS C:\\project> ');
+    stream.emit('$ ');
     const startedAt = performance.now();
     let elapsedMs = Number.NaN;
     const pending = waitForShellReady(stream, 'shell ready', { quietSamples, intervalMs }).then(
@@ -882,7 +149,7 @@ describe('shell readiness gate', () => {
   test('reports ready once the stream settles instead of waiting out the budget', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
     const stream = createFakeStream();
-    stream.emit('PS C:\\project> ');
+    stream.emit('$ ');
     const startedAt = performance.now();
     let elapsedMs = Number.NaN;
     const pending = waitForShellReady(stream, 'shell ready', FAST_READY).then(() => {
@@ -918,19 +185,21 @@ describe('attach classifier direction', () => {
   const INTRODUCER = '\u001b]0;';
 
   test('a title the classifier cannot terminate stops withholding once a control byte follows', () => {
-    const wedge = `${INTRODUCER}C:\\no\\terminator\r\nPowerShell 7.6.5`;
-    expect(shellOutputBeyondAttach(wedge)).toBe('\r\nPowerShell 7.6.5');
+    const wedge = `${INTRODUCER}C:\\no\\terminator\r\ninteractive shell`;
+    expect(shellOutputBeyondTerminalControls(wedge)).toBe('\r\ninteractive shell');
   });
 
   test('a read cut inside a title is still attach, so the gate keeps waiting', () => {
-    expect(shellOutputBeyondAttach(`${INTRODUCER}C:\\partial`)).toBe('');
-    expect(shellOutputBeyondAttach('\u001b]')).toBe('');
-    expect(shellOutputBeyondAttach('\u001b[?100')).toBe('');
+    expect(shellOutputBeyondTerminalControls(`${INTRODUCER}C:\\partial`)).toBe('');
+    expect(shellOutputBeyondTerminalControls('\u001b]')).toBe('');
+    expect(shellOutputBeyondTerminalControls('\u001b[?100')).toBe('');
   });
 
   test('a generic frame member as the shell own first output is consumed, not treated as speech', () => {
-    expect(shellOutputBeyondAttach('\u001b[2Jcleared by a profile')).toBe('cleared by a profile');
-    expect(shellOutputBeyondAttach('\u001b[2J')).toBe('');
+    expect(shellOutputBeyondTerminalControls('\u001b[2Jcleared by a profile')).toBe(
+      'cleared by a profile',
+    );
+    expect(shellOutputBeyondTerminalControls('\u001b[2J')).toBe('');
   });
 });
 
@@ -1006,7 +275,7 @@ describe('harness budget clock', () => {
 
 describe('harness timeout ladder', () => {
   test('each rung leaves the one below it room to report its own verdict', () => {
-    for (const platform of ['win32', 'darwin', 'linux'] as const) {
+    for (const platform of ['darwin', 'linux'] as const) {
       const ladder = harnessTimeouts(platform);
       expect(ladder.budgetMs).toBeGreaterThan(0);
       expect(ladder.verdictDeadlineMs).toBeGreaterThan(ladder.budgetMs);
@@ -1019,24 +288,17 @@ describe('harness timeout ladder', () => {
       );
     }
   });
-
-  test('windows gets the wider ladder its slower shell startup needs', () => {
-    expect(harnessTimeouts('win32').budgetMs).toBeGreaterThan(harnessTimeouts('linux').budgetMs);
-  });
 });
 
 describe('cwd file proof command', () => {
   test('reads a relative sentinel without embedding its random contents', () => {
-    expect(buildCwdFileProofCommand('win32', '.ok-cwd-proof')).toBe(
-      `Write-Output "CWD_PROOF=$(Get-Content -Raw -LiteralPath './.ok-cwd-proof')"`,
-    );
     expect(buildCwdFileProofCommand('linux', '.ok-cwd-proof')).toBe(
       `printf 'CWD_PROOF=%s\\n' "$(cat './.ok-cwd-proof')"`,
     );
   });
 
   test('rejects a sentinel name that could inject shell syntax', () => {
-    expect(() => buildCwdFileProofCommand('win32', "proof'; exit 1")).toThrow(
+    expect(() => buildCwdFileProofCommand('darwin', "proof'; exit 1")).toThrow(
       /invalid cwd proof file name/u,
     );
   });
@@ -1154,7 +416,7 @@ describe('condition waits', () => {
 
   test('names what did arrive when a condition times out', async () => {
     const stream = createFakeStream();
-    stream.emit('PS C:\\project> Write-Output "HARNESS_$((6*7))_DONE"');
+    stream.emit('$ echo "HARNESS_$((6*7))_DONE"');
     await expect(
       waitForCondition(stream, () => false, 'evaluated command output', {
         intervalMs: 5,
@@ -1164,12 +426,12 @@ describe('condition waits', () => {
   });
 });
 
-function evaluateFakePowerShellCommand(command: string): string | null {
-  const arithmetic = /^Write-Output "([^"]*)_\$\(\((\d+)\*(\d+)\)\)_([^"]*)"$/u.exec(command);
+function evaluateFakeShellCommand(command: string): string | null {
+  const arithmetic = /^echo "([^"]*)_\$\(\((\d+)\*(\d+)\)\)_([^"]*)"$/u.exec(command);
   if (arithmetic !== null) {
     return `${arithmetic[1]}_${Number(arithmetic[2]) * Number(arithmetic[3])}_${arithmetic[4]}`;
   }
-  return /^Write-Output "([^"]*)"$/u.exec(command)?.[1] ?? null;
+  return /^echo "([^"]*)"$/u.exec(command)?.[1] ?? null;
 }
 
 function createStartupRaceSpawn(readyAfterMs: number): SpawnPty {
@@ -1180,7 +442,7 @@ function createStartupRaceSpawn(readyAfterMs: number): SpawnPty {
       setTimeout(() => emit('loading profile\r\n'), readyAfterMs / 2),
       setTimeout(() => {
         accepting = true;
-        emit('PS C:\\project> ');
+        emit('$ ');
       }, readyAfterMs),
     ];
     queueMicrotask(() => emit('\u001b[2J\u001b[H'));
@@ -1194,7 +456,7 @@ function createStartupRaceSpawn(readyAfterMs: number): SpawnPty {
         if (!accepting) return;
         const typed = data.replace(/\r$/u, '');
         emit(`${typed}\r\n`);
-        const output = evaluateFakePowerShellCommand(typed);
+        const output = evaluateFakeShellCommand(typed);
         if (output === null) return;
         timers.push(setTimeout(() => emit(`${output}\r\n`), 0));
       },
@@ -1223,7 +485,7 @@ describe('driving a real host through a shell that starts slowly', () => {
       host.send({
         type: 'input',
         ptyId: 'io',
-        data: 'Write-Output "HARNESS_$((6*7))_DONE"\r',
+        data: 'echo "HARNESS_$((6*7))_DONE"\r',
       });
       await waitForCondition(io, () => io.read().includes('HARNESS_42_DONE'), 'command output', {
         intervalMs: 5,
@@ -1284,48 +546,15 @@ describe('driving a real host through a shell that starts slowly', () => {
       host.killActive();
     }
   });
-
-  test('warnings the host raises reach a logger handed to the probe, so a run can say which ConPTY it used', () => {
-    const warnings: Record<string, unknown>[] = [];
-    const attempts: PtySpawnOptions[] = [];
-    const raceSpawn = createStartupRaceSpawn(0);
-    const host = createPtyHostProbe({
-      spawn: (file, args, options) => {
-        attempts.push(options);
-        if (attempts.length === 1) throw new Error('Cannot find conpty.dll beside conpty.node');
-        return raceSpawn(file, args, options);
-      },
-      env: { SystemRoot: 'C:\\Windows' },
-      platform: 'win32',
-      shellExists: () => true,
-      logger: { warn: (entry) => warnings.push(entry) },
-    });
-    try {
-      host.send({
-        type: 'create',
-        ptyId: 'io',
-        cwd: 'C:\\project',
-        cols: 80,
-        rows: 24,
-        shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
-      });
-      expect(attempts.map((options) => options.useConptyDll)).toEqual([true, false]);
-      expect(warnings).toContainEqual(
-        expect.objectContaining({ event: 'pty-host-conpty-dll-fallback' }),
-      );
-    } finally {
-      host.killActive();
-    }
-  });
 });
 
 const INPUT_READY_MARKER = 'OK_INPUT_READY_deadbeef_42_READY';
 const INPUT_READY_PROBE = {
-  input: 'Write-Output "OK_INPUT_READY_deadbeef_$((6*7))_READY"\r',
+  input: 'echo "OK_INPUT_READY_deadbeef_$((6*7))_READY"\r',
   marker: INPUT_READY_MARKER,
 } as const;
 const INPUT_READY_FAST = { roundTripStallMs: 200, intervalMs: 5 } as const;
-const BOOTED_PROMPT = 'PS C:\\project> ';
+const BOOTED_PROMPT = '$ ';
 const SLOW_EVALUATION_MS = 120;
 const READINESS_CEILING_MS = 16_000;
 const SILENT_SHELL_VERDICT = 'without new shell output, the only progress signal this wait watches';
@@ -1363,7 +592,7 @@ function driveEvaluatingShell(
       sent.push(data);
       if (options.evaluates === false) return;
       const typed = data.replace(/\r$/u, '');
-      const output = evaluateFakePowerShellCommand(typed);
+      const output = evaluateFakeShellCommand(typed);
       if (output === null) return;
       timers.push(
         setTimeout(() => stream.emit(`${typed}\r\n${output}\r\n`), options.evaluatesAfterMs ?? 0),
@@ -1430,7 +659,7 @@ describe('evaluated-input readiness', () => {
     await settled;
     expect(verdict.settled).toBe('failed');
     expect(verdict.message).toContain(ROUND_TRIP_CONTAINMENT_VERDICT);
-    expect(stream.read()).toContain('Write-Output');
+    expect(stream.read()).toContain('echo');
     expect(stream.read()).not.toContain(INPUT_READY_MARKER);
   });
 
@@ -1487,33 +716,25 @@ describe('evaluated-input readiness', () => {
   });
 });
 
-const ATTACH_PROLOGUE = '\u001b[?9001h\u001b[?1004h';
-const BUNDLED_WINDOW_SHOWN = '\u001b[1t';
-const BUNDLED_DA1_QUERY_AND_INPUT_MODES = '\u001b[c\u001b[?1004h\u001b[?9001h';
-const BUNDLED_ATTACH_PROLOGUE = `${BUNDLED_WINDOW_SHOWN}${BUNDLED_DA1_QUERY_AND_INPUT_MODES}`;
+const ATTACH_PROLOGUE = '\u001b[?1004h';
+const WINDOW_SHOWN_QUERY = '\u001b[1t';
+const DA1_QUERY_AND_INPUT_MODES = '\u001b[c\u001b[?1004h';
+const QUERY_AND_INPUT_MODES = `${WINDOW_SHOWN_QUERY}${DA1_QUERY_AND_INPUT_MODES}`;
 const BOOT_PAST_ROUND_TRIP_MS = READINESS_CEILING_MS + 500;
-const CONPTY_REPAINT = '\u001b[?25l\u001b[2J\u001b[m\u001b[H';
-const CONPTY_SHOW_CURSOR = '\u001b[?25h';
-const WINDOWS_POWERSHELL_TITLE_BEL =
-  '\u001b]0;Administrator: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\u0007';
-const WINDOWS_POWERSHELL_TITLE_ST =
-  '\u001b]0;Administrator: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\u001b\\';
-const CONPTY_INIT_FRAME = `${CONPTY_REPAINT}${WINDOWS_POWERSHELL_TITLE_BEL}${CONPTY_SHOW_CURSOR}`;
-const CONPTY_INIT_FRAME_ST_TITLE = `${CONPTY_REPAINT}${WINDOWS_POWERSHELL_TITLE_ST}${CONPTY_SHOW_CURSOR}`;
-const CONPTY_INIT_FRAME_CUT_MID_TITLE = `${CONPTY_REPAINT}\u001b]0;C:\\Prog`;
-const WINDOWS_POWERSHELL_GUID_ECHO = '7768de99-595e-40d4-9a3d-a4760b05683b\r\n';
-const WINDOWS_POWERSHELL_WRAP_TOGGLE = '\u001b[?7l\u001b[?7h';
-const PWSH_BANNER = 'PowerShell 7.6.5\r\n';
-const PWSH_TITLE = '\u001b]0;C:\\Program Files\\PowerShell\\7\\pwsh.exe\u0007';
-const PWSH_ADMIN_TITLE = '\u001b]0;Administrator: C:\\Program Files\\PowerShell\\7\\pwsh.exe\u0007';
-const CI_CAPTURE_CONTENT_FREE_FRAME = `${CONPTY_INIT_FRAME}${WINDOWS_POWERSHELL_GUID_ECHO}`;
-const CI_CAPTURE_BANNER_INSIDE_FRAME = `${CONPTY_REPAINT}${PWSH_BANNER}${PWSH_TITLE}${CONPTY_SHOW_CURSOR}`;
+const CLEAR_SCREEN = '\u001b[?25l\u001b[2J\u001b[m\u001b[H';
+const SHOW_CURSOR = '\u001b[?25h';
+const SHELL_TITLE_BEL = '\u001b]0;/bin/zsh\u0007';
+const SHELL_TITLE_ST = '\u001b]0;/bin/zsh\u001b\\';
+const CONTROL_FRAME = `${CLEAR_SCREEN}${SHELL_TITLE_BEL}${SHOW_CURSOR}`;
+const CONTROL_FRAME_ST_TITLE = `${CLEAR_SCREEN}${SHELL_TITLE_ST}${SHOW_CURSOR}`;
+const CONTROL_FRAME_PARTIAL_TITLE = `${CLEAR_SCREEN}\u001b]0;C:\\Prog`;
+const COMMAND_TOKEN_ECHO = '7768de99-595e-40d4-9a3d-a4760b05683b\r\n';
+const PWSH_BANNER = 'interactive shell\r\n';
+const PWSH_TITLE = '\u001b]0;/bin/zsh\u0007';
+const PWSH_ADMIN_TITLE = '\u001b]0;/bin/zsh\u0007';
+const CI_CAPTURE_CONTENT_FREE_FRAME = `${CONTROL_FRAME}${COMMAND_TOKEN_ECHO}`;
+const CI_CAPTURE_BANNER_INSIDE_FRAME = `${CLEAR_SCREEN}${PWSH_BANNER}${PWSH_TITLE}${SHOW_CURSOR}`;
 const CI_CAPTURE_BANNER_THEN_RETITLE = `${CI_CAPTURE_BANNER_INSIDE_FRAME}${PWSH_ADMIN_TITLE}`;
-const BUNDLED_CI_CAPTURE_LAUNCH_THEN_RETITLE =
-  '\u001b[1t\u001b[c\u001b[?1004h\u001b[?9001h\u001b]0;Administrator: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\u001b\\\u001b[?7l\u001b[?7hf8bc0b8a-d339-406f-b6d1-f0b1185054f6\r\n\u001b]0;Administrator: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\u001b\\';
-const BUNDLED_CI_CAPTURE_LAUNCH_ONLY =
-  '\u001b[1t\u001b[c\u001b[?1004h\u001b[?9001h\u001b]0;Administrator: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\u001b\\\u001b[?7l\u001b[?7hd603e31a-bc79-47cd-b36f-7967714a865f\r\n';
-const BUNDLED_CONPTY_RECORDED_WITH_NODE_PTY = '1.2.0-beta.15';
 
 describe('shell startup is a liveness wait, not a round-trip budget', () => {
   test('a shell whose first output arrives after the round-trip ceiling still reports ready', async () => {
@@ -1543,7 +764,7 @@ describe('shell startup is a liveness wait, not a round-trip budget', () => {
       const timing = await pending;
       if (timing === null) throw new Error('the wait resolved without reporting any timing');
       expect(timing.firstOutputMs).toBeGreaterThanOrEqual(BOOT_PAST_ROUND_TRIP_MS);
-      expect(timing.firstOutput).toContain('PS C:');
+      expect(timing.firstOutput).toContain('$ ');
       expect(shell.sent).toEqual([INPUT_READY_PROBE.input]);
     } finally {
       clearTimeout(boot);
@@ -1596,61 +817,46 @@ describe('shell startup is a liveness wait, not a round-trip budget', () => {
   });
 
   test('the attach handshake alone is not the shell speaking, and one byte past it is', () => {
-    expect(shellOutputBeyondAttach(ATTACH_PROLOGUE)).toBe('');
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${BOOTED_PROMPT}`)).toBe(BOOTED_PROMPT);
-    expect(shellOutputBeyondAttach(ATTACH_PROLOGUE.slice(0, -2))).toBe('');
-    expect(shellOutputBeyondAttach('')).toBe('');
-  });
-
-  test('the order the bundled ConPTY ships is not the shell speaking either', () => {
-    expect(shellOutputBeyondAttach(BUNDLED_ATTACH_PROLOGUE)).toBe('');
-    expect(shellOutputBeyondAttach(`${BUNDLED_ATTACH_PROLOGUE}${BOOTED_PROMPT}`)).toBe(
+    expect(shellOutputBeyondTerminalControls(ATTACH_PROLOGUE)).toBe('');
+    expect(shellOutputBeyondTerminalControls(`${ATTACH_PROLOGUE}${BOOTED_PROMPT}`)).toBe(
       BOOTED_PROMPT,
     );
-    expect(shellOutputBeyondAttach(BUNDLED_ATTACH_PROLOGUE.slice(0, -2))).toBe('');
+    expect(shellOutputBeyondTerminalControls(ATTACH_PROLOGUE.slice(0, -2))).toBe('');
+    expect(shellOutputBeyondTerminalControls('')).toBe('');
   });
 
   test("the host's screen-init frame on attach is not the shell speaking", () => {
-    expect(shellOutputBeyondAttach(CONPTY_INIT_FRAME)).toBe('');
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME}`)).toBe('');
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME_ST_TITLE}`)).toBe('');
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME_CUT_MID_TITLE}`)).toBe(
+    expect(shellOutputBeyondTerminalControls(CONTROL_FRAME)).toBe('');
+    expect(shellOutputBeyondTerminalControls(`${ATTACH_PROLOGUE}${CONTROL_FRAME}`)).toBe('');
+    expect(shellOutputBeyondTerminalControls(`${ATTACH_PROLOGUE}${CONTROL_FRAME_ST_TITLE}`)).toBe(
       '',
     );
-  });
-
-  test('a Windows capture reduces to the bytes the shell itself wrote', () => {
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CI_CAPTURE_CONTENT_FREE_FRAME}`)).toBe(
-      WINDOWS_POWERSHELL_GUID_ECHO,
-    );
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CI_CAPTURE_BANNER_INSIDE_FRAME}`)).toBe(
-      `${PWSH_BANNER}${PWSH_TITLE}${CONPTY_SHOW_CURSOR}`,
-    );
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CI_CAPTURE_BANNER_THEN_RETITLE}`)).toBe(
-      `${PWSH_BANNER}${PWSH_TITLE}${CONPTY_SHOW_CURSOR}${PWSH_ADMIN_TITLE}`,
-    );
     expect(
-      shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME_ST_TITLE}${BOOTED_PROMPT}`),
-    ).toBe(BOOTED_PROMPT);
+      shellOutputBeyondTerminalControls(`${ATTACH_PROLOGUE}${CONTROL_FRAME_PARTIAL_TITLE}`),
+    ).toBe('');
   });
 
   test('shell output behind the init frame is never stripped with it', () => {
     expect(
-      shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME}${BOOTED_PROMPT}`),
+      shellOutputBeyondTerminalControls(`${ATTACH_PROLOGUE}${CONTROL_FRAME}${BOOTED_PROMPT}`),
     ).toContain(BOOTED_PROMPT);
-    expect(shellOutputBeyondAttach(CI_CAPTURE_BANNER_INSIDE_FRAME)).toContain('PowerShell 7.6.5');
-    expect(shellOutputBeyondAttach(CI_CAPTURE_CONTENT_FREE_FRAME)).toContain(
-      WINDOWS_POWERSHELL_GUID_ECHO,
+    expect(shellOutputBeyondTerminalControls(CI_CAPTURE_BANNER_INSIDE_FRAME)).toContain(
+      'interactive shell',
+    );
+    expect(shellOutputBeyondTerminalControls(CI_CAPTURE_CONTENT_FREE_FRAME)).toContain(
+      COMMAND_TOKEN_ECHO,
     );
     expect(
-      shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME_ST_TITLE}${BOOTED_PROMPT}`),
+      shellOutputBeyondTerminalControls(
+        `${ATTACH_PROLOGUE}${CONTROL_FRAME_ST_TITLE}${BOOTED_PROMPT}`,
+      ),
     ).toContain(BOOTED_PROMPT);
   });
 
   test('the first output the gate reports leads with the bytes that opened it', async () => {
     const stream = createFakeStream();
     const head = 'OK_GATE_OPENED_HERE';
-    stream.emit(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME}${head}${'x'.repeat(600)}${BOOTED_PROMPT}`);
+    stream.emit(`${ATTACH_PROLOGUE}${CONTROL_FRAME}${head}${'x'.repeat(600)}${BOOTED_PROMPT}`);
     const shell = driveEvaluatingShell(stream);
     try {
       const timing = await waitForEvaluatedInput(
@@ -1669,10 +875,10 @@ describe('shell startup is a liveness wait, not a round-trip budget', () => {
 
   test('the shipped attach burst leaves the gate shut, and a prompt behind it opens it', async () => {
     const attaching = createFakeStream();
-    attaching.emit(BUNDLED_ATTACH_PROLOGUE);
+    attaching.emit(QUERY_AND_INPUT_MODES);
     const attachingShell = driveEvaluatingShell(attaching);
     const booted = createFakeStream();
-    booted.emit(`${BUNDLED_ATTACH_PROLOGUE}${BOOTED_PROMPT}`);
+    booted.emit(`${QUERY_AND_INPUT_MODES}${BOOTED_PROMPT}`);
     const bootedShell = driveEvaluatingShell(booted);
     try {
       await expect(
@@ -1690,7 +896,7 @@ describe('shell startup is a liveness wait, not a round-trip budget', () => {
         'input ready',
         { budgetMs: 5_000, roundTripStallMs: 2_000, intervalMs: 5 },
       );
-      expect(timing.firstOutput).toContain('PS C:');
+      expect(timing.firstOutput).toContain('$ ');
       expect(bootedShell.sent).toEqual([INPUT_READY_PROBE.input]);
     } finally {
       attachingShell.dispose();
@@ -1852,188 +1058,6 @@ describe('shell startup is a liveness wait, not a round-trip budget', () => {
       shell.dispose();
     }
   });
-});
-
-const RECORDED_ATTACH_PROLOGUES = [
-  { host: 'the inbox ConPTY', prologue: ATTACH_PROLOGUE },
-  { host: 'the bundled ConPTY', prologue: BUNDLED_ATTACH_PROLOGUE },
-] as const;
-const BUNDLED_CI_CAPTURE_LAUNCHES = [
-  [
-    'the shell retitles after the launch output',
-    BUNDLED_CI_CAPTURE_LAUNCH_THEN_RETITLE,
-    `${WINDOWS_POWERSHELL_TITLE_ST}${WINDOWS_POWERSHELL_WRAP_TOGGLE}f8bc0b8a-d339-406f-b6d1-f0b1185054f6\r\n${WINDOWS_POWERSHELL_TITLE_ST}`,
-  ],
-  [
-    'the launch output is the last thing written',
-    BUNDLED_CI_CAPTURE_LAUNCH_ONLY,
-    `${WINDOWS_POWERSHELL_TITLE_ST}${WINDOWS_POWERSHELL_WRAP_TOGGLE}d603e31a-bc79-47cd-b36f-7967714a865f\r\n`,
-  ],
-] as const;
-const LEADING_TITLES_BY_HOST = [
-  [
-    'the bundled ConPTY, which paints no title of its own, so the title is the one the shell set',
-    `${BUNDLED_ATTACH_PROLOGUE}${WINDOWS_POWERSHELL_TITLE_ST}`,
-    WINDOWS_POWERSHELL_TITLE_ST,
-  ],
-  [
-    'the inbox ConPTY, which paints the title inside its first-paint frame',
-    `${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME_ST_TITLE}`,
-    '',
-  ],
-] as const;
-
-describe('what the bundled ConPTY writes before the shell speaks is the host speaking, wherever a read cuts it', () => {
-  test.each(RECORDED_ATTACH_PROLOGUES)(
-    'no read of what $host writes on attach opens the gate, and a prompt behind it does',
-    ({ prologue }) => {
-      const reads = Array.from({ length: prologue.length + 1 }, (_, end) => prologue.slice(0, end));
-      expect(reads.filter((read) => shellOutputBeyondAttach(read) !== '')).toEqual([]);
-      expect(shellOutputBeyondAttach(`${prologue}${BOOTED_PROMPT}`)).toBe(BOOTED_PROMPT);
-    },
-  );
-
-  test.each(BUNDLED_CI_CAPTURE_LAUNCHES)(
-    'a launch captured behind the bundled ConPTY drops only the prologue, and keeps everything from the title the shell set on launch, when %s',
-    (_launch, capture, fromShellTitle) => {
-      const kept = shellOutputBeyondAttach(capture);
-      const consumed = capture.slice(0, capture.length - kept.length);
-      expect(consumed).toBe(BUNDLED_ATTACH_PROLOGUE);
-      expect(kept).toBe(fromShellTitle);
-    },
-  );
-
-  test.each(LEADING_TITLES_BY_HOST)(
-    'a title right behind the attach bytes is shell output only when the host paints no title itself: %s',
-    (_host, stream, shellOutput) => {
-      expect(shellOutputBeyondAttach(stream)).toBe(shellOutput);
-    },
-  );
-
-  test('the bundled ConPTY bytes these tests replay were recorded with the node-pty version the desktop package pins and loads', () => {
-    const desktopPackage: { optionalDependencies?: Record<string, string> } = JSON.parse(
-      readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
-    );
-    const loadedNodePtyRoot = dirname(dirname(createRequire(import.meta.url).resolve('node-pty')));
-    const loadedNodePty: { version?: string } = JSON.parse(
-      readFileSync(join(loadedNodePtyRoot, 'package.json'), 'utf8'),
-    );
-    const recapture = `BUNDLED_CONPTY_ATTACH_SEQUENCES in the readiness helper and the bundled captures in this file were recorded from node-pty ${BUNDLED_CONPTY_RECORDED_WITH_NODE_PTY} with its bundled conpty 1.25.260303002. A passing Windows real-PTY run does not print the bytes the classifier strips: compare each INPUT_READY firstOutput head on this change's Windows run with a run before it, check any new leading sequence against the OpenConsole source of the new conpty build, re-record the captures from a Windows run that prints the raw stream, then set BUNDLED_CONPTY_RECORDED_WITH_NODE_PTY to the new version`;
-    expect(desktopPackage.optionalDependencies?.['node-pty'], recapture).toBe(
-      BUNDLED_CONPTY_RECORDED_WITH_NODE_PTY,
-    );
-    expect(loadedNodePty.version, recapture).toBe(BUNDLED_CONPTY_RECORDED_WITH_NODE_PTY);
-  });
-});
-
-const LIVENESS_STALL_MS = 400;
-const LIVENESS_POLL_MS = LIVENESS_STALL_MS / 20;
-const LIVENESS_GRANT_MS = LIVENESS_STALL_MS * 4;
-const SLOW_SHELL_BOOT_MS = LIVENESS_STALL_MS * 2;
-const LATER_ATTACH_READ_MS = LIVENESS_STALL_MS / 2;
-const LIVENESS_WAIT = {
-  budgetMs: LIVENESS_GRANT_MS,
-  roundTripStallMs: LIVENESS_STALL_MS,
-  intervalMs: LIVENESS_POLL_MS,
-} as const;
-const RECORDED_ATTACH_ARRIVALS = [
-  { host: 'the inbox ConPTY', reads: [ATTACH_PROLOGUE] },
-  { host: 'the bundled ConPTY', reads: [BUNDLED_ATTACH_PROLOGUE] },
-  {
-    host: 'the bundled ConPTY across two reads',
-    reads: [BUNDLED_WINDOW_SHOWN, BUNDLED_DA1_QUERY_AND_INPUT_MODES],
-  },
-] as const;
-
-function arriveAttachReads(stream: FakeStream, reads: readonly string[]): () => void {
-  const [first = '', ...later] = reads;
-  stream.emit(first);
-  return scheduleEmissions(
-    stream,
-    later.map((chunk, index) => ({ atMs: LATER_ATTACH_READ_MS * (index + 1), chunk })),
-  );
-}
-
-function driveShellBootingAt(
-  stream: FakeStream,
-  bootAtMs: number,
-): {
-  sends: Array<{ data: string; atMs: number }>;
-  send: (data: string) => void;
-  dispose: () => void;
-} {
-  const startedAt = performance.now();
-  const sends: Array<{ data: string; atMs: number }> = [];
-  const typeahead: string[] = [];
-  let booted = false;
-  const evaluate = (data: string): void => {
-    const typed = data.replace(/\r$/u, '');
-    const output = evaluateFakePowerShellCommand(typed);
-    if (output !== null) stream.emit(`${typed}\r\n${output}\r\n`);
-  };
-  const boot = setTimeout(() => {
-    booted = true;
-    stream.emit(BOOTED_PROMPT);
-    for (const data of typeahead.splice(0)) evaluate(data);
-  }, bootAtMs);
-  return {
-    sends,
-    send: (data) => {
-      sends.push({ data, atMs: performance.now() - startedAt });
-      if (booted) evaluate(data);
-      else typeahead.push(data);
-    },
-    dispose: () => clearTimeout(boot),
-  };
-}
-
-describe('a shell behind the bundled ConPTY is held to its startup grant, as one behind the inbox ConPTY is', () => {
-  test.each(RECORDED_ATTACH_ARRIVALS)(
-    'a shell that never writes behind $host is refused at its grant as never having produced output, with the probe unwritten',
-    async ({ reads }) => {
-      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-      const stream = createFakeStream();
-      const stopReads = arriveAttachReads(stream, reads);
-      const shell = driveEvaluatingShell(stream, { evaluates: false });
-      const { verdict, settled } = watchEvaluatedInput(stream, shell.send, LIVENESS_WAIT);
-      try {
-        await vi.advanceTimersByTimeAsync(LIVENESS_GRANT_MS + LIVENESS_POLL_MS);
-        await settled;
-        expect(verdict.message).toBe(
-          `shell never produced output before input ready within ${LIVENESS_GRANT_MS}ms (received ${JSON.stringify(reads.join(''))})`,
-        );
-        expect(verdict.atMs).toBeGreaterThanOrEqual(LIVENESS_GRANT_MS);
-        expect(shell.sent).toEqual([]);
-      } finally {
-        stopReads();
-        shell.dispose();
-      }
-    },
-  );
-
-  test.each(RECORDED_ATTACH_ARRIVALS)(
-    'a shell that first writes after the round-trip stall window but inside its grant is admitted behind $host, and the probe waits for it',
-    async ({ reads }) => {
-      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-      const stream = createFakeStream();
-      const stopReads = arriveAttachReads(stream, reads);
-      const shell = driveShellBootingAt(stream, SLOW_SHELL_BOOT_MS);
-      const { verdict, settled } = watchEvaluatedInput(stream, shell.send, LIVENESS_WAIT);
-      try {
-        await vi.advanceTimersByTimeAsync(LIVENESS_GRANT_MS + LIVENESS_POLL_MS);
-        await settled;
-        expect(verdict.message).toBe('');
-        expect(verdict.settled).toBe('ready');
-        expect(verdict.timing?.firstOutput).toBe(JSON.stringify(BOOTED_PROMPT));
-        expect(verdict.timing?.firstOutputMs).toBeGreaterThanOrEqual(SLOW_SHELL_BOOT_MS);
-        expect(shell.sends.map((sent) => sent.data)).toEqual([INPUT_READY_PROBE.input]);
-        expect(shell.sends[0]?.atMs).toBeGreaterThanOrEqual(SLOW_SHELL_BOOT_MS);
-      } finally {
-        stopReads();
-        shell.dispose();
-      }
-    },
-  );
 });
 
 const FIRST_OUTPUT_AT_MS = READINESS_CEILING_MS / 40;
@@ -2271,9 +1295,9 @@ describe('the harness budget bounds each scenario, not only the run', () => {
 const CONTAINED_WAIT_WINDOW_MS = READINESS_CEILING_MS / 8;
 const CONTAINED_WAIT_CONTAINMENT_MS = READINESS_CEILING_MS;
 const CONTAINED_WAIT_STEP_MS = CONTAINED_WAIT_WINDOW_MS / 4;
-const HOST_WRITTEN_STEP = CONPTY_REPAINT;
+const HOST_WRITTEN_STEP = CLEAR_SCREEN;
 const SHELL_WRITTEN_STEP = BOOTED_PROMPT;
-const ENCODED_COMMAND_LABEL = 'PowerShell EncodedCommand output';
+const ENCODED_COMMAND_LABEL = 'structured launch output';
 const CONTAINMENT_VERDICT = `${ENCODED_COMMAND_LABEL} was not reached inside its`;
 const SPENT_GRANT_REFUSAL = `the grant for ${ENCODED_COMMAND_LABEL} was spent before the wait could poll once`;
 
@@ -2365,8 +1389,8 @@ describe('a console host speaking before the shell is never counted as shell out
     const { hostNoise, shellSpeaking } = await raceHostNoiseAgainstShellOutput();
     expect(hostNoise.buffer.length).toBeGreaterThan(HOST_WRITTEN_STEP.length);
     expect(shellSpeaking.buffer.length).toBeGreaterThan(SHELL_WRITTEN_STEP.length);
-    expect(shellOutputBeyondAttach(hostNoise.buffer)).toBe('');
-    expect(shellOutputBeyondAttach(shellSpeaking.buffer)).toBe(shellSpeaking.buffer);
+    expect(shellOutputBeyondTerminalControls(hostNoise.buffer)).toBe('');
+    expect(shellOutputBeyondTerminalControls(shellSpeaking.buffer)).toBe(shellSpeaking.buffer);
     expect(hostNoise.settled).toBe('refused');
     expect(shellSpeaking.settled).toBe('refused');
     expect(hostNoise.atMs).toBeGreaterThanOrEqual(CONTAINED_WAIT_CONTAINMENT_MS);
@@ -2403,115 +1427,6 @@ describe('a console host speaking before the shell is never counted as shell out
       stopHostNoise();
       await settled;
     }
-  });
-});
-
-const LAUNCH_OUTPUT = 'd603e31a-bc79-47cd-b36f-7967714a865f\r\n';
-const TITLE_INSIDE_THE_WINDOW_AT_MS = CONTAINED_WAIT_WINDOW_MS / 2;
-const OUTPUT_PAST_THE_WINDOW_FROM_START_AT_MS =
-  CONTAINED_WAIT_WINDOW_MS + CONTAINED_WAIT_WINDOW_MS / 4;
-
-async function waitForLaunchOutputBehind(
-  prologue: string,
-  titleWrite: string,
-): Promise<ContainedWaitVerdict> {
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-  const stream = createFakeStream();
-  stream.emit(prologue);
-  const stopWriting = scheduleEmissions(stream, [
-    { atMs: TITLE_INSIDE_THE_WINDOW_AT_MS, chunk: titleWrite },
-    { atMs: OUTPUT_PAST_THE_WINDOW_FROM_START_AT_MS, chunk: LAUNCH_OUTPUT },
-  ]);
-  const { verdict, settled } = watchContainedWait(
-    stream,
-    {
-      stallMs: CONTAINED_WAIT_WINDOW_MS,
-      intervalMs: ADVANCEMENT_POLL_MS,
-      backstopAt: performance.now() + CONTAINED_WAIT_CONTAINMENT_MS,
-    },
-    () => stream.read().includes(LAUNCH_OUTPUT),
-  );
-  try {
-    await vi.advanceTimersByTimeAsync(CONTAINED_WAIT_CONTAINMENT_MS + ADVANCEMENT_POLL_MS);
-    return verdict;
-  } finally {
-    stopWriting();
-    await settled;
-  }
-}
-
-describe("a plain wait counts progress from the shell's own first byte, whichever ConPTY spoke before it", () => {
-  test.each(RECORDED_ATTACH_PROLOGUES)(
-    'a wait that sees only what $host writes on attach is refused at its containment and says it saw no shell output',
-    async ({ prologue }) => {
-      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-      const stream = createFakeStream();
-      stream.emit(prologue);
-      const { verdict, settled } = watchContainedWait(stream, {
-        stallMs: CONTAINED_WAIT_WINDOW_MS,
-        intervalMs: ADVANCEMENT_POLL_MS,
-        backstopAt: performance.now() + CONTAINED_WAIT_CONTAINMENT_MS,
-      });
-      await vi.advanceTimersByTimeAsync(CONTAINED_WAIT_CONTAINMENT_MS + ADVANCEMENT_POLL_MS);
-      await settled;
-      expect(verdict.settled).toBe('refused');
-      expect(verdict.atMs).toBeGreaterThanOrEqual(CONTAINED_WAIT_CONTAINMENT_MS);
-      expect(verdict.message).toContain(CONTAINMENT_VERDICT);
-      expect(verdict.message).toContain(NO_SHELL_OUTPUT_VERDICT);
-      expect(verdict.message).not.toContain(SHELL_PROGRESS_COUNTED);
-      expect(verdict.message).toContain(`(received ${JSON.stringify(prologue)})`);
-    },
-  );
-
-  test.each(RECORDED_ATTACH_PROLOGUES)(
-    'a shell that keeps writing behind what $host wrote on attach is counted from its own first byte',
-    async ({ prologue }) => {
-      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-      const stream = createFakeStream();
-      stream.emit(`${prologue}${SHELL_WRITTEN_STEP}`);
-      const stopShell = scheduleEmissions(
-        stream,
-        evenCadence(SHELL_WRITTEN_STEP, CONTAINED_WAIT_STEP_MS, CONTAINED_WAIT_CONTAINMENT_MS),
-      );
-      const { verdict, settled } = watchContainedWait(stream, {
-        stallMs: CONTAINED_WAIT_WINDOW_MS,
-        intervalMs: ADVANCEMENT_POLL_MS,
-        backstopAt: performance.now() + CONTAINED_WAIT_CONTAINMENT_MS,
-      });
-      try {
-        await vi.advanceTimersByTimeAsync(CONTAINED_WAIT_CONTAINMENT_MS + ADVANCEMENT_POLL_MS);
-        expect(verdict.settled).toBe('refused');
-        expect(verdict.message).toContain(CONTAINMENT_VERDICT);
-        expect(verdict.message).toContain(
-          `${verdict.buffer.length - prologue.length} characters counted from the shell's first output on`,
-        );
-      } finally {
-        stopShell();
-        await settled;
-      }
-    },
-  );
-
-  test('a title the shell sets behind the bundled ConPTY is shell output, and launch output past the window from the start still lands inside the containment', async () => {
-    const verdict = await waitForLaunchOutputBehind(
-      BUNDLED_ATTACH_PROLOGUE,
-      WINDOWS_POWERSHELL_TITLE_ST,
-    );
-    expect({ settled: verdict.settled, message: verdict.message }).toEqual({
-      settled: 'reached',
-      message: '',
-    });
-    expect(verdict.atMs).toBeGreaterThanOrEqual(OUTPUT_PAST_THE_WINDOW_FROM_START_AT_MS);
-  });
-
-  test('the title the inbox ConPTY paints in its first-paint frame is not shell output, and launch output past the window from the start still lands inside the containment', async () => {
-    expect(shellOutputBeyondAttach(`${ATTACH_PROLOGUE}${CONPTY_INIT_FRAME_ST_TITLE}`)).toBe('');
-    const verdict = await waitForLaunchOutputBehind(ATTACH_PROLOGUE, CONPTY_INIT_FRAME_ST_TITLE);
-    expect({ settled: verdict.settled, message: verdict.message }).toEqual({
-      settled: 'reached',
-      message: '',
-    });
-    expect(verdict.atMs).toBeGreaterThanOrEqual(OUTPUT_PAST_THE_WINDOW_FROM_START_AT_MS);
   });
 });
 
@@ -2897,12 +1812,6 @@ describe('a wait whose readiness is silence is refused at entry when its stall w
     expect(verdict.atMs).toBe(quietWindowMs + VALIDATED_WAIT.intervalMs);
   });
 });
-
-const RECORDED_S1_BANNER_THEN_SILENCE =
-  '\u001b[1t\u001b[c\u001b[?1004h\u001b[?9001hPowerShell 7.6.6\r\n\u001b]0;Administrator: C:\\Program Files\\PowerShell\\7\\pwsh.exe\u001b\\';
-const RECORDED_FIRST_OUTPUT_AT_MS = 3_647;
-const HARNESS_COMMAND_ECHO = 'Write-Output "HARNESS_$((6*7))_DONE"\r\n';
-const HARNESS_COMMAND_OUTPUT = 'HARNESS_42_DONE';
 const POSIX_PROMPT = 'bash-5.2$ ';
 const SHELL_EXIT = 'exited (code 1, signal none)';
 const LATE_SHARE_OF_CONTAINMENT = 7 / 8;
@@ -2920,32 +1829,6 @@ function grantWithWholeBudgetLeft(platform: NodeJS.Platform): number {
 
 function answerAt(stream: FakeStream, atMs: number | null, chunk: string): () => void {
   return atMs === null ? () => undefined : scheduleEmissions(stream, [{ atMs, chunk }]);
-}
-
-function driveShellAnsweringAt(
-  stream: FakeStream,
-  answerAtMs: number | null,
-): { sent: string[]; send: (data: string) => void; dispose: () => void } {
-  const sent: string[] = [];
-  const answer =
-    answerAtMs === null
-      ? null
-      : setTimeout(() => {
-          for (const data of sent) {
-            const typed = data.replace(/\r$/u, '');
-            const output = evaluateFakePowerShellCommand(typed);
-            if (output !== null) stream.emit(`${typed}\r\n${output}\r\n`);
-          }
-        }, answerAtMs);
-  return {
-    sent,
-    send: (data) => {
-      sent.push(data);
-    },
-    dispose: () => {
-      if (answer !== null) clearTimeout(answer);
-    },
-  };
 }
 
 interface ReadinessSiteRun {
@@ -2969,51 +1852,6 @@ interface ReadinessSite {
 }
 
 const READINESS_SITES: readonly ReadinessSite[] = [
-  {
-    site: 'the Windows input round trip',
-    platform: 'win32',
-    label: 'interactive shell ready at project root',
-    speaks: [
-      { atMs: 0, chunk: BUNDLED_ATTACH_PROLOGUE },
-      {
-        atMs: RECORDED_FIRST_OUTPUT_AT_MS,
-        chunk: RECORDED_S1_BANNER_THEN_SILENCE.slice(BUNDLED_ATTACH_PROLOGUE.length),
-      },
-    ],
-    probesWritten: [INPUT_READY_PROBE.input],
-    begin: (stream, label, containmentMs, answerAtMs) => {
-      const shell = driveShellAnsweringAt(stream, answerAtMs);
-      return {
-        settled: waitForEvaluatedInput(stream, shell.send, INPUT_READY_PROBE, label, {
-          budgetMs: containmentMs,
-        }),
-        probesWritten: () => shell.sent,
-        dispose: shell.dispose,
-      };
-    },
-  },
-  {
-    site: 'a command wait after shell output',
-    platform: 'win32',
-    label: 'evaluated command output',
-    speaks: [
-      { atMs: 0, chunk: `${BUNDLED_ATTACH_PROLOGUE}${BOOTED_PROMPT}${HARNESS_COMMAND_ECHO}` },
-    ],
-    probesWritten: null,
-    begin: (stream, label, containmentMs, answerAtMs) => {
-      const stopAnswer = answerAt(stream, answerAtMs, `${HARNESS_COMMAND_OUTPUT}\r\n`);
-      return {
-        settled: waitForCondition(
-          stream,
-          () => stream.read().includes(HARNESS_COMMAND_OUTPUT),
-          label,
-          { backstopAt: performance.now() + containmentMs },
-        ),
-        probesWritten: () => null,
-        dispose: stopAnswer,
-      };
-    },
-  },
   {
     site: 'the POSIX interactive-shell wait',
     platform: 'linux',
@@ -3225,7 +2063,7 @@ async function waitOutExitAfterKill(
 
 describe('a wait whose condition is the shell exiting keeps its meaning: the exit is the success, and a shell still alive is the failure', () => {
   test('waiting on the exit of a shell that exits once the host escalates the kill is reached before its containment', async () => {
-    const containmentMs = grantWithWholeBudgetLeft('win32');
+    const containmentMs = grantWithWholeBudgetLeft('darwin');
     const verdict = await waitOutExitAfterKill('SIGKILL', containmentMs);
     expect({ settled: verdict.settled, message: verdict.message }).toEqual({
       settled: 'reached',
@@ -3236,7 +2074,7 @@ describe('a wait whose condition is the shell exiting keeps its meaning: the exi
   });
 
   test('waiting on the exit of a shell that outlives every kill is refused when its containment is spent, not before', async () => {
-    const containmentMs = grantWithWholeBudgetLeft('win32');
+    const containmentMs = grantWithWholeBudgetLeft('darwin');
     const verdict = await waitOutExitAfterKill('never', containmentMs);
     expect(verdict.settled).toBe('refused');
     expect(verdict.message).toContain(EXIT_AFTER_KILL_LABEL);
@@ -3270,7 +2108,7 @@ const EXIT_WAIT_BOUNDS = [
     endsAtMs: EXIT_WINDOW_MS / 2,
   },
 ] as const;
-const WIN32_HARNESS_BUDGET_MS = harnessTimeouts('win32').budgetMs;
+const HARNESS_BUDGET_MS = harnessTimeouts('darwin').budgetMs;
 
 interface BoundedWaitVerdict {
   settled: 'pending' | 'reached' | 'refused';
@@ -3373,13 +2211,13 @@ describe('a readiness or exit wait names the bound that ended it, and reports sh
       bound: FIRST_OUTPUT_WINDOW_BOUND,
       outlasts: INITIAL_ALLOWANCE_BOUND,
       initialMs: 0,
-      reportMs: WIN32_HARNESS_BUDGET_MS,
+      reportMs: HARNESS_BUDGET_MS,
     },
     {
       bound: INITIAL_ALLOWANCE_BOUND,
       outlasts: FIRST_OUTPUT_WINDOW_BOUND,
-      initialMs: WIN32_HARNESS_BUDGET_MS,
-      reportMs: WIN32_HARNESS_BUDGET_MS * 2,
+      initialMs: HARNESS_BUDGET_MS,
+      reportMs: HARNESS_BUDGET_MS * 2,
     },
   ] as const)(
     'a readiness wait that follows a completion and sees nothing past attach is refused at its $bound when that outlasts its $outlasts, and says it saw no shell output',

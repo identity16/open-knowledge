@@ -71,7 +71,7 @@ interface CheckAndRepairProjectMcpOpts {
   projectDir: string;
   executablePath: string;
   isPackaged: boolean;
-  platform: 'darwin' | 'win32' | 'linux' | string;
+  platform: 'darwin' | 'linux' | string;
   env?: Record<string, string | undefined>;
   cli: ProjectMcpReclaimCliSurface;
   forceEnv?: string | null | undefined;

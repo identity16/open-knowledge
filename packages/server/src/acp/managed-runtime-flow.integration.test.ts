@@ -4,14 +4,13 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   readFileSync,
   rmSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import type {
   ThreadEvent,
   ThreadServerFrame,
@@ -22,7 +21,6 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 const BLOCKING_CONSENT_BUDGET_MS = Math.floor(THREAD_REOPEN_OP_TIMEOUT_MS / 2);
 const OPEN_PATH_CONSENT_BUDGET_MS = 5 * 60 * 1000;
 
-import { ZipFile } from 'yazl';
 import type { AgentSessionManager } from '../agent-sessions.ts';
 import { getLogger } from '../logger.ts';
 import { withLocalAcquisitionRegistry } from './acquisition-contract.test-helper.ts';
@@ -197,17 +195,7 @@ describe('package admission after runtime preparation', () => {
           writeExecutable(join(empty, 'npx'), 'process.exit(0);');
         }
         let bytes: Buffer;
-        if (process.platform === 'win32') {
-          const zip = new ZipFile();
-          for (const entry of readdirSync(selectedBin)) {
-            const path = join(selectedBin, entry);
-            zip.addFile(path, relative(join(home, 'selected'), path).replaceAll('\\', '/'));
-          }
-          zip.end();
-          const chunks: Buffer[] = [];
-          for await (const chunk of zip.outputStream) chunks.push(chunk);
-          bytes = Buffer.concat(chunks);
-        } else {
+        {
           const tarPath = join(home, 'runtime.tar.gz');
           execFileSync('tar', ['-czf', tarPath, '-C', join(home, 'selected'), 'node-vTEST']);
           bytes = readFileSync(tarPath);
@@ -594,60 +582,56 @@ describe('managed-runtime consent + download flow', () => {
     ).not.toContain('let Open Knowledge download a private compatible copy');
   }, 30_000);
 
-  test.skipIf(process.platform === 'win32')(
-    'a compatible login-shell Node replaces a stale GUI-inherited Node',
-    async () => {
-      const contentDir = tmp();
-      const localDir = tmp();
-      const runtimeRoot = tmp();
-      const oldBin = tmp();
-      const newBin = tmp();
-      const calls = join(tmp(), 'calls.log');
-      writeFileSync(join(oldBin, 'npx'), `#!/bin/sh\necho "old:$*" >> ${calls}\nexit 0\n`, {
-        mode: 0o755,
+  test('a compatible login-shell Node replaces a stale GUI-inherited Node', async () => {
+    const contentDir = tmp();
+    const localDir = tmp();
+    const runtimeRoot = tmp();
+    const oldBin = tmp();
+    const newBin = tmp();
+    const calls = join(tmp(), 'calls.log');
+    writeFileSync(join(oldBin, 'npx'), `#!/bin/sh\necho "old:$*" >> ${calls}\nexit 0\n`, {
+      mode: 0o755,
+    });
+    writeNodeVersion(oldBin, 'v16.14.2');
+    writeFileSync(join(newBin, 'npx'), `#!/bin/sh\necho "new:$*" >> ${calls}\nexit 0\n`, {
+      mode: 0o755,
+    });
+    writeNodeVersion(newBin, 'v24.13.0');
+
+    const priorPath = process.env.PATH;
+    process.env.PATH = oldBin;
+    try {
+      const manager = makeManager({
+        contentDir,
+        localDir,
+        runtimeRoot,
+        fetchImpl: fakeNodeFetch(Buffer.from('unused'), 'x'.repeat(64), {
+          ...NPX_AGENT,
+          distribution: { npx: { package: '@fake/agent' } },
+        }),
+        resolveLoginShellPath: async () => newBin,
       });
-      writeNodeVersion(oldBin, 'v16.14.2');
-      writeFileSync(join(newBin, 'npx'), `#!/bin/sh\necho "new:$*" >> ${calls}\nexit 0\n`, {
-        mode: 0o755,
-      });
-      writeNodeVersion(newBin, 'v24.13.0');
 
-      const priorPath = process.env.PATH;
-      process.env.PATH = oldBin;
-      try {
-        const manager = makeManager({
-          contentDir,
-          localDir,
-          runtimeRoot,
-          fetchImpl: fakeNodeFetch(Buffer.from('unused'), 'x'.repeat(64), {
-            ...NPX_AGENT,
-            distribution: { npx: { package: '@fake/agent' } },
-          }),
-          resolveLoginShellPath: async () => newBin,
-        });
+      const events: ThreadEvent[] = [];
+      const info = await manager.createThread({ agent: { source: 'registry', id: 'npxagent' } });
+      await collect(manager, info.threadId, events);
+      await waitFor(
+        () => manager.getInfo(info.threadId)?.status === 'error',
+        10_000,
+        'the fake adapter to exit',
+      );
 
-        const events: ThreadEvent[] = [];
-        const info = await manager.createThread({ agent: { source: 'registry', id: 'npxagent' } });
-        await collect(manager, info.threadId, events);
-        await waitFor(
-          () => manager.getInfo(info.threadId)?.status === 'error',
-          10_000,
-          'the fake adapter to exit',
-        );
-
-        expect(findConsentRequest(events)).toBeUndefined();
-        const invocations = readFileSync(calls, 'utf8').trim().split('\n');
-        expect(invocations).toContain('old:--version');
-        expect(invocations).not.toContain('old:-y @fake/agent');
-        expect(invocations).toContain('new:--version');
-        expect(invocations).toContain('new:-y @fake/agent');
-      } finally {
-        if (priorPath === undefined) delete process.env.PATH;
-        else process.env.PATH = priorPath;
-      }
-    },
-    20_000,
-  );
+      expect(findConsentRequest(events)).toBeUndefined();
+      const invocations = readFileSync(calls, 'utf8').trim().split('\n');
+      expect(invocations).toContain('old:--version');
+      expect(invocations).not.toContain('old:-y @fake/agent');
+      expect(invocations).toContain('new:--version');
+      expect(invocations).toContain('new:-y @fake/agent');
+    } finally {
+      if (priorPath === undefined) delete process.env.PATH;
+      else process.env.PATH = priorPath;
+    }
+  }, 20_000);
 
   test('declining after a crash reports the broken interpreter, not a missing one', async () => {
     const contentDir = tmp();
@@ -1075,65 +1059,57 @@ describe('interpreter health probe', () => {
 });
 
 describe('a context window change superseding a launch inside its interpreter probe', () => {
-  test.skipIf(process.platform === 'win32')(
-    'the superseded launch asks for no runtime consent once its interpreter crashes',
-    async () => {
-      const contentDir = tmp();
-      const localDir = tmp();
-      const runtimeRoot = tmp();
-      const brokenBin = tmp();
-      const control = tmp();
-      const probes = join(control, 'probes.log');
-      const gate = join(control, 'gate');
-      writeFileSync(
-        join(brokenBin, 'npx'),
-        `#!/bin/sh\necho "$*" >> ${JSON.stringify(probes)}\nwhile [ ! -e ${JSON.stringify(gate)} ]; do /bin/sleep 0.05; done\necho "dyld[1]: Library not loaded: libicui18n.74.dylib" >&2\nkill -ABRT $$\n`,
-        { mode: 0o755 },
-      );
-      const manager = makeManager({
-        contentDir,
-        localDir,
-        runtimeRoot,
-        fetchImpl: fakeNodeFetch(Buffer.from('unused'), 'x'.repeat(64), {
-          ...NPX_AGENT,
-          id: 'codex-acp',
-          distribution: { npx: { package: '@fake/agent', env: { PATH: brokenBin } } },
-        }),
-      });
-      const probeCount = (): number =>
-        existsSync(probes)
-          ? readFileSync(probes, 'utf8')
-              .split('\n')
-              .filter((line) => line !== '').length
-          : 0;
-      const events: ThreadEvent[] = [];
-      const consentReasons = () =>
-        events.flatMap((e) => (e.kind === 'runtime_consent_request' ? [e.reason] : []));
-      try {
-        const info = await manager.createThread({ agent: { source: 'registry', id: 'codex-acp' } });
-        await collect(manager, info.threadId, events);
-        await waitFor(
-          () => probeCount() === 1,
-          10_000,
-          'the first launch to probe its interpreter',
-        );
-        void manager.setContextWindow(info.threadId, 400_000).catch(() => {});
-        await waitFor(() => probeCount() === 2, 3_000, 'the restart to probe its interpreter');
-        writeFileSync(gate, '');
-        await waitFor(() => consentReasons().length > 0, 10_000, 'a runtime consent request');
-        await waitFor(
-          () => consentReasons().length > 1,
-          1_500,
-          'a consent request from the superseded launch',
-        ).catch(() => {});
+  test('the superseded launch asks for no runtime consent once its interpreter crashes', async () => {
+    const contentDir = tmp();
+    const localDir = tmp();
+    const runtimeRoot = tmp();
+    const brokenBin = tmp();
+    const control = tmp();
+    const probes = join(control, 'probes.log');
+    const gate = join(control, 'gate');
+    writeFileSync(
+      join(brokenBin, 'npx'),
+      `#!/bin/sh\necho "$*" >> ${JSON.stringify(probes)}\nwhile [ ! -e ${JSON.stringify(gate)} ]; do /bin/sleep 0.05; done\necho "dyld[1]: Library not loaded: libicui18n.74.dylib" >&2\nkill -ABRT $$\n`,
+      { mode: 0o755 },
+    );
+    const manager = makeManager({
+      contentDir,
+      localDir,
+      runtimeRoot,
+      fetchImpl: fakeNodeFetch(Buffer.from('unused'), 'x'.repeat(64), {
+        ...NPX_AGENT,
+        id: 'codex-acp',
+        distribution: { npx: { package: '@fake/agent', env: { PATH: brokenBin } } },
+      }),
+    });
+    const probeCount = (): number =>
+      existsSync(probes)
+        ? readFileSync(probes, 'utf8')
+            .split('\n')
+            .filter((line) => line !== '').length
+        : 0;
+    const events: ThreadEvent[] = [];
+    const consentReasons = () =>
+      events.flatMap((e) => (e.kind === 'runtime_consent_request' ? [e.reason] : []));
+    try {
+      const info = await manager.createThread({ agent: { source: 'registry', id: 'codex-acp' } });
+      await collect(manager, info.threadId, events);
+      await waitFor(() => probeCount() === 1, 10_000, 'the first launch to probe its interpreter');
+      void manager.setContextWindow(info.threadId, 400_000).catch(() => {});
+      await waitFor(() => probeCount() === 2, 3_000, 'the restart to probe its interpreter');
+      writeFileSync(gate, '');
+      await waitFor(() => consentReasons().length > 0, 10_000, 'a runtime consent request');
+      await waitFor(
+        () => consentReasons().length > 1,
+        1_500,
+        'a consent request from the superseded launch',
+      ).catch(() => {});
 
-        expect(consentReasons()).toEqual(['broken']);
-      } finally {
-        writeFileSync(gate, '');
-      }
-    },
-    30_000,
-  );
+      expect(consentReasons()).toEqual(['broken']);
+    } finally {
+      writeFileSync(gate, '');
+    }
+  }, 30_000);
 });
 
 async function pollInstalled(

@@ -14,16 +14,6 @@ describe('macos-codesig check', () => {
     expect(result.summary).toContain('skipped on linux');
   });
 
-  test('passes with skip on win32', async () => {
-    const def = makeMacosCodesigCheck({
-      platform: 'win32',
-      execPath: 'C:\\Program Files\\OpenKnowledge\\ok.exe',
-    });
-    const result = await def.run(ctx);
-    expect(result.status).toBe('pass');
-    expect(result.summary).toContain('skipped on win32');
-  });
-
   test('passes with dev-mode caveat on darwin when execPath has no /Contents/MacOS/', async () => {
     const def = makeMacosCodesigCheck({
       platform: 'darwin',

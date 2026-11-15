@@ -98,10 +98,6 @@ describe.skipIf(process.platform === 'win32')('detached interactive-shell wrappe
         options?.shell,
         'the argv is composed by the callers, so the wrapper must not layer a shell over it',
       ).toBe(false);
-      expect(
-        options?.windowsHide,
-        'a console-less parent must not flash a terminal window for the spawned children',
-      ).toBe(true);
     } finally {
       child.kill();
     }

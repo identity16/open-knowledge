@@ -120,6 +120,15 @@ describe('the registry-to-host contract', () => {
 });
 
 describe('an MCP entry', () => {
+  it('abbreviates a Windows-shaped home too, so the account name stays out of the UI', () => {
+    expect(displayPath('C:\\Users\\alice\\.lmstudio\\mcp.json', 'C:\\Users\\alice')).toBe(
+      '~/.lmstudio/mcp.json',
+    );
+    expect(displayPath('C:\\Users\\bob\\.lmstudio\\mcp.json', 'C:\\Users\\alice')).toBe(
+      'C:\\Users\\bob\\.lmstudio\\mcp.json',
+    );
+    expect(displayPath('/home/alice/we\\ird.json', '/home/alice')).toBe('~/we\\ird.json');
+  });
   it('reads a config that is not there as absent', async () => {
     expect(await answerFor('claude/mcp/project/config-entry')).toEqual({ state: 'absent' });
   });
@@ -132,16 +141,6 @@ describe('an MCP entry', () => {
   it('names the file it read, so a remove confirmation can show it', async () => {
     const answer = await answerFor('claude/mcp/user/config-entry');
     expect(answer?.path).toBe('~/.claude.json');
-  });
-
-  it('abbreviates a Windows-shaped home too, so the account name stays out of the UI', () => {
-    expect(displayPath('C:\\Users\\alice\\.lmstudio\\mcp.json', 'C:\\Users\\alice')).toBe(
-      '~/.lmstudio/mcp.json',
-    );
-    expect(displayPath('C:\\Users\\bob\\.lmstudio\\mcp.json', 'C:\\Users\\alice')).toBe(
-      'C:\\Users\\bob\\.lmstudio\\mcp.json',
-    );
-    expect(displayPath('/home/alice/we\\ird.json', '/home/alice')).toBe('~/we\\ird.json');
   });
 
   it('reads our own canonical entry as satisfied and names every predicate that passed', async () => {

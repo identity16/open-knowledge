@@ -3,19 +3,16 @@ import { afterEach, expect, test, vi } from 'vitest';
 import {
   type PtyHostIncomingMessage,
   type PtyProcessLike,
-  type PtySpawnOptions,
   type PtyStartupSpawnContext,
   type PtyStartupTraceOptions,
   setupPtyHost,
 } from '../../src/utility/pty-host.ts';
-import { buildInputReadyProbe } from '../smoke/_helpers/terminal-smoke-shell.ts';
 import {
   createHarnessBudget,
   createPtyHostProbe,
   HARNESS_REPORT_RESERVE_MS,
   HarnessBudgetRefusal,
   harnessTimeouts,
-  waitForEvaluatedInput,
 } from '../support/pty-readiness.test-helper.ts';
 import { createHarnessScenarioRunner } from '../support/pty-startup-trace.test-helper.ts';
 
@@ -24,8 +21,8 @@ vi.mock('node:child_process', async (importOriginal) => ({
   execFileSync: vi.fn(),
 }));
 
-const PROLOGUE = '\u001b[1t\u001b[c\u001b[?1004h\u001b[?9001h';
-const SHELL = 'C:\\Program Files\\PowerShell\\7\\pwsh.exe';
+const SHELL = '/bin/zsh';
+const OUTPUT = 'terminal output';
 
 function fixture(traceEnabled: boolean) {
   const events: Record<string, unknown>[] = [];
@@ -44,8 +41,8 @@ function fixture(traceEnabled: boolean) {
   };
   const options = {
     spawn: vi.fn(() => pty),
-    env: { SystemRoot: 'C:\\Windows', ProgramFiles: 'C:\\Program Files' },
-    platform: 'win32' as const,
+    env: { SHELL },
+    platform: 'darwin' as const,
     shellExists: (path: string) => path === SHELL,
     logger: {
       info: (entry: Record<string, unknown>) => events.push(entry),
@@ -63,57 +60,6 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test('reports startup boundaries before cleanup when a timed-out lookup precedes prologue-only silence', async () => {
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-  vi.mocked(execFileSync).mockImplementation(() => {
-    throw Object.assign(new Error('spawnSync where.exe ETIMEDOUT'), { code: 'ETIMEDOUT' });
-  });
-  const { host, pty, events, output } = fixture(true);
-  output(PROLOGUE);
-  const probe = buildInputReadyProbe('win32');
-  const pending = waitForEvaluatedInput(
-    host.streamOf('private-session'),
-    (data) => host.send({ type: 'input', ptyId: 'private-session', data }),
-    { input: `${probe.command}\r`, marker: probe.marker },
-    'interactive shell ready at project root',
-    { budgetMs: harnessTimeouts('win32').budgetMs },
-  ).then(
-    () => 'unexpected success',
-    (error: Error) => error.message,
-  );
-  await vi.runAllTimersAsync();
-  const failure = await pending;
-  host.killActive();
-  expect(failure).toContain(
-    'shell never produced output before interactive shell ready at project root',
-  );
-  expect(pty.write).not.toHaveBeenCalled();
-  expect(events).toContainEqual(
-    expect.objectContaining({ event: 'pty-host-shell-path-probe-timed-out' }),
-  );
-  const trace = events.filter((entry) => entry.event === 'pty-host-startup');
-  expect(trace.map((entry) => entry.stage)).toEqual([
-    'lookup-start',
-    'lookup-complete',
-    'spawn-start',
-    'spawn-return',
-    'first-output',
-    'first-forward',
-    'snapshot',
-  ]);
-  expect(trace.at(-1)).toEqual(
-    expect.objectContaining({
-      reason: 'before-cleanup',
-      receivedBytes: Buffer.byteLength(PROLOGUE),
-      forwardedBytes: Buffer.byteLength(PROLOGUE),
-      publicPid: pty.pid,
-      terminalExitObserved: false,
-    }),
-  );
-  expect(JSON.stringify(trace)).not.toMatch(/private-session|private|PowerShell|\\u001b/u);
-  expect(pty.kill).toHaveBeenCalledOnce();
-});
-
 test('does not capture startup diagnostics unless the caller enables them', () => {
   vi.mocked(execFileSync).mockReturnValue(`${SHELL}\r\n`);
   const { host, events, output } = fixture(false);
@@ -123,11 +69,7 @@ test('does not capture startup diagnostics unless the caller enables them', () =
 });
 
 function lifecycleFixture(
-  options: {
-    trace?: boolean;
-    fallback?: boolean;
-    aroundSpawn?: PtyStartupTraceOptions['aroundSpawn'];
-  } = {},
+  options: { trace?: boolean; aroundSpawn?: PtyStartupTraceOptions['aroundSpawn'] } = {},
 ) {
   const events: Record<string, unknown>[] = [];
   const sessions: Array<{
@@ -137,10 +79,7 @@ function lifecycleFixture(
   }> = [];
   const controlObservations: Array<{ stage: unknown; reason: unknown }> = [];
   let messageHandler = (_event: { data: unknown }) => {};
-  const spawn = vi.fn((_file: string, _args: string | string[], spawnOptions: PtySpawnOptions) => {
-    if (options.fallback && spawnOptions.useConptyDll) {
-      throw new Error('Cannot find conpty.dll at C:\\fixture\\conpty.dll, error code: 2');
-    }
+  const spawn = vi.fn((_file: string, _args: string | string[]) => {
     let onData = (_data: string) => {};
     let onExit = (_event: { exitCode: number }) => {};
     const pty: PtyProcessLike = {
@@ -170,8 +109,8 @@ function lifecycleFixture(
       postMessage: vi.fn(),
     },
     spawn,
-    env: { SystemRoot: 'C:\\Windows', ProgramFiles: 'C:\\Program Files' },
-    platform: 'win32' as const,
+    env: { SHELL },
+    platform: 'darwin' as const,
     shellExists: (path: string) => path === SHELL,
     logger: {
       warn: (entry: Record<string, unknown>) => events.push(entry),
@@ -194,7 +133,7 @@ function lifecycleFixture(
   return { handle, sessions, create, send, trace, spawn, controlObservations };
 }
 
-test('startup traces distinguish cached resolution, overrides, and creates across host instances', () => {
+test('startup traces distinguish platform resolution, overrides, and creates across host instances', () => {
   vi.mocked(execFileSync).mockReset().mockReturnValue(`${SHELL}\r\n`);
   const first = lifecycleFixture();
   const second = lifecycleFixture();
@@ -205,29 +144,12 @@ test('startup traces distinguish cached resolution, overrides, and creates acros
     const resolutions = [...first.trace(), ...second.trace()].filter(
       (entry) => entry.stage === 'lookup-complete',
     );
-    expect(resolutions.map((entry) => entry.lookup)).toEqual(['probe', 'cache', 'override']);
+    expect(resolutions.map((entry) => entry.lookup)).toEqual(['platform', 'platform', 'override']);
     expect(new Set(resolutions.map((entry) => entry.traceId)).size).toBe(resolutions.length);
-    expect(vi.mocked(execFileSync)).toHaveBeenCalledOnce();
+    expect(vi.mocked(execFileSync)).not.toHaveBeenCalled();
   } finally {
     first.handle.killActive();
     second.handle.killActive();
-  }
-});
-
-test('startup traces give fallback spawns distinct attempts within the same create', () => {
-  vi.mocked(execFileSync).mockReturnValue(`${SHELL}\r\n`);
-  const host = lifecycleFixture({ fallback: true });
-  try {
-    host.create('fallback');
-    const attempts = host.trace().filter((entry) => entry.stage === 'spawn-start');
-    expect(attempts.map((entry) => entry.backend)).toEqual(['bundled', 'inbox']);
-    expect(new Set(attempts.map((entry) => entry.attempt)).size).toBe(host.spawn.mock.calls.length);
-    expect(new Set(attempts.map((entry) => entry.traceId)).size).toBe(host.sessions.length);
-    expect(host.trace()).toContainEqual(
-      expect.objectContaining({ stage: 'spawn-failed', reason: 'conpty-dll-unavailable' }),
-    );
-  } finally {
-    host.handle.killActive();
   }
 });
 
@@ -298,14 +220,14 @@ test('startup diagnostics sample no clocks when disabled', () => {
 test('failure reporting can snapshot an owned session without controlling it', () => {
   vi.mocked(execFileSync).mockReturnValue(`${SHELL}\r\n`);
   const { host, pty, events, output } = fixture(true);
-  output(PROLOGUE);
+  output(OUTPUT);
   host.snapshotStartup();
   expect(events.at(-1)).toEqual(
     expect.objectContaining({
       stage: 'snapshot',
       reason: 'failure',
-      receivedBytes: Buffer.byteLength(PROLOGUE),
-      forwardedBytes: Buffer.byteLength(PROLOGUE),
+      receivedBytes: Buffer.byteLength(OUTPUT),
+      forwardedBytes: Buffer.byteLength(OUTPUT),
     }),
   );
   expect(pty.kill).not.toHaveBeenCalled();
@@ -313,11 +235,10 @@ test('failure reporting can snapshot an owned session without controlling it', (
   host.killActive();
 });
 
-test('late observations keep the identity of a failed spawn attempt', () => {
+test('late observations keep the identity of its spawn attempt', () => {
   vi.mocked(execFileSync).mockReturnValue(`${SHELL}\r\n`);
   const contexts: PtyStartupSpawnContext[] = [];
   const host = lifecycleFixture({
-    fallback: true,
     aroundSpawn(next, context) {
       contexts.push(context);
       return { pty: next() };
@@ -373,7 +294,7 @@ test('a failing harness scenario snapshots its live session before releasing it'
   vi.mocked(execFileSync).mockReturnValue(`${SHELL}\r\n`);
   const scenario = harnessScenario('shell stays silent');
   await scenario.runner.run('shell stays silent', async () => {
-    scenario.openSession().output(PROLOGUE);
+    scenario.openSession().output(OUTPUT);
     throw new Error('shell never produced output');
   });
   expect(scenario.snapshotReasons()).toEqual([['failure', 'before-cleanup']]);
@@ -387,7 +308,7 @@ test('a hard timeout snapshots the live session of the scenario still in flight'
   const { promise: blocked, resolve: proceed } = Promise.withResolvers<void>();
   const { promise: inFlight, resolve: started } = Promise.withResolvers<void>();
   const running = scenario.runner.run('shell still starting', async () => {
-    scenario.openSession().output(PROLOGUE);
+    scenario.openSession().output(OUTPUT);
     started();
     await blocked;
   });
@@ -407,7 +328,7 @@ test('a passing harness scenario releases its session without a failure snapshot
   vi.mocked(execFileSync).mockReturnValue(`${SHELL}\r\n`);
   const scenario = harnessScenario('shell answers');
   await scenario.runner.run('shell answers', async () => {
-    scenario.openSession().output(PROLOGUE);
+    scenario.openSession().output(OUTPUT);
   });
   expect(scenario.snapshotReasons()).toEqual([['before-cleanup']]);
   expect(scenario.releases()).toEqual([1]);

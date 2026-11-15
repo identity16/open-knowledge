@@ -82,19 +82,16 @@ describe('AcpTerminalSet', () => {
     expect(path.endsWith('/opt/only-in-the-login-shell')).toBe(true);
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'a PATH the agent supplied wins over the login-shell PATH',
-    async () => {
-      const events: ThreadEvent[] = [];
-      const set = makeSet(events, '/opt/only-in-the-login-shell');
-      const { terminalId } = set.create({
-        ...node('process.stdout.write(String(process.env.PATH))'),
-        env: [{ name: 'PATH', value: '/agent/chose/this' }],
-      });
-      await set.waitForExit(terminalId);
-      expect(set.output(terminalId).output).toBe('/agent/chose/this');
-    },
-  );
+  test('a PATH the agent supplied wins over the login-shell PATH', async () => {
+    const events: ThreadEvent[] = [];
+    const set = makeSet(events, '/opt/only-in-the-login-shell');
+    const { terminalId } = set.create({
+      ...node('process.stdout.write(String(process.env.PATH))'),
+      env: [{ name: 'PATH', value: '/agent/chose/this' }],
+    });
+    await set.waitForExit(terminalId);
+    expect(set.output(terminalId).output).toBe('/agent/chose/this');
+  });
 
   test('captures stderr interleaved and a non-zero exit code', async () => {
     const events: ThreadEvent[] = [];

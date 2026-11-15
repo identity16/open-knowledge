@@ -88,7 +88,7 @@ describe('Pi trust grant receipts', () => {
 
     expect(committed.record.state).toBe('committed');
     expect(listPiTrustGrants(home, cwd)).toEqual([committed]);
-    if (process.platform !== 'win32') expect(statSync(committed.path).mode & 0o777).toBe(0o600);
+    expect(statSync(committed.path).mode & 0o777).toBe(0o600);
   });
 
   test.each([false, null, { choice: 'previous', nested: [1, true] }])(
@@ -190,19 +190,16 @@ describe('Pi trust grant receipts', () => {
     expect(existsSync(other.path)).toBe(true);
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'refuses symlinked receipts and preserves their target',
-    () => {
-      const pending = preparePiTrustGrant(home, cwd, configured, canonical, { present: false });
-      const target = join(root, 'receipt-copy.json');
-      renameSync(pending.path, target);
-      symlinkSync(target, pending.path);
+  test('refuses symlinked receipts and preserves their target', () => {
+    const pending = preparePiTrustGrant(home, cwd, configured, canonical, { present: false });
+    const target = join(root, 'receipt-copy.json');
+    renameSync(pending.path, target);
+    symlinkSync(target, pending.path);
 
-      expect(() => listPiTrustGrants(home, cwd)).toThrow('is not a regular file');
-      expect(() => forgetPiTrustGrant(home, pending)).toThrow('is not a regular file');
-      expect(JSON.parse(readFileSync(target, 'utf8'))).toEqual(pending.record);
-    },
-  );
+    expect(() => listPiTrustGrants(home, cwd)).toThrow('is not a regular file');
+    expect(() => forgetPiTrustGrant(home, pending)).toThrow('is not a regular file');
+    expect(JSON.parse(readFileSync(target, 'utf8'))).toEqual(pending.record);
+  });
 
   test('ignores unrelated and atomic temporary files without modifying them', () => {
     const pending = preparePiTrustGrant(home, cwd, configured, canonical, { present: false });
@@ -265,22 +262,19 @@ describe('Pi trust grant receipts', () => {
     expect(readFileSync(path, 'utf8')).toBe('unrelated file');
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'refuses a receipt directory replaced by a symlink before commit and forget',
-    () => {
-      const receipt = preparePiTrustGrant(home, cwd, configured, canonical, { present: false });
-      const directory = dirname(receipt.path);
-      const target = join(root, 'moved-receipts');
-      renameSync(directory, target);
-      symlinkSync(target, directory);
+  test('refuses a receipt directory replaced by a symlink before commit and forget', () => {
+    const receipt = preparePiTrustGrant(home, cwd, configured, canonical, { present: false });
+    const directory = dirname(receipt.path);
+    const target = join(root, 'moved-receipts');
+    renameSync(directory, target);
+    symlinkSync(target, directory);
 
-      expect(() => commitPiTrustGrant(home, receipt)).toThrow('is not a regular directory');
-      expect(() => forgetPiTrustGrant(home, receipt)).toThrow('is not a regular directory');
-      expect(JSON.parse(readFileSync(receipt.path, 'utf8'))).toEqual(receipt.record);
-    },
-  );
+    expect(() => commitPiTrustGrant(home, receipt)).toThrow('is not a regular directory');
+    expect(() => forgetPiTrustGrant(home, receipt)).toThrow('is not a regular directory');
+    expect(JSON.parse(readFileSync(receipt.path, 'utf8'))).toEqual(receipt.record);
+  });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'retains an unreadable receipt with actionable failure',
     () => {
       const receipt = preparePiTrustGrant(home, cwd, configured, canonical, { present: false });

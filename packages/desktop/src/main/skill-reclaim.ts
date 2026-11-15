@@ -122,7 +122,7 @@ type UserSkillReclaimResult =
 interface ReclaimUserSkillsOpts {
   home: string;
   isPackaged: boolean;
-  platform: 'darwin' | 'win32' | 'linux' | string;
+  platform: 'darwin' | 'linux' | string;
   executablePath: string;
   env?: Record<string, string | undefined>;
   forceEnv?: string | null | undefined;

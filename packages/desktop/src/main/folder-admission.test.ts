@@ -365,24 +365,6 @@ describe('isSystemDirectory', () => {
       expect(isSystemDirectory(link, HOME)).toBe(true);
     },
   );
-
-  test('Windows system folders match case-insensitively from the environment', () => {
-    const env = {
-      SystemRoot: 'C:\\Windows',
-      ProgramFiles: 'C:\\Program Files',
-      'ProgramFiles(x86)': 'C:\\Program Files (x86)',
-      ProgramData: 'C:\\ProgramData',
-    };
-    const winHome = 'C:\\Users\\test';
-    expect(isSystemDirectory('c:\\windows', winHome, 'win32', env)).toBe(true);
-    expect(isSystemDirectory('C:\\Program Files\\', winHome, 'win32', env)).toBe(true);
-    expect(isSystemDirectory('C:\\Program Files (x86)', winHome, 'win32', env)).toBe(true);
-    expect(isSystemDirectory('C:\\ProgramData', winHome, 'win32', env)).toBe(true);
-    expect(isSystemDirectory('C:\\Users', winHome, 'win32', env)).toBe(true);
-    expect(isSystemDirectory('C:\\Windows\\notes', winHome, 'win32', env)).toBe(false);
-    expect(isSystemDirectory('C:\\Users\\test\\notes', winHome, 'win32', env)).toBe(false);
-    expect(isSystemDirectory('D:\\notes', winHome, 'win32', env)).toBe(false);
-  });
 });
 
 describe('discoverProject — managed kind (ancestor walk)', () => {

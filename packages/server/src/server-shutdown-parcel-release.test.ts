@@ -87,7 +87,7 @@ test('once the server is destroyed, a native delivery neither dispatches a disk 
   await server.destroy();
   server = undefined;
 
-  const nativeReleasesPerSubscription = process.platform === 'win32' ? 0 : 1;
+  const nativeReleasesPerSubscription = 1;
   expect({ content: content.nativeReleases(), head: head.nativeReleases() }).toEqual({
     content: nativeReleasesPerSubscription,
     head: nativeReleasesPerSubscription,
@@ -103,22 +103,18 @@ test('once the server is destroyed, a native delivery neither dispatches a disk 
   }).toEqual({ dispatched: [], batchesBegun: 0 });
 }, 60_000);
 
-test.skipIf(process.platform === 'win32')(
-  'a HEAD watcher whose native release fails still lets the content watcher release',
-  async () => {
-    server = await bootCompositionRig(root);
-    await server.ready;
-    const content = nativeSubscriptionOn(root);
-    const head = nativeSubscriptionOn(join(root, '.git'));
-    failNextNativeRelease(join(root, '.git'));
+test('a HEAD watcher whose native release fails still lets the content watcher release', async () => {
+  server = await bootCompositionRig(root);
+  await server.ready;
+  const content = nativeSubscriptionOn(root);
+  const head = nativeSubscriptionOn(join(root, '.git'));
+  failNextNativeRelease(join(root, '.git'));
 
-    await server.destroy();
-    server = undefined;
+  await server.destroy();
+  server = undefined;
 
-    expect({ content: content.nativeReleases(), head: head.nativeReleases() }).toEqual({
-      content: 1,
-      head: 1,
-    });
-  },
-  60_000,
-);
+  expect({ content: content.nativeReleases(), head: head.nativeReleases() }).toEqual({
+    content: 1,
+    head: 1,
+  });
+}, 60_000);

@@ -24,19 +24,6 @@ describe('resolveSyncWorkspace', () => {
     });
   });
 
-  test('Electron Windows: backslash separator', () => {
-    const windowLike = {
-      okDesktop: {
-        config: { projectPath: 'C:\\repo' },
-        platform: 'win32',
-      },
-    } as unknown as Window;
-    expect(resolveSyncWorkspace(windowLike)).toEqual({
-      contentDir: 'C:\\repo',
-      pathSeparator: '\\',
-    });
-  });
-
   test('Electron Linux: forward-slash separator', () => {
     const windowLike = {
       okDesktop: {

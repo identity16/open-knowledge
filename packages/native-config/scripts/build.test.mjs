@@ -24,15 +24,11 @@ describe('resolveBuildArgs', () => {
     ]);
   });
 
-  test('keeps the existing native build on macOS and Windows', () => {
+  test('keeps the existing native build on macOS', () => {
     assert.deepEqual(resolveBuildArgs({ platform: 'darwin', arch: 'arm64', release: true }), [
       'build',
       '--platform',
       '--release',
-    ]);
-    assert.deepEqual(resolveBuildArgs({ platform: 'win32', arch: 'x64', release: false }), [
-      'build',
-      '--platform',
     ]);
   });
 

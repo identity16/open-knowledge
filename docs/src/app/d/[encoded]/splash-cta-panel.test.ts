@@ -13,7 +13,6 @@ const SHARE_ROUTE = '/d/encoded-share/download';
 
 describe('splashPrimaryDownloadUrl', () => {
   test('requests the picker through the share route without choosing an architecture', () => {
-    expect(splashPrimaryDownloadUrl(SHARE_ROUTE, 'windows')).toBe(`${SHARE_ROUTE}?picker=1`);
     expect(splashPrimaryDownloadUrl(SHARE_ROUTE, 'linux')).toBe(`${SHARE_ROUTE}?picker=1`);
   });
 

@@ -51,7 +51,7 @@ function runMacMemorySysctl(): Promise<string> {
     execFile(
       '/usr/sbin/sysctl',
       MAC_MEMORY_SYSCTL_ARGS,
-      { timeout: MAC_MEMORY_SYSCTL_TIMEOUT_MS, windowsHide: true },
+      { timeout: MAC_MEMORY_SYSCTL_TIMEOUT_MS },
       (err, stdout) => (err ? reject(err) : resolve(stdout)),
     );
   });

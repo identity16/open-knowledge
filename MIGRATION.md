@@ -178,7 +178,7 @@ node scripts/fork/restore-original.mjs
 ## 유지관리자: 다음 Release 만들기
 
 소스 변경을 fork의 `main`에 반영한 뒤 GitHub Actions의 **OpenKnowledge16 Release**를 수동 실행합니다.
-브랜치는 `main`, 버전은 `0.76.0-identity16.4`처럼 기존 Release보다 큰 새 버전을 지정합니다.
+Choose `main` and a new plain semver version such as `0.78.7`, newer than the latest release.
 태그 push로 서명 작업을 시작하지 않습니다. 서명 자격증명은 `main`에서만 사용할 수 있습니다.
 
 workflow는 빌드·공증·패키징·공개를 별도 job으로 실행합니다. 웹 GUI + CLI의 renderer를

@@ -576,27 +576,6 @@ describe('buildAndOpenSkill', () => {
     expect(result.status).toBe('installed');
     expect(capture.command).toBe('open');
     expect(capture.args).toEqual([out]);
-    expect(capture.opts?.windowsHide).toBe(true);
-  });
-
-  test('win32: spawns `cmd /c start "" <path>` and returns status="installed"', async () => {
-    const home = freshHome();
-    const capture: { command?: string; args?: readonly string[]; opts?: SpawnOptions } = {};
-    const out = join(home, 'win32.skill');
-
-    const result = await buildAndOpenSkill({
-      home,
-      out,
-      platformName: 'win32',
-      spawnFn: makeFakeSpawn(capture),
-    });
-
-    expect(result.status).toBe('installed');
-    expect(capture.command).toBe('cmd');
-    expect(capture.args?.[0]).toBe('/c');
-    expect(capture.args?.[1]).toBe('start');
-    expect(capture.args?.[3]).toBe(out);
-    expect(capture.opts?.windowsHide).toBe(true);
   });
 
   test('linux: spawns `xdg-open <path>` and returns status="installed"', async () => {
@@ -612,7 +591,6 @@ describe('buildAndOpenSkill', () => {
 
     expect(result.status).toBe('installed');
     expect(capture.command).toBe('xdg-open');
-    expect(capture.opts?.windowsHide).toBe(true);
   });
 
   test('unsupported platform: status="built" with handoffError reason=unsupported-platform', async () => {
@@ -674,8 +652,7 @@ describe('buildAndOpenSkill', () => {
     });
   });
 
-  test('an opener that exists but cannot run is reported with its own error, not as missing', async (ctx) => {
-    ctx.skip(process.platform === 'win32', 'exec permission bits are POSIX-only');
+  test('an opener that exists but cannot run is reported with its own error, not as missing', async (_ctx) => {
     const home = freshHome();
     const unrunnableOpener = join(home, 'unrunnable-opener');
     writeFileSync(unrunnableOpener, 'not a program\n', { mode: 0o644 });

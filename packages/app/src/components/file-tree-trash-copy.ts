@@ -13,17 +13,12 @@ export function trashDetailMacos(): string {
   return t`You can restore this file from the Trash.`;
 }
 
-export function trashDetailWindows(): string {
-  return t`You can restore this file from the Recycle Bin.`;
-}
-
 export function buildTrashConfirmCopyElectron(
   targets: ReadonlyArray<FileTreeTarget>,
-  platform?: string | null,
+  _platform?: string | null,
 ): TrashConfirmCopy {
-  const isWindows = platform === 'win32';
-  const detail = isWindows ? trashDetailWindows() : trashDetailMacos();
-  const confirmLabel = isWindows ? t`Move to Recycle Bin` : t`Move to Trash`;
+  const detail = trashDetailMacos();
+  const confirmLabel = t`Move to Trash`;
   const confirmLabelBusy = t`Moving`;
   if (targets.length === 0) {
     return {

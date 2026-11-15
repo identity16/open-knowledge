@@ -30,100 +30,6 @@ describe('detectProtocol', () => {
     expect(result).toEqual({ installed: true, displayName: 'Claude' });
   });
 
-  test('returns installed:true on Windows happy path', async () => {
-    const result = await detectProtocol(
-      {
-        platform: 'win32',
-        getApplicationInfoForProtocol: async () => ({
-          name: 'Codex',
-          path: 'C:\\Program Files\\Codex\\codex.exe',
-        }),
-      },
-      'codex',
-    );
-    expect(result).toEqual({ installed: true, displayName: 'Codex' });
-  });
-
-  test('Windows fallback: Electron rejects (MSIX app), registry probe returns true → installed:true', async () => {
-    let probedScheme: string | null = null;
-    const result = await detectProtocol(
-      {
-        platform: 'win32',
-        getApplicationInfoForProtocol: async () => {
-          throw new Error('Unable to retrieve installation path to app');
-        },
-        runWindowsProbe: async (s) => {
-          probedScheme = s;
-          return true;
-        },
-      },
-      'claude',
-    );
-    expect(probedScheme).toBe('claude');
-    expect(result).toEqual({ installed: true });
-  });
-
-  test('Windows fallback: Electron returns empty info, registry probe returns true → installed:true', async () => {
-    const result = await detectProtocol(
-      {
-        platform: 'win32',
-        getApplicationInfoForProtocol: async () => ({ name: '', path: '' }),
-        runWindowsProbe: async () => true,
-      },
-      'codex',
-    );
-    expect(result).toEqual({ installed: true });
-  });
-
-  test('Windows fallback: Electron rejects AND registry probe false → installed:false', async () => {
-    const result = await detectProtocol(
-      {
-        platform: 'win32',
-        getApplicationInfoForProtocol: async () => {
-          throw new Error('no handler');
-        },
-        runWindowsProbe: async () => false,
-      },
-      'cursor',
-    );
-    expect(result).toEqual({ installed: false });
-  });
-
-  test('Windows fallback: registry probe throwing is the same outcome as false', async () => {
-    const result = await detectProtocol(
-      {
-        platform: 'win32',
-        getApplicationInfoForProtocol: async () => {
-          throw new Error('no handler');
-        },
-        runWindowsProbe: async () => {
-          throw new Error('reg.exe timeout');
-        },
-      },
-      'claude',
-    );
-    expect(result).toEqual({ installed: false });
-  });
-
-  test('Windows fallback: unknown scheme never consults the registry probe', async () => {
-    let called = false;
-    const result = await detectProtocol(
-      {
-        platform: 'win32',
-        getApplicationInfoForProtocol: async () => {
-          throw new Error('no handler');
-        },
-        runWindowsProbe: async () => {
-          called = true;
-          return true;
-        },
-      },
-      'someotherscheme',
-    );
-    expect(called).toBe(false);
-    expect(result).toEqual({ installed: false });
-  });
-
   test('returns installed:false when Electron rejects AND macOS osascript fallback returns false', async () => {
     const result = await detectProtocol(
       {
@@ -195,23 +101,6 @@ describe('detectProtocol', () => {
         },
       },
       'foo',
-    );
-    expect(probeCalled).toBe(false);
-    expect(result).toEqual({ installed: false });
-  });
-
-  test('returns installed:false on Windows when handler returns empty (no osascript fallback on win32)', async () => {
-    let probeCalled = false;
-    const result = await detectProtocol(
-      {
-        platform: 'win32',
-        getApplicationInfoForProtocol: async () => ({ name: '', path: '' }),
-        runMacOsProbe: async () => {
-          probeCalled = true;
-          return true;
-        },
-      },
-      'codex',
     );
     expect(probeCalled).toBe(false);
     expect(result).toEqual({ installed: false });
@@ -306,12 +195,6 @@ describe('validateSpawnPath', () => {
     expect(validateSpawnPath('/home/x/project', 'linux')).toBe(true);
   });
 
-  test('accepts absolute Windows paths', () => {
-    expect(validateSpawnPath('C:\\Users\\x\\project', 'win32')).toBe(true);
-    expect(validateSpawnPath('C:/Users/x/project', 'win32')).toBe(true);
-    expect(validateSpawnPath('\\\\server\\share\\project', 'win32')).toBe(true);
-  });
-
   test('rejects empty string', () => {
     expect(validateSpawnPath('', 'darwin')).toBe(false);
   });
@@ -324,10 +207,6 @@ describe('validateSpawnPath', () => {
     expect(validateSpawnPath('./project', 'darwin')).toBe(false);
     expect(validateSpawnPath('project', 'linux')).toBe(false);
     expect(validateSpawnPath('project\\sub', 'win32')).toBe(false);
-  });
-
-  test('rejects POSIX-absolute on Windows (not drive-letter)', () => {
-    expect(validateSpawnPath('/Users/x', 'win32')).toBe(false);
   });
 });
 
@@ -365,18 +244,6 @@ describe('isPathWithinProject — Review M5 confined-path check', () => {
     expect(isPathWithinProject('D:\\other', 'C:\\Users\\x\\project', 'win32')).toBe(false);
   });
 
-  test('Windows: accepts same-drive subpaths', () => {
-    expect(
-      isPathWithinProject('C:\\Users\\x\\project\\specs', 'C:\\Users\\x\\project', 'win32'),
-    ).toBe(true);
-  });
-
-  test('Windows: matches drive root case-insensitively', () => {
-    expect(
-      isPathWithinProject('c:\\Users\\x\\project\\sub', 'C:\\Users\\x\\project', 'win32'),
-    ).toBe(true);
-  });
-
   test('Windows: rejects UNC userPath when projectPath is on a local drive', () => {
     expect(isPathWithinProject('\\\\evil\\share\\secret.txt', 'C:\\projects\\foo', 'win32')).toBe(
       false,
@@ -397,12 +264,6 @@ describe('isPathWithinProject — Review M5 confined-path check', () => {
 
   test('Windows: rejects same-server-different-share UNC paths', () => {
     expect(isPathWithinProject('\\\\srv\\evil\\foo', '\\\\srv\\proj\\base', 'win32')).toBe(false);
-  });
-
-  test('Windows: accepts subpath within the same UNC share', () => {
-    expect(
-      isPathWithinProject('\\\\srv\\proj\\base\\specs\\foo.md', '\\\\srv\\proj\\base', 'win32'),
-    ).toBe(true);
   });
 
   test('Windows: rejects device / extended-length namespace prefixes (cross-root)', () => {
@@ -909,31 +770,17 @@ describe('showItemInFolder', () => {
     expect(calls).toEqual([]);
   });
 
-  test('Windows: reveals path within project', () => {
+  test('refuses a foreign Windows drive path on macOS', () => {
     const calls: string[] = [];
     const result = showItemInFolder(
       {
-        platform: 'win32',
-        projectPath: 'C:\\Users\\me\\proj',
-        showItemInFolder: (p) => calls.push(p),
-      },
-      'C:\\Users\\me\\proj\\specs\\foo.md',
-    );
-    expect(result).toEqual({ ok: true });
-    expect(calls).toEqual(['C:\\Users\\me\\proj\\specs\\foo.md']);
-  });
-
-  test('Windows: refuses cross-drive escape with reason "out-of-project"', () => {
-    const calls: string[] = [];
-    const result = showItemInFolder(
-      {
-        platform: 'win32',
-        projectPath: 'C:\\Users\\me\\proj',
+        platform: 'darwin',
+        projectPath: '/Users/me/proj',
         showItemInFolder: (p) => calls.push(p),
       },
       'D:\\elsewhere\\foo.md',
     );
-    expect(result).toEqual({ ok: false, reason: 'out-of-project' });
+    expect(result).toEqual({ ok: false, reason: 'invalid-format' });
     expect(calls).toEqual([]);
   });
 });

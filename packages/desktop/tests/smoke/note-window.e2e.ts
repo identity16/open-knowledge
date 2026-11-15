@@ -63,7 +63,7 @@ async function launchApp(s: Seed, opts: { deepLink?: boolean } = {}): Promise<El
       env: {
         ...process.env,
         ...homeEnv(s.tmpHome),
-        ...(process.platform === 'win32' ? {} : { PATH: '/usr/bin:/bin:/usr/sbin:/sbin' }),
+        PATH: '/usr/bin:/bin:/usr/sbin:/sbin',
         OK_DESKTOP_E2E_SMOKE: '1',
         OK_RECLAIM_DISABLE: '1',
       },

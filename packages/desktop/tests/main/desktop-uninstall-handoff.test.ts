@@ -2510,10 +2510,11 @@ exec /bin/sleep "$1"`,
           '../../src/main/desktop-uninstall-handoff.ts'
         );
         const declaredWaitSeconds = Math.ceil(PROGRESS_READY_DECLARED_WAIT_MS / 1000);
-        const oneSecondMs = inMilliseconds(1);
         const f = fixture();
         const recorder = signalRecorder(f);
         const sleeps = join(f.dir, 'sleeps');
+        const clock = join(f.dir, 'clock');
+        writeFileSync(clock, '0');
         const script = buildWithDeclaredWait(
           handoffInput(f),
           withSignalSeam(
@@ -2521,10 +2522,12 @@ exec /bin/sleep "$1"`,
               ...f.commands,
               ps: f.executable('ps', 'exit 1'),
               psTimeoutSeconds: HANDOFF_WATCHDOG_SECONDS,
+              date: f.executable('counted-date', `exec /bin/cat '${clock}'`),
               sleep: f.executable(
                 'dated-sleep',
-                `printf '%s %s\\n' "$(/bin/date +%s)" "$1" >> '${sleeps}'
-exec /bin/sleep "$1"`,
+                `second=$(/bin/cat '${clock}')
+printf '%s %s\\n' "$second" "$1" >> '${sleeps}'
+printf '%s\\n' "$((second + 1))" > '${clock}'`,
               ),
               result: [
                 f.executable(
@@ -2537,10 +2540,6 @@ exec /bin/sleep "$1"`,
           ),
         );
         expectEverySignalRoutedThrough(recorder.path, script);
-        const waitingFromSecond = Math.floor(Date.now() / oneSecondMs);
-        while (Math.floor(Date.now() / oneSecondMs) === waitingFromSecond) {
-          await delay(oneSecondMs - (Date.now() % oneSecondMs));
-        }
         const run = await runKeepingTheBoundFailure({
           shell,
           script,
@@ -2553,7 +2552,7 @@ exec /bin/sleep "$1"`,
         if (run instanceof BoundedSpawnTimeoutError) throw run;
         expect(
           countRecordedLines(sleeps),
-          'the readiness wait never slept through commands.sleep, so no poll read the clock the script reads, and there is no poll to hold to the declared wait',
+          'the readiness wait must poll through commands.sleep before its injected clock passes the declared wait',
         ).toBeGreaterThan(0);
         expect(
           readProgressGiveUp(f.dir, run),
@@ -2569,18 +2568,12 @@ exec /bin/sleep "$1"`,
           .filter((line) => line !== '');
         expect(
           polls.filter((poll) => !/^\d+ /.test(poll)),
-          'each poll records the whole second /bin/date reads just before it sleeps, and these records carry none, so the fixture could not read the clock the script reads and these polls cannot be placed against the declared wait',
+          'each poll must record the injected clock before advancing it by one second',
         ).toEqual([]);
         const polledSeconds = polls.map((poll) => Number(poll.split(' ')[0]));
-        const [firstPolledSecond] = polledSeconds;
-        const secondsPastFirstPoll = polledSeconds.map((second) => second - firstPolledSecond);
-        const polledPastTheWait = secondsPastFirstPoll
-          .slice(0, -1)
-          .filter((seconds) => seconds > declaredWaitSeconds);
-        expect(
-          polledPastTheWait,
-          `the handoff kept polling a progress window that never became ready after the clock it reads had counted past the declared wait: ${polledPastTheWait.length} of its ${polls.length} polls, not counting the last, were taken more than ${declaredWaitSeconds} whole seconds after the first poll's second (whole seconds after the first poll's second, poll by poll: ${secondsPastFirstPoll.join(' ')}). Each poll reads the clock after the script has read it for that poll and before the script reads it again, and the first poll's second is no earlier than the second the wait started counting from, so a poll taken past the first poll's second plus ${declaredWaitSeconds} puts the script's next read past its deadline, where it must give up: only the last poll can lie past it, and polling on means the wait read a clock past its deadline and kept waiting, so it lasts longer than it was declared to. ${declaredWaitSeconds} is not a performance figure but that declared wait, the constant this test mocks into the product rounded up to whole seconds, and this measures no elapsed time and bounds nothing by host speed: it only orders whole-second readings of the clock the script reads, an order host load cannot change. Load can only lower the number of polls or move the first one later, which can let a late give-up through but never fails a wait that gives up on its first read past its deadline`,
-        ).toEqual([]);
+        expect(polledSeconds).toEqual(
+          Array.from({ length: declaredWaitSeconds + 1 }, (_, second) => second),
+        );
       } finally {
         vi.doUnmock('../../src/main/desktop-uninstall-result.ts');
         vi.resetModules();

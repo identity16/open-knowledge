@@ -20,9 +20,7 @@ export function getUpdaterBaseCacheDir(opts: {
   homeDir: string;
 }): string {
   const { platform, env, homeDir } = opts;
-  if (platform === 'win32') {
-    return env.LOCALAPPDATA || join(homeDir, 'AppData', 'Local');
-  }
+
   if (platform === 'darwin') {
     return join(homeDir, 'Library', 'Caches');
   }

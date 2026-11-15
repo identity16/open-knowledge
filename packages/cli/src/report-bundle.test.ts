@@ -661,7 +661,7 @@ describe('collectReportBundle — full level', () => {
       );
     });
 
-    test('discloses kept records in the README even when one Windows log failed', async () => {
+    test('discloses kept records in the README when one OS log read fails', async () => {
       const outputPath = join(makeTmpDir(), 'report.zip');
 
       const { zipPath } = await collectReportBundle({
@@ -671,22 +671,21 @@ describe('collectReportBundle — full level', () => {
         userLogsDir: makeTmpDir(),
         diagnosticReportsDir: makeTmpDir(),
         osTerminationEvidenceDeps: {
-          platform: 'win32',
-          systemRoot: 'C:\\Windows',
+          platform: 'linux',
           runCommand: async (_command, args) =>
-            args[1] === 'System'
-              ? {
+            args.includes('--user')
+              ? { status: 5, stdout: '', stderr: 'Access is denied.' }
+              : {
                   status: 0,
                   stdout:
-                    "<Event><System><Provider Name='EventLog'/><EventID>6008</EventID><TimeCreated SystemTime='2026-10-04T11:00:00Z'/></System></Event>",
+                    '2026-10-04T18:49:10.000000+0000 host kernel: Out of memory: Killed process 12 (openknowledge)\n',
                   stderr: '',
-                }
-              : { status: 5, stdout: '', stderr: 'Access is denied.' },
+                },
         },
       });
 
       expect(JSON.parse(readZipEntry(zipPath, 'state/os-termination-evidence.json'))).toMatchObject(
-        { outcome: 'partial', events: [{ log: 'System', eventId: 6008 }] },
+        { outcome: 'partial', events: [{ origin: 'kernel', action: 'oom-kill', pid: 12 }] },
       );
       expect(readZipEntry(zipPath, 'README.md')).toContain(
         'Termination records: read from the operating system',

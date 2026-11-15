@@ -300,7 +300,7 @@ describe('toRedirectResponse', () => {
 describe('STABLE_DMG_URL', () => {
   test('targets the GitHub latest alias with the shared asset name', () => {
     expect(STABLE_DMG_URL).toBe(
-      `https://github.com/inkeep/open-knowledge/releases/latest/download/${DMG_ASSET_NAME}`,
+      `https://github.com/identity16/open-knowledge/releases/latest/download/${DMG_ASSET_NAME}`,
     );
   });
 });

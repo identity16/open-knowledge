@@ -147,7 +147,7 @@ export const TerminalFacetSchema = z.object({
 });
 export type TerminalFacet = z.infer<typeof TerminalFacetSchema>;
 
-export const HANDOFF_HOST_PLATFORMS = ['darwin', 'win32', 'linux'] as const;
+export const HANDOFF_HOST_PLATFORMS = ['darwin', 'linux'] as const;
 export const HandoffHostPlatformSchema = z.enum(HANDOFF_HOST_PLATFORMS);
 export type HandoffHostPlatform = z.infer<typeof HandoffHostPlatformSchema>;
 

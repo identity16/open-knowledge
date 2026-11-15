@@ -1,14 +1,12 @@
 import type { spawn as NativeSpawn } from 'node:child_process';
 import { statSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join, win32 } from 'node:path';
+import { join } from 'node:path';
 import {
   DESKTOP_PRODUCTS,
   type DesktopProduct,
   type DesktopProductName,
   desktopChannelLabel,
-  desktopWindowsExecutableName,
-  desktopWindowsInstallDirNames,
   OK_CHANNEL_ENV,
   PACKAGED_DESKTOP_PRODUCT_NAMES,
   resolveDesktopProductName,
@@ -152,35 +150,6 @@ function probeExecutable(deps: DetectDeps, path: string): boolean {
   }
 }
 
-function resolveWindowsExecutable(
-  deps: DetectDeps,
-  cliProduct: DesktopProductName,
-): ResolvedDesktop | null {
-  if (deps.env.ELECTRON_RUN_AS_NODE === '1') {
-    const bundledProduct = PACKAGED_DESKTOP_PRODUCTS.find((name) =>
-      deps.execPath
-        .toLowerCase()
-        .endsWith(`\\${desktopWindowsExecutableName(DESKTOP_PRODUCTS[name]).toLowerCase()}`),
-    );
-    if (bundledProduct) return { path: deps.execPath, product: bundledProduct };
-  }
-  const localAppData = deps.env.LOCALAPPDATA;
-  if (localAppData) {
-    for (const product of desktopProductsVisibleTo(cliProduct)) {
-      for (const dirName of desktopWindowsInstallDirNames(DESKTOP_PRODUCTS[product])) {
-        const exe = win32.join(
-          localAppData,
-          'Programs',
-          dirName,
-          desktopWindowsExecutableName(DESKTOP_PRODUCTS[product]),
-        );
-        if (probeExecutable(deps, exe)) return { path: exe, product };
-      }
-    }
-  }
-  return null;
-}
-
 function resolveLinuxExecutable(
   deps: DetectDeps,
   cliProduct: DesktopProductName,
@@ -206,7 +175,7 @@ export function detectDesktop(deps: DetectDeps): DetectResult {
     return { available: false, reason: 'force-browser', cliProduct };
   }
 
-  if (deps.platform !== 'darwin' && deps.platform !== 'win32' && deps.platform !== 'linux') {
+  if (deps.platform !== 'darwin' && deps.platform !== 'linux') {
     return { available: false, reason: 'unsupported-platform', cliProduct };
   }
 
@@ -215,9 +184,7 @@ export function detectDesktop(deps: DetectDeps): DetectResult {
     resolved =
       deps.platform === 'darwin'
         ? resolveBundlePath(deps, cliProduct)
-        : deps.platform === 'win32'
-          ? resolveWindowsExecutable(deps, cliProduct)
-          : resolveLinuxExecutable(deps, cliProduct);
+        : resolveLinuxExecutable(deps, cliProduct);
   } catch {
     return { available: false, reason: 'stat-error', cliProduct };
   }
@@ -231,8 +198,7 @@ export function detectDesktop(deps: DetectDeps): DetectResult {
     return { available: true, reason: 'available', ...app };
   }
 
-  const ttyInteractive =
-    deps.isTTY === true || (deps.platform === 'win32' && deps.isTTY === undefined && !deps.env.CI);
+  const ttyInteractive = deps.isTTY === true;
   if (!ttyInteractive || deps.env.SSH_CONNECTION || deps.env.SSH_TTY) {
     return { available: false, reason: 'headless', ...app };
   }

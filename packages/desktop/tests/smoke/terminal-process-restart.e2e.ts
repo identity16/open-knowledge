@@ -52,8 +52,8 @@ import {
 const TARGET = resolveDesktopTarget();
 const ENABLED = process.env.OK_DESKTOP_E2E_SMOKE === '1';
 const PRIMARY_MODIFIER = process.platform === 'darwin' ? 'Meta' : 'Control';
-const QUIT_SAMPLES = process.platform === 'win32' ? 50 : 1;
-const SECOND_TAB_LABEL = process.platform === 'win32' ? 'process second' : 'Terminal 2';
+const QUIT_SAMPLES = 1;
+const SECOND_TAB_LABEL = 'Terminal 2';
 const TERMINAL_UNIT = '#dock-unit-terminal';
 
 interface RestartSeed {
@@ -182,9 +182,6 @@ async function arrangeTabsInRightTerminal(
   secondTabId: string,
 ): Promise<void> {
   await renameTerminalTab(page, terminalTabById(page, firstTabId), 'process first');
-  if (process.platform === 'win32') {
-    await renameTerminalTab(page, terminalTabById(page, secondTabId), SECOND_TAB_LABEL);
-  }
   await terminalTabById(page, secondTabId).click();
   await expect(terminalTabById(page, secondTabId)).toHaveAttribute('aria-selected', 'true');
   await page.locator('section[aria-label="Terminal"]:visible .xterm').click();

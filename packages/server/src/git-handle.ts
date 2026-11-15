@@ -59,7 +59,6 @@ const GIT_AUTH_ENV_KEYS = [
   'TMP',
   'USERNAME',
   'USERDOMAIN',
-  'PATHEXT',
   'SSH_AUTH_SOCK',
   'ELECTRON_RUN_AS_NODE',
 ] as const;

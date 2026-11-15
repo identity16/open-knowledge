@@ -86,7 +86,6 @@ export default defineConfig({
     'ok/path-conditional-map-driven-origin': 'error',
     'ok/playwright-prefer-to-have-count': 'error',
     'ok/require-utf8-multipart-parser': 'error',
-    'ok/require-windowshide-on-spawn': 'error',
     [NO_COMMENTS_RULE]: NO_COMMENTS_SEVERITY,
     'eslint/logical-assignment-operators': [
       'error',

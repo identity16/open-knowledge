@@ -210,6 +210,29 @@ describe('on GitHub Actions, a Vitest run that executed no test fails', () => {
   );
 
   test(
+    'a related run whose changed source no test imports passes without an annotation',
+    async ({ signal }) => {
+      const root = fixturePackage('@ok-fixture/related-untested', {
+        ...ONE_EXECUTED,
+        'untested.mjs': 'export const untested = 1;\n',
+      });
+      const run = await runVitest(
+        signal,
+        root,
+        ['related', '--run', '--passWithNoTests', 'untested.mjs'],
+        {
+          GITHUB_ACTIONS: 'true',
+          npm_lifecycle_event: 'verify:changed',
+        },
+      );
+      expect(run.signal).toBeNull();
+      expect(run.status, run.output).toBe(0);
+      expect(errorAnnotations(run), run.output).toEqual([]);
+    },
+    BOUNDED_BY_CHILD_SILENCE,
+  );
+
+  test(
     'a package with one executed test passes without an annotation',
     async ({ signal }) => {
       const root = fixturePackage('@ok-fixture/executed', ONE_EXECUTED);

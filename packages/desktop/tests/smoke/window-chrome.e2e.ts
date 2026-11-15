@@ -223,22 +223,6 @@ test.describe('Windows/Linux window chrome smoke', () => {
     });
     console.log(`[window-chrome] windowControlsOverlay: ${JSON.stringify(overlay)}`);
     expect(overlay.supported).toBe(true);
-
-    if (process.platform === 'win32') {
-      expect(overlay.visible).toBe(true);
-      await expect(editor.locator('header[data-app-header]')).toBeVisible();
-      const heights = await editor.evaluate(() => {
-        const wco = (
-          navigator as Navigator & { windowControlsOverlay?: { getTitlebarAreaRect(): DOMRect } }
-        ).windowControlsOverlay;
-        const header = document.querySelector('header[data-app-header]');
-        return {
-          titlebarArea: wco?.getTitlebarAreaRect().height ?? null,
-          appHeader: header?.getBoundingClientRect().height ?? null,
-        };
-      });
-      expect(heights.titlebarArea).toBe(heights.appHeader);
-    }
     await configureDesktopGitRepositories(editor, projectDir);
   });
 });

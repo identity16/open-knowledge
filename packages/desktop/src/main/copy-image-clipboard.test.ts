@@ -44,26 +44,6 @@ describe('copyImageToClipboard — same-origin path handling', () => {
     expect(write).not.toHaveBeenCalled();
   });
 
-  test('windows drive-letter after decode triggers the isAbsolute guard', async () => {
-    const write = vi.fn(async () => {});
-    const resolveCanonical = vi.fn((p: string) => p);
-    const result = await copyImageToClipboard(
-      baseDeps({
-        platform: 'win32',
-        clipboard: { write },
-        resolveCanonical,
-      }),
-      { src: 'http://localhost:5173/C:/Windows/System32/passwd' },
-    );
-    expect(result).toEqual({
-      ok: false,
-      reason: 'path-escape',
-      detail: expect.stringContaining('absolute rel path'),
-    });
-    expect(resolveCanonical).not.toHaveBeenCalled();
-    expect(write).not.toHaveBeenCalled();
-  });
-
   test('realpath ENOENT surfaces as read-error (missing file along the chain)', async () => {
     const write = vi.fn(async () => {});
     const result = await copyImageToClipboard(

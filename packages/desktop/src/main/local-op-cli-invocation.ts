@@ -1,4 +1,3 @@
-import { win32 } from 'node:path';
 import {
   type HostCliInvocation,
   isDevChannel,
@@ -18,10 +17,6 @@ export interface ResolveLocalOpCliInvocationInput {
   readonly workspaceCliBuilt: boolean;
 }
 
-function bundledCliEntryOnWindows(resourcesPath: string): string {
-  return win32.join(resourcesPath, 'cli', 'dist', 'cli.mjs');
-}
-
 export function resolveLocalOpCliInvocation(
   input: ResolveLocalOpCliInvocationInput,
 ): HostCliInvocation | undefined {
@@ -29,17 +24,7 @@ export function resolveLocalOpCliInvocation(
     if (!isDevChannel(input.parentEnv)) return { cliArgs: ['open-knowledge'] };
     return input.workspaceCliBuilt ? { cliArgs: ['node', input.workspaceCliEntry] } : undefined;
   }
-  if (input.platform === 'win32') {
-    const nodeOptions = input.parentEnv.NODE_OPTIONS;
-    return {
-      cliArgs: [input.execPath, bundledCliEntryOnWindows(input.resourcesPath)],
-      cliEnv: {
-        ELECTRON_RUN_AS_NODE: '1',
-        NODE_OPTIONS: undefined,
-        ...(nodeOptions ? { OK_NODE_OPTIONS: nodeOptions } : {}),
-      },
-    };
-  }
+
   return { cliArgs: [wrapperPathInBundle(input.execPath, input.platform)] };
 }
 

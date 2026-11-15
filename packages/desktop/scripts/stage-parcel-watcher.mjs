@@ -11,14 +11,7 @@ const STAGING = join(DESKTOP_ROOT, 'build', 'parcel-watcher-staging', 'node_modu
 
 const RUNTIME_DEPS = ['picomatch', 'is-glob', 'is-extglob', 'detect-libc'];
 
-const PREBUILD_SUFFIXES = [
-  'darwin-arm64',
-  'darwin-x64',
-  'win32-x64',
-  'win32-arm64',
-  'linux-x64-glibc',
-  'linux-arm64-glibc',
-];
+const PREBUILD_SUFFIXES = ['darwin-arm64', 'darwin-x64', 'linux-x64-glibc', 'linux-arm64-glibc'];
 
 const requireFromRepo = createRequire(join(REPO_ROOT, 'noop.js'));
 

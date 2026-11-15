@@ -176,7 +176,7 @@ describe('bootServer() preflight survives the subprocess boundary (FR6 / US-005)
         const { ConfigSchema } = await import('./src/config/schema.ts');
         const { GitProbeTimeoutError } = await import('./src/git-preflight.ts');
         const projectDir = process.env.OK_TEST_PROJECT_DIR;
-        const guidance = { product: 'Git for Windows', url: 'https://gitforwindows.org/', options: [] };
+        const guidance = { product: 'Git', url: 'https://git-scm.com/download/mac', options: [] };
         try {
           await bootServer({
             config: ConfigSchema.parse({}),
@@ -186,7 +186,7 @@ describe('bootServer() preflight survives the subprocess boundary (FR6 / US-005)
             gitEnabled: true,
             idleShutdownMs: null,
             gitPreflight: () => {
-              throw new GitProbeTimeoutError('win32', guidance, { path: 'timeout', fallback: null });
+              throw new GitProbeTimeoutError('darwin', guidance, { path: 'timeout', fallback: null });
             },
           });
         } catch (err) {
@@ -210,7 +210,7 @@ describe('bootServer() preflight survives the subprocess boundary (FR6 / US-005)
 
       const stderr = result.stderr.toString();
       expect(result.exitCode).toBe(78);
-      expect(stderr).toContain('could not verify Git for Windows');
+      expect(stderr).toContain('could not verify Git because');
       expect(stderr).not.toContain('UNEXPECTED-CATCH');
     } finally {
       await rm(projectDir, { recursive: true, force: true });

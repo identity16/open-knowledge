@@ -4,23 +4,19 @@ import {
   LINUX_RPM_ARM64_URL,
   LINUX_RPM_X64_URL,
   STABLE_DMG_URL,
-  STABLE_WINDOWS_SETUP_ARM64_URL,
-  STABLE_WINDOWS_SETUP_X64_URL,
 } from './download-links';
 import { type DownloadCta, downloadRouteForCta } from './site';
 
-export type DetectedOs = 'macos' | 'windows' | 'linux' | 'unknown';
+export type DetectedOs = 'macos' | 'linux' | 'unknown';
 
 type DownloadOs = Exclude<DetectedOs, 'unknown'>;
 
 type DownloadArch = 'arm64' | 'x64';
 
-type DownloadFormat = 'dmg' | 'exe' | 'deb' | 'rpm';
+type DownloadFormat = 'dmg' | 'deb' | 'rpm';
 
 export type DownloadTargetId =
   | 'macos-arm64'
-  | 'windows-x64'
-  | 'windows-arm64'
   | 'linux-deb-x64'
   | 'linux-deb-arm64'
   | 'linux-rpm-x64'
@@ -43,22 +39,6 @@ export const DOWNLOAD_TARGETS: readonly DownloadTarget[] = [
     format: 'dmg',
     label: 'macOS (Apple Silicon)',
     assetUrl: STABLE_DMG_URL,
-  },
-  {
-    id: 'windows-x64',
-    os: 'windows',
-    arch: 'x64',
-    format: 'exe',
-    label: 'Windows (x64)',
-    assetUrl: STABLE_WINDOWS_SETUP_X64_URL,
-  },
-  {
-    id: 'windows-arm64',
-    os: 'windows',
-    arch: 'arm64',
-    format: 'exe',
-    label: 'Windows (Arm64)',
-    assetUrl: STABLE_WINDOWS_SETUP_ARM64_URL,
   },
   {
     id: 'linux-deb-x64',
@@ -96,7 +76,6 @@ export const DOWNLOAD_TARGETS: readonly DownloadTarget[] = [
 
 const DEFAULT_TARGET_BY_OS: Record<DownloadOs, DownloadTargetId> = {
   macos: 'macos-arm64',
-  windows: 'windows-x64',
   linux: 'linux-deb-x64',
 };
 
@@ -144,7 +123,6 @@ export function classifyDownloadOs(input: string | null | undefined): DetectedOs
     return 'unknown';
   }
   if (lower.includes('mac') || lower === 'darwin') return 'macos';
-  if (lower.includes('win')) return 'windows';
   if (
     lower.includes('linux') ||
     lower.includes('x11') ||
@@ -169,8 +147,6 @@ export function downloadLabelForOs(os: DetectedOs): string {
   switch (os) {
     case 'macos':
       return 'Download for Mac';
-    case 'windows':
-      return 'Download for Windows';
     case 'linux':
       return 'Download for Linux';
     default:
@@ -187,7 +163,7 @@ export function downloadHrefForTarget(cta: DownloadCta, target: DownloadTarget):
 }
 
 export function downloadHrefForDetectedOs(cta: DownloadCta, os: DetectedOs): string {
-  if (os === 'windows' || os === 'linux') return downloadPageHrefForCta(cta);
+  if (os === 'linux') return downloadPageHrefForCta(cta);
   return downloadHrefForTarget(cta, defaultTargetForOs(os));
 }
 
@@ -207,5 +183,5 @@ export function resolveTargetFromParams(params: URLSearchParams): DownloadTarget
 }
 
 function isDownloadOs(value: string): value is DownloadOs {
-  return value === 'macos' || value === 'windows' || value === 'linux';
+  return value === 'macos' || value === 'linux';
 }

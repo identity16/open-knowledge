@@ -113,9 +113,9 @@ describe('detectBundleIdentity', () => {
     );
     expect(linuxState.kind).toBe('unchanged');
 
-    const winState = detectBundleIdentity(
+    const unsupportedState = detectBundleIdentity(
       input({
-        platform: 'win32',
+        platform: 'freebsd',
         currentInode: '0:100',
         statInode: () => '0:200',
         realpath: () => {
@@ -123,7 +123,7 @@ describe('detectBundleIdentity', () => {
         },
       }),
     );
-    expect(winState.kind).toBe('unchanged');
+    expect(unsupportedState.kind).toBe('unchanged');
   });
 
   test('returns `unchanged` when realpath path string differs but inode is identical', () => {

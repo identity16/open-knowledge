@@ -40,7 +40,5 @@ export function SplashCtaPanel({
 }
 
 export function splashPrimaryDownloadUrl(downloadUrl: string, os: DetectedOs): string {
-  return os === 'windows' || os === 'linux'
-    ? `${downloadUrl}?picker=1`
-    : `${downloadUrl}${splashDownloadQuery(os)}`;
+  return os === 'linux' ? `${downloadUrl}?picker=1` : `${downloadUrl}${splashDownloadQuery(os)}`;
 }

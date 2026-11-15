@@ -184,52 +184,46 @@ describe('removeOwnLaunchEntry', () => {
 });
 
 describe('removeOwnLaunchEntry — symlinks', () => {
-  test.skipIf(process.platform === 'win32')(
-    'preserves a symlink and edits the destination launch configuration',
-    () => {
-      const dir = project();
-      try {
-        const p = writeLaunch(dir, {
-          configurations: [
-            { name: 'My App', type: 'node' },
-            {
-              name: LAUNCH_CONFIG_NAME,
-              runtimeExecutable: 'npx',
-              runtimeArgs: ['-y', '@inkeep/open-knowledge', 'ui'],
-            },
-          ],
-        });
-        const target = join(dir, 'dotfiles-launch.json');
-        renameSync(p, target);
-        symlinkSync('../dotfiles-launch.json', p);
-        expect(removeOwnLaunchEntry(dir).kind).toBe('removed');
-        expect(lstatSync(p).isSymbolicLink()).toBe(true);
-        expect(readlinkSync(p)).toBe('../dotfiles-launch.json');
-        expect(JSON.parse(readFileSync(target, 'utf8')).configurations).toEqual([
+  test('preserves a symlink and edits the destination launch configuration', () => {
+    const dir = project();
+    try {
+      const p = writeLaunch(dir, {
+        configurations: [
           { name: 'My App', type: 'node' },
-        ]);
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    },
-  );
+          {
+            name: LAUNCH_CONFIG_NAME,
+            runtimeExecutable: 'npx',
+            runtimeArgs: ['-y', '@inkeep/open-knowledge', 'ui'],
+          },
+        ],
+      });
+      const target = join(dir, 'dotfiles-launch.json');
+      renameSync(p, target);
+      symlinkSync('../dotfiles-launch.json', p);
+      expect(removeOwnLaunchEntry(dir).kind).toBe('removed');
+      expect(lstatSync(p).isSymbolicLink()).toBe(true);
+      expect(readlinkSync(p)).toBe('../dotfiles-launch.json');
+      expect(JSON.parse(readFileSync(target, 'utf8')).configurations).toEqual([
+        { name: 'My App', type: 'node' },
+      ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 
-  test.skipIf(process.platform === 'win32').each(['dangling', 'cycle'])(
-    'declines a %s launch symlink without removing it',
-    (kind) => {
-      const dir = project();
-      try {
-        const p = join(dir, '.claude', 'launch.json');
-        symlinkSync(kind === 'cycle' ? 'launch.json' : 'missing.json', p);
-        expect(removeOwnLaunchEntry(dir)).toEqual({
-          kind: 'declined',
-          reason: kind === 'cycle' ? 'unresolved-symlink' : 'missing-symlink-target',
-        });
-        expect(lstatSync(p).isSymbolicLink()).toBe(true);
-        expect(existsSync(join(dir, '.claude', 'missing.json'))).toBe(false);
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    },
-  );
+  test.each(['dangling', 'cycle'])('declines a %s launch symlink without removing it', (kind) => {
+    const dir = project();
+    try {
+      const p = join(dir, '.claude', 'launch.json');
+      symlinkSync(kind === 'cycle' ? 'launch.json' : 'missing.json', p);
+      expect(removeOwnLaunchEntry(dir)).toEqual({
+        kind: 'declined',
+        reason: kind === 'cycle' ? 'unresolved-symlink' : 'missing-symlink-target',
+      });
+      expect(lstatSync(p).isSymbolicLink()).toBe(true);
+      expect(existsSync(join(dir, '.claude', 'missing.json'))).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

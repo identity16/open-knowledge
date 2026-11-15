@@ -1,26 +1,14 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { userInfo } from 'node:os';
-import { basename, win32 } from 'node:path';
+import { basename } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import {
-  composeWindowsShellLaunchArgs,
   isTerminalLaunchEnvName,
-  launchWithoutSupportFile,
   OK_DESKTOP_TERMINAL_ENV,
-  resolveWindowsShellFamily,
   shellSingleQuote,
   type TerminalLaunchCommand,
   terminalLaunchEnvSlots,
-  type WindowsShellFamily,
-  WindowsShellLaunchError,
-  type WindowsShellLaunchFailureReason,
 } from '@inkeep/open-knowledge-core';
-import { isTerminalShellNoticeReason } from '@inkeep/open-knowledge-core/desktop-bridge';
-import type {
-  TerminalShellNoticeReason,
-  TerminalSupportFileNoticeReason,
-} from '../shared/bridge-contract.ts';
 import {
   composeOkChildEnv,
   hasNoResolvableOkHome,
@@ -35,11 +23,6 @@ import {
   quoteShellArg,
   shellCommandFamily,
 } from '../shared/terminal-shell.ts';
-import { getWindowsEnvValue, windowsPathKey, windowsWherePathArgs } from '../shared/windows-env.ts';
-import {
-  materializeSupportFileSync,
-  TERMINAL_SUPPORT_FILE_ESCAPE_CODE,
-} from './support-file-write.ts';
 
 const utilityPhaseTrace = takeUtilityPtyPhaseTrace();
 utilityPhaseTrace?.mark('module-entry', 'point', {
@@ -57,7 +40,6 @@ export interface PtyCreateMessage {
   cols: number;
   rows: number;
   shell?: string;
-  shellInvalidReason?: TerminalShellNoticeReason;
   launchCommand?: string | TerminalLaunchCommand;
 }
 interface PtyInputMessage {
@@ -111,48 +93,16 @@ type PtySpawnErrorMessage =
       type: 'spawn-error';
       ptyId: string;
       message: string;
-      launchFailure?: undefined;
       shellNeverAttached?: undefined;
     }
   | {
       type: 'spawn-error';
       ptyId: string;
       message?: undefined;
-      launchFailure: WindowsShellLaunchFailureReason;
-      shellNeverAttached?: undefined;
-    }
-  | {
-      type: 'spawn-error';
-      ptyId: string;
-      message?: undefined;
-      launchFailure?: undefined;
       shellNeverAttached: true;
       exitCode: number | undefined;
     };
-type PtyShellNoticeMessage =
-  | {
-      type: 'shell-notice';
-      ptyId: string;
-      notice: 'invalid-shell-override';
-      reason: TerminalShellNoticeReason;
-    }
-  | {
-      type: 'shell-notice';
-      ptyId: string;
-      notice: 'shell-resolved';
-      shellFamily: WindowsShellFamily;
-    }
-  | {
-      type: 'shell-notice';
-      ptyId: string;
-      notice: 'support-file-degraded';
-      reason: TerminalSupportFileNoticeReason;
-    };
-export type PtyHostOutgoingMessage =
-  | PtyDataMessage
-  | PtyExitMessage
-  | PtySpawnErrorMessage
-  | PtyShellNoticeMessage;
+export type PtyHostOutgoingMessage = PtyDataMessage | PtyExitMessage | PtySpawnErrorMessage;
 
 export interface PtyProcessLike {
   readonly pid: number;
@@ -172,7 +122,6 @@ export interface PtySpawnOptions {
   cwd: string;
   env: Record<string, string>;
   encoding: 'utf8';
-  useConptyDll?: boolean;
 }
 export type SpawnPty = (
   file: string,
@@ -379,14 +328,14 @@ type PtyStartupHostObservation =
   | { stage: 'lookup-start' }
   | {
       stage: 'lookup-complete';
-      lookup: 'probe' | 'cache' | 'override' | 'platform';
+      lookup: 'override' | 'platform';
       rung: ShellResolutionRung;
     }
   | { stage: 'spawn-start' | 'spawn-return'; backend: PtyStartupBackend }
   | {
       stage: 'spawn-failed';
       backend: PtyStartupBackend;
-      reason: 'spawn-error' | 'conpty-dll-unavailable';
+      reason: 'spawn-error';
     }
   | { stage: 'first-output'; currentSession: boolean }
   | { stage: 'first-forward' }
@@ -438,13 +387,7 @@ export interface SetupPtyHostDeps {
   platform?: NodeJS.Platform;
   userInfoShell?: () => string | null;
   shellExists?: (path: string) => boolean;
-  pathProbe?: (command: string, env: Record<string, string | undefined>) => string | null;
-  listDirectory?: (path: string) => readonly string[];
   cliBinDir?: string;
-  materializeSupportFile?: (
-    cwd: string,
-    file: NonNullable<TerminalLaunchCommand['supportFile']>,
-  ) => void;
   logger?: {
     warn: (o: Record<string, unknown>) => void;
     info?: (o: Record<string, unknown>) => void;
@@ -460,22 +403,6 @@ function asIncomingMessage(raw: unknown): PtyHostIncomingMessage | null {
   switch (m.type) {
     case 'create': {
       const launch = m.launchCommand;
-      const supportFile =
-        typeof launch === 'object' && launch !== null
-          ? (launch as Record<string, unknown>).supportFile
-          : undefined;
-      const supportFileValid =
-        supportFile === undefined ||
-        (typeof supportFile === 'object' &&
-          supportFile !== null &&
-          (supportFile as Record<string, unknown>).kind === 'claude-settings' &&
-          typeof (supportFile as Record<string, unknown>).relativePath === 'string' &&
-          /^\.ok\/local\/terminal\/claude-settings-(?:mcp|tools|mcp-tools)\.json$/u.test(
-            (supportFile as Record<string, unknown>).relativePath as string,
-          ) &&
-          typeof (supportFile as Record<string, unknown>).contents === 'string' &&
-          ((supportFile as Record<string, unknown>).contents as string).length <= 16_384 &&
-          (launch as Record<string, unknown>).executable === 'claude');
       const launchEnv =
         typeof launch === 'object' && launch !== null
           ? (launch as Record<string, unknown>).env
@@ -510,13 +437,11 @@ function asIncomingMessage(raw: unknown): PtyHostIncomingMessage | null {
             (arg) => typeof arg === 'string',
           ) &&
           launchEnvValid &&
-          launchPathPrependValid &&
-          supportFileValid);
+          launchPathPrependValid);
       return typeof m.cwd === 'string' &&
         typeof m.cols === 'number' &&
         typeof m.rows === 'number' &&
         (m.shell === undefined || typeof m.shell === 'string') &&
-        (m.shellInvalidReason === undefined || isTerminalShellNoticeReason(m.shellInvalidReason)) &&
         launchValid
         ? (raw as PtyHostIncomingMessage)
         : null;
@@ -544,11 +469,8 @@ export interface PtyHostHandle {
 export interface ResolveShellOptions {
   platform: NodeJS.Platform;
   override?: string;
-  overrideInvalidReason?: TerminalShellNoticeReason;
   userInfoShell?: () => string | null;
   shellExists?: (path: string) => boolean;
-  pathProbe?: (command: string, env: Record<string, string | undefined>) => string | null;
-  listDirectory?: (path: string) => readonly string[];
   logger?: {
     warn: (o: Record<string, unknown>) => void;
     info?: (o: Record<string, unknown>) => void;
@@ -557,11 +479,6 @@ export interface ResolveShellOptions {
 
 export type ShellResolutionRung =
   | 'override'
-  | 'pwsh-path'
-  | 'pwsh-known-install'
-  | 'windows-powershell'
-  | 'comspec'
-  | 'cmd'
   | 'env-shell'
   | 'platform-fallback'
   | 'passwd-shell'
@@ -571,54 +488,6 @@ export type ShellResolutionRung =
 export interface ShellResolution {
   shell: string;
   rung: ShellResolutionRung;
-  invalidOverride: boolean;
-  invalidOverrideReason?: TerminalShellNoticeReason;
-}
-
-const PATH_PROBE_TIMEOUT_MS = 5000;
-
-function defaultWindowsPathProbe(
-  command: string,
-  env: Record<string, string | undefined>,
-  logger?: ResolveShellOptions['logger'],
-): string | null {
-  const systemRoot = getWindowsEnvValue(env, 'SystemRoot') ?? 'C:\\Windows';
-  const whereExe = win32.join(systemRoot, 'System32', 'where.exe');
-  try {
-    const output = execFileSync(whereExe, windowsWherePathArgs(command), {
-      encoding: 'utf8',
-      env: { ...process.env, ...env },
-      windowsHide: true,
-      stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: PATH_PROBE_TIMEOUT_MS,
-    });
-    return (
-      output
-        .split(/\r?\n/u)
-        .map((line) => line.trim())
-        .find((line) => win32.isAbsolute(line) && line.toLowerCase().endsWith('.exe')) ?? null
-    );
-  } catch (error) {
-    const code = (error as { code?: string } | null)?.code ?? 'unknown';
-    if (code === 'ETIMEDOUT') {
-      logger?.warn({
-        event: 'pty-host-shell-path-probe-timed-out',
-        command,
-        timeoutMs: PATH_PROBE_TIMEOUT_MS,
-      });
-    } else {
-      logger?.warn({ event: 'pty-host-shell-path-probe-failed', command, code });
-    }
-    return null;
-  }
-}
-
-function defaultListDirectory(path: string): readonly string[] {
-  try {
-    return readdirSync(path);
-  } catch {
-    return [];
-  }
 }
 
 function isFalseStyleShell(shell: string): boolean {
@@ -639,112 +508,25 @@ export function resolveShellWithDetails(
   env: Record<string, string | undefined>,
   options: ResolveShellOptions,
 ): ShellResolution {
-  if (options.platform === 'win32') {
-    const shellExists = options.shellExists ?? existsSync;
-    const override = options.override?.trim();
-    let invalidOverride = options.overrideInvalidReason !== undefined;
-    let invalidOverrideReason = options.overrideInvalidReason;
-    if (override) {
-      if (win32.isAbsolute(override) && shellExists(override)) {
-        const unsupportedFamily = resolveWindowsShellFamily(override) === null;
-        return {
-          shell: override,
-          rung: 'override',
-          invalidOverride: unsupportedFamily,
-          invalidOverrideReason: unsupportedFamily ? 'unsupported-family' : undefined,
-        };
-      }
-      invalidOverride = true;
-      invalidOverrideReason = win32.isAbsolute(override) ? 'not-found' : 'not-absolute';
-    }
-
-    const pathShell = options.pathProbe
-      ? options.pathProbe('pwsh', env)
-      : defaultWindowsPathProbe('pwsh', env, options.logger);
-    if (pathShell && win32.isAbsolute(pathShell) && shellExists(pathShell)) {
-      return { shell: pathShell, rung: 'pwsh-path', invalidOverride, invalidOverrideReason };
-    }
-
-    const programFiles = getWindowsEnvValue(env, 'ProgramFiles');
-    if (programFiles) {
-      const knownPwsh = win32.join(programFiles, 'PowerShell', '7', 'pwsh.exe');
-      if (shellExists(knownPwsh)) {
-        return {
-          shell: knownPwsh,
-          rung: 'pwsh-known-install',
-          invalidOverride,
-          invalidOverrideReason,
-        };
-      }
-    }
-
-    const localAppData = getWindowsEnvValue(env, 'LOCALAPPDATA');
-    if (localAppData) {
-      const windowsApps = win32.join(localAppData, 'Microsoft', 'WindowsApps');
-      const entries = (options.listDirectory ?? defaultListDirectory)(windowsApps);
-      for (const entry of entries) {
-        if (!entry.toLowerCase().startsWith('microsoft.powershell_')) continue;
-        const alias = win32.join(windowsApps, entry, 'pwsh.exe');
-        if (shellExists(alias)) {
-          return {
-            shell: alias,
-            rung: 'pwsh-known-install',
-            invalidOverride,
-            invalidOverrideReason,
-          };
-        }
-      }
-    }
-
-    const systemRoot = getWindowsEnvValue(env, 'SystemRoot') ?? 'C:\\Windows';
-    const windowsPowerShell = win32.join(
-      systemRoot,
-      'System32',
-      'WindowsPowerShell',
-      'v1.0',
-      'powershell.exe',
-    );
-    if (shellExists(windowsPowerShell)) {
-      return {
-        shell: windowsPowerShell,
-        rung: 'windows-powershell',
-        invalidOverride,
-        invalidOverrideReason,
-      };
-    }
-
-    const comspec = getWindowsEnvValue(env, 'ComSpec');
-    if (comspec && win32.isAbsolute(comspec) && shellExists(comspec)) {
-      return { shell: comspec, rung: 'comspec', invalidOverride, invalidOverrideReason };
-    }
-
-    return {
-      shell: win32.join(systemRoot, 'System32', 'cmd.exe'),
-      rung: 'cmd',
-      invalidOverride,
-      invalidOverrideReason,
-    };
-  }
-
   if (options.override && options.override.length > 0) {
-    return { shell: options.override, rung: 'override', invalidOverride: false };
+    return { shell: options.override, rung: 'override' };
   }
 
   const configuredShell = env.SHELL;
   if (options.platform === 'darwin') {
     return typeof configuredShell === 'string' && configuredShell.length > 0
-      ? { shell: configuredShell, rung: 'env-shell', invalidOverride: false }
-      : { shell: DARWIN_FALLBACK_SHELL, rung: 'platform-fallback', invalidOverride: false };
+      ? { shell: configuredShell, rung: 'env-shell' }
+      : { shell: DARWIN_FALLBACK_SHELL, rung: 'platform-fallback' };
   }
   if (options.platform !== 'linux') {
     return typeof configuredShell === 'string' && configuredShell.length > 0
-      ? { shell: configuredShell, rung: 'env-shell', invalidOverride: false }
-      : { shell: '/bin/sh', rung: 'platform-fallback', invalidOverride: false };
+      ? { shell: configuredShell, rung: 'env-shell' }
+      : { shell: '/bin/sh', rung: 'platform-fallback' };
   }
 
   const shellExists = options.shellExists ?? existsSync;
   if (isUsableShell(configuredShell, shellExists)) {
-    return { shell: configuredShell, rung: 'env-shell', invalidOverride: false };
+    return { shell: configuredShell, rung: 'env-shell' };
   }
 
   let passwdShell: string | null = null;
@@ -759,11 +541,11 @@ export function resolveShellWithDetails(
     passwdShell = null;
   }
   if (isUsableShell(passwdShell, shellExists)) {
-    return { shell: passwdShell, rung: 'passwd-shell', invalidOverride: false };
+    return { shell: passwdShell, rung: 'passwd-shell' };
   }
   return shellExists('/bin/bash')
-    ? { shell: '/bin/bash', rung: 'bash', invalidOverride: false }
-    : { shell: '/bin/sh', rung: 'sh', invalidOverride: false };
+    ? { shell: '/bin/bash', rung: 'bash' }
+    : { shell: '/bin/sh', rung: 'sh' };
 }
 
 export function resolveShell(
@@ -778,12 +560,7 @@ export function buildShellArgs(
   shell: string,
   launchCommand: string | TerminalLaunchCommand | undefined,
   managedBinDirs: readonly string[],
-): string[] | string {
-  if (platform === 'win32') {
-    return typeof launchCommand === 'object'
-      ? composeWindowsShellLaunchArgs(shell, launchCommand)
-      : [];
-  }
+): string[] {
   const interactiveArgs = [...interactiveShellArgs(platform)];
   const command =
     typeof launchCommand === 'object'
@@ -840,21 +617,12 @@ function composeStructuredLaunch(shell: string, launch: TerminalLaunchCommand): 
 }
 
 export function buildLaunchEnv(
-  platform: NodeJS.Platform,
   shellEnv: Record<string, string>,
   launchCommand: string | TerminalLaunchCommand | undefined,
 ): Record<string, string> {
   if (typeof launchCommand !== 'object') return shellEnv;
   const env = { ...shellEnv };
   for (const { slot, value } of terminalLaunchEnvSlots(launchCommand.env)) env[slot] = value;
-  const pathPrepend = launchCommand.pathPrepend ?? [];
-  if (platform !== 'win32' || pathPrepend.length === 0) return env;
-  const key = windowsPathKey(env);
-  const existing = env[key];
-  env[key] = [
-    ...pathPrepend,
-    ...(existing === undefined || existing === '' ? [] : [existing]),
-  ].join(';');
   return env;
 }
 
@@ -878,23 +646,6 @@ export function buildShellEnv(
   return { env: out, managedBinDirs: okManagedBinDirs(childOptions) };
 }
 
-const CONPTY_DLL_LOAD_ERROR_PREFIXES = {
-  'Cannot find conpty.dll': 'not-found',
-  'Failed to get conpty.node module handle': 'module-handle',
-  'Failed to get conpty.node module file name': 'module-file-name',
-  'Failed to load conpty.dll': 'load-failed',
-} as const;
-
-function conptyDllLoadFailureReason(
-  error: unknown,
-): (typeof CONPTY_DLL_LOAD_ERROR_PREFIXES)[keyof typeof CONPTY_DLL_LOAD_ERROR_PREFIXES] | null {
-  const message = error instanceof Error ? error.message : String(error);
-  const prefix = Object.keys(CONPTY_DLL_LOAD_ERROR_PREFIXES).find((candidate) =>
-    message.startsWith(candidate),
-  ) as keyof typeof CONPTY_DLL_LOAD_ERROR_PREFIXES | undefined;
-  return prefix === undefined ? null : CONPTY_DLL_LOAD_ERROR_PREFIXES[prefix];
-}
-
 function classifyNodePtyEnding(
   ptyId: string,
   pidAtExit: number,
@@ -904,79 +655,6 @@ function classifyNodePtyEnding(
     return { type: 'spawn-error', ptyId, shellNeverAttached: true, exitCode };
   }
   return { type: 'exit', ptyId, exitCode, signal: signal ?? null };
-}
-
-const CSI = '\u001b[';
-const CURSOR_POSITION_QUERY = `${CSI}6n`;
-const CURSOR_POSITION_REPORT_PARAMETERS = /^\d+;\d+$/u;
-
-function isCursorPositionReport(input: string): boolean {
-  return (
-    input.startsWith(CSI) &&
-    input.endsWith('R') &&
-    CURSOR_POSITION_REPORT_PARAMETERS.test(input.slice(CSI.length, -1))
-  );
-}
-
-function trailingCursorPositionQueryPrefix(output: string): string {
-  for (let length = CURSOR_POSITION_QUERY.length - 1; length > 0; length -= 1) {
-    const prefix = CURSOR_POSITION_QUERY.slice(0, length);
-    if (output.endsWith(prefix)) return prefix;
-  }
-  return '';
-}
-
-interface ConptyCursorSyncGate {
-  observeResize(cols: number, rows: number): void;
-  observeOutput(data: string): void;
-  observeInput(data: string): 'admit' | 'withhold';
-}
-
-// UPSTREAM(node-pty@1.2.0-beta.15): its bundled ConPTY asks for the cursor position after a resize, asks again while the reply is late, and keeps one reply slot, so a surplus reply becomes an F3 key.
-function createConptyCursorSyncGate(
-  size: { cols: number; rows: number },
-  onReplyWithheld: () => void,
-): ConptyCursorSyncGate {
-  let { cols, rows } = size;
-  let syncPending = false;
-  let unansweredQueries = 0;
-  let replySlotArmed = false;
-  let withheldReplyReported = false;
-  let partialQuery = '';
-  return {
-    observeResize(nextCols, nextRows) {
-      if (nextCols === cols && nextRows === rows) return;
-      cols = nextCols;
-      rows = nextRows;
-      syncPending = true;
-    },
-    observeOutput(data) {
-      const scanned = partialQuery + data;
-      if (syncPending) {
-        const queries = scanned.split(CURSOR_POSITION_QUERY).length - 1;
-        if (queries > 0) {
-          unansweredQueries += queries;
-          replySlotArmed = true;
-        }
-      }
-      partialQuery = trailingCursorPositionQueryPrefix(scanned);
-    },
-    observeInput(data) {
-      if (unansweredQueries === 0 || !isCursorPositionReport(data)) return 'admit';
-      unansweredQueries -= 1;
-      if (replySlotArmed) {
-        replySlotArmed = false;
-        syncPending = false;
-        withheldReplyReported = false;
-        return 'admit';
-      }
-      if (!withheldReplyReported) {
-        withheldReplyReported = true;
-        onReplyWithheld();
-      }
-      return 'withhold';
-    },
-  };
 }
 
 function markStartupPhase(
@@ -1061,12 +739,9 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
     startupTraces?.get(pty)?.snapshot(reason);
   }
 
-  const cursorSyncGates = new WeakMap<PtyProcessLike, ConptyCursorSyncGate>();
   const shutdownMs = deps.shutdownMs ?? 1_500;
   const setHostTimer = deps.setTimer ?? setTimeout;
   const clearHostTimer = deps.clearTimer ?? clearTimeout;
-  const materializeSupportFile = deps.materializeSupportFile ?? materializeSupportFileSync;
-  const cachedWindowsPaths = new Map<string, string>();
   const killEscalateTokens = new Map<string, ReturnType<typeof setHostTimer>>();
 
   function clearKillEscalate(ptyId: string): void {
@@ -1079,19 +754,6 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
   function clearAllKillEscalates(): void {
     for (const token of killEscalateTokens.values()) clearHostTimer(token);
     killEscalateTokens.clear();
-  }
-
-  function probeWindowsShellPath(
-    command: string,
-    probeEnv: Record<string, string | undefined>,
-  ): string | null {
-    const cached = cachedWindowsPaths.get(command);
-    if (cached !== undefined) return cached;
-    const resolved = deps.pathProbe
-      ? deps.pathProbe(command, probeEnv)
-      : defaultWindowsPathProbe(command, probeEnv, deps.logger);
-    if (resolved !== null) cachedWindowsPaths.set(command, resolved);
-    return resolved;
   }
 
   function post(message: PtyHostOutgoingMessage): void {
@@ -1127,9 +789,7 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
       traceId === undefined ? undefined : performance.timeOrigin + performance.now();
     let attempt = 0;
     let sequence = 0;
-    let lookup: 'probe' | 'cache' | 'override' | 'platform' = message.shell
-      ? 'override'
-      : 'platform';
+    const lookup: 'override' | 'platform' = message.shell ? 'override' : 'platform';
     const emit =
       startedAt === undefined
         ? undefined
@@ -1157,18 +817,8 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
       resolution = resolveShellWithDetails(env, {
         platform,
         override: message.shell,
-        overrideInvalidReason: message.shellInvalidReason,
         userInfoShell: deps.userInfoShell,
         shellExists: deps.shellExists,
-        pathProbe:
-          platform === 'win32'
-            ? (command, probeEnv) => {
-                if (traceId !== undefined)
-                  lookup = cachedWindowsPaths.has(command) ? 'cache' : 'probe';
-                return probeWindowsShellPath(command, probeEnv);
-              }
-            : deps.pathProbe,
-        listDirectory: deps.listDirectory,
         logger: deps.logger,
       });
     } catch (error) {
@@ -1176,99 +826,33 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
       throw error;
     }
     observe?.({ stage: 'lookup-complete', lookup, rung: resolution.rung });
-    if (resolution.invalidOverride) {
-      const reason = resolution.invalidOverrideReason ?? 'invalid-value';
-      deps.logger?.warn({
-        event:
-          reason === 'unsupported-family'
-            ? 'pty-host-shell-override-capability-limited'
-            : 'pty-host-shell-override-invalid',
-        platform,
-        reason,
-      });
-      post({
-        type: 'shell-notice',
-        ptyId,
-        notice: 'invalid-shell-override',
-        reason,
-      });
-    }
     deps.logger?.info?.({
       event: 'pty-host-shell-resolved',
       platform,
       rung: resolution.rung,
-      shellCommandFamily: platform === 'win32' ? undefined : shellCommandFamily(resolution.shell),
+      shellCommandFamily: shellCommandFamily(resolution.shell),
     });
     const shell = resolution.shell;
-    if (platform === 'win32') {
-      const shellFamily = resolveWindowsShellFamily(shell);
-      if (shellFamily !== null) {
-        post({ type: 'shell-notice', ptyId, notice: 'shell-resolved', shellFamily });
-      }
-    }
     const { env: shellEnv, managedBinDirs } = buildShellEnv(env, {
       platform,
       cliBinDir: deps.cliBinDir,
       logger: deps.logger,
     });
-    let launchCommand = message.launchCommand;
-    if (
-      platform === 'win32' &&
-      typeof launchCommand === 'object' &&
-      resolution.invalidOverrideReason === 'unsupported-family'
-    ) {
-      deps.logger?.warn({
-        event: 'pty-host-launch-degraded-unsupported-shell',
-        platform,
-        rung: resolution.rung,
-      });
-      launchCommand = undefined;
-    }
-    if (
-      platform === 'win32' &&
-      typeof launchCommand === 'object' &&
-      launchCommand.supportFile !== undefined
-    ) {
-      try {
-        materializeSupportFile(message.cwd, launchCommand.supportFile);
-      } catch (error) {
-        deps.logger?.warn({
-          event: 'pty-host-support-file-materialize-failed',
-          kind: launchCommand.supportFile.kind,
-          code: (error as { code?: string } | null)?.code ?? 'unknown',
-        });
-        post({
-          type: 'shell-notice',
-          ptyId,
-          notice: 'support-file-degraded',
-          reason:
-            (error as { code?: string } | null)?.code === TERMINAL_SUPPORT_FILE_ESCAPE_CODE
-              ? 'containment-refused'
-              : 'write-failed',
-        });
-        launchCommand = launchWithoutSupportFile(launchCommand);
-      }
-    }
-    let shellArgs: string[] | string;
+    const launchCommand = message.launchCommand;
+    let shellArgs: string[];
     try {
       shellArgs = buildShellArgs(platform, shell, launchCommand, managedBinDirs);
     } catch (error) {
-      const launchFailure = error instanceof WindowsShellLaunchError ? error.reason : null;
       deps.logger?.warn({
         event: 'pty-host-launch-compose-failed',
         platform,
         rung: resolution.rung,
-        ...(launchFailure === null ? {} : { launchFailure }),
       });
-      post(
-        launchFailure === null
-          ? {
-              type: 'spawn-error',
-              ptyId,
-              message: error instanceof Error ? error.message : String(error),
-            }
-          : { type: 'spawn-error', ptyId, launchFailure },
-      );
+      post({
+        type: 'spawn-error',
+        ptyId,
+        message: error instanceof Error ? error.message : String(error),
+      });
       return;
     }
     const spawnOptions: PtySpawnOptions = {
@@ -1276,15 +860,14 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
       cols: message.cols,
       rows: message.rows,
       cwd: message.cwd,
-      env: buildLaunchEnv(platform, shellEnv, launchCommand),
+      env: buildLaunchEnv(shellEnv, launchCommand),
       encoding: 'utf8',
     };
     let observation: PtyStartupObservedProcess | undefined;
     const spawnAttempt = (options: PtySpawnOptions): PtyProcessLike => {
       if (observe === undefined) return deps.spawn(shell, shellArgs, options);
       attempt += 1;
-      const backend: PtyStartupBackend =
-        platform === 'win32' ? (options.useConptyDll ? 'bundled' : 'inbox') : 'posix';
+      const backend: PtyStartupBackend = 'posix';
       observe({ stage: 'spawn-start', backend });
       try {
         const next = () => deps.spawn(shell, shellArgs, options);
@@ -1301,49 +884,17 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
         observe({ stage: 'spawn-return', backend });
         return observation.pty;
       } catch (error) {
-        observe({
-          stage: 'spawn-failed',
-          backend,
-          reason:
-            conptyDllLoadFailureReason(error) === null ? 'spawn-error' : 'conpty-dll-unavailable',
-        });
+        observe({ stage: 'spawn-failed', backend, reason: 'spawn-error' });
         throw error;
       }
     };
     let pty: PtyProcessLike;
     try {
-      pty = spawnAttempt({
-        ...spawnOptions,
-        ...(platform === 'win32' ? { useConptyDll: true } : {}),
-      });
+      pty = spawnAttempt(spawnOptions);
     } catch (err) {
-      const conptyFailureReason = platform === 'win32' ? conptyDllLoadFailureReason(err) : null;
-      if (conptyFailureReason !== null) {
-        deps.logger?.warn({
-          event: 'pty-host-conpty-dll-fallback',
-          reason: conptyFailureReason,
-        });
-        try {
-          pty = spawnAttempt({ ...spawnOptions, useConptyDll: false });
-        } catch (fallbackErr) {
-          const fallbackMessage =
-            fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
-          post({ type: 'spawn-error', ptyId, message: fallbackMessage });
-          return;
-        }
-      } else {
-        const spawnMessage = err instanceof Error ? err.message : String(err);
-        post({ type: 'spawn-error', ptyId, message: spawnMessage });
-        return;
-      }
-    }
-    if (platform === 'win32') {
-      cursorSyncGates.set(
-        pty,
-        createConptyCursorSyncGate({ cols: message.cols, rows: message.rows }, () =>
-          deps.logger?.warn({ event: 'pty-host-cursor-report-dropped', ptyId }),
-        ),
-      );
+      const spawnMessage = err instanceof Error ? err.message : String(err);
+      post({ type: 'spawn-error', ptyId, message: spawnMessage });
+      return;
     }
     if (observe !== undefined) {
       let receivedBytes = 0;
@@ -1390,7 +941,6 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
     pty.onData((data) => {
       startupTraces?.get(pty)?.receive(data, sessions.get(ptyId) === pty);
       if (sessions.get(ptyId) !== pty) return;
-      cursorSyncGates.get(pty)?.observeOutput(data);
       post({ type: 'data', ptyId, data });
       startupTraces?.get(pty)?.forward(data);
     });
@@ -1410,14 +960,12 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
   function handleInput(message: PtyInputMessage): void {
     const pty = sessions.get(message.ptyId);
     if (!pty) return;
-    if (cursorSyncGates.get(pty)?.observeInput(message.data) === 'withhold') return;
     pty.write(message.data);
   }
 
   function handleResize(message: PtyResizeMessage): void {
     const pty = sessions.get(message.ptyId);
     if (!pty) return;
-    cursorSyncGates.get(pty)?.observeResize(message.cols, message.rows);
     pty.resize(message.cols, message.rows);
   }
 

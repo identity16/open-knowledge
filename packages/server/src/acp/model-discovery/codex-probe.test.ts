@@ -79,16 +79,8 @@ describe('resolving the binary the launch path would use', () => {
     expect(probe.outcome).toBe('failed');
   });
 
-  test('a windows .cmd shim runs through the shell wrap, not execed directly', () => {
-    const composed = codexProbeCommand('codex.cmd', { PATH: '' }, 'win32');
-    expect(composed.wrap).toBe(true);
-    expect(composed.cmd.toLowerCase()).toContain('cmd');
-    expect(composed.args.join(' ')).toContain('debug');
-  });
-
   test('elsewhere the binary is invoked directly with the catalog subcommand', () => {
     const composed = codexProbeCommand('codex', { PATH: '/usr/bin' }, 'darwin');
-    expect(composed.wrap).toBe(false);
     expect(composed.cmd).toBe('codex');
     expect(composed.args).toEqual(['debug', 'models']);
   });

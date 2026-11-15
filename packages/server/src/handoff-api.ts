@@ -1,7 +1,6 @@
 import { execFile } from 'node:child_process';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { InstalledAgentsSuccessSchema } from '@inkeep/open-knowledge-core';
-import { withHiddenWindowsConsole } from './child-process-windows-hide.ts';
 import { errorResponse } from './http/error-response.ts';
 import { successResponse } from './http/success-response.ts';
 import { getLogger } from './logger.ts';
@@ -21,7 +20,7 @@ const MACOS_APP_NAMES: Record<InstalledAgentScheme, ReadonlyArray<string>> = {
 export type ExecFileLike = (
   file: string,
   args: readonly string[],
-  opts: { timeout?: number; encoding?: BufferEncoding; windowsHide?: boolean },
+  opts: { timeout?: number; encoding?: BufferEncoding },
   cb: (err: (Error & { code?: number | string }) | null, stdout: string, stderr: string) => void,
 ) => void;
 
@@ -145,7 +144,7 @@ export function createOsProbe(
 ): (scheme: InstalledAgentScheme) => Promise<boolean> {
   return (scheme) => {
     if (platform === 'darwin') return probeMacOs(scheme, exec);
-    if (platform === 'win32') return probeWindows(scheme, exec);
+
     return probeLinux(scheme, exec);
   };
 }
@@ -157,10 +156,10 @@ function probeMacOs(scheme: InstalledAgentScheme, exec: ExecFileLike): Promise<b
       exec(
         'osascript',
         ['-e', `id of app "${appName}"`],
-        withHiddenWindowsConsole({
+        {
           timeout: INSTALLED_AGENTS_PROBE_TIMEOUT_MS,
           encoding: 'utf-8',
-        }),
+        },
         (err, stdout) => {
           if (err) {
             resolve(false);
@@ -179,31 +178,15 @@ function probeMacOs(scheme: InstalledAgentScheme, exec: ExecFileLike): Promise<b
   })();
 }
 
-function probeWindows(scheme: InstalledAgentScheme, exec: ExecFileLike): Promise<boolean> {
-  return new Promise((resolve) => {
-    exec(
-      'reg',
-      ['query', `HKCR\\${scheme}`, '/ve'],
-      withHiddenWindowsConsole({
-        timeout: INSTALLED_AGENTS_PROBE_TIMEOUT_MS,
-        encoding: 'utf-8',
-      }),
-      (err) => {
-        resolve(!err);
-      },
-    );
-  });
-}
-
 function probeLinux(scheme: InstalledAgentScheme, exec: ExecFileLike): Promise<boolean> {
   return new Promise((resolve) => {
     exec(
       'xdg-mime',
       ['query', 'default', `x-scheme-handler/${scheme}`],
-      withHiddenWindowsConsole({
+      {
         timeout: INSTALLED_AGENTS_PROBE_TIMEOUT_MS,
         encoding: 'utf-8',
-      }),
+      },
       (err, stdout) => {
         if (err) {
           resolve(false);

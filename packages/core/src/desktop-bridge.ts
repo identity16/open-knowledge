@@ -17,12 +17,7 @@ import type {
   WorktreeCreateResult,
   WorktreeListResult,
 } from './git/worktree-selector-model.ts';
-import type {
-  TerminalCli,
-  TerminalLaunchCommand,
-  WindowsShellFamily,
-  WindowsShellLaunchFailureReason,
-} from './handoff/terminal-launch.ts';
+import type { TerminalCli, TerminalLaunchCommand } from './handoff/terminal-launch.ts';
 import type { HandoffFailureReason, HandoffScope } from './handoff/types.ts';
 import type { LanguagePreference } from './i18n/locales.ts';
 import type {
@@ -1049,8 +1044,6 @@ export type OkPtyAdoptResult =
   | {
       readonly ok: true;
       readonly replay: string;
-      readonly shellFamily?: WindowsShellFamily;
-      readonly shellNoticeReason?: Extract<TerminalShellNoticeReason, 'unsupported-family'>;
     }
   | {
       readonly ok: false;
@@ -1068,7 +1061,6 @@ export type OkPtyExit =
       readonly neverStarted: true;
       readonly error?: string;
       readonly hostExited?: true;
-      readonly launchFailure?: WindowsShellLaunchFailureReason;
     }
   | {
       readonly ptyId: string;
@@ -1077,64 +1069,6 @@ export type OkPtyExit =
       readonly signal: number | null;
       readonly error?: string;
       readonly hostExited?: true;
-    };
-
-const TERMINAL_SHELL_NOTICE_REASON_VOCABULARY = [
-  'config-unreadable',
-  'invalid-value',
-  'not-absolute',
-  'not-found',
-  'unsupported-family',
-] as const;
-
-export type TerminalShellNoticeReason = (typeof TERMINAL_SHELL_NOTICE_REASON_VOCABULARY)[number];
-
-export const TERMINAL_SHELL_NOTICE_REASONS: ReadonlySet<TerminalShellNoticeReason> = new Set(
-  TERMINAL_SHELL_NOTICE_REASON_VOCABULARY,
-);
-
-export function isTerminalShellNoticeReason(value: unknown): value is TerminalShellNoticeReason {
-  return (
-    typeof value === 'string' &&
-    TERMINAL_SHELL_NOTICE_REASONS.has(value as TerminalShellNoticeReason)
-  );
-}
-
-const TERMINAL_SUPPORT_FILE_NOTICE_REASON_VOCABULARY = [
-  'containment-refused',
-  'write-failed',
-] as const;
-
-export type TerminalSupportFileNoticeReason =
-  (typeof TERMINAL_SUPPORT_FILE_NOTICE_REASON_VOCABULARY)[number];
-
-export const TERMINAL_SUPPORT_FILE_NOTICE_REASONS: ReadonlySet<TerminalSupportFileNoticeReason> =
-  new Set(TERMINAL_SUPPORT_FILE_NOTICE_REASON_VOCABULARY);
-
-export function isTerminalSupportFileNoticeReason(
-  value: unknown,
-): value is TerminalSupportFileNoticeReason {
-  return (
-    typeof value === 'string' &&
-    TERMINAL_SUPPORT_FILE_NOTICE_REASONS.has(value as TerminalSupportFileNoticeReason)
-  );
-}
-
-export type OkPtyNotice =
-  | {
-      readonly ptyId: string;
-      readonly notice: 'invalid-shell-override';
-      readonly reason: TerminalShellNoticeReason;
-    }
-  | {
-      readonly ptyId: string;
-      readonly notice: 'shell-resolved';
-      readonly shellFamily: WindowsShellFamily;
-    }
-  | {
-      readonly ptyId: string;
-      readonly notice: 'support-file-degraded';
-      readonly reason: TerminalSupportFileNoticeReason;
     };
 
 export interface ClaudeReadiness {
@@ -1508,7 +1442,6 @@ export interface OkDesktopBridge {
     setDockState(state: OkTerminalDockStateUpdate): Promise<OkTerminalDockStateWriteResult>;
     onData(cb: (msg: OkPtyData) => void): OkUnsubscribe;
     onExit(cb: (msg: OkPtyExit) => void): OkUnsubscribe;
-    onNotice(cb: (msg: OkPtyNotice) => void): OkUnsubscribe;
     claudePreflight(): Promise<ClaudeReadiness>;
     cliPreflight(cli: TerminalCli): Promise<CliReadiness>;
     cliInstalledMap(): Promise<Partial<Record<TerminalCli, boolean>>>;

@@ -21,16 +21,16 @@ import {
 } from './git-preflight.ts';
 
 describe('parseGitVersion', () => {
+  test('parses a vendor-suffixed Git version', () => {
+    expect(parseGitVersion('git version 2.45.0.windows.1\n')).toBe('2.45.0');
+  });
+
   test('parses canonical Linux/macOS output', () => {
     expect(parseGitVersion('git version 2.39.3\n')).toBe('2.39.3');
   });
 
   test('parses Apple Git vendor suffix', () => {
     expect(parseGitVersion('git version 2.39.3 (Apple Git-145)\n')).toBe('2.39.3');
-  });
-
-  test('parses Git for Windows vendor suffix', () => {
-    expect(parseGitVersion('git version 2.45.0.windows.1\n')).toBe('2.45.0');
   });
 
   test('parses MinGit nested suffix', () => {
@@ -161,13 +161,6 @@ describe('fallbackPaths', () => {
     expect(paths).toContain('/usr/bin/git');
   });
 
-  test('Windows includes Program Files first', () => {
-    const paths = fallbackPaths('win32');
-    expect(paths[0]).toBe('C:\\Program Files\\Git\\cmd\\git.exe');
-    expect(paths).toContain('C:\\Program Files (x86)\\Git\\cmd\\git.exe');
-    expect(paths.some((p) => p.includes('scoop'))).toBe(true);
-  });
-
   test('Linux includes /usr/bin first and snap', () => {
     const paths = fallbackPaths('linux');
     expect(paths[0]).toBe('/usr/bin/git');
@@ -175,9 +168,9 @@ describe('fallbackPaths', () => {
     expect(paths).toContain('/snap/bin/git');
   });
 
-  test('unknown platforms fall through to Linux paths', () => {
+  test('unsupported platforms have no native fallback paths', () => {
     const paths = fallbackPaths('freebsd' as NodeJS.Platform);
-    expect(paths).toContain('/usr/bin/git');
+    expect(paths).toEqual([]);
   });
 });
 
@@ -190,16 +183,6 @@ describe('buildGuidance', () => {
     expect(
       guidance.options.find((o) => o.command === 'xcode-select --install')?.requiresAdmin,
     ).toBe(true);
-  });
-
-  test('Windows guidance always ends with manual download fallback', () => {
-    const guidance = buildGuidance('win32');
-    expect(guidance.product).toBe('Git for Windows');
-    expect(guidance.url).toBe('https://gitforwindows.org/');
-    expect(guidance.options.length).toBeGreaterThan(0);
-    expect(guidance.options[guidance.options.length - 1]?.label).toBe(
-      'Download the official installer',
-    );
   });
 
   test('Linux guidance carries at least one option', () => {
@@ -249,12 +232,6 @@ describe('GitNotAvailableError', () => {
     }
   });
 
-  test('Windows variant says "Git for Windows"', () => {
-    const guidance = buildGuidance('win32');
-    const err = new GitNotAvailableError('win32', guidance);
-    expect(err.message).toContain('Git for Windows');
-  });
-
   test('forwards cause to Error options bag', () => {
     const cause = new Error('underlying');
     const err = new GitNotAvailableError('darwin', buildGuidance('darwin'), { cause });
@@ -270,14 +247,14 @@ describe('GitNotAvailableError', () => {
 
 describe('GitProbeTimeoutError', () => {
   test('carries a distinct code and avoids missing-Git guidance', () => {
-    const err = new GitProbeTimeoutError('win32', buildGuidance('win32'), {
+    const err = new GitProbeTimeoutError('darwin', buildGuidance('darwin'), {
       path: 'timeout',
       fallback: 'timeout',
     });
     expect(err.code).toBe('GIT_PROBE_TIMEOUT');
     expect(err.name).toBe('GitProbeTimeoutError');
     expect(err.probe).toEqual({ path: 'timeout', fallback: 'timeout' });
-    expect(err.message).toContain('could not verify Git for Windows');
+    expect(err.message).toContain('could not verify Git because');
     expect(err.message).not.toContain("isn't installed");
   });
 });
@@ -317,18 +294,8 @@ describe('GitTooOldError', () => {
 });
 
 describe('resolveOnPath', () => {
-  test('resolves a tool that is on PATH (cmd on Windows, sh elsewhere)', () => {
-    const target =
-      process.platform === 'win32'
-        ? 'cmd'
-        : process.platform === 'darwin' || process.platform === 'linux'
-          ? 'sh'
-          : 'sh';
-    const result = resolveOnPath(target);
-    expect(result).not.toBeNull();
-    if (result) {
-      expect(result.length).toBeGreaterThan(0);
-    }
+  test('resolves an executable available on the POSIX PATH', () => {
+    expect(resolveOnPath('sh')).not.toBeNull();
   });
 
   test('returns null for a name that does not exist', () => {
@@ -350,7 +317,7 @@ describe('resolveOnPath', () => {
     const project = mkdtempSync(join(tmpdir(), 'resolve-project-'));
     const bin = mkdtempSync(join(tmpdir(), 'resolve-bin-'));
     const name = 'ok-resolve-probe-tool';
-    const file = process.platform === 'win32' ? `${name}.cmd` : name;
+    const file = name;
     for (const dir of [project, bin]) {
       writeFileSync(join(dir, file), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     }
@@ -366,27 +333,7 @@ describe('resolveOnPath', () => {
     }
   });
 
-  test.runIf(process.platform === 'win32')(
-    'falls back to the standard extensions when PATHEXT is empty or lists none',
-    () => {
-      const bin = mkdtempSync(join(tmpdir(), 'resolve-pathext-'));
-      const previous = process.env.PATHEXT;
-      try {
-        for (const [index, pathext] of ['', ';;', 'COM EXE'].entries()) {
-          const name = `ok-resolve-pathext-${index}`;
-          writeFileSync(join(bin, `${name}.cmd`), '@exit /b 0\r\n');
-          process.env.PATHEXT = pathext;
-          expect(resolveOnPath(name, bin), JSON.stringify(pathext)).toBe(join(bin, `${name}.cmd`));
-        }
-      } finally {
-        if (previous === undefined) delete process.env.PATHEXT;
-        else process.env.PATHEXT = previous;
-        rmSync(bin, { recursive: true, force: true });
-      }
-    },
-  );
-
-  test.skipIf(process.platform === 'win32')('skips a file that is not executable', () => {
+  test('skips a file that is not executable', () => {
     const bin = mkdtempSync(join(tmpdir(), 'resolve-noexec-'));
     try {
       writeFileSync(join(bin, 'ok-resolve-noexec'), 'x', { mode: 0o644 });
@@ -414,11 +361,7 @@ describe('detectGit (integration)', () => {
     expect(['PATH', 'fallback']).toContain(detected.source);
   });
 
-  test('Stage 2 fallback fires when PATH has no git and a fallback candidate exists', (ctx) => {
-    ctx.skip(
-      process.platform === 'win32',
-      'the PATH override and the fallback candidates are POSIX',
-    );
+  test('Stage 2 fallback fires when PATH has no git and a fallback candidate exists', (_ctx) => {
     const originalPath = process.env.PATH;
     process.env.PATH = '/nonexistent-stage2-fallback-test-xyz';
     try {

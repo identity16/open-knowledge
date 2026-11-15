@@ -10,7 +10,6 @@ import type {
   OkPtyCreateResult,
   OkPtyData,
   OkPtyExit,
-  OkPtyNotice,
 } from '@/lib/desktop-bridge-types';
 import {
   __resetPaneVisibilityStoreForTests,
@@ -250,7 +249,6 @@ function makeBridge(
 ) {
   const dataSubs: Array<(m: OkPtyData) => void> = [];
   const exitSubs: Array<(m: OkPtyExit) => void> = [];
-  const noticeSubs: Array<(m: OkPtyNotice) => void> = [];
   const unsubData = vi.fn(() => {});
   const unsubExit = vi.fn(() => {});
   const unsubNotice = vi.fn(() => {});
@@ -286,10 +284,6 @@ function makeBridge(
       exitSubs.push(cb);
       return unsubExit;
     }),
-    onNotice: vi.fn((cb: (m: OkPtyNotice) => void) => {
-      noticeSubs.push(cb);
-      return unsubNotice;
-    }),
     claudePreflight: vi.fn(async () => preflight),
     cliPreflight: vi.fn(async () => ({ onPath: 'present' as const })),
   };
@@ -316,9 +310,6 @@ function makeBridge(
     },
     pushExit: (m: OkPtyExit) => {
       for (const f of exitSubs) f(m);
-    },
-    pushNotice: (m: OkPtyNotice) => {
-      for (const f of noticeSubs) f(m);
     },
   };
 }
@@ -575,11 +566,11 @@ describe('TerminalPanel', () => {
 
   test('reload rehydration: gates direct input surfaces until replay completes', async () => {
     deferTerminalWrites = true;
-    const { bridge, terminal, pushNotice } = makeBridge(
+    const { bridge, terminal } = makeBridge(
       { ok: true, ptyId: 'pty-fresh' },
       WIRED,
       async () => ({ ok: true, replay: 'REPLAYED-SCREEN-BYTES' }),
-      'win32',
+      'linux',
     );
     render(<TerminalPanel bridge={bridge} adoptPtyId="pty-survivor" />);
 
@@ -588,13 +579,6 @@ describe('TerminalPanel', () => {
     if (term?.keyHandler == null || term.wheelHandler == null) {
       throw new Error('terminal input handlers not attached');
     }
-    act(() =>
-      pushNotice({
-        ptyId: 'pty-survivor',
-        notice: 'shell-resolved',
-        shellFamily: 'powershell',
-      }),
-    );
 
     const shiftEnter = {
       type: 'keydown',
@@ -617,7 +601,7 @@ describe('TerminalPanel', () => {
       type: 'keydown',
       key: 'v',
       ctrlKey: true,
-      shiftKey: false,
+      shiftKey: true,
       altKey: false,
       metaKey: false,
       preventDefault: vi.fn(() => {}),
@@ -665,25 +649,6 @@ describe('TerminalPanel', () => {
     expect(document.querySelector('[data-terminal-status="exited"]')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Restart terminal' })).toBeTruthy();
     expect(lastTerm?.focus).not.toHaveBeenCalled();
-  });
-
-  test('reload rehydration: restores a standing unsupported-shell capability notice', async () => {
-    const { bridge, terminal } = makeBridge(
-      { ok: true, ptyId: 'pty-fresh' },
-      WIRED,
-      async () => ({
-        ok: true,
-        replay: '',
-        shellNoticeReason: 'unsupported-family',
-      }),
-      'win32',
-    );
-    render(<TerminalPanel bridge={bridge} adoptPtyId="pty-survivor" />);
-
-    await waitFor(() => expect(terminal.adopt).toHaveBeenCalledWith('pty-survivor'));
-    expect(screen.getByTestId('terminal-shell-notice-banner').textContent).toMatch(
-      /\.ok\/local\/config\.yml.*PowerShell.*cmd\.exe.*Git Bash.*plain terminal only.*agent and command launches do not run/i,
-    );
   });
 
   test('reload rehydration: a refused adopt (session died in the gap) falls through to a fresh create', async () => {
@@ -847,153 +812,6 @@ describe('TerminalPanel', () => {
     );
   });
 
-  test('a PowerShell terminal doubles quotes in dropped Windows paths', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    (bridge as unknown as { getPathForFile: (file: File) => string }).getPathForFile = (file) =>
-      `C:\\Users\\O'Brien\\${file.name}`;
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(lastTerm?.onDataCb).toBeTruthy());
-    act(() =>
-      pushNotice({
-        ptyId: 'pty-1',
-        notice: 'shell-resolved',
-        shellFamily: 'powershell',
-      }),
-    );
-
-    const container = document.querySelector('[data-terminal-status]');
-    if (container === null) throw new Error('terminal container not found');
-    const file = new File(['x'], 'shot.png', { type: 'image/png' });
-    const dataTransfer = { types: ['Files'], files: [file] };
-    fireEvent.drop(container, { dataTransfer });
-
-    expect(terminal.input).toHaveBeenCalledWith('pty-1', "'C:\\Users\\O''Brien\\shot.png' ");
-  });
-
-  test('a PowerShell terminal doubles every curly single quote in dropped Windows paths', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    (bridge as unknown as { getPathForFile: (file: File) => string }).getPathForFile = (file) =>
-      `C:\\Users\\me\\${file.name}`;
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(lastTerm?.onDataCb).toBeTruthy());
-    act(() =>
-      pushNotice({
-        ptyId: 'pty-1',
-        notice: 'shell-resolved',
-        shellFamily: 'powershell',
-      }),
-    );
-
-    const container = document.querySelector('[data-terminal-status]');
-    if (container === null) throw new Error('terminal container not found');
-    const files = [
-      new File(['a'], '\u2018draft.md', { type: 'text/markdown' }),
-      new File(['b'], 'Nick\u2019s notes.md', { type: 'text/markdown' }),
-      new File(['c'], 'a\u201Ab.md', { type: 'text/markdown' }),
-      new File(['d'], 'a\u201Bb.md', { type: 'text/markdown' }),
-    ];
-    fireEvent.drop(container, { dataTransfer: { types: ['Files'], files } });
-
-    expect(terminal.input).toHaveBeenCalledWith(
-      'pty-1',
-      "'C:\\Users\\me\\\u2018\u2018draft.md' 'C:\\Users\\me\\Nick\u2019\u2019s notes.md' 'C:\\Users\\me\\a\u201A\u201Ab.md' 'C:\\Users\\me\\a\u201B\u201Bb.md' ",
-    );
-    expect(screen.queryByTestId('terminal-path-drop-notice-banner')).toBeNull();
-  });
-
-  test('a Git Bash terminal POSIX-quotes dropped Windows paths', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    (bridge as unknown as { getPathForFile: (file: File) => string }).getPathForFile = (file) =>
-      `C:\\Users\\O'Brien\\${file.name}`;
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(lastTerm?.onDataCb).toBeTruthy());
-    act(() => pushNotice({ ptyId: 'pty-1', notice: 'shell-resolved', shellFamily: 'bash' }));
-
-    const container = document.querySelector('[data-terminal-status]');
-    if (container === null) throw new Error('terminal container not found');
-    const file = new File(['x'], 'shot.png', { type: 'image/png' });
-    fireEvent.drop(container, { dataTransfer: { types: ['Files'], files: [file] } });
-
-    expect(terminal.input).toHaveBeenCalledWith('pty-1', "'C:\\Users\\O'\\''Brien\\shot.png' ");
-  });
-
-  test('a shell family learned before the start reply survives the start reply', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    let releaseStart = (): void => {};
-    terminal.adopt.mockImplementationOnce(
-      async () =>
-        await new Promise<OkPtyAdoptResult>((resolve) => {
-          releaseStart = () => resolve({ ok: true, replay: '' });
-        }),
-    );
-    (bridge as unknown as { getPathForFile: (file: File) => string }).getPathForFile = () =>
-      'C:\\Users\\A B\\safe.png';
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(terminal.start).toHaveBeenCalledWith('pty-1'));
-    act(() => pushNotice({ ptyId: 'pty-1', notice: 'shell-resolved', shellFamily: 'cmd' }));
-    await act(async () => {
-      releaseStart();
-      await Promise.resolve();
-    });
-    await waitFor(() =>
-      expect(document.querySelector('[data-terminal-status="running"]')).toBeTruthy(),
-    );
-
-    const container = document.querySelector('[data-terminal-status]');
-    if (container === null) throw new Error('terminal container not found');
-    const file = new File(['x'], 'safe.png', { type: 'image/png' });
-    fireEvent.drop(container, { dataTransfer: { types: ['Files'], files: [file] } });
-
-    expect(terminal.input).toHaveBeenCalledWith('pty-1', '"C:\\Users\\A B\\safe.png" ');
-    expect(screen.queryByTestId('terminal-path-drop-notice-banner')).toBeNull();
-  });
-
-  test('a cmd terminal quotes safe paths and refuses variable-expanding paths', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    (bridge as unknown as { getPathForFile: (file: File) => string }).getPathForFile = (file) =>
-      file.name === 'unsafe.png' ? 'C:\\Users\\%USERNAME%\\unsafe.png' : 'C:\\Users\\A B\\safe.png';
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(lastTerm?.onDataCb).toBeTruthy());
-    act(() => pushNotice({ ptyId: 'pty-1', notice: 'shell-resolved', shellFamily: 'cmd' }));
-
-    const container = document.querySelector('[data-terminal-status]');
-    if (container === null) throw new Error('terminal container not found');
-    const safe = new File(['x'], 'safe.png', { type: 'image/png' });
-    const unsafe = new File(['y'], 'unsafe.png', { type: 'image/png' });
-    const dataTransfer = { types: ['Files'], files: [safe, unsafe] };
-    fireEvent.drop(container, { dataTransfer });
-
-    expect(terminal.input).toHaveBeenCalledWith('pty-1', '"C:\\Users\\A B\\safe.png" ');
-    expect(screen.getByTestId('terminal-path-drop-notice-banner').textContent).toMatch(
-      /could not be inserted safely/i,
-    );
-  });
-
   test('a drop where every file resolves to no disk path writes nothing (clipboard blobs)', async () => {
     const { bridge, terminal } = makeBridge({ ok: true, ptyId: 'pty-1' });
     (bridge as unknown as { getPathForFile: (f: File) => string }).getPathForFile = () => '';
@@ -1083,7 +901,6 @@ describe('TerminalPanel', () => {
     const DROP_TERMINALS: ReadonlyArray<{
       readonly label: string;
       readonly platform: OkDesktopBridge['platform'];
-      readonly shellFamily: 'powershell' | 'cmd' | 'bash' | null;
       readonly root: string;
       readonly quote: string;
       readonly otherRefusedCharacters: string;
@@ -1091,7 +908,6 @@ describe('TerminalPanel', () => {
       {
         label: 'macOS',
         platform: 'darwin',
-        shellFamily: null,
         root: '/dropped/',
         quote: "'",
         otherRefusedCharacters: '',
@@ -1099,32 +915,7 @@ describe('TerminalPanel', () => {
       {
         label: 'Linux',
         platform: 'linux',
-        shellFamily: null,
         root: '/dropped/',
-        quote: "'",
-        otherRefusedCharacters: '',
-      },
-      {
-        label: 'Windows PowerShell',
-        platform: 'win32',
-        shellFamily: 'powershell',
-        root: 'C:\\Users\\me\\',
-        quote: "'",
-        otherRefusedCharacters: '',
-      },
-      {
-        label: 'Windows cmd',
-        platform: 'win32',
-        shellFamily: 'cmd',
-        root: 'C:\\Users\\me\\',
-        quote: '"',
-        otherRefusedCharacters: '!"%',
-      },
-      {
-        label: 'Windows Git Bash',
-        platform: 'win32',
-        shellFamily: 'bash',
-        root: 'C:\\Users\\me\\',
         quote: "'",
         otherRefusedCharacters: '',
       },
@@ -1139,7 +930,7 @@ describe('TerminalPanel', () => {
     async function renderDropTarget(
       target: DropTerminal,
     ): Promise<(names: readonly string[]) => string[]> {
-      const { bridge, terminal, pushNotice } = makeBridge(
+      const { bridge, terminal } = makeBridge(
         { ok: true, ptyId: 'pty-1' },
         WIRED,
         undefined,
@@ -1151,10 +942,6 @@ describe('TerminalPanel', () => {
       await waitFor(() =>
         expect(document.querySelector('[data-terminal-status="running"]')).not.toBeNull(),
       );
-      const { shellFamily } = target;
-      if (shellFamily !== null) {
-        act(() => pushNotice({ ptyId: 'pty-1', notice: 'shell-resolved', shellFamily }));
-      }
       const container = document.querySelector('[data-terminal-status]');
       if (container === null) throw new Error('terminal container not found');
       return (names) => {
@@ -1623,103 +1410,6 @@ describe('TerminalPanel', () => {
     expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
   });
 
-  test('Windows Ctrl+C copies with a selection and interrupts without one', async () => {
-    const { bridge, terminal } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(lastTerm?.keyHandler).toBeTruthy());
-    const handler = lastTerm?.keyHandler;
-
-    if (lastTerm) lastTerm.selection = 'selected output';
-    const copyPreventDefault = vi.fn(() => {});
-    expect(
-      handler?.({
-        type: 'keydown',
-        key: 'c',
-        ctrlKey: true,
-        shiftKey: false,
-        altKey: false,
-        metaKey: false,
-        preventDefault: copyPreventDefault,
-      } as unknown as KeyboardEvent),
-    ).toBe(false);
-    expect(copyPreventDefault).toHaveBeenCalledTimes(1);
-    await waitFor(() =>
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('selected output'),
-    );
-
-    vi.mocked(navigator.clipboard.writeText).mockClear();
-    expect(lastTerm?.clearSelection).toHaveBeenCalledTimes(1);
-    const interruptPreventDefault = vi.fn(() => {});
-    expect(
-      handler?.({
-        type: 'keydown',
-        key: 'c',
-        ctrlKey: true,
-        shiftKey: false,
-        altKey: false,
-        metaKey: false,
-        preventDefault: interruptPreventDefault,
-      } as unknown as KeyboardEvent),
-    ).toBe(true);
-    expect(interruptPreventDefault).toHaveBeenCalledTimes(1);
-    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
-    act(() => lastTerm?.onDataCb?.('\x03'));
-    expect(terminal.input).toHaveBeenLastCalledWith('pty-1', '\x03');
-  });
-
-  test('Windows Ctrl+Shift+C copies and both Ctrl+V chords paste', async () => {
-    const { bridge, terminal } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(lastTerm?.keyHandler).toBeTruthy());
-    const handler = lastTerm?.keyHandler;
-    if (lastTerm) lastTerm.selection = 'shift-selected';
-
-    expect(
-      handler?.({
-        type: 'keydown',
-        key: 'C',
-        ctrlKey: true,
-        shiftKey: true,
-        altKey: false,
-        metaKey: false,
-        preventDefault: vi.fn(() => {}),
-      } as unknown as KeyboardEvent),
-    ).toBe(false);
-    await waitFor(() =>
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('shift-selected'),
-    );
-
-    for (const shiftKey of [false, true]) {
-      const preventDefault = vi.fn(() => {});
-      expect(
-        handler?.({
-          type: 'keydown',
-          key: 'V',
-          ctrlKey: true,
-          shiftKey,
-          altKey: false,
-          metaKey: false,
-          preventDefault,
-        } as unknown as KeyboardEvent),
-      ).toBe(false);
-      expect(preventDefault).toHaveBeenCalledTimes(1);
-    }
-    await waitFor(() => expect(lastTerm?.paste).toHaveBeenCalledTimes(2));
-    expect(lastTerm?.paste).toHaveBeenNthCalledWith(1, 'clipboard paste');
-    expect(lastTerm?.paste).toHaveBeenNthCalledWith(2, 'clipboard paste');
-    expect(terminal.input).not.toHaveBeenCalledWith('pty-1', 'clipboard paste');
-  });
-
   test('Linux paste ignores clipboard text that resolves after the terminal unmounts', async () => {
     let resolveClipboard: ((text: string) => void) | null = null;
     Object.defineProperty(globalThis.navigator, 'clipboard', {
@@ -2004,125 +1694,20 @@ describe('TerminalPanel', () => {
     expect(lastTerm?.write.mock.calls[0]?.[0]).toBe('mine');
   });
 
-  test('shows a translated pane notice when an invalid shell override is skipped', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
+  test('a new launch clears dropped-path notices from the previous session', async () => {
+    const { bridge, terminal } = makeBridge(
       { ok: true, ptyId: 'pty-1' },
       WIRED,
       undefined,
-      'win32',
-    );
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(terminal.onNotice).toHaveBeenCalledTimes(1));
-
-    act(() =>
-      pushNotice({ ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' }),
-    );
-
-    const banner = screen.getByTestId('terminal-shell-notice-banner');
-    expect(banner.textContent).toMatch(/terminal\.shell executable.*was not found/i);
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.queryByTestId('terminal-shell-notice-banner')).toBeNull();
-  });
-
-  test('explains the capability boundary for an unsupported Windows shell override', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(terminal.onNotice).toHaveBeenCalledTimes(1));
-
-    act(() =>
-      pushNotice({
-        ptyId: 'pty-1',
-        notice: 'invalid-shell-override',
-        reason: 'unsupported-family',
-      }),
-    );
-
-    expect(screen.getByTestId('terminal-shell-notice-banner').textContent).toMatch(
-      /\.ok\/local\/config\.yml.*PowerShell.*cmd\.exe.*Git Bash.*plain terminal only.*agent and command launches do not run/i,
-    );
-  });
-
-  test('does not lose a shell notice delivered before create resolves', async () => {
-    const h = makeBridge({ ok: true, ptyId: 'pty-1' }, WIRED, undefined, 'win32');
-    h.terminal.create.mockImplementationOnce(async () => {
-      h.pushNotice({
-        ptyId: 'pty-1',
-        notice: 'invalid-shell-override',
-        reason: 'not-found',
-      });
-      return { ok: true as const, ptyId: 'pty-1' };
-    });
-
-    render(<TerminalPanel bridge={h.bridge} />);
-
-    expect((await screen.findByTestId('terminal-shell-notice-banner')).textContent).toMatch(
-      /terminal\.shell executable.*was not found/i,
-    );
-  });
-
-  test.each([
-    ['containment-refused', /not safely contained.*not a link.*approve OpenKnowledge/i],
-    ['write-failed', /\.ok\/local\/terminal.*folder is writable.*approve OpenKnowledge/i],
-  ] as const)('shows the support-file degradation notice for %s', async (reason, copy) => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(terminal.onNotice).toHaveBeenCalledTimes(1));
-
-    act(() => pushNotice({ ptyId: 'pty-1', notice: 'support-file-degraded', reason }));
-
-    const banner = screen.getByTestId('terminal-support-file-notice-banner');
-    expect(banner.textContent).toMatch(copy);
-  });
-
-  test('shows one operational notice at a time and reveals the next after dismissal', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(terminal.onNotice).toHaveBeenCalledTimes(1));
-
-    act(() => {
-      pushNotice({ ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' });
-      pushNotice({ ptyId: 'pty-1', notice: 'support-file-degraded', reason: 'write-failed' });
-    });
-
-    expect(screen.getByTestId('terminal-support-file-notice-banner')).toBeTruthy();
-    expect(screen.queryByTestId('terminal-shell-notice-banner')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.getByTestId('terminal-shell-notice-banner')).toBeTruthy();
-  });
-
-  test('a new launch clears shell and dropped-path notices from the previous session', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
+      'darwin',
     );
     (bridge as unknown as { getPathForFile: (file: File) => string }).getPathForFile = () =>
-      'C:\\Users\\%USERNAME%\\unsafe.png';
+      '/dropped/unsafe\u0000.png';
     const { rerender } = render(
       <TerminalPanel bridge={bridge} launch={{ prompt: null, cli: 'claude', nonce: 1 }} />,
     );
-    await waitFor(() => expect(terminal.onNotice).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(terminal.onData).toHaveBeenCalledTimes(1));
 
-    act(() => {
-      pushNotice({ ptyId: 'pty-1', notice: 'shell-resolved', shellFamily: 'cmd' });
-      pushNotice({ ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' });
-    });
     const container = document.querySelector('[data-terminal-status]');
     if (container === null) throw new Error('terminal container not found');
     fireEvent.drop(container, {
@@ -2134,53 +1719,8 @@ describe('TerminalPanel', () => {
 
     rerender(<TerminalPanel bridge={bridge} launch={{ prompt: null, cli: 'claude', nonce: 2 }} />);
     await waitFor(() => expect(terminal.create).toHaveBeenCalledTimes(2));
-    expect(screen.queryByTestId('terminal-shell-notice-banner')).toBeNull();
     expect(screen.queryByTestId('terminal-path-drop-notice-banner')).toBeNull();
   });
-
-  test('shows operational notices before the routine manual-submit notice', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'win32',
-    );
-    (bridge as unknown as { getPathForFile: (file: File) => string }).getPathForFile = () =>
-      'C:\\Users\\%USERNAME%\\unsafe.png';
-    render(
-      <TerminalPanel
-        bridge={bridge}
-        launch={{ prompt: 'review this safely', cli: 'claude', nonce: 1 }}
-      />,
-    );
-    await waitFor(() =>
-      expect(document.querySelector('[data-terminal-status="running"]')).not.toBeNull(),
-    );
-
-    act(() => {
-      pushNotice({ ptyId: 'pty-1', notice: 'shell-resolved', shellFamily: 'cmd' });
-      pushNotice({ ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' });
-      pushNotice({ ptyId: 'pty-1', notice: 'support-file-degraded', reason: 'write-failed' });
-    });
-    const container = document.querySelector('[data-terminal-status]');
-    if (container === null) throw new Error('terminal container not found');
-    fireEvent.drop(container, {
-      dataTransfer: {
-        types: ['Files'],
-        files: [new File(['x'], 'unsafe.png', { type: 'image/png' })],
-      },
-    });
-
-    await waitFor(() => expect(terminal.input).toHaveBeenCalled(), { timeout: 6_000 });
-    expect(screen.getByTestId('terminal-path-drop-notice-banner')).toBeTruthy();
-    expect(screen.queryByTestId('terminal-manual-submit-notice-banner')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.getByTestId('terminal-support-file-notice-banner')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.getByTestId('terminal-shell-notice-banner')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.getByTestId('terminal-manual-submit-notice-banner')).toBeTruthy();
-  }, 10_000);
 
   test('reports the no-project state and wires no data stream when the window has no project', async () => {
     const { bridge, terminal } = makeBridge({ ok: false, reason: 'no-project' });
@@ -2239,7 +1779,6 @@ describe('TerminalPanel', () => {
       drain: vi.fn(() => {}),
       onData: vi.fn(() => vi.fn(() => {})),
       onExit: vi.fn(() => vi.fn(() => {})),
-      onNotice: vi.fn(() => vi.fn(() => {})),
     };
     const bridge = { terminal, config: { e2eSmoke: false } } as unknown as OkDesktopBridge;
 
@@ -2423,7 +1962,6 @@ describe('TerminalPanel', () => {
       drain: vi.fn(() => {}),
       onData: vi.fn(() => vi.fn(() => {})),
       onExit: vi.fn(() => vi.fn(() => {})),
-      onNotice: vi.fn(() => vi.fn(() => {})),
       claudePreflight: vi.fn(async () => WIRED),
       cliPreflight: vi.fn(async () => ({ onPath: 'present' as const })),
     };
@@ -2562,19 +2100,6 @@ describe('TerminalPanel', () => {
       screen.getByText(/background service stopped before the shell could start/i),
     ).toBeTruthy();
     expect(screen.queryByText(/terminal host exited/)).toBeNull();
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
-  });
-
-  test('a launch that could not be composed reads as localized copy, not a machine reason', async () => {
-    const { bridge, terminal, pushExit } = makeBridge({ ok: true, ptyId: 'pty-1' });
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(terminal.onExit).toHaveBeenCalledTimes(1));
-
-    act(() => pushExit({ ptyId: 'pty-1', neverStarted: true, launchFailure: 'unsafe-argument' }));
-
-    expect(screen.getByText(/couldn't start/i)).toBeTruthy();
-    expect(screen.getByText(/can't run this command in the configured shell/i)).toBeTruthy();
-    expect(screen.queryByText('unsafe-argument')).toBeNull();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
   });
 
@@ -2757,7 +2282,6 @@ describe('TerminalPanel', () => {
         exitSubs.push(cb);
         return vi.fn(() => {});
       }),
-      onNotice: vi.fn(() => vi.fn(() => {})),
       claudePreflight: vi.fn(async () => WIRED),
     };
     const bridge = {

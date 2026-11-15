@@ -111,15 +111,7 @@ describe('probeSpawnArgs', () => {
     }
   });
 
-  test('leaves Windows and non-command argv unchanged', () => {
-    const windows = ['/d', '/s', '/c', 'where.exe codex'];
-    expect(
-      probeSpawnArgs('cmd.exe', windows, {
-        platform: 'win32',
-        home: 'C:\\Users\\alice',
-        cliBinDir: 'C:\\OpenKnowledge\\cli\\bin',
-      }),
-    ).toEqual({ args: windows, reassert: 'skipped-win32', family: undefined });
+  test('leaves non-command argv unchanged', () => {
     const direct = ['--version'];
     expect(probeSpawnArgs('/bin/sh', direct, { platform: 'linux', home: '/home/alice' })).toEqual({
       args: direct,
@@ -154,7 +146,7 @@ describe('probeSpawnArgs', () => {
 });
 
 describe('probeSpawnDetached', () => {
-  test('detaches the probe child on POSIX and leaves win32 spawn placement unchanged', () => {
+  test('detaches the probe child on supported POSIX platforms', () => {
     expect(
       probeSpawnDetached('linux'),
       'the production probe adapter must spawn detached on POSIX: the release note guarantees an interactive shell probe can no longer stop the app from a background process group of a controlling terminal, and an undetached interactive shell acquires that session terminal',
@@ -163,10 +155,6 @@ describe('probeSpawnDetached', () => {
       probeSpawnDetached('darwin'),
       'the production probe adapter must spawn detached on every POSIX platform, not only Linux',
     ).toBe(true);
-    expect(
-      probeSpawnDetached('win32'),
-      'Windows has no POSIX session or controlling-terminal job control to detach from, so the spawn placement stays unchanged there',
-    ).toBe(false);
   });
 });
 
@@ -192,10 +180,6 @@ describe.skipIf(process.platform === 'win32')('realProbeSpawn site pin', () => {
         options?.shell,
         'the probe argv is composed upstream, so the site must not layer a shell over it',
       ).toBe(false);
-      expect(
-        options?.windowsHide,
-        'a console-less parent must not flash a terminal window for the probe child',
-      ).toBe(true);
     } finally {
       child.kill();
     }
@@ -304,64 +288,6 @@ describe.skipIf(process.platform === 'win32')('realProbeSpawn detached group kil
   });
 });
 
-describe('realProbeSpawn win32 spawn-site placement', () => {
-  function withPlatform<T>(platform: NodeJS.Platform, run: () => T): T {
-    const original = process.platform;
-    Object.defineProperty(process, 'platform', { configurable: true, value: platform });
-    try {
-      return run();
-    } finally {
-      Object.defineProperty(process, 'platform', { configurable: true, value: original });
-    }
-  }
-
-  test('keeps the spawn site itself un-detached when the stubbed platform is win32', () => {
-    withPlatform('win32', () => {
-      spawnMock.mockClear();
-      const child = realProbeSpawn('/bin/sh', ['--version']);
-      child.onError(() => {});
-      try {
-        expect(
-          spawnMock.mock.calls.length,
-          'the win32 site pin must observe the adapter real spawn call; zero calls means the passthrough record broke',
-        ).toBe(1);
-        const options = spawnCallOptions();
-        expect(
-          options?.detached,
-          'the win32 half of the release note is pinned at the spawn site, not only on the predicate: replacing the site with a literal detached: true would keep the predicate pins green while detaching every Windows probe child',
-        ).toBe(false);
-        expect(
-          options?.windowsHide,
-          'the win32 spawn placement stays unchanged apart from detach, so the site still passes the console-less no-terminal-flash option',
-        ).toBe(true);
-      } finally {
-        child.kill();
-      }
-    });
-  });
-
-  test('keeps the kill on the child itself and off any process group when the stubbed platform is win32', () => {
-    withPlatform('win32', () => {
-      const groupKill = vi.spyOn(process, 'kill').mockImplementation(() => true);
-      spawnMock.mockClear();
-      const child = realProbeSpawn('/bin/sh', ['-c', 'sleep 5']);
-      try {
-        const { spawned } = onlySpawnedProbe();
-        const childKill = vi.spyOn(spawned, 'kill');
-        child.kill();
-        expect(
-          childKill,
-          'the win32 probe has no POSIX job control to detach from, so its termination stays on the child handle the spawn returned',
-        ).toHaveBeenCalledWith('SIGKILL');
-        expect(groupKill).not.toHaveBeenCalled();
-      } finally {
-        groupKill.mockRestore();
-        child.kill();
-      }
-    });
-  });
-});
-
 describe.skipIf(process.platform === 'win32')('the production CLI-presence probe adapter', () => {
   let scratchHome: string;
   let shell: string;
@@ -444,8 +370,6 @@ describe.skipIf(process.platform === 'win32')('the production CLI-presence probe
   });
 });
 
-const WIN_CLI_BIN = 'C:\\Program Files\\Open Knowledge\\resources\\cli\\bin';
-
 describe('probeEnvVerdict', () => {
   test('reports inherited when the app PATH already carries the OK-managed bin dir', () => {
     expect(
@@ -466,23 +390,12 @@ describe('probeEnvVerdict', () => {
     expect(probeEnvVerdict({ PATH: '/usr/bin' }, { platform: 'darwin' })).toBe(
       'not-applicable-no-home',
     );
-    expect(probeEnvVerdict({ Path: 'C:\\Windows' }, { platform: 'win32' })).toBe('not-applicable');
-    expect(
-      probeEnvVerdict({ Path: 'C:\\Windows' }, { platform: 'win32', cliBinDir: WIN_CLI_BIN }),
-    ).toBe('injected');
-    expect(
-      probeEnvVerdict(
-        { Path: `${WIN_CLI_BIN};C:\\Windows` },
-        { platform: 'win32', cliBinDir: WIN_CLI_BIN },
-      ),
-    ).toBe('inherited');
   });
 
-  test('every verdict is reachable from a real okProbeSpawnEnv parent environment', () => {
+  test('each supported POSIX verdict is reachable from a real parent environment', () => {
     const reached = new Set<string>();
     for (const [parent, options] of [
       [{ PATH: '/usr/bin' }, { platform: 'darwin' as const }],
-      [{ Path: 'C:\\Windows' }, { platform: 'win32' as const }],
       [{ PATH: '/usr/bin' }, { platform: 'darwin' as const, home: '/Users/alice' }],
       [
         { PATH: '/Users/alice/.ok/bin:/usr/bin' },
@@ -491,9 +404,7 @@ describe('probeEnvVerdict', () => {
     ] as const) {
       reached.add(probeEnvVerdict(parent, options));
     }
-    expect(reached).toEqual(
-      new Set(['not-applicable', 'not-applicable-no-home', 'inherited', 'injected']),
-    );
+    expect(reached).toEqual(new Set(['not-applicable-no-home', 'inherited', 'injected']));
   });
 });
 

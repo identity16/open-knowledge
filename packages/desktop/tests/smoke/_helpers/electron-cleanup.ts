@@ -1,75 +1,19 @@
 import type { ChildProcess } from 'node:child_process';
-import { spawn } from 'node:child_process';
 import { type Dirent, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ElectronApplication } from '@playwright/test';
 import { PACKAGED_SMOKE_SERVER_IDLE_SHUTDOWN_MS } from './launch-desktop';
 
-export interface TaskkillOutcome {
-  status: number | null;
-  signal: NodeJS.Signals | null;
-  stdout: string;
-  stderr: string;
-  error?: Error;
-  timedOut: boolean;
-}
-
 export interface CloseAppBoundedOpts {
   gracefulMs?: number;
   postKillReapMs?: number;
   kill?: (pid: number, signal: NodeJS.Signals | string) => void;
-  taskkill?: (pid: number) => Promise<TaskkillOutcome>;
   platform?: NodeJS.Platform;
 }
 
 const POST_KILL_REAP_MS = 2_000;
-const TASKKILL_TIMEOUT_MS = 5_000;
+const KILL_ESCALATION_RESERVE_MS = 5_000;
 const KILL_ATTEMPTS = 2;
-
-export function taskkillTree(pid: number): Promise<TaskkillOutcome> {
-  return new Promise<TaskkillOutcome>((resolve) => {
-    let child: ChildProcess;
-    try {
-      child = spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true });
-    } catch (error) {
-      resolve({
-        status: null,
-        signal: null,
-        stdout: '',
-        stderr: '',
-        error: error instanceof Error ? error : new Error(String(error)),
-        timedOut: false,
-      });
-      return;
-    }
-    let stdout = '';
-    let stderr = '';
-    child.stdout?.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString('utf8');
-    });
-    child.stderr?.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString('utf8');
-    });
-    let settled = false;
-    const settle = (outcome: Omit<TaskkillOutcome, 'stdout' | 'stderr'>) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      resolve({ ...outcome, stdout, stderr });
-    };
-    const timer = setTimeout(() => {
-      child.kill('SIGKILL');
-      settle({ status: null, signal: null, timedOut: true });
-    }, TASKKILL_TIMEOUT_MS);
-    timer.unref();
-    child.once('error', (error: Error) =>
-      settle({ status: null, signal: null, error, timedOut: false }),
-    );
-    child.once('close', (status: number | null, signal: NodeJS.Signals | null) =>
-      settle({ status, signal, timedOut: false }),
-    );
-  });
-}
 
 const closed = new WeakSet<ChildProcess>();
 const watched = new WeakSet<ChildProcess>();
@@ -244,7 +188,6 @@ function waitForClose(proc: ChildProcess, timeoutMs: number): Promise<void> {
 }
 
 export type KillAttempt = { elapsedMs: number } & (
-  | { lever: 'taskkill'; outcome: TaskkillOutcome }
   | { lever: 'group-kill'; thrown: unknown }
   | { lever: 'no-pid' }
   | { lever: 'leader-exited' }
@@ -255,10 +198,6 @@ async function escalate(proc: ChildProcess, opts: CloseAppBoundedOpts): Promise<
   const pid = usablePid(proc);
   if (pid === undefined) return { lever: 'no-pid', elapsedMs: Date.now() - startedAt };
   if (hasExited(proc)) return { lever: 'leader-exited', elapsedMs: Date.now() - startedAt };
-  if ((opts.platform ?? process.platform) === 'win32') {
-    const outcome = await (opts.taskkill ?? taskkillTree)(pid);
-    return { lever: 'taskkill', outcome, elapsedMs: Date.now() - startedAt };
-  }
   const killFn = opts.kill ?? process.kill.bind(process);
   try {
     killFn(-pid, 'SIGKILL');
@@ -268,27 +207,18 @@ async function escalate(proc: ChildProcess, opts: CloseAppBoundedOpts): Promise<
   }
 }
 
-function quote(text: string): string {
-  const trimmed = text.trim();
-  return trimmed.length === 0 ? 'none' : JSON.stringify(trimmed);
-}
-
 function describeAttempt(attempt: KillAttempt, slot: number): string {
   const label = `attempt ${slot + 1} after ${attempt.elapsedMs}ms`;
   if (attempt.lever === 'no-pid') return `${label}: no usable pid, no kill lever available`;
   if (attempt.lever === 'leader-exited') {
     return `${label}: nothing signalled because the launched process had already exited`;
   }
-  if (attempt.lever === 'group-kill') {
+  {
     const thrown = attempt.thrown;
     if (thrown === undefined) return `${label}: kill(-pid, SIGKILL) sent`;
     const detail = thrown instanceof Error ? thrown.message : String(thrown);
     return `${label}: kill(-pid, SIGKILL) threw ${detail}`;
   }
-  const { status, signal, error, stdout, stderr, timedOut } = attempt.outcome;
-  return `${label}: taskkill /T /F status=${String(status)} signal=${signal ?? 'none'} timedOut=${timedOut} error=${
-    error === undefined ? 'none' : error.message
-  } stdout=${quote(stdout)} stderr=${quote(stderr)}`;
 }
 
 export class AppCleanupIncompleteError extends Error {
@@ -338,7 +268,7 @@ export async function closeAppBounded(
   const gracefulWaitMs = Date.now() - gracefulStartedAt;
   if (hasClosed(proc)) return;
 
-  const escalationDeadline = Date.now() + KILL_ATTEMPTS * (TASKKILL_TIMEOUT_MS + reapMs);
+  const escalationDeadline = Date.now() + KILL_ATTEMPTS * (KILL_ESCALATION_RESERVE_MS + reapMs);
   const attempts: KillAttempt[] = [];
   for (let round = 0; round < KILL_ATTEMPTS; round += 1) {
     const attempt = await escalate(proc, opts);

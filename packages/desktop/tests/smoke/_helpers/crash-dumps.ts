@@ -69,18 +69,7 @@ const DESCRIBED_ANNOTATIONS = 40;
 const DESCRIBED_ANNOTATION_VALUE_CHARS = 60;
 const PROCESS_TABLE_READ_TIMEOUT_MS = 10_000;
 
-const WINDOWS_EXCEPTION_NAMES: ReadonlyMap<number, string> = new Map([
-  [0x8000_0003, 'EXCEPTION_BREAKPOINT'],
-  [0xc000_0005, 'EXCEPTION_ACCESS_VIOLATION'],
-  [0xc000_001d, 'EXCEPTION_ILLEGAL_INSTRUCTION'],
-  [0xc000_00fd, 'EXCEPTION_STACK_OVERFLOW'],
-  [0xc000_0374, 'STATUS_HEAP_CORRUPTION'],
-  [0xc000_0409, 'STATUS_STACK_BUFFER_OVERRUN'],
-  [0xe06d_7363, 'MSVC C++ exception'],
-]);
-
-const NODE_PTY_HOST_ADDONS = new Set(['conpty.node', 'pty.node']);
-const NODE_PTY_CONSOLE_LIST_ADDON = 'conpty_console_list.node';
+const NODE_PTY_HOST_ADDONS = new Set(['pty.node']);
 
 export interface LoadedModule {
   path: string;
@@ -421,9 +410,7 @@ export function processRoleOf(facts: CrashDumpFacts): string {
   if (fromNodePty.some((module) => NODE_PTY_HOST_ADDONS.has(module.file))) {
     return 'pty-host (node-pty terminal addon loaded)';
   }
-  if (fromNodePty.some((module) => module.file === NODE_PTY_CONSOLE_LIST_ADDON)) {
-    return 'node-pty console-list agent';
-  }
+
   if (loaded.some((module) => module.owner?.startsWith('@parcel/watcher') === true)) {
     return 'project server (@parcel/watcher addon loaded)';
   }
@@ -444,8 +431,8 @@ function hex(value: number | bigint, width = 8): string {
   return `0x${value.toString(16).toUpperCase().padStart(width, '0')}`;
 }
 
-export function exceptionNameOf(code: number, platform: NodeJS.Platform): string | null {
-  return platform === 'win32' ? (WINDOWS_EXCEPTION_NAMES.get(code) ?? null) : null;
+export function exceptionNameOf(_code: number, _platform: NodeJS.Platform): string | null {
+  return null;
 }
 
 function printable(value: string, limit: number): string {
@@ -689,18 +676,8 @@ function readProcessTable(file: string, args: readonly string[]): ProcessTableRe
   const result = spawnSync(file, [...args], {
     encoding: 'utf8',
     timeout: PROCESS_TABLE_READ_TIMEOUT_MS,
-    windowsHide: true,
   });
   return { status: result.status, stdout: result.stdout ?? '' };
-}
-
-function listedWindowsPids(stdout: string): Set<number> {
-  const listed = new Set<number>();
-  for (const line of stdout.split(/\r?\n/)) {
-    const match = /^"[^"]*","(\d+)"/.exec(line.trim());
-    if (match?.[1] !== undefined) listed.add(Number(match[1]));
-  }
-  return listed;
 }
 
 function listedPosixPids(stdout: string): Set<number> {
@@ -718,15 +695,8 @@ export function runningAppProcesses(
 ): AppProcess[] {
   const candidates = processes.filter((entry) => Number.isInteger(entry.pid) && entry.pid > 0);
   if (candidates.length === 0) return [];
-  const platform = options.platform ?? process.platform;
+  const _platform = options.platform ?? process.platform;
   const read = options.read ?? readProcessTable;
-  if (platform === 'win32') {
-    const table = read('tasklist', ['/FO', 'CSV', '/NH']);
-    if (table.status !== 0) return candidates;
-    const listed = listedWindowsPids(table.stdout);
-    if (listed.size === 0) return candidates;
-    return candidates.filter((entry) => listed.has(entry.pid));
-  }
   const table = read('ps', ['-o', 'pid=', '-p', candidates.map((entry) => entry.pid).join(',')]);
   if (table.status !== 0 && table.status !== 1) return candidates;
   const listed = listedPosixPids(table.stdout);

@@ -176,6 +176,24 @@ describe('prepareDiagnosticReportText', () => {
 });
 
 describe('collectDiagnosticReports', () => {
+  test('filters by mtime while ordering by incident time', () => {
+    const dir = makeTmpDir();
+    writeReport(dir, 'OpenKnowledge-old-incident-fresh-mtime.ips', {
+      name: 'OpenKnowledge',
+      at: hoursBefore(1),
+      incidentAt: daysBefore(10),
+    });
+    writeReport(dir, 'OpenKnowledge-recent-incident.ips', {
+      name: 'OpenKnowledge',
+      at: hoursBefore(50),
+      incidentAt: hoursBefore(2),
+    });
+
+    expect(collectedNames(dir)).toEqual([
+      'OpenKnowledge-recent-incident.ips',
+      'OpenKnowledge-old-incident-fresh-mtime.ips',
+    ]);
+  });
   test('collects a report for the app main process', () => {
     const dir = makeTmpDir();
     writeReport(dir, 'OpenKnowledge-2026-08-27-045958.ips', { name: 'OpenKnowledge' });
@@ -320,25 +338,6 @@ describe('collectDiagnosticReports', () => {
     expect(collectedNames(dir)).toEqual([
       'OpenKnowledge-later-instant.ips',
       'OpenKnowledge-earlier-instant.ips',
-    ]);
-  });
-
-  test('windows on mtime while ordering on the incident time', () => {
-    const dir = makeTmpDir();
-    writeReport(dir, 'OpenKnowledge-old-incident-fresh-mtime.ips', {
-      name: 'OpenKnowledge',
-      at: hoursBefore(1),
-      incidentAt: daysBefore(10),
-    });
-    writeReport(dir, 'OpenKnowledge-recent-incident.ips', {
-      name: 'OpenKnowledge',
-      at: hoursBefore(50),
-      incidentAt: hoursBefore(2),
-    });
-
-    expect(collectedNames(dir)).toEqual([
-      'OpenKnowledge-recent-incident.ips',
-      'OpenKnowledge-old-incident-fresh-mtime.ips',
     ]);
   });
 

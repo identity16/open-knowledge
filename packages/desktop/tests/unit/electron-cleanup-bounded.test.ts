@@ -10,9 +10,7 @@ import {
   AppCleanupIncompleteError,
   captureAppProcess,
   closeAppBounded,
-  taskkillTree,
 } from '../smoke/_helpers/electron-cleanup';
-import { reapedTaskkill } from '../smoke/_helpers/electron-cleanup.test-helper';
 
 vi.mock('node:child_process', async (importOriginal) => ({
   ...(await importOriginal<typeof import('node:child_process')>()),
@@ -140,70 +138,6 @@ describe('closeAppBounded — bounded-time process-group reap', () => {
     expect(firstKill).toBeDefined();
     expect(firstKill?.pid).toBe(-12345);
     expect(firstKill?.signal).toBe('SIGKILL');
-  });
-
-  test('hung process on win32 → tree-kills via taskkill, never the negated PID', async () => {
-    const proc = makeProc(23456);
-    const kill = mockKill(proc);
-    const taskkillPids: number[] = [];
-
-    await expect(
-      closeAppBounded(proc as unknown as ChildProcess, {
-        gracefulMs: 200,
-        postKillReapMs: REAP_MS,
-        kill,
-        taskkill: async (pid) => {
-          taskkillPids.push(pid);
-          return reapedTaskkill(pid);
-        },
-        platform: 'win32',
-      }),
-    ).rejects.toBeInstanceOf(AppCleanupIncompleteError);
-
-    expect(taskkillPids).toEqual([23456, 23456]);
-    expect(proc.killCalls).toEqual([]);
-  });
-
-  test('win32 → does not resolve until the tree is actually reaped', async () => {
-    const proc = makeProc(23458);
-    let resolved = false;
-
-    const pending = closeAppBounded(proc as unknown as ChildProcess, {
-      gracefulMs: 1_000,
-      taskkill: async (pid) => {
-        setTimeout(() => proc.fireExit(0), 150);
-        return reapedTaskkill(pid);
-      },
-      platform: 'win32',
-    }).then(() => {
-      resolved = true;
-    });
-
-    await new Promise((r) => setTimeout(r, 50));
-    expect(resolved).toBe(false);
-
-    await pending;
-    expect(resolved).toBe(true);
-    expect(proc.exitCode).toBe(0);
-  });
-
-  test('graceful exit on win32 → no taskkill (idempotency holds on both branches)', async () => {
-    const proc = makeProc(23457);
-    scheduleExitIn(proc, 50);
-    const taskkillPids: number[] = [];
-
-    await closeAppBounded(proc as unknown as ChildProcess, {
-      gracefulMs: 5_000,
-      kill: mockKill(proc),
-      taskkill: async (pid) => {
-        taskkillPids.push(pid);
-        return reapedTaskkill(pid);
-      },
-      platform: 'win32',
-    });
-
-    expect(taskkillPids).toEqual([]);
-    expect(proc.exitCode).toBe(0);
   });
 
   test('already-exited process → no kill (idempotent on dead)', async () => {
@@ -464,31 +398,6 @@ describe('closeAppBounded — nothing is signalled once the launched process has
     }).toEqual({ killCalls: [], reported: true, reachedProcessKill: [] });
   });
 
-  test('exited at first sight on win32 while a descendant still holds its stdio → no tree-kill of the exited pid, and closure is reported unestablished', async () => {
-    const proc = withStdioHeldOpen(makeProc(31_314));
-    proc.exitCode = 0;
-    const { calls, kill } = recordingKill();
-    const taskkillPids: number[] = [];
-
-    const rejection = await closeAppBounded(proc as unknown as ChildProcess, {
-      gracefulMs: 50,
-      postKillReapMs: REAP_MS,
-      kill,
-      taskkill: async (pid) => {
-        taskkillPids.push(pid);
-        return reapedTaskkill(pid);
-      },
-      platform: 'win32',
-    }).catch((error: unknown) => error);
-
-    expect({
-      taskkillPids,
-      killCalls: calls,
-      reported: rejection instanceof AppCleanupIncompleteError,
-      reachedProcessKill: backstop.refused,
-    }).toEqual({ taskkillPids: [], killCalls: [], reported: true, reachedProcessKill: [] });
-  });
-
   test('exits during the graceful wait while a descendant still holds its stdio → no group kill after the exit', async () => {
     const proc = withStdioHeldOpen(makeProc(31_315));
     const exitTimer = setTimeout(() => proc.fireExitWithoutClose(0), 10);
@@ -550,34 +459,27 @@ describe('closeAppBounded — nothing is signalled once the launched process has
       : outcome;
   }
 
-  test.each(['linux', 'win32'] as const)(
+  test.each(['linux'] as const)(
     "records a 'leader-exited' attempt in every escalation round on %s when the launched process exited while a descendant holds its stdio",
     async (platform) => {
       const proc = withStdioHeldOpen(makeProc(31_319));
       proc.exitCode = 0;
       const { calls, kill } = recordingKill();
-      const taskkillPids: number[] = [];
 
       const rejection = await closeAppBounded(proc as unknown as ChildProcess, {
         gracefulMs: 50,
         postKillReapMs: REAP_MS,
         kill,
-        taskkill: async (pid) => {
-          taskkillPids.push(pid);
-          return reapedTaskkill(pid);
-        },
         platform,
       }).catch((error: unknown) => error);
 
       expect({
         levers: leversOf(rejection),
         killCalls: calls,
-        taskkillPids,
         reachedProcessKill: backstop.refused,
       }).toEqual({
         levers: ['leader-exited', 'leader-exited'],
         killCalls: [],
-        taskkillPids: [],
         reachedProcessKill: [],
       });
     },
@@ -657,76 +559,5 @@ describe('closeAppBounded — nothing is signalled once the launched process has
     } finally {
       vi.useRealTimers();
     }
-  });
-});
-
-interface FakeTaskkillChild extends EventEmitter {
-  stdout: EventEmitter;
-  stderr: EventEmitter;
-  kill: (signal?: NodeJS.Signals) => boolean;
-  killSignals: (NodeJS.Signals | undefined)[];
-}
-
-function fakeTaskkillChild(): FakeTaskkillChild {
-  const child = new EventEmitter() as FakeTaskkillChild;
-  child.stdout = new EventEmitter();
-  child.stderr = new EventEmitter();
-  child.killSignals = [];
-  child.kill = (signal) => {
-    child.killSignals.push(signal);
-    return true;
-  };
-  return child;
-}
-
-describe('taskkillTree — the shipped win32 lever', () => {
-  test('spawns the tree-kill with the pinned argv and reports what Windows said', async () => {
-    const child = fakeTaskkillChild();
-    vi.mocked(spawn).mockReturnValue(child as unknown as ReturnType<typeof spawn>);
-
-    const outcome = taskkillTree(23456);
-    child.stdout.emit('data', Buffer.from('SUCCESS: terminated.\r\n', 'utf8'));
-    child.stderr.emit('data', Buffer.from('', 'utf8'));
-    child.emit('close', 0, null);
-
-    await expect(outcome).resolves.toEqual({
-      status: 0,
-      signal: null,
-      stdout: 'SUCCESS: terminated.\r\n',
-      stderr: '',
-      timedOut: false,
-    });
-    expect(vi.mocked(spawn)).toHaveBeenCalledWith('taskkill', ['/pid', '23456', '/T', '/F'], {
-      windowsHide: true,
-    });
-  });
-
-  test('a taskkill that never exits is abandoned on its own timeout rather than blocking cleanup', async () => {
-    vi.useFakeTimers();
-    try {
-      const child = fakeTaskkillChild();
-      vi.mocked(spawn).mockReturnValue(child as unknown as ReturnType<typeof spawn>);
-
-      const outcome = taskkillTree(23456);
-      await vi.advanceTimersByTimeAsync(5_000);
-
-      await expect(outcome).resolves.toMatchObject({ timedOut: true, status: null });
-      expect(child.killSignals).toEqual(['SIGKILL']);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  test('a taskkill that cannot be spawned reports the error instead of throwing', async () => {
-    const child = fakeTaskkillChild();
-    vi.mocked(spawn).mockReturnValue(child as unknown as ReturnType<typeof spawn>);
-
-    const outcome = taskkillTree(23456);
-    child.emit('error', new Error('spawn taskkill ENOENT'));
-
-    await expect(outcome).resolves.toMatchObject({
-      timedOut: false,
-      error: expect.objectContaining({ message: 'spawn taskkill ENOENT' }),
-    });
   });
 });

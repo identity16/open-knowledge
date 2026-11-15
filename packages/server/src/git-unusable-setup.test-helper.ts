@@ -48,7 +48,7 @@ export async function withUnusableGitEverywhere(fn: () => Promise<void>): Promis
     const origPath = process.env.PATH;
     const origPlatform = process.platform;
     process.env.PATH = dir;
-    setPlatform(origPlatform === 'win32' ? 'linux' : 'win32');
+    setPlatform('aix');
     try {
       await fn();
     } finally {

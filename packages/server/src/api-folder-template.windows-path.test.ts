@@ -54,7 +54,7 @@ describe('folder-config HTTP with importer-scoped Node win32 relative paths', ()
         expect(importedEdges).toEqual([
           new URL('./mcp/tools/path-safety.ts', import.meta.url).href,
         ]);
-        expect(sep).toBe(process.platform === 'win32' ? '\\' : '/');
+        expect(sep).toBe('/');
 
         const folder = 'Setup/Results';
         const res = await fetch(

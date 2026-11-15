@@ -13,7 +13,7 @@ type UpdateChannel = keyof typeof CHANNELS;
 const SAFE_FILENAME = /^[A-Za-z0-9._-]+$/;
 const ARTIFACT_VERSION =
   /-(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)-(?:arm64|x64|universal)-mac\.zip(?:\.blockmap)?$/;
-const MANIFEST = /^(?:latest|beta|beta-product)(?:-mac|-linux(?:-arm64)?)?\.yml$/;
+const MANIFEST = /^(?:latest|beta|beta-product)(?:-mac|-linux(?:-arm64)?)\.yml$/;
 const TAG_FROM_URL = /\/releases\/download\/([^/]+)\//;
 const HEADER_VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/;
 
@@ -25,21 +25,20 @@ const VERSION_FROM_TAG = /^v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)$/;
 
 const betaResolvers = new Map(
   ['beta', 'beta-product'].flatMap((prefix) =>
-    ['.yml', '-mac.yml', '-linux.yml', '-linux-arm64.yml'].map((suffix) => {
+    ['-mac.yml', '-linux.yml', '-linux-arm64.yml'].map((suffix) => {
       const assetName = `${prefix}${suffix}`;
       return [assetName, createBetaResolver({ assetName })] as const;
     }),
   ),
 );
 
-type ArtifactType = 'manifest' | 'zip' | 'blockmap' | 'dmg' | 'exe' | 'deb' | 'rpm' | 'other';
+type ArtifactType = 'manifest' | 'zip' | 'blockmap' | 'dmg' | 'deb' | 'rpm' | 'other';
 
-type UpdateOs = 'macos' | 'windows' | 'linux';
+type UpdateOs = 'macos' | 'linux';
 type UpdateArch = 'arm64' | 'x64' | 'universal';
 
 const OS_BY_ARTIFACT: Partial<Record<ArtifactType, UpdateOs>> = {
   zip: 'macos',
-  exe: 'windows',
   deb: 'linux',
   rpm: 'linux',
 };
@@ -53,7 +52,7 @@ const ARCH_BY_TOKEN: Record<string, UpdateArch> = {
   universal: 'universal',
 };
 
-const ARCH_TOKEN = /-([A-Za-z0-9_]+)(?:-mac)?\.(?:zip|exe|deb|rpm)$/;
+const ARCH_TOKEN = /-([A-Za-z0-9_]+)(?:-mac)?\.(?:zip|deb|rpm)$/;
 
 function archOf(filename: string): UpdateArch | undefined {
   const token = ARCH_TOKEN.exec(filename)?.[1];
@@ -62,10 +61,9 @@ function archOf(filename: string): UpdateArch | undefined {
 
 function classify(filename: string): ArtifactType {
   if (MANIFEST.test(filename)) return 'manifest';
-  if (filename.endsWith('.blockmap')) return 'blockmap';
+  if (/\.(?:zip|dmg|deb|rpm)\.blockmap$/.test(filename)) return 'blockmap';
   if (filename.endsWith('.zip')) return 'zip';
   if (filename.endsWith('.dmg')) return 'dmg';
-  if (filename.endsWith('.exe')) return 'exe';
   if (filename.endsWith('.deb')) return 'deb';
   if (filename.endsWith('.rpm')) return 'rpm';
   return 'other';
@@ -87,11 +85,9 @@ async function latestBetaTag(
   const manifest =
     type === 'manifest'
       ? filename
-      : type === 'exe'
-        ? `${channel}.yml`
-        : type === 'deb' || type === 'rpm'
-          ? `${channel}-linux${archOf(filename) === 'arm64' ? '-arm64' : ''}.yml`
-          : `${channel}-mac.yml`;
+      : type === 'deb' || type === 'rpm'
+        ? `${channel}-linux${archOf(filename) === 'arm64' ? '-arm64' : ''}.yml`
+        : `${channel}-mac.yml`;
   const resolve = betaResolvers.get(manifest);
   if (!resolve) return null;
   const redirect = await resolve();
@@ -115,7 +111,7 @@ function matchesChannelIdentity(
 ): boolean {
   const config = CHANNELS[channel];
   if (type === 'manifest') {
-    return ['.yml', '-mac.yml', '-linux.yml', '-linux-arm64.yml'].some(
+    return ['-mac.yml', '-linux.yml', '-linux-arm64.yml'].some(
       (suffix) => filename === `${config.manifestPrefix}${suffix}`,
     );
   }
@@ -158,8 +154,7 @@ export async function GET(
     resolvedTagVersion = VERSION_FROM_TAG.exec(tag)?.[1];
   }
 
-  const counted =
-    (type === 'zip' && version != null) || type === 'exe' || type === 'deb' || type === 'rpm';
+  const counted = (type === 'zip' && version != null) || type === 'deb' || type === 'rpm';
   if (counted) {
     captureServerEvent({
       event: 'app_update_downloaded',

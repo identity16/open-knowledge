@@ -304,7 +304,7 @@ describe('buildMcpServers hosted-marker outcomes', () => {
   });
 });
 
-describe.skipIf(process.platform === 'win32')('buildMcpServers × agentBrowserTools', () => {
+describe('buildMcpServers × agentBrowserTools', () => {
   const fakeNpx = () => {
     const dir = tmp();
     writeFileSync(join(dir, 'npx'), '');

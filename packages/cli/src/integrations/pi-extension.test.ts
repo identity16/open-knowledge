@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CHAIN_V2,
-  CHAIN_WIN_V1,
   isEntryUpToDate,
   PI_EXTENSION_OWNERSHIP_MARKER,
   PI_EXTENSION_VERSION_SENTINEL,
@@ -28,11 +27,10 @@ describe('buildPiExtensionSource', () => {
     expect(buildPiExtensionSource({ mode: 'published' })).toBe(buildPiExtensionSource());
   });
 
-  it('embeds BOTH platform launcher chains so one committed file serves every teammate', () => {
+  it('embeds the POSIX launcher chain', () => {
     const source = buildPiExtensionSource();
     expect(source).toContain(JSON.stringify(CHAIN_V2));
-    expect(source).toContain(JSON.stringify(CHAIN_WIN_V1));
-    expect(source).toContain('process.platform === "win32"');
+    expect(source).toContain('const launcher = LAUNCHERS.unix;');
   });
 
   it('dev mode embeds the local dist launcher and an owned-but-stale header', () => {

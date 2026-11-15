@@ -276,17 +276,14 @@ export function agentBrowserMcpServer(opts: {
 
 function npxRuntime(
   npx: string,
-  platform: NodeJS.Platform,
+  _platform: NodeJS.Platform,
   exists: (path: string) => boolean,
 ): { node: string; npx: readonly string[] } | null {
   const nodeDir = dirname(npx);
-  if (platform !== 'win32') {
+  {
     const node = join(nodeDir, 'node');
     return exists(node) ? { node, npx: [npx] } : null;
   }
-  const node = join(nodeDir, 'node.exe');
-  const npxCli = join(nodeDir, 'node_modules', 'npm', 'bin', 'npx-cli.js');
-  return exists(node) && exists(npxCli) ? { node, npx: [node, npxCli] } : null;
 }
 
 export function browserNpxRunnable(

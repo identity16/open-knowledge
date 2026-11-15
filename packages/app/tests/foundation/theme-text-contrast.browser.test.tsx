@@ -305,7 +305,6 @@ function terminalBridge(): OkDesktopBridge {
     kill: async () => {},
     onData: () => () => {},
     onExit: () => () => {},
-    onNotice: () => () => {},
   };
   return {
     terminal,

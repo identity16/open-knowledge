@@ -55,16 +55,13 @@ describe('resolveDetachedSpawnArgs', () => {
     );
   });
 
-  test.each([
-    ['darwin', false],
-    ['linux', true],
-    ['linux', false],
-    ['win32', true],
-    ['win32', false],
-  ] as const)('platform=%s packaged=%s → file is the parent execPath', (platform, isPackaged) => {
-    const { file } = resolveDetachedSpawnArgs(makeInput({ platform, isPackaged }));
-    expect(file).toBe(PARENT_EXEC);
-  });
+  test.each([['darwin', false], ['linux', true], ['linux', false], [true], [false]] as const)(
+    'platform=%s packaged=%s → file is the parent execPath',
+    (platform, isPackaged) => {
+      const { file } = resolveDetachedSpawnArgs(makeInput({ platform, isPackaged }));
+      expect(file).toBe(PARENT_EXEC);
+    },
+  );
 
   test('opts.env injects ELECTRON_RUN_AS_NODE=1 and OK_LOCK_KIND=interactive and preserves the inherited env', () => {
     const { opts } = resolveDetachedSpawnArgs(makeInput({ env: { PATH: '/usr/bin', FOO: 'bar' } }));
@@ -95,43 +92,6 @@ describe('resolveDetachedSpawnArgs', () => {
     expect(segments).toContain('/usr/local/bin');
     expect(segments).toContain('/snap/bin');
     expect(segments).toContain('/opt/myapp/bin');
-  });
-
-  test('win32 → opts.env.PATH prepends Windows git fallback dirs with `;` delimiter', () => {
-    const { opts } = resolveDetachedSpawnArgs(
-      makeInput({
-        platform: 'win32',
-        env: { PATH: 'C:\\Windows;C:\\Windows\\System32' },
-      }),
-    );
-    const segments = (opts.env?.PATH ?? '').split(';');
-    expect(segments[0]).toBe('C:\\Program Files\\Git\\cmd');
-    expect(segments).toContain('C:\\Program Files (x86)\\Git\\cmd');
-    expect(segments).toContain('C:\\Windows');
-    expect(segments).toContain('C:\\Windows\\System32');
-  });
-
-  test('win32 → inherited PATH is read case-insensitively (`Path` key) so System32 survives', () => {
-    const { opts } = resolveDetachedSpawnArgs(
-      makeInput({
-        platform: 'win32',
-        env: { Path: 'C:\\Windows;C:\\Windows\\System32', SystemRoot: 'C:\\Windows' },
-      }),
-    );
-    const segments = (opts.env?.PATH ?? '').split(';');
-    expect(segments).toContain('C:\\Windows\\System32');
-    expect(segments).toContain('C:\\Windows');
-    expect(segments[0]).toBe('C:\\Program Files\\Git\\cmd');
-  });
-
-  test('win32 → emits exactly one canonical PATH key (no `Path`/`PATH` collision)', () => {
-    const { opts } = resolveDetachedSpawnArgs(
-      makeInput({ platform: 'win32', env: { Path: 'C:\\Windows\\System32', FOO: 'bar' } }),
-    );
-    const pathKeys = Object.keys(opts.env ?? {}).filter((k) => /^path$/i.test(k));
-    expect(pathKeys).toEqual(['PATH']);
-    expect(opts.env?.PATH?.split(';')).toContain('C:\\Windows\\System32');
-    expect(opts.env?.FOO).toBe('bar');
   });
 
   test('enriched PATH deduplicates dirs already present in inherited PATH', () => {

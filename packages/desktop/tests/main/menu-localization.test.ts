@@ -206,7 +206,7 @@ describe('an injected translator reaches every label', () => {
     expect(spellcheck).toContain('«Cut»');
     expect(spellcheck).toContain('«View in Source Markdown»');
 
-    for (const platform of ['darwin', 'win32', 'linux'] as const) {
+    for (const platform of ['darwin', 'linux'] as const) {
       const asset = buildAssetMenuTemplate({
         kind: 'asset',
         platform,

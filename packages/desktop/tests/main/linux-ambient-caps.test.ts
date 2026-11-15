@@ -68,7 +68,7 @@ describe('parseAmbientCaps', () => {
 
 describe('planAmbientCapsReexec', () => {
   test('non-linux platforms never read /proc and never re-exec', () => {
-    for (const platform of ['darwin', 'win32'] as const) {
+    for (const platform of ['darwin'] as const) {
       const d = deps({ platform });
       const posture = planAmbientCapsReexec(d);
       expect(posture.decision).toBe('not-linux');

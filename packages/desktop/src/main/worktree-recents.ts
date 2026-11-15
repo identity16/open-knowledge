@@ -35,7 +35,6 @@ export function readWorktreeBranch(projectPath: string): string | null {
       execFileSync('git', ['symbolic-ref', '--quiet', '--short', 'HEAD'], {
         cwd: projectPath,
         env: gitSpawnEnv(),
-        windowsHide: true,
       }),
     ).trim();
     return out.length > 0 ? out : null;
@@ -50,7 +49,6 @@ export async function readWorktreeBranchAsync(projectPath: string): Promise<stri
     const { stdout } = await execFileAsync('git', ['symbolic-ref', '--quiet', '--short', 'HEAD'], {
       cwd: projectPath,
       env: gitSpawnEnv(),
-      windowsHide: true,
     });
     const out = stdout.trim();
     return out.length > 0 ? out : null;
@@ -108,7 +106,6 @@ function computeRecentGit(realPath: string): RecentGitInfo {
       execFileSync('git', [...REV_PARSE_ARGS], {
         cwd: realPath,
         env: gitSpawnEnv(),
-        windowsHide: true,
       }),
     );
   } catch {
@@ -123,7 +120,6 @@ async function computeRecentGitAsync(realPath: string): Promise<RecentGitInfo> {
     const { stdout } = await execFileAsync('git', [...REV_PARSE_ARGS], {
       cwd: realPath,
       env: gitSpawnEnv(),
-      windowsHide: true,
     });
     out = stdout;
   } catch {

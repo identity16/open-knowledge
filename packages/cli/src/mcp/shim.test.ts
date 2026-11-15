@@ -164,7 +164,6 @@ describe('MCP stdio shim server resolution', () => {
           },
           encoding: 'utf8',
           timeout: 15_000,
-          windowsHide: true,
         },
       );
       expect(child.status, child.stderr).toBe(0);

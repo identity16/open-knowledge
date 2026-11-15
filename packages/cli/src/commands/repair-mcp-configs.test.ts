@@ -12,7 +12,6 @@ vi.mock('./init.ts', async (importOriginal) => {
 });
 
 let CHAIN_ENTRY: ReturnType<typeof buildManagedServerEntry>;
-let WIN_CHAIN_ENTRY: ReturnType<typeof buildManagedServerEntry>;
 const CMD_WORKAROUND = {
   command: 'cmd',
   args: ['/c', 'C:\\Users\\me\\AppData\\Roaming\\npm\\ok.cmd', 'mcp'],
@@ -29,6 +28,19 @@ const BUNDLE_ABSOLUTE = {
 const SYMLINK = { command: '/usr/local/bin/ok', args: ['mcp'] };
 
 describe('repairMcpConfigs', () => {
+  it('preserves recognized legacy launcher configuration without clobbering it', () => {
+    const configPath = writeClaude({
+      command: 'powershell',
+      args: ['-NoProfile', '-NonInteractive', '-Command', '# ok-mcp-win-v1\nlegacy launcher'],
+    });
+    const before = readFileSync(configPath, 'utf-8');
+
+    const result = repairMcpConfigs({ projectDir, home: fakeHome });
+
+    expect(result.repairedCount).toBe(0);
+    expect(result.outcomes.find((o) => o.editorId === 'claude')?.outcome).toBe('canonical');
+    expect(readFileSync(configPath, 'utf-8')).toBe(before);
+  });
   let testDir: string;
   let fakeHome: string;
   let projectDir: string;
@@ -47,7 +59,6 @@ describe('repairMcpConfigs', () => {
     mkdirSync(projectDir, { recursive: true });
     Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
     CHAIN_ENTRY = buildManagedServerEntry({ mode: 'published' });
-    WIN_CHAIN_ENTRY = buildManagedServerEntry({ mode: 'published', platformName: 'win32' });
     logEvents = [];
   });
 
@@ -110,17 +121,6 @@ describe('repairMcpConfigs', () => {
     expect(second.repairedCount).toBe(0);
     expect(second.outcomes.find((o) => o.editorId === 'claude')?.outcome).toBe('canonical');
     expect(after2).toBe(after1);
-  });
-
-  it('leaves the Windows canonical untouched on a non-Windows host (cross-platform no-clobber)', () => {
-    const configPath = writeClaude(WIN_CHAIN_ENTRY);
-    const before = readFileSync(configPath, 'utf-8');
-
-    const result = repairMcpConfigs({ projectDir, home: fakeHome });
-
-    expect(result.repairedCount).toBe(0);
-    expect(result.outcomes.find((o) => o.editorId === 'claude')?.outcome).toBe('canonical');
-    expect(readFileSync(configPath, 'utf-8')).toBe(before);
   });
 
   it('leaves a recognized future launcher byte-unchanged', () => {

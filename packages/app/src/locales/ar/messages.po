@@ -5743,9 +5743,6 @@ msgstr "YAML غير صالح"
 msgid "It also adds any display-connection errors OpenKnowledge wrote to your user journal in the past week, each message cut to 200 characters."
 msgstr "كما يضيف أي أخطاء في الاتصال بالشاشة كتبها OpenKnowledge في سجل المستخدم الخاص بك خلال الأسبوع الماضي، مع اقتطاع كل رسالة إلى 200 حرف."
 
-msgid "It also adds the crash and hang records Windows logged for OpenKnowledge in the past week, without file paths, and the times of every shutdown, restart, power loss, and low-memory warning on this computer in that week, whatever caused them."
-msgstr "كما يضيف سجلات التعطّل وعدم الاستجابة التي سجّلها Windows لـ OpenKnowledge خلال الأسبوع الماضي، دون مسارات الملفات، وأوقات كل إيقاف تشغيل وإعادة تشغيل وانقطاع للطاقة وتحذير من نقص الذاكرة على هذا الكمبيوتر خلال ذلك الأسبوع، أيًّا كان سببها."
-
 msgid "It also adds the crash reports macOS recorded for OpenKnowledge and its helper processes, never another app's report, though ours do name the processes they were running alongside. Each one carries machine details macOS puts in every report: your account uid, the Mac model, and the name of the process that launched the app. On a managed machine, that launching process can be internal tooling. The identifiers that would link the bug reports you file to each other are replaced first, so a collected report is not byte-identical to the one macOS wrote."
 msgstr "يضيف أيضًا تقارير الأعطال التي سجّلها macOS لـ OpenKnowledge وعملياته المساعدة، ولا يضيف أبدًا تقرير تطبيق آخر، وإن كانت تقاريرنا تذكر العمليات التي كانت تعمل إلى جانبها. يحمل كل تقرير تفاصيل الجهاز التي يضعها macOS في كل تقرير: uid حسابك، وطراز الـ Mac، واسم العملية التي شغّلت التطبيق. على جهاز مُدار، قد تكون عملية التشغيل تلك أداة داخلية. تُستبدل أولًا المعرّفات التي قد تربط بلاغات الأخطاء التي ترسلها ببعضها، لذا فإن التقرير المجمَّع ليس مطابقًا بايتًا ببايت لما كتبه macOS."
 
@@ -6488,9 +6485,6 @@ msgstr "النقل إلى جزء جديد على اليسار"
 
 msgid "Move to new pane right"
 msgstr "النقل إلى جزء جديد على اليمين"
-
-msgid "Move to Recycle Bin"
-msgstr "النقل إلى سلة المحذوفات"
 
 msgid "Move to right panel"
 msgstr "نقل إلى اللوحة اليمنى"
@@ -7560,15 +7554,6 @@ msgstr "لم يتمكن OpenKnowledge من العثور على هذا الوكي
 msgid "OpenKnowledge couldn't finish setting up this project. The worktree was created but not opened."
 msgstr "تعذر على OpenKnowledge إكمال إعداد هذا المشروع. تم إنشاء شجرة العمل ولكن لم يتم فتحها."
 
-msgid "OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead."
-msgstr "تعذّر على OpenKnowledge قراءة terminal.shell في .ok/local/config.yml. سيتم استخدام صدفة Windows متاحة بدلًا منها."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge."
-msgstr "تعذّر على OpenKnowledge كتابة إعدادات التشغيل ضمن .ok/local/terminal لأن المجلد غير موجود بأمان داخل هذا المشروع. تحقّق من أنه مجلد حقيقي داخل المشروع وليس رابطًا. سيطلب منك Claude الموافقة على OpenKnowledge."
-
-msgid "OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge."
-msgstr "تعذّر على OpenKnowledge كتابة إعدادات التشغيل ضمن .ok/local/terminal هذه المرة. تحقّق من أن المجلد قابل للكتابة. سيطلب منك Claude الموافقة على OpenKnowledge."
-
 msgid "OpenKnowledge created a share link"
 msgstr "أنشأ OpenKnowledge رابط مشاركة"
 
@@ -8495,9 +8480,6 @@ msgstr "يجري إعادة الاتصال…"
 msgid "Recovered content"
 msgstr "محتوى مستعاد"
 
-msgid "Recycle Bin"
-msgstr "سلة المحذوفات"
-
 msgid "Redo"
 msgstr "إعادة"
 
@@ -9000,9 +8982,6 @@ msgstr "أعد استخدام تبويب واحد عند التنقل بالنق
 
 msgid "Reused if it already exists, created if not."
 msgstr "يُعاد استخدامه إن كان موجودًا، ويُنشأ إن لم يكن."
-
-msgid "Reveal in File Explorer"
-msgstr "الكشف في مستعرض الملفات"
 
 msgid "Reveal in Finder"
 msgstr "الكشف في Finder"
@@ -10449,15 +10428,6 @@ msgstr "لم تُحمَّل إعدادات الطرفية بعد — أعد ال
 msgid "Terminal settings not yet loaded — try again in a moment"
 msgstr "لم تُحمَّل إعدادات الطرفية بعد — أعد المحاولة بعد قليل"
 
-msgid "terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead."
-msgstr "يجب أن تكون terminal.shell في .ok/local/config.yml سلسلة نصية. سيتم استخدام صدفة Windows متاحة بدلًا منها."
-
-msgid "terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead."
-msgstr "يجب أن تكون terminal.shell في .ok/local/config.yml مسار Windows مطلقًا. سيتم استخدام صدفة Windows متاحة بدلًا منها."
-
-msgid "terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it."
-msgstr "يدعم terminal.shell في .ok/local/config.yml ‏PowerShell أو cmd.exe أو Git Bash لعمليات التشغيل التي يديرها OpenKnowledge ولمسارات الملفات المُسقطة. يفتح هذا الغلاف طرفية عادية فقط؛ ولا تعمل عمليات تشغيل الوكلاء والأوامر فيه."
-
 msgid "Test connection"
 msgstr "اختبار الاتصال"
 
@@ -10708,9 +10678,6 @@ msgstr "تحظر المعاينة الموارد التي لا تستوفي قو
 msgid "The project's server is on a different branch than this window — content can't load."
 msgstr "خادم هذا المشروع على فرع مختلف عن هذه النافذة — يتعذر تحميل المحتوى."
 
-msgid "The prompt was pasted but not submitted automatically. Review it, then press Enter to send it."
-msgstr "تم لصق المطالبة ولكن لم يتم إرسالها تلقائيًا. راجعها، ثم اضغط على Enter لإرسالها."
-
 msgid "The properties block at the top of this doc has a formatting error. Switch to source mode to fix it."
 msgstr "كتلة الخصائص أعلى هذا المستند بها خطأ تنسيقي. بدّل إلى وضع المصدر لإصلاحه."
 
@@ -10807,9 +10774,6 @@ msgstr "خدمة الطرفية الخلفية ليست قيد التشغيل."
 msgid "The terminal background service stopped before the shell could start."
 msgstr "توقفت خدمة الطرفية الخلفية قبل أن تتمكن الصدفة من البدء."
 
-msgid "The terminal can't run this command in the configured shell."
-msgstr "تعذّر على الطرفية تشغيل هذا الأمر في الصدفة المُهيّأة."
-
 msgid "The terminal couldn't start."
 msgstr "تعذّر بدء الطرفية."
 
@@ -10827,9 +10791,6 @@ msgstr "انتهت جلسة الطرفية."
 
 msgid "The terminal stopped unexpectedly."
 msgstr "توقفت الطرفية على نحو غير متوقع."
-
-msgid "The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead."
-msgstr "لم يتم العثور على الملف التنفيذي terminal.shell المحدد في .ok/local/config.yml. سيتم استخدام صدفة Windows متاحة بدلًا منه."
 
 msgid "The token needs the repo and read:user scopes."
 msgstr "يحتاج الرمز إلى نطاقي repo وread:user."
@@ -12170,9 +12131,6 @@ msgstr "يمكنك إرفاق ما يصل إلى {MAX_ATTACHMENTS} صور."
 
 msgid "You can change this later in <0>Settings → Sync</0>."
 msgstr "يمكنك تغيير هذا لاحقًا من <0>الإعدادات ← المزامنة</0>."
-
-msgid "You can restore this file from the Recycle Bin."
-msgstr "يمكنك استعادة هذا الملف من سلة المحذوفات."
 
 msgid "You can restore this file from the Trash."
 msgstr "يمكنك استعادة هذا الملف من المهملات."

@@ -12,8 +12,6 @@ import {
   LINUX_JOURNAL_GREP,
   parseJetsamReport,
   renderOsTerminationEvidence,
-  windowsEventLogArgs,
-  windowsEventLogExecutable,
 } from './os-termination-evidence.ts';
 
 const tmpDirs: string[] = [];
@@ -295,7 +293,7 @@ describe('the jetsam kill of one process', () => {
     });
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'is inconclusive beside an unreadable report, and unavailable when none could be read',
     () => {
       const dir = makeTmpDir();
@@ -321,38 +319,35 @@ describe('the jetsam kill of one process', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32')(
-    'counts a report it could not stat as unreadable, and is unavailable only when nothing could be statted',
-    () => {
-      const dir = makeTmpDir();
-      symlinkSync(join(dir, 'gone.ips'), join(dir, 'JetsamEvent-dangling.ips'));
-      expect(findJetsamKillSync(QUERY, dir)).toEqual({
-        outcome: 'unavailable',
-        unavailableReason: 'ENOENT',
-      });
+  test('counts a report it could not stat as unreadable, and is unavailable only when nothing could be statted', () => {
+    const dir = makeTmpDir();
+    symlinkSync(join(dir, 'gone.ips'), join(dir, 'JetsamEvent-dangling.ips'));
+    expect(findJetsamKillSync(QUERY, dir)).toEqual({
+      outcome: 'unavailable',
+      unavailableReason: 'ENOENT',
+    });
 
-      writeAt(dir, 'JetsamEvent-old.ips', jetsamReport([MAIN_KILLED]), LAST_ALIVE_MS - 60_000);
-      expect(findJetsamKillSync(QUERY, dir)).toEqual({
-        outcome: 'inconclusive',
-        reportsRead: 0,
-        ...NOTHING_MISSED,
-        unreadable: 1,
-      });
+    writeAt(dir, 'JetsamEvent-old.ips', jetsamReport([MAIN_KILLED]), LAST_ALIVE_MS - 60_000);
+    expect(findJetsamKillSync(QUERY, dir)).toEqual({
+      outcome: 'inconclusive',
+      reportsRead: 0,
+      ...NOTHING_MISSED,
+      unreadable: 1,
+    });
 
-      writeAt(
-        dir,
-        'JetsamEvent-open.ips',
-        jetsamReport([{ name: 'Slack', pid: 77 }]),
-        LAST_ALIVE_MS + 41_000,
-      );
-      expect(findJetsamKillSync(QUERY, dir)).toEqual({
-        outcome: 'inconclusive',
-        reportsRead: 1,
-        ...NOTHING_MISSED,
-        unreadable: 1,
-      });
-    },
-  );
+    writeAt(
+      dir,
+      'JetsamEvent-open.ips',
+      jetsamReport([{ name: 'Slack', pid: 77 }]),
+      LAST_ALIVE_MS + 41_000,
+    );
+    expect(findJetsamKillSync(QUERY, dir)).toEqual({
+      outcome: 'inconclusive',
+      reportsRead: 1,
+      ...NOTHING_MISSED,
+      unreadable: 1,
+    });
+  });
 
   test('reports an unreadable directory as unavailable rather than as no kill', () => {
     expect(findJetsamKillSync(QUERY, join(makeTmpDir(), 'missing'))).toEqual({
@@ -720,7 +715,7 @@ describe('Linux journal collection', () => {
       });
     });
 
-    test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+    test.skipIf(process.getuid?.() === 0)(
       'keeps attributed lines but will not call the rest foreign when a desktop log was unreadable',
       async () => {
         const dir = desktopLogs();
@@ -786,192 +781,6 @@ describe('Linux journal collection', () => {
   });
 });
 
-function windowsEvent(provider: string, eventId: number, at: string, payload: string): string {
-  return `<Event xmlns='http://schemas.microsoft.com/win/2004/08/events/event'><System><Provider Name='${provider}' Guid='{x}'/><EventID Qualifiers='0'>${eventId}</EventID><TimeCreated SystemTime='${at}'/></System>${payload}</Event>`;
-}
-
-function eventData(values: string[]): string {
-  return `<EventData>${values.map((v) => `<Data>${v}</Data>`).join('')}</EventData>`;
-}
-
-function memoryExhaustion(processes: string[]): string {
-  const entries = processes
-    .map(
-      (name, i) =>
-        `<Process_${i}><Name>${name}</Name><ID>${4412 + i}</ID><CommitCharge>9000000000</CommitCharge></Process_${i}>`,
-    )
-    .join('');
-  return `<UserData><MemoryExhaustionInfo xmlns='http://www.microsoft.com/Windows/Resource/Exhaustion/Detector/Events'><SystemInfo><SystemCommitLimit>34359738368</SystemCommitLimit><SystemCommitCharge>34000000000</SystemCommitCharge></SystemInfo><ProcessInfo>${entries}</ProcessInfo></MemoryExhaustionInfo></UserData>`;
-}
-
-describe('Windows event log collection', () => {
-  test('runs wevtutil from System32 and narrows the application query to this app', () => {
-    expect(windowsEventLogExecutable('D:\\Win')).toBe('D:\\Win\\System32\\wevtutil.exe');
-    expect(windowsEventLogExecutable(undefined)).toBe('C:\\Windows\\System32\\wevtutil.exe');
-    expect(windowsEventLogArgs('System')).toEqual([
-      'qe',
-      'System',
-      '/q:*[System[(EventID=41 or EventID=1074 or EventID=2004 or EventID=6008) and TimeCreated[timediff(@SystemTime) <= 604800000]]]',
-      '/f:xml',
-      '/rd:true',
-      '/c:200',
-    ]);
-    expect(windowsEventLogArgs('Application')).toEqual([
-      'qe',
-      'Application',
-      "/q:*[System[(EventID=1000 or EventID=1001 or EventID=1002) and TimeCreated[timediff(@SystemTime) <= 604800000]] and EventData[Data='OpenKnowledge.exe' or Data='OpenKnowledge Beta.exe' or Data='OpenKnowledge16.exe']]",
-      '/f:xml',
-      '/rd:true',
-      '/c:200',
-    ]);
-  });
-
-  test('keeps system events as times only, and this app’s application events without paths', async () => {
-    const system = [
-      windowsEvent(
-        'Microsoft-Windows-Resource-Exhaustion-Detector',
-        2004,
-        '2026-10-04T10:00:00Z',
-        memoryExhaustion(['OpenKnowledge.exe', 'chrome.exe']),
-      ),
-      windowsEvent(
-        'Microsoft-Windows-Resource-Exhaustion-Detector',
-        2004,
-        '2026-10-04T10:30:00Z',
-        memoryExhaustion(['chrome.exe']),
-      ),
-      windowsEvent('EventLog', 6008, '2026-10-04T11:00:00Z', eventData(['11:00:00', '10/4/2026'])),
-      windowsEvent('Some-Other-Provider', 41, '2026-10-04T12:00:00Z', eventData([])),
-    ].join('');
-    const application = [
-      windowsEvent(
-        'Application Hang',
-        1002,
-        '2026-10-04T09:00:00Z',
-        eventData([
-          'OpenKnowledge.exe',
-          '0.79.9.0',
-          '4412',
-          'C:\\Users\\someone\\AppData\\Local\\Programs\\OpenKnowledge\\OpenKnowledge.exe',
-          'Quit',
-        ]),
-      ),
-      windowsEvent('Application Error', 1000, '2026-10-04T08:00:00Z', eventData(['chrome.exe'])),
-    ].join('');
-    const { run, calls, maxInFlight } = runner({
-      'wevtutil:System': { status: 0, stdout: system, stderr: '' },
-      'wevtutil:Application': { status: 0, stdout: application, stderr: '' },
-    });
-
-    const evidence = await collectOsTerminationEvidence({
-      platform: 'win32',
-      runCommand: run,
-      systemRoot: 'C:\\Windows',
-    });
-
-    expect(calls.map((c) => c.command)).toEqual([
-      'C:\\Windows\\System32\\wevtutil.exe',
-      'C:\\Windows\\System32\\wevtutil.exe',
-    ]);
-    expect(maxInFlight()).toBe(2);
-    expect(evidence.outcome).toBe('collected');
-    expect(evidence.foreignIgnored).toBe(2);
-    expect(evidence.events).toEqual([
-      {
-        kind: 'windows-event',
-        at: '2026-10-04T10:00:00Z',
-        log: 'System',
-        provider: 'Microsoft-Windows-Resource-Exhaustion-Detector',
-        eventId: 2004,
-        mentionsOpenKnowledge: true,
-        data: [],
-      },
-      {
-        kind: 'windows-event',
-        at: '2026-10-04T10:30:00Z',
-        log: 'System',
-        provider: 'Microsoft-Windows-Resource-Exhaustion-Detector',
-        eventId: 2004,
-        mentionsOpenKnowledge: false,
-        data: [],
-      },
-      {
-        kind: 'windows-event',
-        at: '2026-10-04T11:00:00Z',
-        log: 'System',
-        provider: 'EventLog',
-        eventId: 6008,
-        mentionsOpenKnowledge: false,
-        data: [],
-      },
-      {
-        kind: 'windows-event',
-        at: '2026-10-04T09:00:00Z',
-        log: 'Application',
-        provider: 'Application Hang',
-        eventId: 1002,
-        mentionsOpenKnowledge: true,
-        data: ['OpenKnowledge.exe', '0.79.9.0', '4412', 'Quit'],
-      },
-    ]);
-  });
-
-  test('keeps each queried id only from the provider that documents it', async () => {
-    const documented: [log: 'System' | 'Application', id: number, provider: string][] = [
-      ['System', 41, 'Microsoft-Windows-Kernel-Power'],
-      ['System', 1074, 'User32'],
-      ['System', 2004, 'Microsoft-Windows-Resource-Exhaustion-Detector'],
-      ['System', 6008, 'EventLog'],
-      ['Application', 1000, 'Application Error'],
-      ['Application', 1001, 'Windows Error Reporting'],
-      ['Application', 1002, 'Application Hang'],
-    ];
-    const at = '2026-10-04T10:00:00Z';
-    const recordsFor = (log: string) =>
-      documented
-        .filter(([l]) => l === log)
-        .flatMap(([, id, provider]) => [
-          windowsEvent(provider, id, at, eventData(['OpenKnowledge.exe'])),
-          windowsEvent('Impostor', id, at, eventData(['OpenKnowledge.exe'])),
-        ])
-        .join('');
-    const { run } = runner({
-      'wevtutil:System': { status: 0, stdout: recordsFor('System'), stderr: '' },
-      'wevtutil:Application': { status: 0, stdout: recordsFor('Application'), stderr: '' },
-    });
-
-    const evidence = await collectOsTerminationEvidence({ platform: 'win32', runCommand: run });
-
-    expect(
-      evidence.events.map((e) =>
-        e.kind === 'windows-event' ? [e.log, e.eventId, e.provider] : null,
-      ),
-    ).toEqual(documented);
-    expect(evidence.foreignIgnored).toBe(documented.length);
-  });
-
-  test('a single failed log makes the sweep partial, and two make it unavailable', async () => {
-    const oneFailed = runner({
-      'wevtutil:System': { status: 5, stdout: '', stderr: 'Access is denied.' },
-      'wevtutil:Application': { status: 0, stdout: '', stderr: '' },
-    });
-    const bothFailed = runner({
-      'wevtutil:System': { status: null, stdout: '', stderr: '', errorCode: 'ENOENT' },
-      'wevtutil:Application': { status: null, stdout: '', stderr: '', signal: 'SIGKILL' },
-    });
-
-    expect(
-      await collectOsTerminationEvidence({ platform: 'win32', runCommand: oneFailed.run }),
-    ).toMatchObject({ outcome: 'partial', unavailableReason: 'System: exit 5: Access is denied.' });
-    expect(
-      await collectOsTerminationEvidence({ platform: 'win32', runCommand: bothFailed.run }),
-    ).toMatchObject({
-      outcome: 'unavailable',
-      unavailableReason: 'System: ENOENT; Application: signal SIGKILL',
-    });
-  });
-});
-
 describe('createRunCommand', () => {
   const node = process.execPath;
 
@@ -1002,7 +811,7 @@ describe('createRunCommand', () => {
     });
   });
 
-  test.skipIf(process.platform === 'win32')('names the signal that ended a child', async () => {
+  test('names the signal that ended a child', async () => {
     const run = createRunCommand();
 
     expect(
@@ -1022,11 +831,11 @@ test('summarises the sweep in one line, naming what it could not keep', () => {
   expect(
     describeOsTerminationEvidence({
       schemaVersion: 1,
-      platform: 'win32',
-      source: 'windows-event-log',
+      platform: 'linux',
+      source: 'linux-journal',
       outcome: 'partial',
       readFrom: [],
-      unavailableReason: 'System: exit 5',
+      unavailableReason: 'journalctl: exit 5',
       windowDays: 7,
       foreignIgnored: 3,
       unparseable: 1,
@@ -1034,7 +843,7 @@ test('summarises the sweep in one line, naming what it could not keep', () => {
       events: [],
     }),
   ).toBe(
-    'partial from Windows event logs, System: exit 5 (7d; 0 kept; 3 other-process record(s) ignored; 1 unparseable; 2 older dropped over cap)',
+    'partial from system and user journals, journalctl: exit 5 (7d; 0 kept; 3 other-process record(s) ignored; 1 unparseable; 2 older dropped over cap)',
   );
 });
 

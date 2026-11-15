@@ -14,25 +14,10 @@ vi.mock('node:os', async (importOriginal) => {
   return { ...actual, homedir: vi.fn(actual.homedir) };
 });
 
-const WIN_CLI_BIN = 'C:\\Program Files\\Open Knowledge\\resources\\cli\\bin';
-
 describe('okPackagedCliBinDir', () => {
-  test('is the packaged cli bin under resourcesPath on win32', () => {
-    expect(okPackagedCliBinDir('win32', 'C:\\Program Files\\Open Knowledge\\resources')).toBe(
-      WIN_CLI_BIN,
-    );
-  });
-
-  test('is undefined off win32', () => {
-    expect(
-      okPackagedCliBinDir('darwin', '/Applications/OK.app/Contents/Resources'),
-    ).toBeUndefined();
-    expect(okPackagedCliBinDir('linux', '/opt/ok/resources')).toBeUndefined();
-  });
-
   test('is undefined when resourcesPath is absent, so it is safe outside Electron', () => {
-    expect(okPackagedCliBinDir('win32', undefined)).toBeUndefined();
-    expect(okPackagedCliBinDir('win32', '')).toBeUndefined();
+    expect(okPackagedCliBinDir('darwin', undefined)).toBeUndefined();
+    expect(okPackagedCliBinDir('darwin', '')).toBeUndefined();
   });
 });
 
@@ -41,8 +26,6 @@ describe('okManagedBinDirs', () => {
     ['darwin' as const, { home: '/Users/alice' }, ['/Users/alice/.ok/bin']],
     ['linux' as const, { home: '/home/alice' }, ['/home/alice/.ok/bin']],
     ['darwin' as const, {}, []],
-    ['win32' as const, { cliBinDir: WIN_CLI_BIN }, [WIN_CLI_BIN]],
-    ['win32' as const, { home: 'C:\\Users\\alice' }, []],
   ])('%s %o', (platform, options, expected) => {
     expect(okManagedBinDirs({ platform, ...options })).toEqual(expected);
   });
@@ -70,24 +53,6 @@ describe('composeOkChildEnv PATH grant', () => {
     expect(env.PATH).toBe('/usr/bin');
   });
 
-  test('writes through the inherited PATH key casing on win32 and never adds the POSIX dir', () => {
-    const env = composeOkChildEnv(
-      { Path: 'C:\\Windows\\System32;C:\\Tools', HOME: 'C:\\Users\\alice' },
-      { platform: 'win32', home: 'C:\\Users\\alice', cliBinDir: WIN_CLI_BIN },
-    );
-    expect(env.Path).toBe(`${WIN_CLI_BIN};C:\\Windows\\System32;C:\\Tools`);
-    expect(env.PATH).toBeUndefined();
-    expect(env.Path).not.toContain('.ok');
-  });
-
-  test('dedupes case-insensitively on win32', () => {
-    const env = composeOkChildEnv(
-      { Path: `C:\\Windows;${WIN_CLI_BIN.toUpperCase()}` },
-      { platform: 'win32', cliBinDir: WIN_CLI_BIN },
-    );
-    expect(env.Path).toBe(`C:\\Windows;${WIN_CLI_BIN.toUpperCase()}`);
-  });
-
   test('seeds PATH when the parent carries none', () => {
     const env = composeOkChildEnv({}, { platform: 'darwin', home: '/Users/alice' });
     expect(env.PATH).toBe('/Users/alice/.ok/bin');
@@ -101,14 +66,6 @@ describe('composeOkChildEnv', () => {
       { platform: 'darwin', home: '/Users/alice' },
     );
     expect(env.OK_CHANNEL).toBeUndefined();
-  });
-
-  test('drops the dev channel under the differently cased key a Windows environment can carry', () => {
-    const env = composeOkChildEnv(
-      { Path: 'C:\\Windows', Ok_Channel: 'dev' },
-      { platform: 'win32', cliBinDir: 'C:\\ok\\bin' },
-    );
-    expect(Object.keys(env).filter((key) => key.toUpperCase() === 'OK_CHANNEL')).toEqual([]);
   });
 
   test('passes a shipped channel through, since every released CLI knows it', () => {

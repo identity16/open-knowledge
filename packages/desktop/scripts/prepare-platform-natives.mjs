@@ -18,7 +18,6 @@ import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
 export const PLATFORM_PACKAGES = {
-  win32: ['win32-x64-msvc', 'win32-arm64-msvc'],
   linux: ['linux-x64-gnu', 'linux-arm64-gnu'],
 };
 
@@ -295,10 +294,8 @@ async function fetchVerified({ fetchImpl, url, pkgName, version, integrity, slee
   );
 }
 
-function defaultTarBin(platform) {
-  return platform === 'win32'
-    ? join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe')
-    : 'tar';
+function defaultTarBin(_platform) {
+  return 'tar';
 }
 
 export function extractWithTar(tarBin) {
@@ -418,7 +415,7 @@ export async function prepareNatives({
   const suffixes = PLATFORM_PACKAGES[platform];
   if (!suffixes) {
     log(
-      `${LOG_PREFIX} platform=${platform} — no-op (win32/linux only; darwin uses prepare-universal.mjs).`,
+      `${LOG_PREFIX} platform=${platform} — no-op (linux only; darwin uses prepare-universal.mjs).`,
     );
     return;
   }

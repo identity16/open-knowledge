@@ -15,7 +15,7 @@ vi.mock('@parcel/watcher', async () => {
 });
 
 const POSIX_PLATFORMS = ['linux', 'darwin'] as const satisfies readonly NodeJS.Platform[];
-const PLATFORMS = ['win32', ...POSIX_PLATFORMS] as const satisfies readonly NodeJS.Platform[];
+const PLATFORMS = [...POSIX_PLATFORMS] as const satisfies readonly NodeJS.Platform[];
 const LIVENESS = { timeout: 10_000 };
 
 let contentDir: string;
@@ -74,14 +74,6 @@ async function deliverLiveCreate(watched: WatchedContent): Promise<string> {
 }
 
 describe('releasing the file watcher on the parcel backend', () => {
-  test('on win32, releasing the file watcher never asks the addon to unsubscribe natively', async () => {
-    const { watcher, subscription } = await watchContent('win32');
-
-    await watcher.unsubscribe();
-
-    expect(subscription.nativeReleases(), 'native unsubscribe calls').toBe(0);
-  });
-
   test.each(PLATFORMS)(
     'on %s, a create the addon delivers after the file watcher is released reaches no consumer',
     async (platform) => {

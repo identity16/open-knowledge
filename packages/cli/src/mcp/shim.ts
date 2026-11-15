@@ -267,7 +267,7 @@ export async function resolveMcpHttpUrl(opts: ResolveMcpHttpUrlOptions): Promise
       child = spawnFn(self.command, [...self.prefixArgs, 'start'], {
         detached: true,
         stdio: ['ignore', 'ignore', stderrFd],
-        windowsHide: true,
+
         cwd: opts.contentDir,
         env: {
           ...process.env,

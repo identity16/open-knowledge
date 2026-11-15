@@ -92,14 +92,6 @@ export type PackagedDesktopProductName = (typeof PACKAGED_DESKTOP_PRODUCT_NAMES)
 
 export const DEV_CHANNEL = 'dev' satisfies DesktopProductName;
 
-export function desktopWindowsExecutableName(product: DesktopProduct): string {
-  return `${product.productName}.exe`;
-}
-
-export function desktopWindowsInstallDirNames(product: DesktopProduct): readonly string[] {
-  return [product.packageName.replaceAll('/', ''), product.productName];
-}
-
 export const PRODUCT_NAME = DESKTOP_PRODUCTS.stable.productName;
 
 export const OK_CHANNEL_ENV = 'OK_CHANNEL';

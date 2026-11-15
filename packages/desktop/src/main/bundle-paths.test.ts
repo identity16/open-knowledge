@@ -29,13 +29,4 @@ describe('appBundleRootFromExecutable', () => {
       '/opt/local/bin',
     );
   });
-
-  test('win32 and linux use the directory the helper binaries share', () => {
-    expect(appBundleRootFromExecutable('C:\\Program Files\\OK\\OpenKnowledge.exe', 'win32')).toBe(
-      'C:\\Program Files\\OK',
-    );
-    expect(appBundleRootFromExecutable('/opt/OpenKnowledge/open-knowledge', 'linux')).toBe(
-      '/opt/OpenKnowledge',
-    );
-  });
 });

@@ -13,8 +13,9 @@ import {
   targetQuery,
 } from './download-targets.ts';
 
-const ALL_OS: readonly DetectedOs[] = ['macos', 'windows', 'linux', 'unknown'];
-const ASSET_PREFIX = 'https://github.com/inkeep/open-knowledge/releases/latest/download/';
+const ALL_OS: readonly DetectedOs[] = ['macos', 'linux', 'unknown'];
+const ASSET_PREFIX =
+  /^https:\/\/github\.com\/(?:identity16|inkeep)\/open-knowledge\/releases\/latest\/download\//;
 
 describe('DOWNLOAD_TARGETS', () => {
   test('ids are unique — they are the analytics discriminator', () => {
@@ -29,7 +30,7 @@ describe('DOWNLOAD_TARGETS', () => {
 
   test('every asset is a version-less `releases/latest` alias', () => {
     for (const target of DOWNLOAD_TARGETS) {
-      expect(target.assetUrl.startsWith(ASSET_PREFIX)).toBe(true);
+      expect(ASSET_PREFIX.test(target.assetUrl)).toBe(true);
     }
   });
 
@@ -48,7 +49,6 @@ describe('DOWNLOAD_TARGETS', () => {
 describe('defaultTargetForOs', () => {
   test('guesses the common arch per OS', () => {
     expect(defaultTargetForOs('macos').id).toBe('macos-arm64');
-    expect(defaultTargetForOs('windows').id).toBe('windows-x64');
     expect(defaultTargetForOs('linux').id).toBe('linux-deb-x64');
   });
 
@@ -57,7 +57,7 @@ describe('defaultTargetForOs', () => {
   });
 
   test('the default for an OS is actually a build for that OS', () => {
-    for (const os of ['macos', 'windows', 'linux'] as const) {
+    for (const os of ['macos', 'linux'] as const) {
       expect(defaultTargetForOs(os).os).toBe(os);
     }
   });
@@ -73,7 +73,7 @@ describe('orderTargetsForOs', () => {
   });
 
   test('the detected OS leads the list', () => {
-    for (const os of ['macos', 'windows', 'linux'] as const) {
+    for (const os of ['macos', 'linux'] as const) {
       expect(orderTargetsForOs(os)[0]?.os).toBe(os);
     }
   });
@@ -85,14 +85,14 @@ describe('downloadLabelForOs', () => {
   });
 
   test('names the detected OS once it is known', () => {
-    expect(downloadLabelForOs('windows')).toBe('Download for Windows');
+    expect(downloadLabelForOs('macos')).toBe('Download for Mac');
+    expect(downloadLabelForOs('linux')).toBe('Download for Linux');
   });
 });
 
 describe('downloadHrefForDetectedOs', () => {
-  test('sends Windows and Linux to the production picker without losing attribution', () => {
+  test('sends Linux to the production picker without losing attribution', () => {
     const expected = `${DOWNLOAD_PAGE_HREF}?utm_content=docs-sidebar`;
-    expect(downloadHrefForDetectedOs('docs-sidebar', 'windows')).toBe(expected);
     expect(downloadHrefForDetectedOs('docs-sidebar', 'linux')).toBe(expected);
     expect(DOWNLOAD_PAGE_HREF).toBe('https://openknowledge.ai/download');
   });
@@ -131,7 +131,6 @@ describe('resolveTargetFromParams', () => {
   });
 
   test('a bare ?os= resolves to that OS default rather than failing', () => {
-    expect(resolveTargetFromParams(new URLSearchParams('os=windows'))?.id).toBe('windows-x64');
     expect(resolveTargetFromParams(new URLSearchParams('os=linux'))?.id).toBe('linux-deb-x64');
   });
 
@@ -141,6 +140,9 @@ describe('resolveTargetFromParams', () => {
 
   test('an unknown OS resolves to nothing rather than a wrong-platform installer', () => {
     expect(resolveTargetFromParams(new URLSearchParams('os=solaris&arch=sparc'))).toBeNull();
+    expect(
+      resolveTargetFromParams(new URLSearchParams('os=windows&arch=x64&format=exe')),
+    ).toBeNull();
   });
 
   test('an unbuilt arch for a known OS falls back to that OS, not to macOS', () => {
@@ -152,7 +154,7 @@ describe('resolveTargetFromParams', () => {
 describe('classifyDownloadOs', () => {
   test('reads the narrow userAgentData platform values', () => {
     expect(classifyDownloadOs('macOS')).toBe('macos');
-    expect(classifyDownloadOs('Windows')).toBe('windows');
+    expect(classifyDownloadOs('Windows')).toBe('unknown');
     expect(classifyDownloadOs('Linux')).toBe('linux');
     expect(classifyDownloadOs('Chrome OS')).toBe('linux');
     expect(classifyDownloadOs('Chromium OS')).toBe('linux');
