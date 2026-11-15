@@ -114,17 +114,17 @@ function setElectronHost(enabled: boolean) {
   });
 }
 
-function setWindowsHost() {
+function setLinuxHost() {
   Object.defineProperty(window, 'okDesktop', {
     configurable: true,
-    value: { menu: {}, platform: 'win32' },
+    value: { menu: {}, platform: 'linux' },
   });
 }
 
 function setNoteHost() {
   Object.defineProperty(window, 'okDesktop', {
     configurable: true,
-    value: { config: { mode: 'note' }, menu: {}, platform: 'win32' },
+    value: { config: { mode: 'note' }, menu: {}, platform: 'linux' },
   });
 }
 
@@ -324,8 +324,8 @@ describe('EditorHeader runtime behavior', () => {
     expectVisualClassTokensAbsent(tabHost.className, ['absolute', 'invisible']);
   });
 
-  test('a Windows project window leaves the app menu to the app header', async () => {
-    setWindowsHost();
+  test('a Linux project window leaves the app menu to the app header', async () => {
+    setLinuxHost();
     const header = await renderHeader();
 
     await act(async () => {});

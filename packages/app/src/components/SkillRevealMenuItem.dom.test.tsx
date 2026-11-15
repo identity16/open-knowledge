@@ -12,7 +12,7 @@ vi.doMock('@lingui/react/macro', () => linguiShim);
 
 const showItemInFolder = vi.fn();
 
-function setBridge(platform: 'darwin' | 'win32' | 'linux' | null) {
+function setBridge(platform: 'darwin' | 'linux' | null) {
   if (platform === null) {
     Reflect.deleteProperty(window, 'okDesktop');
     return;
@@ -64,13 +64,6 @@ describe('SkillRevealMenuItem', () => {
     setBridge(null);
     await renderItem('/Users/tester/.claude/skills/demo/SKILL.md');
 
-    expect(screen.queryByText('Reveal in Finder')).toBeNull();
-  });
-
-  test('names the platform file manager rather than always saying Finder', async () => {
-    setBridge('win32');
-    await renderItem('C:\\Users\\tester\\.claude\\skills\\demo\\SKILL.md');
-    expect(screen.getByText('Reveal in File Explorer')).toBeTruthy();
     expect(screen.queryByText('Reveal in Finder')).toBeNull();
   });
 

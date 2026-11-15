@@ -206,7 +206,7 @@ describe('SettingsDialogBody preferences runtime', () => {
   test('places the spelling rows after the interface Language row, keeping the CLI row', async () => {
     Object.defineProperty(window, 'okDesktop', {
       value: {
-        platform: 'win32',
+        platform: 'linux',
         menu: { dispatch: async () => ({ spellCheckEnabled: true }) },
         spellcheck: {
           setEnabled: async () => ({ ok: true, enabled: true, saved: true }),

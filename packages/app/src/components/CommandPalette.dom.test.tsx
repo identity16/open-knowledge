@@ -1893,7 +1893,7 @@ describe('CommandPalette ⌘K — overlay gate', () => {
 describe('CommandPalette Open with AI on the host OS', () => {
   beforeEach(() => {
     cleanup();
-    restrictHandoffTargetPlatforms({ codex: ['darwin', 'win32'] });
+    restrictHandoffTargetPlatforms({ codex: ['darwin'] });
   });
 
   afterEach(() => {
@@ -1924,9 +1924,9 @@ describe('CommandPalette Open with AI on the host OS', () => {
 
   test('shows the Open with AI heading over the apps when the host OS has a build of them', async () => {
     restrictHandoffTargetPlatforms({
-      'claude-code': ['darwin', 'win32'],
-      codex: ['darwin', 'win32'],
-      cursor: ['darwin', 'win32'],
+      'claude-code': ['darwin'],
+      codex: ['darwin'],
+      cursor: ['darwin'],
     });
     await renderPalette({ bridge: { ...createBridge(), platform: 'darwin' } });
     const agentGroup = screen.getByRole('region', { name: 'Open with AI' });
@@ -1936,9 +1936,9 @@ describe('CommandPalette Open with AI on the host OS', () => {
 
   test('shows no Open with AI heading when the host OS has a build of none of the apps', async () => {
     restrictHandoffTargetPlatforms({
-      'claude-code': ['darwin', 'win32'],
-      codex: ['darwin', 'win32'],
-      cursor: ['darwin', 'win32'],
+      'claude-code': ['darwin'],
+      codex: ['darwin'],
+      cursor: ['darwin'],
     });
     await renderPalette({ bridge: { ...createBridge(), platform: 'linux' } });
     expect(screen.queryByRole('region', { name: 'Open with AI' })).toBeNull();
