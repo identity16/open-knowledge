@@ -3270,7 +3270,7 @@ function ToolTooltipContent({ text }: { text: ToolTooltipText }): ReactNode {
       align="start"
       sideOffset={6}
       arrow={false}
-      className="max-w-72 border border-border bg-popover text-popover-foreground shadow-md"
+      className="max-w-72 flex-col items-start gap-0.5 border border-border bg-popover text-popover-foreground shadow-md"
       data-testid="agent-thread-tool-tooltip"
     >
       {text.purpose !== null ? <span className="block">{text.purpose}</span> : null}
