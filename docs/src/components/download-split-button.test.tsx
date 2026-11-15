@@ -8,7 +8,7 @@ const html = renderToStaticMarkup(<DownloadButton />);
 describe('the docs download button before hydration', () => {
   test('names no platform', () => {
     expect(html).toContain(`>${downloadLabelForOs('unknown')}<`);
-    for (const os of ['macos', 'windows', 'linux'] as const) {
+    for (const os of ['macos', 'linux'] as const) {
       expect(html).not.toContain(downloadLabelForOs(os));
     }
   });

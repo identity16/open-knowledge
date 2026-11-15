@@ -2,14 +2,12 @@ import { z } from 'zod';
 
 const RELEASES_API_URL = 'https://api.github.com/repos/inkeep/open-knowledge/releases?per_page=100';
 
-export const DMG_ASSET_NAME = 'OpenKnowledge-arm64.dmg';
+export const DMG_ASSET_NAME = 'OpenKnowledge16-arm64.dmg';
 export const BETA_DMG_ASSET_NAME = 'OpenKnowledge-Beta-arm64.dmg';
 
-export const STABLE_DMG_URL = `https://github.com/inkeep/open-knowledge/releases/latest/download/${DMG_ASSET_NAME}`;
+export const STABLE_DMG_URL = `https://github.com/identity16/open-knowledge/releases/latest/download/${DMG_ASSET_NAME}`;
 
 const RELEASE_ASSET_BASE = 'https://github.com/inkeep/open-knowledge/releases/latest/download';
-export const STABLE_WINDOWS_SETUP_X64_URL = `${RELEASE_ASSET_BASE}/OpenKnowledge-Setup-x64.exe`;
-export const STABLE_WINDOWS_SETUP_ARM64_URL = `${RELEASE_ASSET_BASE}/OpenKnowledge-Setup-arm64.exe`;
 export const LINUX_DEB_X64_URL = `${RELEASE_ASSET_BASE}/OpenKnowledge-amd64.deb`;
 export const LINUX_DEB_ARM64_URL = `${RELEASE_ASSET_BASE}/OpenKnowledge-arm64.deb`;
 export const LINUX_RPM_X64_URL = `${RELEASE_ASSET_BASE}/OpenKnowledge-x86_64.rpm`;

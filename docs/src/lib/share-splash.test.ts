@@ -522,7 +522,7 @@ describe('classifySplashOs', () => {
   test('classifies userAgentData.platform values', () => {
     expect(classifySplashOs('macOS')).toBe('macos');
     expect(classifySplashOs('Linux')).toBe('linux');
-    expect(classifySplashOs('Windows')).toBe('windows');
+    expect(classifySplashOs('Windows')).toBe('unknown');
     expect(classifySplashOs('Chrome OS')).toBe('linux');
     expect(classifySplashOs('iOS')).toBe('unknown');
     expect(classifySplashOs('Android')).toBe('unknown');
@@ -560,10 +560,10 @@ describe('classifySplashOs', () => {
       classifySplashOs(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       ),
-    ).toBe('windows');
+    ).toBe('unknown');
     expect(
       classifySplashOs('Mozilla/5.0 (Windows NT 10.0; rv:120.0) Gecko/20100101 Firefox/120.0'),
-    ).toBe('windows');
+    ).toBe('unknown');
   });
 
   test('classifies iPhone / iPad UAs as unknown (the trailing "Mac OS X" is a decoy)', () => {
@@ -603,16 +603,12 @@ describe('splashDownloadQuery', () => {
     }
   });
 
-  test('Windows guesses the x64 installer', () => {
-    expect(splashDownloadQuery('windows')).toBe('?os=windows&arch=x64&format=exe');
-  });
-
   test('Linux guesses the x64 deb', () => {
     expect(splashDownloadQuery('linux')).toBe('?os=linux&arch=x64&format=deb');
   });
 
   test('every query names a build the redirect routes can resolve', () => {
-    for (const os of ['macos', 'windows', 'linux', 'unknown'] as const) {
+    for (const os of ['macos', 'linux', 'unknown'] as const) {
       const params = new URLSearchParams(splashDownloadQuery(os).slice(1));
       expect(resolveTargetFromParams(params)).not.toBeNull();
     }

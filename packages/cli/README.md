@@ -1,8 +1,8 @@
 # @inkeep/open-knowledge
 
-[OpenKnowledge](https://openknowledge.ai) is a local-first, agent-friendly Markdown knowledge base with a rich editor. It is available as a desktop app for **macOS, Windows, and Linux**, or as the same local web app served from your terminal.
+[OpenKnowledge](https://openknowledge.ai) is a local-first, agent-friendly Markdown knowledge base with a rich editor. This fork supports **macOS only**, with a desktop app and the same local web app served from your terminal.
 
-This package installs the cross-platform `ok` / `open-knowledge` CLI and bundles the web app. Use it on Linux, Windows, macOS, an Intel Mac, or a server. The macOS desktop app currently requires Apple silicon, so Intel Mac users should use this CLI and the web app.
+This package installs the `ok` / `open-knowledge` CLI and bundles the web app for macOS. The desktop app requires Apple silicon.
 
 ## Install
 
@@ -29,7 +29,7 @@ ok start         # serve the editor and open it in your browser
 
 ## Desktop app
 
-For the native desktop experience, [download OpenKnowledge](https://openknowledge.ai/download) for macOS, Windows, or Linux.
+For the native desktop experience, [download OpenKnowledge16](https://github.com/identity16/open-knowledge/releases/latest) for macOS 13+ on Apple silicon.
 
 ## Documentation
 

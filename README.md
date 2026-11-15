@@ -13,7 +13,7 @@
 <div >
   <a href="https://openknowledge.ai">website</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-  <a href="https://openknowledge.ai/download">desktop app</a>
+  <a href="https://github.com/identity16/open-knowledge/releases/latest">desktop app</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
   <a href="https://openknowledge.ai/docs/get-started/quickstart#ok-install-web-app">web UI + cli</a>
   <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
@@ -35,7 +35,7 @@
 
 Highlights:
 - Full true **WYSIWYG** so that editing markdown files feels like editing a Google Doc or Notion page. 
-- **Desktop app** (macOS, Windows, Linux) and **web UI** with file navigator, search, tabs, graph wiki link viewer, and more. 
+- **Desktop app** (macOS 13+ on Apple Silicon) and **web UI** with file navigator, search, tabs, graph wiki link viewer, and more.
 - Integrated **side-by-side AI-editing** with **Claude, Codex, OpenCode, Pi and others**. Can be used with any harness/agent via MCP/CLI.
 - Out-of-the-box **MCP**, **skills**, and **agentic search** for LLM Wikis, second brains, and knowledge graphs.
 - No-code **Team sharing** and **Auto-sync** powered by git/GitHub under the hood.
@@ -46,12 +46,6 @@ Highlights:
 **OpenKnowledge16 (this product, macOS Apple Silicon)** — download the signed desktop app from the
 [releases](https://github.com/identity16/open-knowledge/releases/latest).
 See [installation, updates, and rollback](MIGRATION.md) for the desktop app and the existing web GUI + CLI channel.
-
-**Upstream desktop app** — download it from [openknowledge.ai/download](https://openknowledge.ai/download) (or grab an installer from the [latest release](https://github.com/inkeep/open-knowledge/releases/latest)):
-
-- **macOS** (Apple Silicon): open the DMG and drag **OpenKnowledge** to **Applications**.
-- **Windows 10+** (x64 / Arm64): run the Setup installer — per-user, no admin prompt.
-- **Linux** (x64 / arm64): install the deb (Debian/Ubuntu) or rpm (Fedora/RHEL) package.
 
 **Upstream web app** — on any platform (including Intel Macs and servers), run the same editor as a local web app via the CLI ([Node.js 24+](https://nodejs.org) and git required):
 

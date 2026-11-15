@@ -67,7 +67,7 @@ url = "https://<your-external-url>/mcp"
 
 Claude Desktop only takes command-type servers, so it reaches the server through the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge, a local process that forwards to your `/mcp` URL.
 
-Its config file is `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS and `%APPDATA%\Claude\claude_desktop_config.json` on Windows. In Claude Desktop open **Settings → Developer → Edit Config**, which creates the file and reveals it. Then add:
+Its config file is `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS. In Claude Desktop open **Settings → Developer → Edit Config**, which creates the file and reveals it. Then add:
 
 ```json title="claude_desktop_config.json"
 {

@@ -67,7 +67,6 @@ body:
       options:
         - macOS (Apple Silicon)
         - macOS (Intel)
-        - Windows
         - Linux
         - Web app
         - CLI only

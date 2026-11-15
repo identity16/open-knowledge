@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import fixture from '../../../../../../test-support/fixtures/share-url-v1-v2.json';
 
 const SPLASH_URL =
-  'https://github.com/inkeep/open-knowledge/releases/latest/download/OpenKnowledge-arm64.dmg';
+  'https://github.com/identity16/open-knowledge/releases/latest/download/OpenKnowledge16-arm64.dmg';
 
 type CaptureOpts = {
   event: string;
@@ -118,12 +118,6 @@ describe('GET /d/[encoded]/download', () => {
   test('a bare ?os= resolves to that OS default build', async () => {
     _viewKind = 'ok';
     _lastCapture = null;
-    const windows = await call('valid-share', '?os=windows');
-    expect(windows.headers.get('location')).toBe(
-      'https://github.com/inkeep/open-knowledge/releases/latest/download/OpenKnowledge-Setup-x64.exe',
-    );
-    expect(_lastCapture?.properties).toMatchObject({ os: 'windows', arch: 'x64', format: 'exe' });
-
     const linux = await call('valid-share', '?os=linux');
     expect(linux.headers.get('location')).toBe(
       'https://github.com/inkeep/open-knowledge/releases/latest/download/OpenKnowledge-amd64.deb',
@@ -141,11 +135,7 @@ describe('GET /d/[encoded]/download', () => {
 
   test('every platform row still sets the pairing cookie', async () => {
     _viewKind = 'ok';
-    for (const query of [
-      '?os=macos&arch=arm64&format=dmg',
-      '?os=windows&arch=arm64&format=exe',
-      '?os=linux&arch=x64&format=rpm',
-    ]) {
+    for (const query of ['?os=macos&arch=arm64&format=dmg', '?os=linux&arch=x64&format=rpm']) {
       const res = await call('valid-share', query);
       expect(res.headers.get('set-cookie')).toContain('ok-pending-share=valid-share');
     }
