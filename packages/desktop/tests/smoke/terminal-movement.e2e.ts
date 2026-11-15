@@ -662,10 +662,7 @@ test.describe('Terminal placement continuity — live Electron', () => {
     const [, secondTabId] = await terminalTabIds(page);
     if (secondTabId === undefined) throw new Error('second terminal tab was not created');
     await renameTerminalTab(page, terminalTabById(page, firstTabId), 'restart first');
-    const secondLabel = process.platform === 'win32' ? 'restart second' : 'Terminal 2';
-    if (process.platform === 'win32') {
-      await renameTerminalTab(page, terminalTabById(page, secondTabId), secondLabel);
-    }
+    const secondLabel = 'Terminal 2';
     await terminalTabById(page, secondTabId).click();
     await expect(terminalTabById(page, secondTabId)).toHaveAttribute('aria-selected', 'true');
     const token = randomUUID().replaceAll('-', '');

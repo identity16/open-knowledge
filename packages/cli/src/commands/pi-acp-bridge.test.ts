@@ -97,7 +97,7 @@ describe('probePiBridgeState', () => {
       'zeta.ts',
       'prettier.ts, tailwind.ts, eslint.ts',
       'helper.ts. No other extensions are present.ts',
-      ...(process.platform === 'win32' ? [] : ['quoted"name.ts']),
+      'quoted"name.ts',
     ];
     for (const name of names) write(join(extensionDir, name), `User extension ${name}`);
     write(bridgePathIn(cwd), buildPiExtensionSource({ mode: 'published' }));
@@ -107,7 +107,7 @@ describe('probePiBridgeState', () => {
       '"helper.ts. No other extensions are present.ts"',
       '"hidden\\u200b.ts"',
       '"prettier.ts, tailwind.ts, eslint.ts"',
-      ...(process.platform === 'win32' ? [] : ['"quoted\\"name.ts"']),
+      '"quoted\\"name.ts"',
       '"safe\\u202e.ts"',
       '"zeta.ts"',
     ]);
@@ -410,7 +410,7 @@ describe('ensurePiBridge', () => {
   });
 });
 
-describe.skipIf(process.platform === 'win32')('symlinked Pi trust stores', () => {
+describe('symlinked Pi trust stores', () => {
   function fixture() {
     const cwd = tmp();
     const home = tmp();
@@ -810,7 +810,7 @@ describe('owned Pi trust grants', () => {
     expect(readFileSync(unexpectedFile, 'utf8')).toBe('preserve this file');
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'retains neutral shared-trust guidance when its ownership record cannot be removed',
     async () => {
       const cwd = tmp();
@@ -840,7 +840,7 @@ describe('owned Pi trust grants', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'adds retry guidance after a trust write loses directory access without losing its receipt',
     async () => {
       const cwd = tmp();
@@ -882,44 +882,39 @@ describe('owned Pi trust grants', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32')(
-    'preserves both stores when a recorded symlink is retargeted until the link is repaired',
-    async () => {
-      const cwd = tmp();
-      const home = tmp();
-      const trustPath = trustPathIn(home);
-      const firstTarget = join(tmp(), 'first.json');
-      const otherTarget = join(tmp(), 'other.json');
-      write(firstTarget, '{"other":true}\n');
-      write(otherTarget, `${JSON.stringify({ [cwd]: true, unrelated: true })}\n`);
-      mkdirSync(dirname(trustPath), { recursive: true });
-      symlinkSync(firstTarget, trustPath);
-      await ensurePiBridge(cwd, { mode: 'published' }, home);
-      const firstBytes = readFileSync(firstTarget, 'utf8');
-      const otherBytes = readFileSync(otherTarget, 'utf8');
-      unlinkSync(trustPath);
-      symlinkSync(otherTarget, trustPath);
+  test('preserves both stores when a recorded symlink is retargeted until the link is repaired', async () => {
+    const cwd = tmp();
+    const home = tmp();
+    const trustPath = trustPathIn(home);
+    const firstTarget = join(tmp(), 'first.json');
+    const otherTarget = join(tmp(), 'other.json');
+    write(firstTarget, '{"other":true}\n');
+    write(otherTarget, `${JSON.stringify({ [cwd]: true, unrelated: true })}\n`);
+    mkdirSync(dirname(trustPath), { recursive: true });
+    symlinkSync(firstTarget, trustPath);
+    await ensurePiBridge(cwd, { mode: 'published' }, home);
+    const firstBytes = readFileSync(firstTarget, 'utf8');
+    const otherBytes = readFileSync(otherTarget, 'utf8');
+    unlinkSync(trustPath);
+    symlinkSync(otherTarget, trustPath);
 
-      expect(() => removeOwnMcpEntry(EDITOR_TARGETS.pi, cwd, home, bridgePathIn(cwd))).toThrow(
-        'restore the intended file location or symlink, then retry',
-      );
-      expect(readlinkSync(trustPath)).toBe(otherTarget);
-      expect(readFileSync(firstTarget, 'utf8')).toBe(firstBytes);
-      expect(readFileSync(otherTarget, 'utf8')).toBe(otherBytes);
-      expect(existsSync(bridgePathIn(cwd))).toBe(true);
-      expect(listPiTrustGrants(home, cwd)).toHaveLength(1);
+    expect(() => removeOwnMcpEntry(EDITOR_TARGETS.pi, cwd, home, bridgePathIn(cwd))).toThrow(
+      'restore the intended file location or symlink, then retry',
+    );
+    expect(readlinkSync(trustPath)).toBe(otherTarget);
+    expect(readFileSync(firstTarget, 'utf8')).toBe(firstBytes);
+    expect(readFileSync(otherTarget, 'utf8')).toBe(otherBytes);
+    expect(existsSync(bridgePathIn(cwd))).toBe(true);
+    expect(listPiTrustGrants(home, cwd)).toHaveLength(1);
 
-      unlinkSync(trustPath);
-      symlinkSync(firstTarget, trustPath);
-      expect(removeOwnMcpEntry(EDITOR_TARGETS.pi, cwd, home, bridgePathIn(cwd)).kind).toBe(
-        'removed',
-      );
-      expect(readlinkSync(trustPath)).toBe(firstTarget);
-      expect(JSON.parse(readFileSync(firstTarget, 'utf8'))).toEqual({ other: true });
-      expect(readFileSync(otherTarget, 'utf8')).toBe(otherBytes);
-      expect(listPiTrustGrants(home, cwd)).toEqual([]);
-    },
-  );
+    unlinkSync(trustPath);
+    symlinkSync(firstTarget, trustPath);
+    expect(removeOwnMcpEntry(EDITOR_TARGETS.pi, cwd, home, bridgePathIn(cwd)).kind).toBe('removed');
+    expect(readlinkSync(trustPath)).toBe(firstTarget);
+    expect(JSON.parse(readFileSync(firstTarget, 'utf8'))).toEqual({ other: true });
+    expect(readFileSync(otherTarget, 'utf8')).toBe(otherBytes);
+    expect(listPiTrustGrants(home, cwd)).toEqual([]);
+  });
 
   test('forgets stale ownership after the user changes a granted decision', async () => {
     const cwd = tmp();
@@ -1024,13 +1019,13 @@ describe('canonical Pi project identity', () => {
       const otherProject = tmp();
       const home = tmp();
       const alias = join(tmp(), 'project-link');
-      symlinkSync(approvedProject, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(approvedProject, alias, 'dir');
       const before = '{"unrelated":false}\n';
       write(trustPathIn(home), before);
       const approved = probeReadyPiBridgeState(alias, home).canonicalCwd;
       if (retarget) {
         unlinkSync(alias);
-        symlinkSync(otherProject, alias, process.platform === 'win32' ? 'junction' : 'dir');
+        symlinkSync(otherProject, alias, 'dir');
       }
 
       const result = await ensurePiBridge(alias, { mode: 'published' }, home, undefined, approved);
@@ -1072,7 +1067,7 @@ describe('canonical Pi project identity', () => {
       const cwd = tmp();
       const home = tmp();
       const alias = join(tmp(), 'project-link');
-      symlinkSync(cwd, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(cwd, alias, 'dir');
       const trustPath = trustPathIn(home);
       const before = JSON.stringify({
         [alias]: true,
@@ -1111,12 +1106,12 @@ describe('canonical Pi project identity', () => {
       const home = tmp();
       const alias = join(tmp(), 'project-link');
       const opened = ancestor ? join(alias, 'project') : alias;
-      symlinkSync(target, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(target, alias, 'dir');
       await ensurePiBridge(opened, { mode: 'published' }, home);
       const before = readFileSync(trustPathIn(home), 'utf8');
       rmSync(bridgePathIn(cwd));
       unlinkSync(alias);
-      symlinkSync(join(tmp(), 'missing'), alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(join(tmp(), 'missing'), alias, 'dir');
 
       expect(removePiTrustEntry(opened, home, undefined, { recordedOnly: true })).toMatchObject({
         action: 'kept-unverified',
@@ -1126,7 +1121,7 @@ describe('canonical Pi project identity', () => {
       expect(listPiTrustGrants(home, cwd)).toHaveLength(1);
 
       unlinkSync(alias);
-      symlinkSync(target, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(target, alias, 'dir');
       expect(
         removeOwnMcpEntry(EDITOR_TARGETS.pi, opened, home, bridgePathIn(opened)),
       ).toMatchObject({ kind: 'removed', trust: 'removed' });
@@ -1141,7 +1136,7 @@ describe('canonical Pi project identity', () => {
     mkdirSync(cwd);
     const home = tmp();
     const alias = join(tmp(), 'parent-link');
-    symlinkSync(parent, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(parent, alias, 'dir');
     const opened = join(alias, 'project');
     await ensurePiBridge(opened, { mode: 'published' }, home);
     const before = readFileSync(trustPathIn(home), 'utf8');
@@ -1176,11 +1171,11 @@ describe('canonical Pi project identity', () => {
       mkdirSync(cwd);
       const home = tmp();
       const alias = join(tmp(), 'parent-link');
-      symlinkSync(parent, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(parent, alias, 'dir');
       const opened = join(alias, 'project');
       const storeDir = tmp();
       const configuredDir = join(tmp(), 'store-link');
-      symlinkSync(storeDir, configuredDir, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(storeDir, configuredDir, 'dir');
       const configured = join(configuredDir, 'trust.json');
       const canonical = join(storeDir, 'trust.json');
       const otherStore = join(tmp(), 'other-trust.json');
@@ -1251,7 +1246,7 @@ describe('canonical Pi project identity', () => {
     const parent = tmp();
     const home = tmp();
     const alias = join(tmp(), 'parent-link');
-    symlinkSync(parent, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(parent, alias, 'dir');
     const opened = join(alias, 'deleted', 'project');
     write(trustPathIn(home), '{unrelated invalid trust');
 
@@ -1276,7 +1271,7 @@ describe('canonical Pi project identity', () => {
     expect(readFileSync(parent, 'utf8')).toBe('preserve');
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'refuses inaccessible ancestry while checking a missing project',
     () => {
       const parent = tmp();
@@ -1331,43 +1326,40 @@ describe('canonical Pi project identity', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32')(
-    'preserves a known pending receipt when the ambient path aliases its recorded store',
-    () => {
-      const cwd = tmp();
-      const home = tmp();
-      const trustPath = trustPathIn(home);
-      const configured = join(tmp(), 'trust.json');
-      const before = JSON.stringify({ [cwd]: true, other: false });
-      write(trustPath, before);
-      symlinkSync(trustPath, configured);
-      write(bridgePathIn(cwd), buildPiExtensionSource({ mode: 'published' }));
-      withPiTrustLockSync(configured, realpathSync(trustPath), () => {
-        preparePiTrustGrant(home, cwd, configured, realpathSync(trustPath), { present: false });
-      });
-      const lockSpy = vi.spyOn(lockfile, 'lockSync');
+  test('preserves a known pending receipt when the ambient path aliases its recorded store', () => {
+    const cwd = tmp();
+    const home = tmp();
+    const trustPath = trustPathIn(home);
+    const configured = join(tmp(), 'trust.json');
+    const before = JSON.stringify({ [cwd]: true, other: false });
+    write(trustPath, before);
+    symlinkSync(trustPath, configured);
+    write(bridgePathIn(cwd), buildPiExtensionSource({ mode: 'published' }));
+    withPiTrustLockSync(configured, realpathSync(trustPath), () => {
+      preparePiTrustGrant(home, cwd, configured, realpathSync(trustPath), { present: false });
+    });
+    const lockSpy = vi.spyOn(lockfile, 'lockSync');
 
-      const result = removeOwnMcpEntry(EDITOR_TARGETS.pi, cwd, home, bridgePathIn(cwd));
+    const result = removeOwnMcpEntry(EDITOR_TARGETS.pi, cwd, home, bridgePathIn(cwd));
 
-      expect(result).toMatchObject({ kind: 'removed', trust: 'kept-unowned' });
-      expect(result).toHaveProperty(
-        'trustDetail',
-        expect.stringContaining('ownership record is pending'),
-      );
-      expect(result).toHaveProperty('trustDetail', expect.stringContaining(configured));
-      expect(result).toHaveProperty('trustDetail', expect.stringContaining(trustPath));
-      expect(lockSpy.mock.calls.map(([, options]) => options?.lockfilePath)).toEqual([
-        `${configured}.lock`,
-        `${trustPath}.lock`,
-      ]);
-      expect(listPiTrustGrants(home, cwd)).toMatchObject([
-        { record: { state: 'pending', configuredTrustPath: configured } },
-      ]);
-      expect(readFileSync(trustPath, 'utf8')).toBe(before);
-      expect(existsSync(bridgePathIn(cwd))).toBe(false);
-      expect(lstatSync(configured).isSymbolicLink()).toBe(true);
-    },
-  );
+    expect(result).toMatchObject({ kind: 'removed', trust: 'kept-unowned' });
+    expect(result).toHaveProperty(
+      'trustDetail',
+      expect.stringContaining('ownership record is pending'),
+    );
+    expect(result).toHaveProperty('trustDetail', expect.stringContaining(configured));
+    expect(result).toHaveProperty('trustDetail', expect.stringContaining(trustPath));
+    expect(lockSpy.mock.calls.map(([, options]) => options?.lockfilePath)).toEqual([
+      `${configured}.lock`,
+      `${trustPath}.lock`,
+    ]);
+    expect(listPiTrustGrants(home, cwd)).toMatchObject([
+      { record: { state: 'pending', configuredTrustPath: configured } },
+    ]);
+    expect(readFileSync(trustPath, 'utf8')).toBe(before);
+    expect(existsSync(bridgePathIn(cwd))).toBe(false);
+    expect(lstatSync(configured).isSymbolicLink()).toBe(true);
+  });
 
   test('does not convert disclosure into removal when a new ownership record appears under the lock', () => {
     const cwd = tmp();
@@ -1407,7 +1399,7 @@ describe('canonical Pi project identity', () => {
       const other = tmp();
       const home = tmp();
       const alias = join(tmp(), 'project-link');
-      symlinkSync(cwd, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(cwd, alias, 'dir');
       await ensurePiBridge(alias, { mode: 'published' }, home);
       const trustPath = trustPathIn(home);
       const before = readFileSync(trustPath, 'utf8');
@@ -1415,7 +1407,7 @@ describe('canonical Pi project identity', () => {
       vi.spyOn(lockfile, 'lockSync').mockImplementation((path, options) => {
         const release = originalLockSync(path, options);
         unlinkSync(alias);
-        symlinkSync(other, alias, process.platform === 'win32' ? 'junction' : 'dir');
+        symlinkSync(other, alias, 'dir');
         return () => {
           if (releaseFails) writeFileSync(join(`${trustPath}.lock`, 'keep.txt'), 'preserve');
           release();
@@ -1435,7 +1427,7 @@ describe('canonical Pi project identity', () => {
       vi.restoreAllMocks();
       if (releaseFails) rmSync(`${trustPath}.lock`, { recursive: true });
       unlinkSync(alias);
-      symlinkSync(cwd, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(cwd, alias, 'dir');
       expect(removeOwnMcpEntry(EDITOR_TARGETS.pi, alias, home, bridgePathIn(alias))).toMatchObject({
         kind: 'removed',
         trust: 'removed',
@@ -1443,7 +1435,7 @@ describe('canonical Pi project identity', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'cleans a searchable project without requiring permission to list its root',
     async () => {
       const cwd = tmp();
@@ -1470,7 +1462,7 @@ describe('canonical Pi project identity', () => {
       const cwd = tmp();
       const home = tmp();
       const alias = join(tmp(), 'project-link');
-      symlinkSync(cwd, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(cwd, alias, 'dir');
 
       expect(
         (await ensurePiBridge(setupPath === 'alias' ? alias : cwd, { mode: 'published' }, home)).ok,
@@ -1497,7 +1489,7 @@ describe('canonical Pi project identity', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'discloses canonical trust after a sibling alias receipt cannot be forgotten',
     () => {
       const cwd = tmp();
@@ -1543,7 +1535,7 @@ describe('canonical Pi project identity', () => {
     const cwd = tmp();
     const home = tmp();
     const alias = join(tmp(), 'project-link');
-    symlinkSync(cwd, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(cwd, alias, 'dir');
     const trustPath = trustPathIn(home);
     write(
       trustPath,
@@ -1584,7 +1576,7 @@ describe('canonical Pi project identity', () => {
     expect(existsSync(bridgePathIn(cwd))).toBe(false);
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'preserves the first completed decision when its receipt deletion fails and the next key succeeds',
     () => {
       const { cwd, home, alias, trustPath, receipt } = twoRecordedKeys();
@@ -1615,7 +1607,7 @@ describe('canonical Pi project identity', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0).each([false, true])(
+  test.skipIf(process.getuid?.() === 0).each([false, true])(
     'discloses a committed record retained through an accessible inspection path (shared=%s)',
     async (shared) => {
       const cwd = tmp();
@@ -1669,7 +1661,7 @@ describe('canonical Pi project identity', () => {
       const cwd = tmp();
       const home = tmp();
       const alias = join(tmp(), 'project-link');
-      symlinkSync(cwd, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(cwd, alias, 'dir');
       const trustPath = trustPathIn(home);
       write(trustPath, JSON.stringify({ [cwd]: true, [alias]: true, unrelated: false }));
       write(bridgePathIn(alias), buildPiExtensionSource({ mode: 'published' }));
@@ -1702,7 +1694,7 @@ describe('canonical Pi project identity', () => {
     const current = tmp();
     const home = tmp();
     const alias = join(tmp(), 'project-link');
-    symlinkSync(original, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(original, alias, 'dir');
     const trustPath = trustPathIn(home);
     write(trustPath, JSON.stringify({ [original]: true, [current]: true, [alias]: true }));
     write(bridgePathIn(original), buildPiExtensionSource({ mode: 'published' }));
@@ -1714,7 +1706,7 @@ describe('canonical Pi project identity', () => {
       commitPiTrustGrant(home, pending);
     });
     unlinkSync(alias);
-    symlinkSync(current, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(current, alias, 'dir');
 
     expect(removeOwnMcpEntry(EDITOR_TARGETS.pi, alias, home, bridgePathIn(alias))).toMatchObject({
       kind: 'removed',
@@ -1732,15 +1724,11 @@ describe('canonical Pi project identity', () => {
     const cwd = tmp();
     const home = tmp();
     const alias = join(tmp(), 'project-link');
-    symlinkSync(cwd, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(cwd, alias, 'dir');
     await ensurePiBridge(alias, { mode: 'published' }, home);
     const before = readFileSync(trustPathIn(home), 'utf8');
     unlinkSync(alias);
-    symlinkSync(
-      join(tmp(), 'missing-project'),
-      alias,
-      process.platform === 'win32' ? 'junction' : 'dir',
-    );
+    symlinkSync(join(tmp(), 'missing-project'), alias, 'dir');
 
     expect(await ensurePiBridge(alias, { mode: 'published' }, home)).toMatchObject({
       ok: false,
@@ -1768,7 +1756,7 @@ describe('canonical Pi project identity', () => {
     const other = tmp();
     const home = tmp();
     const alias = join(tmp(), 'project-link');
-    symlinkSync(original, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    symlinkSync(original, alias, 'dir');
     const trustPath = trustPathIn(home);
     const before = '{"unrelated":true}\n';
     write(trustPath, before);
@@ -1783,7 +1771,7 @@ describe('canonical Pi project identity', () => {
         ]),
       ).toBe('waiting');
       unlinkSync(alias);
-      symlinkSync(other, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      symlinkSync(other, alias, 'dir');
     } finally {
       unlinkSync(canonicalLock);
       await pending;
@@ -1800,7 +1788,7 @@ describe('canonical Pi project identity', () => {
     expect(existsSync(bridgePathIn(other))).toBe(false);
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'refuses an unreadable project through the result contract and permits repair and retry',
     async () => {
       const cwd = tmp();

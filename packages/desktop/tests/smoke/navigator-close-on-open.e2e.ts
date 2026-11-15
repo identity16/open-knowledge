@@ -16,7 +16,6 @@ import { findProjectEditorWindow } from './_helpers/project-editor-window';
 import { expect, test } from './_helpers/smoke-test';
 
 const TARGET = resolveDesktopTarget();
-const WINDOWS = process.platform === 'win32';
 
 interface SeededHome {
   tmpHome: string;
@@ -435,10 +434,6 @@ test.describe('Project Navigator close-on-project-open smoke', () => {
   test('The app quits on SIGTERM while the home-directory refusal is still open', async ({
     captureStderrFor,
   }) => {
-    test.skip(
-      WINDOWS,
-      'Windows has no SIGTERM: ChildProcess.kill terminates the process whatever the app does.',
-    );
     const { tmpHome, projectDir } = seedHomeWithoutLastOpenedProject('refused-sigterm');
     const app = await launchApp(tmpHome);
     captureStderrFor(app, { home: tmpHome, cleanupDirs: [tmpHome, projectDir] });

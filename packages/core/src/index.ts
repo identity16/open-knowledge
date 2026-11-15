@@ -592,8 +592,6 @@ export {
   type DesktopProductName,
   defaultToDevChannel,
   desktopChannelLabel,
-  desktopWindowsExecutableName,
-  desktopWindowsInstallDirNames,
   envWithoutDevChannel,
   type HostCliInvocation,
   isDevChannel,

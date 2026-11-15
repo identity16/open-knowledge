@@ -16,7 +16,6 @@ import {
   buildSkillZip,
   resolveBundledSkillDir,
 } from './build-skill-zip.ts';
-import { withHiddenWindowsConsole } from './child-process-windows-hide.ts';
 import { tracedCpSync, tracedMkdir, tracedMkdirSync, tracedRmSync } from './fs-traced.ts';
 import { errnoCode } from './http/handler-utils.ts';
 import { getLogger } from './logger.ts';
@@ -398,7 +397,7 @@ function fileAssociationCommand(
   platformName: NodeJS.Platform,
 ): { command: string; args: string[] } | undefined {
   if (platformName === 'darwin') return { command: 'open', args: [skillPath] };
-  if (platformName === 'win32') return { command: 'cmd', args: ['/c', 'start', '""', skillPath] };
+
   if (platformName === 'linux') return { command: 'xdg-open', args: [skillPath] };
   return undefined;
 }
@@ -426,10 +425,10 @@ function invokeFileAssociation(
       message: `Platform '${platformName}' has no file-association invocation wired.`,
     });
   }
-  const detached: SpawnOptions = withHiddenWindowsConsole({
+  const detached: SpawnOptions = {
     detached: true,
     stdio: 'ignore',
-  });
+  };
   return new Promise((resolve) => {
     let child: ReturnType<SpawnLike>;
     try {

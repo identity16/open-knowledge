@@ -110,9 +110,7 @@ function roleLabelSource(role: string, isMac: boolean): string | undefined {
         : NATIVE_MENU_LABELS.roleAbout;
     case 'quit':
       if (isMac) return NATIVE_MENU_LABELS.roleQuit;
-      return process.platform === 'win32'
-        ? NATIVE_MENU_LABELS.roleExit
-        : NATIVE_MENU_LABELS.roleQuitGeneric;
+      return NATIVE_MENU_LABELS.roleQuitGeneric;
     case 'close':
       return isMac ? NATIVE_MENU_LABELS.roleCloseWindow : NATIVE_MENU_LABELS.roleClose;
     case 'services':

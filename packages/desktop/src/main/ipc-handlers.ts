@@ -29,18 +29,12 @@ interface DetectProtocolDeps {
   platform: NodeJS.Platform;
   getApplicationInfoForProtocol: (url: string) => Promise<AppInfo>;
   runMacOsProbe?: (scheme: InstalledAgentScheme) => Promise<boolean>;
-  runWindowsProbe?: (scheme: InstalledAgentScheme) => Promise<boolean>;
   runXdgMime?: (scheme: string, timeoutMs: number) => Promise<{ stdout: string; code: number }>;
   timeoutMs?: number;
 }
 
 const macOsProbeReal: (scheme: InstalledAgentScheme) => Promise<boolean> = createOsProbe(
   'darwin',
-  execFile as ExecFileLike,
-);
-
-const windowsProbeReal: (scheme: InstalledAgentScheme) => Promise<boolean> = createOsProbe(
-  'win32',
   execFile as ExecFileLike,
 );
 
@@ -53,7 +47,7 @@ function xdgMimeReal(scheme: string, timeoutMs: number): Promise<{ stdout: strin
     execFile(
       'xdg-mime',
       ['query', 'default', `x-scheme-handler/${scheme}`],
-      { timeout: timeoutMs, encoding: 'utf-8', windowsHide: true },
+      { timeout: timeoutMs, encoding: 'utf-8' },
       (err, stdout) => {
         if (err) {
           resolve({ stdout: '', code: typeof err.code === 'number' ? err.code : 1 });
@@ -75,7 +69,7 @@ export async function detectProtocol(
 
   const timeoutMs = deps.timeoutMs ?? DEFAULT_PROBE_TIMEOUT_MS;
 
-  if (deps.platform === 'darwin' || deps.platform === 'win32') {
+  if (deps.platform === 'darwin') {
     try {
       const info = await Promise.race([
         deps.getApplicationInfoForProtocol(`${scheme}://`),
@@ -88,10 +82,7 @@ export async function detectProtocol(
       }
     } catch {}
     if (isInstalledAgentScheme(scheme)) {
-      const probe =
-        deps.platform === 'darwin'
-          ? (deps.runMacOsProbe ?? macOsProbeReal)
-          : (deps.runWindowsProbe ?? windowsProbeReal);
+      const probe = deps.runMacOsProbe ?? macOsProbeReal;
       try {
         if (await probe(scheme)) return { installed: true };
       } catch {}

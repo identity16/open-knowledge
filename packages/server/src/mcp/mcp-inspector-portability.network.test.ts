@@ -96,8 +96,7 @@ function describeFinding(finding: Finding): string {
 function persistentNpmCache(): string {
   const configured = process.env.npm_config_cache ?? process.env.NPM_CONFIG_CACHE;
   if (configured) return configured;
-  if (process.platform !== 'win32') return join(homedir(), '.npm');
-  return join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'npm-cache');
+  return join(homedir(), '.npm');
 }
 
 function inspectorEnv(stateDir: string): Record<string, string> {
@@ -134,10 +133,9 @@ async function runInspector(
     ],
     {
       cwd: stateDir,
-      detached: process.platform !== 'win32',
+      detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: inspectorEnv(stateDir),
-      windowsHide: true,
     },
   );
   const started = Date.now();

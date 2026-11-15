@@ -17,7 +17,6 @@ import {
   type ShellCommandFamily,
   shellCommandFamily,
 } from '../shared/terminal-shell.ts';
-import { windowsPathKey } from '../shared/windows-env.ts';
 import { getLogger } from './desktop-logger.ts';
 import { projectLocalSlidevBin } from './slidev-resolve.ts';
 
@@ -161,17 +160,7 @@ export type SlidevInvocation =
       readonly file: string;
       readonly args: readonly string[];
       readonly family: ShellCommandFamily;
-    }
-  | {
-      readonly mode: 'windows-shell';
-      readonly file: string;
-      readonly args: readonly string[];
-      readonly verbatim: true;
     };
-
-function cmdQuote(value: string): string {
-  return `"${value}"`;
-}
 
 const JOB_CONTROL_OPT_OUT: Record<ShellCommandFamily, string> = {
   posix: 'set +m; ',
@@ -186,19 +175,7 @@ export function buildSlidevInvocation(
   managedBinDirs: readonly string[],
 ): SlidevInvocation {
   const portArgs = ['--port', String(port)];
-  if (platform === 'win32') {
-    const target =
-      config.source === 'project-local'
-        ? projectLocalSlidevBin(config.projectRoot, platform)
-        : 'slidev';
-    const cmdline = `"${cmdQuote(target)} ${cmdQuote(config.docPath)} ${portArgs.join(' ')}"`;
-    return {
-      mode: 'windows-shell',
-      file: 'cmd.exe',
-      args: ['/d', '/s', '/c', cmdline],
-      verbatim: true,
-    };
-  }
+
   if (config.source === 'project-local') {
     const bin = projectLocalSlidevBin(config.projectRoot, platform);
     return { mode: 'direct', file: bin, args: [config.docPath, ...portArgs] };
@@ -217,37 +194,7 @@ export function buildSlidevInvocation(
 
 export interface SignalSlidevChildDeps {
   readonly platform?: NodeJS.Platform;
-  readonly killWindowsTree?: (pid: number) => Promise<void>;
   readonly timeoutMs?: number;
-}
-
-const WINDOWS_TREE_KILL_TIMEOUT_MS = 5_000;
-
-function taskkillWindowsTree(pid: number, timeoutMs: number): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    const killer = spawn('taskkill', ['/pid', String(pid), '/T', '/F'], {
-      stdio: 'ignore',
-      windowsHide: true,
-    });
-    let settled = false;
-    const settle = (error?: Error) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      if (error === undefined) resolve();
-      else reject(error);
-    };
-    const timer = setTimeout(() => {
-      killer.kill();
-      settle(new Error('taskkill timed out'));
-    }, timeoutMs);
-    timer.unref();
-    killer.once('error', (error) => settle(error));
-    killer.once('exit', (code) => {
-      if (code === 0) settle();
-      else settle(new Error(`taskkill exited with status ${code ?? 'unknown'}`));
-    });
-  });
 }
 
 function hasRecordedTermination(child: ChildProcess): boolean {
@@ -257,40 +204,11 @@ function hasRecordedTermination(child: ChildProcess): boolean {
 export function signalSlidevChild(
   child: ChildProcess,
   sig: 'SIGTERM' | 'SIGKILL',
-  deps: SignalSlidevChildDeps = {},
+  _deps: SignalSlidevChildDeps = {},
 ): Promise<void> {
   const pid = child.pid;
   if (pid === undefined) return Promise.resolve();
-  if ((deps.platform ?? process.platform) === 'win32') {
-    const timeoutMs = deps.timeoutMs ?? WINDOWS_TREE_KILL_TIMEOUT_MS;
-    const killTree = deps.killWindowsTree ?? ((treePid) => taskkillWindowsTree(treePid, timeoutMs));
-    return new Promise<void>((resolve) => {
-      let settled = false;
-      const finish = (err?: unknown) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        if (err !== undefined) {
-          getLogger('slidev-server').warn(
-            { event: 'slides-tree-kill-failed', pid, signal: sig, err },
-            'slidev server failure',
-          );
-        }
-        resolve();
-      };
-      const timer = setTimeout(() => finish(new Error('taskkill timed out')), timeoutMs);
-      timer.unref();
-      void Promise.resolve()
-        .then(() => {
-          if (hasRecordedTermination(child)) return;
-          return killTree(pid);
-        })
-        .then(
-          () => finish(),
-          (err: unknown) => finish(err),
-        );
-    });
-  }
+
   if (hasRecordedTermination(child)) return Promise.resolve();
   try {
     process.kill(-pid, sig);
@@ -326,7 +244,7 @@ export function composeSlidevSpawnEnv(
     }
     return env;
   }
-  const pathKey = windowsPathKey(env);
+  const pathKey = 'PATH';
   env[pathKey] = augmentAgentSpawnPath(env[pathKey], {
     platform: options.platform,
     homeDir,
@@ -402,9 +320,7 @@ export function realSpawnSlidev(config: SlidevSpawnConfig, port: number): Slidev
     env: slidevSpawnEnv(options),
     stdio: 'ignore',
     shell: false,
-    detached: process.platform !== 'win32',
-    windowsHide: true,
-    windowsVerbatimArguments: invocation.mode === 'windows-shell',
+    detached: true,
   });
   return adaptSlidevChild(child);
 }

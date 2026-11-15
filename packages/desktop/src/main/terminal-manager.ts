@@ -2,14 +2,11 @@ import {
   BRACKETED_PASTE_ENABLE_MARKER,
   type TerminalLaunchCommand,
 } from '@inkeep/open-knowledge-core';
-import { isTerminalShellNoticeReason } from '@inkeep/open-knowledge-core/desktop-bridge';
 import type {
   OkPtyAdoptResult,
   OkPtyCreateResult,
   OkPtyExit,
   OkPtyListEntry,
-  OkPtyNotice,
-  TerminalShellNoticeReason,
 } from '../shared/bridge-contract.ts';
 import type { SendableWebContents } from '../shared/ipc-send.ts';
 import type { PtyPhaseTrace } from '../shared/pty-phase-trace.ts';
@@ -32,7 +29,6 @@ export interface TerminalManagerDeps {
   forkPtyHost: (windowId: number) => PtyUtilityLike;
   sendData: (webContents: SendableWebContents, payload: { ptyId: string; data: string }) => void;
   sendExit: (webContents: SendableWebContents, payload: OkPtyExit) => void;
-  sendNotice?: (webContents: SendableWebContents, payload: OkPtyNotice) => void;
   newPtyId: () => string;
   canSpawnAt: (projectRoot: string) => boolean;
   setTimer: (cb: () => void, ms: number) => TimerToken;
@@ -59,7 +55,6 @@ interface TerminalCreateRequest {
   cols: number;
   rows: number;
   shell?: string;
-  shellInvalidReason?: TerminalShellNoticeReason;
   launchCommand?: string | TerminalLaunchCommand;
 }
 
@@ -262,11 +257,6 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
     deps.sendExit(handle.webContents, payload);
   }
 
-  function pushNotice(handle: PtyWindowHandle, payload: OkPtyNotice): void {
-    if (handle.webContents.isDestroyed?.()) return;
-    deps.sendNotice?.(handle.webContents, payload);
-  }
-
   function deliver(
     windowId: number,
     handle: PtyWindowHandle,
@@ -344,10 +334,6 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
           (m.shellNeverAttached === true &&
             m.message === undefined &&
             (m.exitCode === undefined || typeof m.exitCode === 'number'))
-          ? (raw as PtyHostOutgoingMessage)
-          : null;
-      case 'shell-notice':
-        return m.notice === 'invalid-shell-override' && isTerminalShellNoticeReason(m.reason)
           ? (raw as PtyHostOutgoingMessage)
           : null;
       default:
@@ -456,13 +442,6 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
         pushExit(handle, { ptyId, error: message.message, neverStarted: true });
         break;
       }
-      case 'shell-notice':
-        pushNotice(handle, {
-          ptyId: message.ptyId,
-          notice: message.notice,
-          reason: message.reason,
-        });
-        break;
     }
   }
 
@@ -572,9 +551,6 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
           cols: req.cols,
           rows: req.rows,
           ...(req.shell === undefined ? {} : { shell: req.shell }),
-          ...(req.shellInvalidReason === undefined
-            ? {}
-            : { shellInvalidReason: req.shellInvalidReason }),
           ...(req.launchCommand === undefined ? {} : { launchCommand: req.launchCommand }),
         },
         outbound: '',

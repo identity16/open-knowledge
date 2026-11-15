@@ -91,7 +91,7 @@ describe.each(['async', 'sync'] as const)('Pi trust lock (%s)', (mode) => {
         configured,
         canonical,
       ],
-      { stdio: ['ignore', 'ignore', 'pipe', 'ipc'], windowsHide: true },
+      { stdio: ['ignore', 'ignore', 'pipe', 'ipc'] },
     );
     children.push(child);
     let entered = false;

@@ -51,7 +51,7 @@ function optionsFor(options) {
   return {
     cwd: options.cwd ?? process.cwd(),
     env: environmentFor(options.env ?? process.env),
-    windowsHide: options.windowsHide,
+
     timeout: options.timeout ?? 0,
     maxBuffer: options.maxBuffer ?? 1_048_576,
     killSignal: options.killSignal ?? 'SIGTERM',

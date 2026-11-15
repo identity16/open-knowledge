@@ -26,7 +26,6 @@ import { expect, test } from './_helpers/smoke-test';
 import { waitForShellReady } from './_helpers/terminal-ready';
 
 const TARGET = resolveDesktopTarget();
-const WINDOWS = process.platform === 'win32';
 
 const OK_SERVER_NAME = 'open-knowledge';
 
@@ -205,10 +204,6 @@ test.describe('Docked terminal launch — composed argv', () => {
   test.skip(!SMOKE_ENABLED, 'Set OK_DESKTOP_E2E_SMOKE=1 to run Electron smoke tests.');
   test.skip(!PTY_PLATFORM_SUPPORTED, PTY_PLATFORM_SKIP_REASON);
   test.skip(!TARGET.exists, TARGET.missingReason);
-  test.skip(
-    WINDOWS,
-    'The fake claude on PATH is a POSIX sh script and the launch PATH is POSIX-shaped; the Windows shell never reaches readiness with them.',
-  );
 
   test('a Claude launch hands the PTY the settings payload and the prompt verbatim', async ({
     captureStderrFor,

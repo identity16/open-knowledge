@@ -35,18 +35,18 @@ describe('maybeRedirectToHelperBundle', () => {
     ).toBeNull();
   });
 
-  test.each([
-    ['linux', '/Applications/OpenKnowledge.app/Contents/MacOS/OpenKnowledge'],
-    ['win32', 'C:\\Program Files\\OpenKnowledge\\OpenKnowledge.exe'],
-  ] as const)('non-darwin (%s) → null even if exists() would pass', (platform, execPath) => {
-    expect(
-      maybeRedirectToHelperBundle({
-        execPath,
-        platform,
-        exists: always,
-      }),
-    ).toBeNull();
-  });
+  test.each([['linux', '/Applications/OpenKnowledge.app/Contents/MacOS/OpenKnowledge']] as const)(
+    'non-darwin (%s) → null even if exists() would pass',
+    (platform, execPath) => {
+      expect(
+        maybeRedirectToHelperBundle({
+          execPath,
+          platform,
+          exists: always,
+        }),
+      ).toBeNull();
+    },
+  );
 
   test.each([
     '/usr/local/bin/node',
@@ -129,10 +129,7 @@ describe('resolveSelfSpawn', () => {
     expect(result.prefixArgs).toEqual([PACKAGED_ENTRY]);
   });
 
-  it.each([
-    ['linux', PACKAGED_EXEC],
-    ['win32', 'C:\\Program Files\\OpenKnowledge\\OpenKnowledge.exe'],
-  ] as const)(
+  it.each([['linux', PACKAGED_EXEC]] as const)(
     'non-darwin (%s) → command stays execPath (no LaunchServices)',
     (platform, execPath) => {
       const result = resolveSelfSpawn({

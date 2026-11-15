@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -90,11 +89,7 @@ async function waitForWitnessPings(tmpHome: string, minPings: number): Promise<v
 function killProcessTree(app: ElectronApplication): Promise<void> {
   const proc = app.process();
   const exited = new Promise<void>((resolve) => proc.once('exit', () => resolve()));
-  if (process.platform === 'win32') {
-    spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { stdio: 'ignore' });
-  } else {
-    proc.kill('SIGKILL');
-  }
+  proc.kill('SIGKILL');
   return exited;
 }
 

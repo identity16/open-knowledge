@@ -35,15 +35,12 @@ import {
   probeNpxNodeCompatibility,
   type ResolvedLaunch,
   resolveCustomLaunch,
-  resolveNpxNodeCommand,
   resolveRegistryLaunch,
-  resolveWindowsCommand,
   spawnAcpAgent,
   staleNpxCacheEntry,
   terminateAgentTree,
   undeletableManagedRuntimeHint,
   unrepairableManagedRuntimeHint,
-  windowsCmdWrap,
   withHostedAgentMarker,
   withLoginShellPath,
   withPreferredLoginShellPath,
@@ -167,19 +164,6 @@ describe('package acquisition descriptor boundaries', () => {
       ),
     ).rejects.toMatchObject({ code: 'unsupported-platform' });
   });
-
-  test.each(['agent@0.0.0 - 1.2.3', '@scope/agent@0.0.0 - 1.2.3', 'agent<=1.2.3'])(
-    'compatibility control: Windows transports %s as one quoted operand',
-    (operand) => {
-      const wrapped = windowsCmdWrap('C:\\Program Files\\nodejs\\npm.cmd', [
-        'pack',
-        operand,
-        '--json',
-      ]);
-      expect(wrapped.args[3]).toContain(`"${operand}"`);
-      expect(wrapped.args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
-    },
-  );
 });
 
 describe('mergedEnv PATH augmentation', () => {
@@ -1042,7 +1026,7 @@ describe('preflightLaunch', () => {
 
   test('a bare command is found via a PATH search', async () => {
     const dir = tmp();
-    const name = process.platform === 'win32' ? 'fakeagent.cmd' : 'fakeagent';
+    const name = 'fakeagent';
     writeFileSync(join(dir, name), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     await expect(
       preflightLaunch({
@@ -1072,7 +1056,7 @@ describe('preflightLaunch', () => {
   });
 });
 
-describe.skipIf(process.platform === 'win32')('probeInterpreterHealth', () => {
+describe('probeInterpreterHealth', () => {
   const fakeNpx = (body: string): ResolvedLaunch => {
     const dir = tmp();
     writeFileSync(join(dir, 'npx'), `#!/bin/sh\n${body}\n`, { mode: 0o755 });
@@ -1179,7 +1163,7 @@ describe.skipIf(process.platform === 'win32')('probeInterpreterHealth', () => {
   }, 20_000);
 });
 
-describe.skipIf(process.platform === 'win32')('probeNpxNodeCompatibility', () => {
+describe('probeNpxNodeCompatibility', () => {
   const launchWithNodeVersion = (body: string): ResolvedLaunch => {
     const dir = tmp();
     writeFileSync(join(dir, 'node'), `#!/bin/sh\n${body}\n`, { mode: 0o755 });
@@ -1329,58 +1313,6 @@ describe('brokenInterpreterHint', () => {
   });
 });
 
-describe('windows cmd wrapping (spawn on Windows)', () => {
-  test('resolveWindowsCommand leaves path-qualified commands untouched', () => {
-    expect(resolveWindowsCommand('C:\\x\\uvx.exe', 'C:\\x')).toBe('C:\\x\\uvx.exe');
-    expect(resolveWindowsCommand('/usr/bin/uvx', undefined)).toBe('/usr/bin/uvx');
-  });
-
-  test('resolveWindowsCommand picks the .cmd/.exe, never a bare extensionless file', () => {
-    const dir = tmp();
-    writeFileSync(join(dir, 'npx'), '#!/bin/sh\n');
-    writeFileSync(join(dir, 'npx.cmd'), '@echo off\n');
-    const resolved = resolveWindowsCommand('npx', dir);
-    expect(resolved).not.toBe(join(dir, 'npx'));
-    if (resolved !== 'npx') expect(/\.cmd$/i.test(resolved)).toBe(true);
-  });
-
-  test('the npx compatibility probe selects the node.exe beside the resolved shim', () => {
-    const priorPathExt = process.env.PATHEXT;
-    try {
-      process.env.PATHEXT = '.cmd;.exe';
-      const earlier = tmp();
-      const npmBin = tmp();
-      writeFileSync(join(earlier, 'node.exe'), 'unrelated node');
-      writeFileSync(join(npmBin, 'npx.cmd'), '@echo off\n');
-      writeFileSync(join(npmBin, 'node.exe'), 'npm shim node');
-      const launch: ResolvedLaunch = {
-        cmd: 'npx',
-        args: ['-y', '@fake/agent'],
-        env: { PATH: [earlier, npmBin].join(delimiter) },
-        kind: 'npx',
-        pathFromOverlay: true,
-      };
-
-      expect(resolveNpxNodeCommand(launch, 'win32')).toBe(join(npmBin, 'node.exe'));
-    } finally {
-      if (priorPathExt === undefined) delete process.env.PATHEXT;
-      else process.env.PATHEXT = priorPathExt;
-    }
-  });
-
-  test('outer-quotes the whole command so a spaced launcher path survives /s', () => {
-    const { cmd, args } = windowsCmdWrap('C:\\Program Files\\nodejs\\npx.cmd', ['-y', 'pkg']);
-    expect(cmd.toLowerCase()).toContain('cmd');
-    expect(args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
-    expect(args[3]).toBe('""C:\\Program Files\\nodejs\\npx.cmd" -y pkg"');
-  });
-
-  test('quotes args that would otherwise split or be interpreted by cmd', () => {
-    const { args } = windowsCmdWrap('tool', ['a b', 'safe', 'a&b', '']);
-    expect(args[3]).toBe('""tool" "a b" safe "a&b" """');
-  });
-});
-
 describe('terminateAgentTree', () => {
   test('a compliant agent exits on SIGTERM within the grace window', async () => {
     const dir = tmp();
@@ -1480,14 +1412,6 @@ describe('staleNpxCacheEntry', () => {
 
   test('names the npx cache entry npm could not read', () => {
     expect(staleNpxCacheEntry(npm11)).toBe('/Users/andrew/.npm/_npx/4142609e2aa780f6');
-  });
-
-  test('reads the older npm ERR! spelling and a Windows cache path', () => {
-    const detail =
-      'npm ERR! code ENOENT\r\nnpm ERR! path C:\\Users\\Ann Smith\\AppData\\Local\\npm-cache\\_npx\\1a2b3c4d5e6f7a8b\\package.json\r\nnpm ERR! errno -4058\r\n';
-    expect(staleNpxCacheEntry(detail)).toBe(
-      'C:\\Users\\Ann Smith\\AppData\\Local\\npm-cache\\_npx\\1a2b3c4d5e6f7a8b',
-    );
   });
 
   test('falls back to the quoted path of the failed open', () => {
@@ -1633,4 +1557,12 @@ test('diagnostic stderr flushes a final line without a newline', () => {
   capture.write('https://0123456789abcdef@pypi.company.com/simple');
   capture.end();
   expect(lines).toEqual(['https://***@pypi.company.com/simple']);
+});
+
+test('reads the older npm ERR! spelling and a Windows cache path', () => {
+  const detail =
+    'npm ERR! code ENOENT\r\nnpm ERR! path C:\\Users\\Ann Smith\\AppData\\Local\\npm-cache\\_npx\\1a2b3c4d5e6f7a8b\\package.json\r\nnpm ERR! errno -4058\r\n';
+  expect(staleNpxCacheEntry(detail)).toBe(
+    'C:\\Users\\Ann Smith\\AppData\\Local\\npm-cache\\_npx\\1a2b3c4d5e6f7a8b',
+  );
 });

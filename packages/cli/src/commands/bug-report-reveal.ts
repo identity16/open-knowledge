@@ -9,7 +9,6 @@ export function revealBundle(
 ): void {
   try {
     if (os === 'darwin') spawnDetached('/usr/bin/open', ['-R', zipPath]);
-    else if (os === 'win32') spawnDetached('explorer.exe', [dirname(zipPath)]);
     else spawnDetached('xdg-open', [dirname(zipPath)]);
   } catch {}
 }

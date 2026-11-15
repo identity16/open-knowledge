@@ -100,7 +100,6 @@ export function proxyToBundle(params: {
       {
         env: { ...params.env, OK_BUNDLE_PROXY: '0' },
         stdio: 'inherit',
-        windowsHide: true,
       },
     );
 

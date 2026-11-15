@@ -270,11 +270,7 @@ describe('command-menu parity ratchet', () => {
   });
 
   test('Ratchet B: every actionable menu leaf is classified across both platforms', () => {
-    const leaves = [
-      ...collectLeavesForPlatform('darwin'),
-      ...collectLeavesForPlatform('win32'),
-      ...collectLeavesForPlatform('linux'),
-    ];
+    const leaves = [...collectLeavesForPlatform('darwin'), ...collectLeavesForPlatform('linux')];
     const untracked = leaves.filter((leaf) => {
       if (leaf.role) return !OS_ROLE_EXEMPT.has(leaf.role);
       const label = normalizeLabel(leaf.label);
@@ -286,7 +282,7 @@ describe('command-menu parity ratchet', () => {
   const DECLARED_MULTI_PLACEMENT = new Set<string>([]);
 
   test('Ratchet B: no menu leaf label appears twice in the same platform menu', () => {
-    for (const platform of ['darwin', 'win32'] as const) {
+    for (const platform of ['darwin', 'linux'] as const) {
       const counts = new Map<string, number>();
       for (const leaf of collectLeavesForPlatform(platform)) {
         if (leaf.role) continue;
@@ -385,16 +381,16 @@ describe('command-menu parity ratchet', () => {
     expectMenuShortcutParity(MENU_SHORTCUT_PAIRS, 'darwin', 'mac');
   });
 
-  test('Ratchet D: Windows/Linux navigation accelerators agree with the shortcut registry', () => {
-    expectMenuShortcutParity(NAVIGATION_HISTORY_SHORTCUT_PAIRS, 'win32', 'windowsLinux');
+  test('Ratchet D: Linux navigation accelerators agree with the shortcut registry', () => {
+    expectMenuShortcutParity(NAVIGATION_HISTORY_SHORTCUT_PAIRS, 'linux', 'windowsLinux');
   });
 
-  test('Ratchet D: cross-platform accelerators agree on Windows/Linux as well', () => {
-    expectMenuShortcutParity(CROSS_PLATFORM_SHORTCUT_PAIRS, 'win32', 'windowsLinux');
+  test('Ratchet D: cross-platform accelerators agree on Linux', () => {
+    expectMenuShortcutParity(CROSS_PLATFORM_SHORTCUT_PAIRS, 'linux', 'windowsLinux');
   });
 
   test('Ratchet D: cross-platform accelerators declare a platform-neutral modifier', () => {
-    for (const platform of ['darwin', 'win32'] as const) {
+    for (const platform of ['darwin', 'linux'] as const) {
       const leaves = collectLeavesForPlatform(platform);
       const accelerators = CROSS_PLATFORM_SHORTCUT_PAIRS.map((pair) => ({
         menuLabel: pair.menuLabel,
@@ -668,7 +664,7 @@ describe('menu state-dependent rendering', () => {
   });
 
   test('presence-gated leaves disappear when their dep is unwired', () => {
-    for (const platform of ['darwin', 'win32'] as const) {
+    for (const platform of ['darwin', 'linux'] as const) {
       expect(
         findLeaf(collectLeavesForPlatform(platform, makeFullDeps()), 'Check for updates'),
       ).toBeDefined();

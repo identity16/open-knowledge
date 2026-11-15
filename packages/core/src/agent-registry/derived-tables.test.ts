@@ -232,7 +232,7 @@ describe('handoff targets', () => {
       appBrandName: 'Claude Desktop',
       schemes: ['claude:'],
       installUrl: 'https://claude.com/download',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: "Conversational pairing in Claude Desktop's Cowork tab.",
     },
     {
@@ -241,7 +241,7 @@ describe('handoff targets', () => {
       appBrandName: 'Claude Desktop',
       schemes: ['claude:'],
       installUrl: 'https://claude.com/download',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: "Agentic coding in Claude Desktop's Code tab.",
     },
     {
@@ -250,7 +250,7 @@ describe('handoff targets', () => {
       appBrandName: 'ChatGPT Desktop',
       schemes: ['codex:'],
       installUrl: 'https://developers.openai.com/codex/app',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: "OpenAI's ChatGPT desktop app, home of the Codex agent.",
     },
     {
@@ -258,7 +258,7 @@ describe('handoff targets', () => {
       displayName: 'Cursor',
       schemes: ['cursor:'],
       installUrl: 'https://cursor.com/',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: 'AI-first VS Code fork with multi-file edits.',
     },
     {
@@ -266,7 +266,7 @@ describe('handoff targets', () => {
       displayName: 'GitHub Copilot',
       schemes: [],
       installUrl: 'https://docs.github.com/en/copilot/how-tos/copilot-cli/cli-getting-started',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: "GitHub's terminal-native coding agent.",
     },
     {
@@ -274,7 +274,7 @@ describe('handoff targets', () => {
       displayName: 'OpenCode',
       schemes: [],
       installUrl: 'https://opencode.ai',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: 'Open-source terminal coding agent; bring any local model.',
     },
     {
@@ -282,7 +282,7 @@ describe('handoff targets', () => {
       displayName: 'Pi',
       schemes: [],
       installUrl: 'https://pi.dev',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: 'Minimal open-source terminal coding agent, extensible in TypeScript.',
     },
     {
@@ -290,7 +290,7 @@ describe('handoff targets', () => {
       displayName: 'Antigravity',
       schemes: [],
       installUrl: 'https://antigravity.google',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: "Google's agentic IDE + `agy` terminal agent.",
     },
     {
@@ -298,7 +298,7 @@ describe('handoff targets', () => {
       displayName: 'OpenClaw',
       schemes: [],
       installUrl: 'https://openclaw.ai',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: 'Open-source agent gateway; runs agents against your MCP servers.',
     },
     {
@@ -306,7 +306,7 @@ describe('handoff targets', () => {
       displayName: 'Hermes',
       schemes: [],
       installUrl: 'https://hermes-agent.nousresearch.com',
-      platforms: ['darwin', 'win32', 'linux'],
+      platforms: ['darwin', 'linux'],
       tagline: "Nous Research's terminal coding agent.",
     },
   ];
@@ -357,12 +357,12 @@ describe('handoff targets', () => {
 
 describe('handoff target host platforms', () => {
   it('offers a target on a host platform it declares', () => {
-    expect(isHandoffTargetSupportedOn({ platforms: ['darwin', 'win32'] }, 'darwin')).toBe(true);
-    expect(isHandoffTargetSupportedOn({ platforms: ['darwin', 'win32'] }, 'win32')).toBe(true);
+    expect(isHandoffTargetSupportedOn({ platforms: ['darwin'] }, 'darwin')).toBe(true);
+    expect(isHandoffTargetSupportedOn({ platforms: ['darwin'] }, 'linux')).toBe(false);
   });
 
   it('withholds a target from a host platform it does not declare', () => {
-    expect(isHandoffTargetSupportedOn({ platforms: ['darwin', 'win32'] }, 'linux')).toBe(false);
+    expect(isHandoffTargetSupportedOn({ platforms: ['darwin'] }, 'linux')).toBe(false);
   });
 
   it('offers every target when the host platform is unknown, as on the web host', () => {

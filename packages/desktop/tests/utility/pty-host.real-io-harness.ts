@@ -4,10 +4,7 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { SpawnPty } from '../../src/utility/pty-host.ts';
-import {
-  buildInputReadyProbe,
-  terminalSmokeShellCommands,
-} from '../smoke/_helpers/terminal-smoke-shell.ts';
+import { terminalSmokeShellCommands } from '../smoke/_helpers/terminal-smoke-shell.ts';
 import {
   buildCwdFileProofCommand,
   createHarnessBudget,
@@ -15,7 +12,6 @@ import {
   createHarnessReadinessObserver,
   createPtyHostProbe,
   HARNESS_REPORT_RESERVE_MS,
-  HARNESS_WINDOWS_LAUNCH_STALL_MS,
   HarnessBudgetRefusal,
   type HarnessReadinessObserver,
   harnessTimeouts,
@@ -25,10 +21,6 @@ import {
 } from '../support/pty-readiness.test-helper.ts';
 import { createHarnessScenarioRunner } from '../support/pty-startup-trace.test-helper.ts';
 import { harnessScenarioTitles } from '../support/real-io-harness-roster.test-helper.ts';
-import {
-  WINDOWS_OS_MAX_BUDGET_MS,
-  windowsPowerShellPath,
-} from '../support/windows-os-state.test-helper.ts';
 
 const require = createRequire(import.meta.url);
 
@@ -60,12 +52,7 @@ const createHost = (
     env,
     shellExists,
     logger: hostLogger,
-    startupTrace: { native: process.platform === 'win32' },
-    osCaptureDeadlineAt: () =>
-      Math.min(
-        performance.now() + WINDOWS_OS_MAX_BUDGET_MS,
-        harnessBudget.reportDeadlineAt + HARNESS_REPORT_RESERVE_MS / 2,
-      ),
+    startupTrace: {},
   });
   runner.own({
     snapshot: () => host.snapshotStartup(),
@@ -85,33 +72,12 @@ const HARNESS_BUDGET_MS = resolveHarnessBudgetMs(
 );
 const harnessBudget = createHarnessBudget(HARNESS_BUDGET_MS, HARNESS_REPORT_RESERVE_MS);
 
-async function waitForWindowsInputReady(
-  host: ReturnType<typeof createHost>,
-  ptyId: string,
-  label: string,
-  readiness: HarnessReadinessObserver,
-): Promise<void> {
-  const probe = buildInputReadyProbe();
-  const timing = await readiness.waitForEvaluatedInput(
-    (data) => host.send({ type: 'input', ptyId, data }),
-    { input: `${probe.command}\r`, marker: probe.marker },
-    label,
-  );
-  console.log(
-    `INPUT_READY ${label} firstOutputMs=${timing.firstOutputMs} firstOutput=${timing.firstOutput} readyMs=${timing.roundTripMs}`,
-  );
-}
-
 async function waitForInteractiveShellReady(
-  host: ReturnType<typeof createHost>,
-  ptyId: string,
+  _host: ReturnType<typeof createHost>,
+  _ptyId: string,
   label: string,
   readiness: HarnessReadinessObserver,
 ): Promise<void> {
-  if (process.platform === 'win32') {
-    await waitForWindowsInputReady(host, ptyId, label, readiness);
-    return;
-  }
   await readiness.waitForShellReady(label);
 }
 
@@ -195,51 +161,6 @@ async function main(): Promise<void> {
     }
   });
 
-  if (process.platform === 'win32') {
-    await runner.run('PowerShell executes a structured launch command', async (deadlineAt) => {
-      const powershell = windowsPowerShellPath();
-      if (!existsSync(powershell)) throw new Error(`Windows PowerShell is missing: ${powershell}`);
-
-      const launchToken = randomUUID();
-      const host = createHost({
-        ...BASE_ENV,
-        OK_HARNESS_LAUNCH_TOKEN: launchToken,
-      });
-      const launch = host.streamOf('launch');
-      const readiness = createHarnessReadinessObserver(
-        launch,
-        deadlineAt,
-        harnessBudget.reportDeadlineAt,
-      );
-      host.send({
-        type: 'create',
-        ptyId: 'launch',
-        cwd: tmp,
-        cols: 80,
-        rows: 24,
-        shell: powershell,
-        launchCommand: {
-          executable: 'cmd.exe',
-          args: ['/d', '/c', 'echo', '%OK_HARNESS_LAUNCH_TOKEN%'],
-        },
-      });
-      await readiness.waitForCondition(
-        () => launch.read().includes(launchToken),
-        'PowerShell EncodedCommand output',
-        { stallMs: HARNESS_WINDOWS_LAUNCH_STALL_MS },
-      );
-      await waitForWindowsInputReady(
-        host,
-        'launch',
-        'PowerShell remains interactive after EncodedCommand',
-        readiness,
-      );
-      if (host.errorOf('launch') !== null) {
-        throw new Error(`PowerShell launch failed: ${host.errorOf('launch')}`);
-      }
-    });
-  }
-
   await runner.run('host survives a PTY death and respawns', async (deadlineAt) => {
     const host = createHost(BASE_ENV);
     const first = host.streamOf('c1');
@@ -273,10 +194,7 @@ async function main(): Promise<void> {
   });
 
   await runner.run('bad shell surfaces as a spawn failure', async (deadlineAt) => {
-    const badShell = join(
-      tmp,
-      process.platform === 'win32' ? 'no-such-shell-xyz.exe' : 'no-such-shell-xyz',
-    );
+    const badShell = join(tmp, 'no-such-shell-xyz');
     const host = createHost(BASE_ENV, (path) => path === badShell || existsSync(path));
     const bad = host.streamOf('bad');
     host.send({

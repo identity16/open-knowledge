@@ -1,41 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  assetOpenRefusalRevealsInstead,
-  isTerminalShellNoticeReason,
-  TERMINAL_SHELL_NOTICE_REASONS,
-} from './desktop-bridge.ts';
-
-const WIRE_REASONS = ['config-unreadable', 'invalid-value', 'not-absolute', 'not-found'];
-
-describe('TERMINAL_SHELL_NOTICE_REASONS', () => {
-  it('exposes exactly the wire vocabulary', () => {
-    expect([...TERMINAL_SHELL_NOTICE_REASONS].sort()).toEqual([...WIRE_REASONS].sort());
-  });
-});
-
-describe('isTerminalShellNoticeReason', () => {
-  it('accepts every reason in the wire vocabulary', () => {
-    for (const reason of WIRE_REASONS) {
-      expect(isTerminalShellNoticeReason(reason)).toBe(true);
-    }
-  });
-
-  it('rejects unknown strings', () => {
-    expect(isTerminalShellNoticeReason('unreadable')).toBe(false);
-    expect(isTerminalShellNoticeReason('')).toBe(false);
-    expect(isTerminalShellNoticeReason('Invalid-Value')).toBe(false);
-    expect(isTerminalShellNoticeReason('__proto__')).toBe(false);
-  });
-
-  it('rejects non-string inputs (defends the IPC boundary against arbitrary payloads)', () => {
-    expect(isTerminalShellNoticeReason(undefined)).toBe(false);
-    expect(isTerminalShellNoticeReason(null)).toBe(false);
-    expect(isTerminalShellNoticeReason(0)).toBe(false);
-    expect(isTerminalShellNoticeReason(false)).toBe(false);
-    expect(isTerminalShellNoticeReason({})).toBe(false);
-    expect(isTerminalShellNoticeReason(['invalid-value'])).toBe(false);
-  });
-});
+import { assetOpenRefusalRevealsInstead } from './desktop-bridge.ts';
 
 describe('assetOpenRefusalRevealsInstead', () => {
   it('reveals refusals of items that exist but must not be opened', () => {

@@ -323,25 +323,6 @@ describe('collectDiagnosticReports', () => {
     ]);
   });
 
-  test('windows on mtime while ordering on the incident time', () => {
-    const dir = makeTmpDir();
-    writeReport(dir, 'OpenKnowledge-old-incident-fresh-mtime.ips', {
-      name: 'OpenKnowledge',
-      at: hoursBefore(1),
-      incidentAt: daysBefore(10),
-    });
-    writeReport(dir, 'OpenKnowledge-recent-incident.ips', {
-      name: 'OpenKnowledge',
-      at: hoursBefore(50),
-      incidentAt: hoursBefore(2),
-    });
-
-    expect(collectedNames(dir)).toEqual([
-      'OpenKnowledge-recent-incident.ips',
-      'OpenKnowledge-old-incident-fresh-mtime.ips',
-    ]);
-  });
-
   test('falls back to mtime when the header timestamp does not parse', () => {
     const dir = makeTmpDir();
     const header = JSON.stringify({

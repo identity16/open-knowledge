@@ -264,7 +264,6 @@ describe('ConfigSchema coverage (NR3 — every leaf has fieldRegistry metadata)'
       'server.idleShutdown',
       'server.openBrowser',
       'terminal.enabled',
-      'terminal.shell',
     ]);
   });
 

@@ -3,7 +3,6 @@ import { once } from 'node:events';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { hostname, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { okUserHomeDisplayPath } from '@inkeep/open-knowledge-core';
 import {
   type Config,
   getMachineId,
@@ -447,8 +446,6 @@ describe('runStop identity check at the signal', () => {
     startedAtMs: Date.parse('2026-04-17T12:00:00Z'),
     clock: 'creation' as const,
   });
-  const bootedBeforeTheLock = () => Date.parse('2026-01-01T00:00:00Z');
-  const bootedLongAfterTheLock = () => Date.parse('2026-04-17T12:00:00Z');
 
   function lockState(status: 'alive' | 'foreign-host', owner: Record<string, string>): LockState {
     return {
@@ -481,7 +478,6 @@ describe('runStop identity check at the signal', () => {
       error: (msg) => errors.push(msg),
       probeClients: async () => null,
       logger,
-      readBootInstant: bootedBeforeTheLock,
       ...overrides,
     });
     return { outcome, killed, logs, errors, warnings };
@@ -569,7 +565,6 @@ describe('runStop identity check at the signal', () => {
             pid: 100,
             lockPath,
             platform: 'darwin',
-            nativeFailures: [],
           }),
         },
       ],
@@ -603,97 +598,6 @@ describe('runStop identity check at the signal', () => {
         'Before ending process 100 yourself, confirm that it is an OpenKnowledge server. ' +
         `Once you have confirmed no OpenKnowledge server is running for this project, remove ${lockPath}.`,
     ]);
-  });
-
-  test.each([
-    [
-      'unavailable',
-      'the Windows native addon (native-config.win32-x64-msvc.node) did not load or does not export readProcessStart: the addon was not found',
-      'Reinstall OpenKnowledge to restore the Windows component that verifies process identity. ',
-    ],
-    [
-      'query-failed',
-      'readProcessStart failed: OpenProcess: os error 5',
-      'The Windows component loaded but the operating system refused the query, so reinstalling will not help; retry from an account that can inspect that process. ',
-    ],
-  ] as const)(
-    'on Windows a %s native read reaches the refusal and the record',
-    async (kind, reason, recovery) => {
-      const { outcome, warnings } = run(thisMachine(), {
-        isAlive: () => true,
-        readProcessStart: (_pid, options) => {
-          options?.onNativeFailure?.({ kind, reason });
-          return null;
-        },
-        platform: 'win32',
-      });
-
-      expect((await outcome).failed.map((failure) => failure.error)).toEqual([
-        `Could not read when process 100 started, so it cannot be confirmed as the server that wrote ${lockPath}; ` +
-          'it was not signalled, and --force does not override this check. ' +
-          recovery +
-          `The failure detail is recorded in the CLI log under ${okUserHomeDisplayPath('logs')}. ` +
-          'Before ending process 100 yourself, confirm that it is an OpenKnowledge server. ' +
-          `Once you have confirmed no OpenKnowledge server is running for this project, remove ${lockPath}.`,
-      ]);
-      expect(warnings).toContainEqual({
-        obj: {
-          lockDir,
-          lockPath,
-          lockPid: 100,
-          platform: 'win32',
-          cause: 'process-start-unreadable',
-          nativeFailures: [{ kind, reason }],
-        },
-        msg: 'stop declined: lock holder identity unverified',
-      });
-    },
-  );
-
-  test('on Windows without a logger, as the desktop runs it, a native read failure points at no log', async () => {
-    const { outcome } = run(thisMachine(), {
-      isAlive: () => true,
-      readProcessStart: (_pid, options) => {
-        options?.onNativeFailure?.({
-          kind: 'query-failed',
-          reason: 'readProcessStart failed: OpenProcess: os error 5',
-        });
-        return null;
-      },
-      platform: 'win32',
-      logger: undefined,
-    });
-
-    expect((await outcome).failed.map((failure) => failure.error)).toEqual([
-      `Could not read when process 100 started, so it cannot be confirmed as the server that wrote ${lockPath}; ` +
-        'it was not signalled, and --force does not override this check. ' +
-        'The Windows component loaded but the operating system refused the query, so reinstalling will not help; retry from an account that can inspect that process. ' +
-        'Before ending process 100 yourself, confirm that it is an OpenKnowledge server. ' +
-        `Once you have confirmed no OpenKnowledge server is running for this project, remove ${lockPath}.`,
-    ]);
-  });
-
-  test('on Windows a holder the OS refuses to open, named by a lock written before the last boot, is reported stale and not signalled', async () => {
-    const { outcome, killed, logs, errors, warnings } = run(thisMachine(), {
-      isAlive: () => true,
-      readProcessStart: (_pid, options) => {
-        options?.onNativeFailure?.({
-          kind: 'query-failed',
-          reason: 'readProcessStart failed: OpenProcess: os error 5',
-        });
-        return null;
-      },
-      platform: 'win32',
-      readBootInstant: bootedLongAfterTheLock,
-    });
-
-    expect(await outcome).toEqual({ stopped: [], failed: [], hadTargets: true });
-    expect(killed).toEqual([]);
-    expect(logs).toEqual([]);
-    expect(errors).toEqual([
-      `Process 100 is no longer the server that wrote ${lockPath}; it was not signalled. Run \`ok clean\` to remove the stale lock.`,
-    ]);
-    expect(warnings).toEqual([]);
   });
 
   test('a holder whose start cannot be compared with the recorded start fails without a signal', async () => {
@@ -838,10 +742,7 @@ describe('runStop identity check at the signal', () => {
     expect(warnings.map((w) => w.obj.cause)).toEqual(['foreign-host']);
   });
 
-  test.each([
-    ['darwin', 'HOME'],
-    ['win32', 'USERPROFILE'],
-  ] as const)(
+  test.each([['darwin', 'HOME']] as const)(
     "another machine's lock that records a start is refused on %s naming %s and without the restart advice",
     async (platform, homeVariable) => {
       const state = anotherMachine();

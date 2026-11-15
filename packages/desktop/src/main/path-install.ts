@@ -163,7 +163,7 @@ export function computePathLeg(result: EnsureCliOnPathResult): StartupToastPathL
 interface EnsureCliOnPathOpts {
   executablePath: string;
   isPackaged: boolean;
-  platform: 'darwin' | 'win32' | 'linux' | string;
+  platform: 'darwin' | 'linux' | string;
   forceEnv?: string | null | undefined;
   reclaimDisableEnv?: string | null | undefined;
   env?: Record<string, string | undefined>;
@@ -420,7 +420,6 @@ export async function defaultSpawn(
       const child = nodeSpawn(command, args, {
         env: opts.env as NodeJS.ProcessEnv,
         stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true,
       });
       child.unref();
       let stdout = '';
@@ -546,7 +545,7 @@ export async function ensureCliOnPath(opts: EnsureCliOnPathOpts): Promise<Ensure
     logger = DEFAULT_LOGGER,
   } = opts;
   if (reclaimDisableEnv === '1') return { status: 'skipped', reason: 'reclaim-disabled' };
-  if (platform === 'win32') return { status: 'skipped', reason: 'installer-managed' };
+
   if (platform !== 'darwin' && platform !== 'linux')
     return { status: 'skipped', reason: 'platform' };
   if (!isPackaged && forceEnv !== '1') return { status: 'skipped', reason: 'dev-mode' };

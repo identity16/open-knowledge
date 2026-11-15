@@ -871,7 +871,7 @@ function makeAliasedRoot(
   const real = join(projectDir, target);
   mkdirSync(real);
   const typed = join(projectDir, link);
-  symlinkSync(real, typed, process.platform === 'win32' ? 'junction' : 'dir');
+  symlinkSync(real, typed, 'dir');
   return { projectDir, typed, native: realpathSync.native(typed) };
 }
 

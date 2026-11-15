@@ -54,9 +54,7 @@ function seedProject(rendered = false): { tmpHome: string; projectDir: string; d
   const serverSource = fakeSlidevServer(rendered);
   writeFileSync(deckPath, `---\nslides: true\n---\n\n# ${rendered ? 'Rendered' : 'Shell only'}\n`);
   writeFileSync(fakeServerPath, serverSource);
-  if (process.platform === 'win32') {
-    writeFileSync(join(binDir, 'slidev.cmd'), `@"${process.execPath}" "${fakeServerPath}" %*\r\n`);
-  } else {
+  {
     const binPath = join(binDir, 'slidev');
     writeFileSync(binPath, `#!/usr/bin/env node\n${serverSource}`);
     chmodSync(binPath, 0o755);

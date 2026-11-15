@@ -24,8 +24,8 @@ import {
 } from './prepare-platform-natives.mjs';
 
 const VERSION = '1.3.0';
-const ARM64 = '@napi-rs/keyring-win32-arm64-msvc';
-const X64 = '@napi-rs/keyring-win32-x64-msvc';
+const ARM64 = '@napi-rs/keyring-linux-arm64-gnu';
+const X64 = '@napi-rs/keyring-linux-x64-gnu';
 
 function tarHeader(name, size, type = '0') {
   const header = Buffer.alloc(512, 0);
@@ -62,7 +62,7 @@ const archive = gzipSync(
     { name: 'package/', type: '5' },
     { name: 'package/package.json', data: manifest },
     { name: 'package/README.md', data: Buffer.from('readme') },
-    { name: 'package/keyring.win32-arm64-msvc.node', data: nativeBytes },
+    { name: 'package/keyring.linux-arm64-gnu.node', data: nativeBytes },
   ]),
 );
 const integrity = `sha512-${createHash('sha512').update(archive).digest('base64')}`;
@@ -83,7 +83,7 @@ beforeAll(async () => {
       response.writeHead(503, 'Service Unavailable').end();
       return;
     }
-    if (!request.url.endsWith(`/keyring-win32-arm64-msvc-${VERSION}.tgz`)) {
+    if (!request.url.endsWith(`/keyring-linux-arm64-gnu-${VERSION}.tgz`)) {
       response.writeHead(404, 'Not Found').end();
       return;
     }
@@ -111,11 +111,11 @@ function fixtureRoot() {
   const napi = join(root, 'node_modules', '@napi-rs');
   mkdirSync(join(napi, 'keyring'), { recursive: true });
   writeFileSync(join(napi, 'keyring', 'package.json'), JSON.stringify({ version: VERSION }));
-  const store = join(root, 'node_modules', '.pnpm', `@napi-rs+keyring-win32-x64-msvc@${VERSION}`);
-  const hostPackage = join(store, 'node_modules', '@napi-rs', 'keyring-win32-x64-msvc');
+  const store = join(root, 'node_modules', '.pnpm', `@napi-rs+keyring-linux-x64-gnu@${VERSION}`);
+  const hostPackage = join(store, 'node_modules', '@napi-rs', 'keyring-linux-x64-gnu');
   mkdirSync(hostPackage, { recursive: true });
   writeFileSync(join(hostPackage, 'package.json'), JSON.stringify({ name: X64, version: VERSION }));
-  symlinkSync(hostPackage, join(napi, 'keyring-win32-x64-msvc'));
+  symlinkSync(hostPackage, join(napi, 'keyring-linux-x64-gnu'));
   writeFileSync(
     join(root, 'pnpm-lock.yaml'),
     `packages:\n\n  '${ARM64}@${VERSION}':\n    resolution: {integrity: ${integrity}}\n`,
@@ -127,7 +127,7 @@ const run = (root, overrides = {}) => {
   const lines = [];
   return prepareNatives({
     repoRoot: root,
-    platform: 'win32',
+    platform: 'linux',
     registry,
     extract: extractWithTar('tar'),
     log: (line) => lines.push(line),
@@ -136,9 +136,9 @@ const run = (root, overrides = {}) => {
   }).then(() => lines);
 };
 
-const arm64Dir = (root) => join(root, 'node_modules', '@napi-rs', 'keyring-win32-arm64-msvc');
+const arm64Dir = (root) => join(root, 'node_modules', '@napi-rs', 'keyring-linux-arm64-gnu');
 const hostManifest = (root) =>
-  join(root, 'node_modules', '@napi-rs', 'keyring-win32-x64-msvc', 'package.json');
+  join(root, 'node_modules', '@napi-rs', 'keyring-linux-x64-gnu', 'package.json');
 const parseFailure = (text) => {
   try {
     JSON.parse(text);
@@ -153,9 +153,7 @@ describe('prepare-platform-natives', () => {
   test('publishes a verified prebuild and records its completion marker', async () => {
     const root = fixtureRoot();
     const lines = await run(root);
-    expect(readFileSync(join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'))).toEqual(
-      nativeBytes,
-    );
+    expect(readFileSync(join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'))).toEqual(nativeBytes);
     expect(lines.join('\n')).toContain(`${X64}@${VERSION} present (pnpm-managed) — skip`);
     expect(
       installedState({
@@ -208,9 +206,7 @@ describe('prepare-platform-natives', () => {
     expect(attempts).toBe(2);
     expect(lines.join('\n')).toContain('failed on attempt 1: HTTP 503');
     expect(lines.join('\n')).toContain('on attempt 2');
-    expect(readFileSync(join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'))).toEqual(
-      nativeBytes,
-    );
+    expect(readFileSync(join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'))).toEqual(nativeBytes);
   });
 
   test('names a dropped connection by its cause code', async () => {
@@ -236,9 +232,7 @@ describe('prepare-platform-natives', () => {
     expect(attempts).toBe(2);
     expect(lines.join('\n')).toContain(`${ARM64}@${VERSION} fetched `);
     expect(lines.join('\n')).toContain('on attempt 2');
-    expect(readFileSync(join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'))).toEqual(
-      nativeBytes,
-    );
+    expect(readFileSync(join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'))).toEqual(nativeBytes);
   });
 
   test('fails after one retry when a transient connection error persists', async () => {
@@ -255,7 +249,7 @@ describe('prepare-platform-natives', () => {
     expect(attempts).toBe(2);
     expect(failure).toBeInstanceOf(NativesError);
     expect(failure.message).toContain(`${ARM64}@${VERSION}`);
-    expect(failure.message).toContain(`keyring-win32-arm64-msvc-${VERSION}.tgz`);
+    expect(failure.message).toContain(`keyring-linux-arm64-gnu-${VERSION}.tgz`);
     expect(failure.message).toContain('attempts: 2');
   });
 
@@ -271,7 +265,7 @@ describe('prepare-platform-natives', () => {
     expect(attempts).toBe(1);
     expect(failure).toBeInstanceOf(NativesError);
     expect(failure.message).toContain(`${ARM64}@${VERSION}`);
-    expect(failure.message).toContain(`keyring-win32-arm64-msvc-${VERSION}.tgz`);
+    expect(failure.message).toContain(`keyring-linux-arm64-gnu-${VERSION}.tgz`);
     expect(failure.message).toContain('attempts: 1');
   });
 
@@ -287,7 +281,7 @@ describe('prepare-platform-natives', () => {
     expect(attempts).toBe(1);
     expect(failure).toBeInstanceOf(NativesError);
     expect(failure.message).toContain(`${ARM64}@${VERSION}`);
-    expect(failure.message).toContain(`keyring-win32-arm64-msvc-${VERSION}.tgz`);
+    expect(failure.message).toContain(`keyring-linux-arm64-gnu-${VERSION}.tgz`);
     expect(failure.message).toContain('sha512 hash mismatch');
     expect(failure.message).toContain('attempts: 1');
   });
@@ -314,9 +308,7 @@ describe('prepare-platform-natives', () => {
     expect(attempts).toBe(2);
     expect(lines.join('\n')).toContain('body read failed on attempt 1');
     expect(lines.join('\n')).toContain('on attempt 2');
-    expect(readFileSync(join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'))).toEqual(
-      nativeBytes,
-    );
+    expect(readFileSync(join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'))).toEqual(nativeBytes);
   });
 
   test('rebuilds a partial install from verified bytes', async () => {
@@ -324,14 +316,12 @@ describe('prepare-platform-natives', () => {
     mkdirSync(arm64Dir(root), { recursive: true });
     writeFileSync(join(arm64Dir(root), 'package.json'), manifest);
     writeFileSync(
-      join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'),
+      join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'),
       nativeBytes.subarray(0, 100),
     );
     const lines = await run(root);
     expect(lines.join('\n')).toContain('no completion marker — fetching');
-    expect(readFileSync(join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'))).toEqual(
-      nativeBytes,
-    );
+    expect(readFileSync(join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'))).toEqual(nativeBytes);
   });
 
   test('keeps a partial install unverified when the bytes cannot be fetched', async () => {
@@ -339,7 +329,7 @@ describe('prepare-platform-natives', () => {
     mkdirSync(arm64Dir(root), { recursive: true });
     writeFileSync(join(arm64Dir(root), 'package.json'), manifest);
     writeFileSync(
-      join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'),
+      join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'),
       nativeBytes.subarray(0, 100),
     );
     mode = 'unavailable';
@@ -353,16 +343,14 @@ describe('prepare-platform-natives', () => {
     const root = fixtureRoot();
     await run(root);
     writeFileSync(
-      join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'),
+      join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'),
       nativeBytes.subarray(0, 100),
     );
     await expect(run(root, { checkOnly: true })).rejects.toThrow(
       /differs from the verified archive/,
     );
     await run(root);
-    expect(readFileSync(join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'))).toEqual(
-      nativeBytes,
-    );
+    expect(readFileSync(join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'))).toEqual(nativeBytes);
   });
 
   test('publishes nothing when extraction does not reproduce the verified archive', async () => {
@@ -398,7 +386,7 @@ describe('prepare-platform-natives', () => {
     async () => {
       const root = fixtureRoot();
       const napi = join(root, 'node_modules', '@napi-rs');
-      const staging = join(napi, `.staging-keyring-win32-arm64-msvc-${process.pid}`);
+      const staging = join(napi, `.staging-keyring-linux-arm64-gnu-${process.pid}`);
       const lockParent = (archivePath, destination) => {
         extractWithTar('tar')(archivePath, destination);
         chmodSync(napi, 0o555);
@@ -421,11 +409,11 @@ describe('prepare-platform-natives', () => {
         root,
         'node_modules',
         '@napi-rs',
-        '.staging-keyring-win32-arm64-msvc-earlier',
+        '.staging-keyring-linux-arm64-gnu-earlier',
       );
       const locked = join(leftover, 'locked');
       mkdirSync(locked, { recursive: true });
-      writeFileSync(join(locked, 'keyring.win32-arm64-msvc.node'), 'partial');
+      writeFileSync(join(locked, 'keyring.linux-arm64-gnu.node'), 'partial');
       chmodSync(locked, 0o555);
       let lines;
       try {
@@ -436,7 +424,7 @@ describe('prepare-platform-natives', () => {
       expect(lines.filter((line) => line.includes(leftover))).toEqual([
         expect.stringMatching(/^\[prepare-platform-natives\] .*: E[A-Z]+$/),
       ]);
-      expect(readFileSync(join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'))).toEqual(
+      expect(readFileSync(join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'))).toEqual(
         nativeBytes,
       );
     },
@@ -488,10 +476,10 @@ describe('prepare-platform-natives', () => {
   test('does not trust a host link that leaves the pnpm store', async () => {
     const root = fixtureRoot();
     await run(root);
-    const elsewhere = join(root, 'elsewhere', 'keyring-win32-x64-msvc');
+    const elsewhere = join(root, 'elsewhere', 'keyring-linux-x64-gnu');
     mkdirSync(elsewhere, { recursive: true });
     writeFileSync(join(elsewhere, 'package.json'), JSON.stringify({ name: X64, version: VERSION }));
-    const link = join(root, 'node_modules', '@napi-rs', 'keyring-win32-x64-msvc');
+    const link = join(root, 'node_modules', '@napi-rs', 'keyring-linux-x64-gnu');
     rmSync(link);
     symlinkSync(elsewhere, link);
     await expect(run(root, { checkOnly: true })).rejects.toThrow(
@@ -531,7 +519,7 @@ describe('prepare-platform-natives', () => {
       const root = fixtureRoot();
       await run(root);
       writeFileSync(
-        join(arm64Dir(root), 'keyring.win32-arm64-msvc.node'),
+        join(arm64Dir(root), 'keyring.linux-arm64-gnu.node'),
         nativeBytes.subarray(0, 100),
       );
       chmodSync(arm64Dir(root), 0o555);

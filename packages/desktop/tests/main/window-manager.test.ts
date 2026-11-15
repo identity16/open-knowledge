@@ -13,7 +13,6 @@ import { okUserHomeDir } from '@inkeep/open-knowledge-core/server';
 import { getMachineId } from '@inkeep/open-knowledge-server';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 import { failedOpenHolder, promptHolderStop } from '../../src/main/holder-stop-prompt.ts';
-import { resolveLocalOpCliInvocation } from '../../src/main/local-op-cli-invocation.ts';
 import { breakServerLockHeldBy } from '../../src/main/server-lock-break.ts';
 import type { ShowGateRegistry } from '../../src/main/show-gate.ts';
 import type { WindowChromeKind } from '../../src/main/window-chrome.ts';
@@ -598,11 +597,6 @@ describe('WindowManager', () => {
     expect(wm.windowCount()).toBe(0);
 
     expect(env.timers.find((t) => t.ms === 1000)).toBeUndefined();
-  });
-
-  test('getOpenProjectPaths is empty with no project windows open', () => {
-    const wm = new WindowManager(env.deps);
-    expect(wm.getOpenProjectPaths()).toEqual([]);
   });
 
   test('getOpenProjectPaths returns the path of every live project window', async () => {
@@ -4386,18 +4380,6 @@ describe('WindowManager', () => {
         expect(signals.indexOf('SIGTERM')).toBeLessThan(signals.indexOf('SIGKILL'));
       });
 
-      test('attached-only windows (no spawned pid) are not signaled', async () => {
-        enableAttachProbe();
-        const killCalls: Array<{ pid: number; signal: NodeJS.Signals | 0 }> = [];
-        env.deps.killProbe = (pid: number, signal: NodeJS.Signals | 0) => {
-          killCalls.push({ pid, signal });
-        };
-        const wm = new WindowManager(env.deps);
-        await wm.createProjectWindow({ projectPath: '/tmp/attached-only' });
-        await wm.stopAllOwnedServers();
-        expect(killCalls).toHaveLength(0);
-      });
-
       test('already-dead pid (ESRCH) is skipped without throwing', async () => {
         enableSyncTimers();
         let readCount = 0;
@@ -4507,6 +4489,18 @@ describe('WindowManager', () => {
         expect(killCalls).toHaveLength(1);
         expect(killCalls[0]?.[0]).toBe('SIGKILL');
       });
+
+      test('attached-only windows (no spawned pid) are not signaled', async () => {
+        enableAttachProbe();
+        const killCalls: Array<{ pid: number; signal: NodeJS.Signals | 0 }> = [];
+        env.deps.killProbe = (pid: number, signal: NodeJS.Signals | 0) => {
+          killCalls.push({ pid, signal });
+        };
+        const wm = new WindowManager(env.deps);
+        await wm.createProjectWindow({ projectPath: '/tmp/attached-only' });
+        await wm.stopAllOwnedServers();
+        expect(killCalls).toHaveLength(0);
+      });
     });
 
     test('legacy lock (kind undefined) is conservatively refused', async () => {
@@ -4568,6 +4562,11 @@ describe('WindowManager', () => {
       expect(env.utilities.length).toBe(0);
       expect(ctx.ownsServer).toBe(false);
     });
+  });
+
+  test('getOpenProjectPaths is empty with no project windows open', () => {
+    const wm = new WindowManager(env.deps);
+    expect(wm.getOpenProjectPaths()).toEqual([]);
   });
 });
 
@@ -6221,29 +6220,8 @@ describe.each(FORK_PATH_STARTUP_BUDGETS)(
 );
 
 describe('WindowManager — local-op CLI invocation threading', () => {
-  const WIN_EXE = 'C:\\Program Files\\OpenKnowledge\\OpenKnowledge.exe';
-  const WIN_RESOURCES = 'C:\\Program Files\\OpenKnowledge\\resources';
-
-  const spawnedLock: ServerLockMetadataLike = {
-    pid: 88001,
-    hostname: 'my-host',
-    port: 60111,
-    startedAt: '2026-05-21T00:00:00.000Z',
-    worktreeRoot: '/tmp/spawned-project',
-    kind: 'interactive',
-    capabilities: ['http', 'ws'],
-  };
-
-  function packagedWin32Invocation() {
-    return resolveLocalOpCliInvocation({
-      platform: 'win32',
-      isPackaged: true,
-      execPath: WIN_EXE,
-      resourcesPath: WIN_RESOURCES,
-      parentEnv: {},
-      workspaceCliEntry: 'C:\\src\\open-knowledge\\packages\\cli\\dist\\cli.mjs',
-      workspaceCliBuilt: true,
-    });
+  function invocationWithEnvOverlay() {
+    return { cliArgs: ['node', '/tmp/cli.mjs'], cliEnv: { EXAMPLE: '1' } };
   }
 
   let env: TestEnv;
@@ -6252,43 +6230,13 @@ describe('WindowManager — local-op CLI invocation threading', () => {
     env = buildEnv();
   });
 
-  function enableDetachedSpawn(): void {
-    env.deps.setTimeout = (cb: () => void, _ms: number) => {
-      cb();
-      return null;
-    };
-    let readCount = 0;
-    env.deps.readServerLock = () => {
-      readCount++;
-      return readCount === 1 ? null : spawnedLock;
-    };
-    env.deps.isProcessAlive = () => true;
-    env.deps.hostname = () => 'my-host';
-    env.deps.probeWsUpgrade = () => Promise.resolve(true);
-    env.deps.spawnDetachedServer = () => Promise.resolve(heldChild(env.deps, 88001));
-  }
-
-  test('a packaged win32 host opens a project window on the detached-spawn path it actually takes', async () => {
-    enableDetachedSpawn();
-    const wm = new WindowManager(env.deps);
-
-    const ctx = await wm.createProjectWindow({
-      projectPath: '/tmp/spawned-project',
-      localOpCliInvocation: packagedWin32Invocation(),
-    });
-
-    expect(ctx.ownsServer).toBe(false);
-    expect(env.utilities.length).toBe(0);
-    expect(env.windows.length).toBe(1);
-  });
-
   test('an invocation carrying a cliEnv overlay fails loudly when it reaches the utility fork', async () => {
     const wm = new WindowManager(env.deps);
 
     await expect(
       wm.createProjectWindow({
         projectPath: '/tmp/fork-with-overlay',
-        localOpCliInvocation: packagedWin32Invocation(),
+        localOpCliInvocation: invocationWithEnvOverlay(),
       }),
     ).rejects.toThrow(/cliEnv/);
   });
@@ -6308,7 +6256,7 @@ describe('WindowManager — local-op CLI invocation threading', () => {
     await expect(
       wm.createProjectWindow({
         projectPath: '/tmp/fork-with-overlay-clean',
-        localOpCliInvocation: packagedWin32Invocation(),
+        localOpCliInvocation: invocationWithEnvOverlay(),
       }),
     ).rejects.toThrow(/cliEnv/);
 

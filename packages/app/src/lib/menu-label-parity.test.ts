@@ -77,7 +77,7 @@ describe('every palette descriptor is in the catalog and agrees with MENU_LABELS
 });
 
 describe('platform label overrides stay in sync between the native menu and the renderer', () => {
-  const platforms = ['win32', 'linux'] as const;
+  const platforms = ['linux'] as const;
   for (const platform of platforms) {
     const paletteOverrides = PLATFORM_PALETTE_COMMAND_LABELS[platform];
     for (const [key, coreOverrides] of Object.entries(PLATFORM_MENU_LABELS)) {

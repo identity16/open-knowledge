@@ -59,11 +59,6 @@ async function stopServerBeforeGitRemoval(
         lockPid: target.pid,
         lockPath: unverified?.lockPath,
         cause: unverified?.cause,
-        ...(unverified !== undefined &&
-        'nativeFailures' in unverified &&
-        unverified.nativeFailures.length > 0
-          ? { nativeFailures: unverified.nativeFailures }
-          : {}),
         error,
       },
       NOT_STOPPED,

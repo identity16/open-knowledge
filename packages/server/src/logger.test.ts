@@ -185,7 +185,7 @@ describe('Logger', () => {
       await logger.flushFileSink();
 
       expect(existsSync(logsDir)).toBe(true);
-      if (process.platform !== 'win32') expect(statSync(logsDir).mode & 0o777).toBe(0o700);
+      expect(statSync(logsDir).mode & 0o777).toBe(0o700);
       expect(existsSync(logsCurrentPath(tmp))).toBe(true);
     });
 

@@ -9,9 +9,7 @@ import {
   AppCleanupIncompleteError,
   type CloseAppBoundedOpts,
   closeAppBounded,
-  type TaskkillOutcome,
 } from './electron-cleanup';
-import { reapedTaskkill, timedOutTaskkill } from './electron-cleanup.test-helper';
 
 const REAP_MS = 50;
 
@@ -292,65 +290,6 @@ describe.skipIf(process.platform === 'win32')(
         rootAlive: isAlive(tree.rootPid),
         holderAlive: isAlive(tree.holderPid),
       }).toEqual({ refused: [], closeObserved: true, rootAlive: false, holderAlive: false });
-    });
-
-    test('(3) win32 tree-kill reports ETIMEDOUT once and kills nothing, then succeeds → converges to real closure', async () => {
-      const tree = await spawnStreamHeldTree(HANG_FOREVER);
-      heldBoundary();
-      const attempts: TaskkillOutcome[] = [];
-
-      const taskkill = async (pid: number): Promise<TaskkillOutcome> => {
-        if (attempts.length === 0) {
-          const timedOut = timedOutTaskkill();
-          attempts.push(timedOut);
-          return timedOut;
-        }
-        tree.root.kill('SIGKILL');
-        tree.root.stdio[3]?.destroy();
-        const reaped = reapedTaskkill(pid);
-        attempts.push(reaped);
-        return reaped;
-      };
-
-      await closeAppBounded(tree.root, { gracefulMs: 500, taskkill, platform: 'win32' });
-
-      expect({
-        closeObserved: tree.closeObserved(),
-        rootAlive: isAlive(tree.rootPid),
-        holderAlive: isAlive(tree.holderPid),
-      }).toEqual({ closeObserved: true, rootAlive: false, holderAlive: false });
-      expect(attempts.length).toBe(2);
-    });
-
-    test('(4) win32 tree-kill always reports ETIMEDOUT and kills nothing → never returns normally while the tree is still alive', async () => {
-      const tree = await spawnStreamHeldTree(HANG_FOREVER);
-      heldBoundary();
-      const attempts: number[] = [];
-
-      const taskkill = async (pid: number): Promise<TaskkillOutcome> => {
-        attempts.push(pid);
-        return timedOutTaskkill();
-      };
-
-      const outcome = await settleClose(tree, {
-        gracefulMs: 500,
-        postKillReapMs: REAP_MS,
-        taskkill,
-        platform: 'win32',
-      });
-
-      const rootAlive = isAlive(tree.rootPid);
-      const holderAlive = isAlive(tree.holderPid);
-
-      expect({
-        outcome,
-        attemptedPids: attempts,
-        claimedCleanupComplete: outcome === 'returned' && (rootAlive || holderAlive),
-      }).toEqual({
-        outcome: 'reported-failure',
-        attemptedPids: [tree.rootPid, tree.rootPid],
-        claimedCleanupComplete: false,
-      });
     });
 
     test('(5) root already exited before the call while a same-group descendant still holds its stdio → nothing is signalled after the exit, and closure is never claimed while the holder lives', async () => {

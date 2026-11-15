@@ -143,7 +143,7 @@ function canonicalSubPath(rel: string): string {
   return rel.normalize('NFC').split(sep).join('/').replace(/\/+/g, '/');
 }
 
-const CASE_INSENSITIVE_PATHS = process.platform === 'darwin' || process.platform === 'win32';
+const CASE_INSENSITIVE_PATHS = process.platform === 'darwin';
 
 function comparablePath(p: string): string {
   const s = p.normalize('NFC').replace(/\\/g, '/').replace(/\/+$/, '');

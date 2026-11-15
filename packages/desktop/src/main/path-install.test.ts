@@ -325,10 +325,6 @@ describe('ensureCliOnPath', () => {
       status: 'skipped',
       reason: 'reclaim-disabled',
     });
-    expect(await ensureCliOnPath({ ...base, platform: 'win32' })).toEqual({
-      status: 'skipped',
-      reason: 'installer-managed',
-    });
     expect(
       await ensureCliOnPath({
         ...base,

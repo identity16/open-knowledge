@@ -71,23 +71,6 @@ describe('runCoworkSkill', () => {
     expect(plain).toContain('Upload skill');
   });
 
-  it('spawns `cmd /c start` on win32', async () => {
-    const outPath = join(testDir, 'win32.skill');
-    const capture: { command?: string; args?: readonly string[] } = {};
-    const result = await runCoworkSkill({
-      out: outPath,
-      home: testDir,
-      platformName: 'win32',
-      spawnFn: makeFakeSpawn(capture),
-    });
-
-    expect(result.status).toBe('installed');
-    expect(capture.command).toBe('cmd');
-    expect(capture.args?.[0]).toBe('/c');
-    expect(capture.args?.[1]).toBe('start');
-    expect(capture.args?.[3]).toBe(outPath);
-  });
-
   it('spawns `xdg-open` on linux', async () => {
     const outPath = join(testDir, 'linux.skill');
     const capture: { command?: string; args?: readonly string[] } = {};

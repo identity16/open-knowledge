@@ -224,7 +224,7 @@ interface RunMcpWiringOpts {
   isPackaged: boolean;
   executablePath: string;
   home: string;
-  platform: 'darwin' | 'win32' | 'linux' | string;
+  platform: 'darwin' | 'linux' | string;
   env?: Record<string, string | undefined>;
   ipcMain: IpcMainLike;
   cli: McpWiringCliSurface;

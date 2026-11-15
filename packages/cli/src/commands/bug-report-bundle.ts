@@ -22,7 +22,6 @@ import {
   SPAWN_ERROR_LOG,
 } from '@inkeep/open-knowledge-core';
 import { okProjectLogsDir, okUserHomeDir } from '@inkeep/open-knowledge-core/server';
-import { withHiddenWindowsConsole } from '@inkeep/open-knowledge-server';
 import type { ZipFile } from 'yazl';
 import type { DesktopMetadata } from '../diagnose/bundle.ts';
 import {
@@ -141,10 +140,7 @@ function collectSysinfo(): Record<string, unknown> {
   };
 
   try {
-    const ver = execSync(
-      'sw_vers -productVersion 2>/dev/null',
-      withHiddenWindowsConsole({ encoding: 'utf8' }),
-    ).trim();
+    const ver = execSync('sw_vers -productVersion 2>/dev/null', { encoding: 'utf8' }).trim();
     info.macosVersion = ver;
   } catch {}
 
@@ -677,9 +673,7 @@ export async function collectStandardBundle(
           'this app, as structured fields with the machine name, cgroup paths and',
           "user id left out, plus display-connection errors this app's desktop",
           "process wrote to the user's own journal, with Chromium's message cut to",
-          '200 characters. On Windows: crash and hang records for this app with',
-          'file paths left out, plus the time of every shutdown, restart, power',
-          'loss and low-memory warning on the machine, whatever caused it:',
+          '200 characters:',
           `- ${OS_TERMINATION_EVIDENCE_PATH}`,
           '',
         ]

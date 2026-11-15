@@ -1,5 +1,5 @@
 import type { SpawnOptions } from 'node:child_process';
-import { posix as pathPosix, win32 as pathWin32 } from 'node:path';
+import { posix as pathPosix } from 'node:path';
 import { resolveHelperBundleBinary } from '@inkeep/open-knowledge-core/helper-bundle';
 import { fallbackPaths } from '@inkeep/open-knowledge-server';
 
@@ -25,12 +25,12 @@ export interface ResolvedDetachedSpawnArgs {
   readonly opts: SpawnOptions;
 }
 
-function platformPathDelimiter(platform: NodeJS.Platform): string {
-  return platform === 'win32' ? ';' : ':';
+function platformPathDelimiter(_platform: NodeJS.Platform): string {
+  return ':';
 }
 
 function gitEnrichmentDirs(platform: NodeJS.Platform): readonly string[] {
-  const dn = platform === 'win32' ? pathWin32.dirname : pathPosix.dirname;
+  const dn = pathPosix.dirname;
   return fallbackPaths(platform).map((p) => dn(p));
 }
 
@@ -122,7 +122,6 @@ export function resolveDetachedSpawnArgs(
      * `detached: true`. Kept for every-spawn consistency; the spawned binary is
      * Electron (GUI subsystem), so no console window appears either way.
      */
-    windowsHide: true,
   };
 
   return { file, args, opts };

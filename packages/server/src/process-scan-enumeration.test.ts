@@ -207,20 +207,6 @@ describe('process enumeration', () => {
     });
   });
 
-  it('retains existing candidate discovery with Windows Unix tools', async () => {
-    Object.defineProperty(process, 'platform', { value: 'win32' });
-    spawnSync.mockImplementation((program: string) => {
-      if (program === 'pgrep') return { status: 0, stdout: `${row}\n` };
-      if (program === 'lsof') return { status: 1, stdout: '', stderr: '' };
-      return { status: null, error: unavailable };
-    });
-
-    expect(await scanLockProcesses(() => ({ onProbeFailure: () => {} }))).toEqual({
-      candidates: [{ lockDir, pid: fixturePid, source: 'lock-dir-argument' }],
-      unavailable: [],
-    });
-  });
-
   it('reports a listing read failure even after receiving a matching row', async () => {
     const readError = Object.assign(new Error('could not read output'), { code: 'EIO' });
     spawnSync.mockImplementation((program: string) => {
@@ -257,7 +243,7 @@ describe('process enumeration', () => {
     expect(await scanLockProcesses()).toEqual({ candidates: [], unavailable: [] });
   });
 
-  it.each(['darwin', 'linux', 'win32'] as const)(
+  it.each(['darwin', 'linux'] as const)(
     'reports a process listing that cannot start on %s',
     async (platform) => {
       Object.defineProperty(process, 'platform', { value: platform });

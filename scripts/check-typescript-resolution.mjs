@@ -582,18 +582,13 @@ function readJson(file) {
 }
 
 function binVersionOf(dir, program = 'tsc') {
-  const bin = path.join(
-    dir,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? `${program}.cmd` : program,
-  );
+  const bin = path.join(dir, 'node_modules', '.bin', program);
   if (!fs.existsSync(bin)) return null;
   try {
     const out = execFileSync(bin, ['--version'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
+      shell: false,
     });
     const m = /Version\s+(\S+)/.exec(out);
     return m ? m[1] : out.trim();

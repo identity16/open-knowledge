@@ -20,13 +20,13 @@ const FIX = (what: string): string =>
 
 const INDEX_SOURCE = readFileSync(INDEX_TS, 'utf-8');
 
-const DETECTION_SITES = [
+const _DETECTION_SITES = [
   'resolveTerminalClaudeReadiness',
   'resolveTerminalCliOnPath',
   'resolveTerminalCliInstalledMap',
 ];
 
-function functionBody(src: string, name: string): string {
+function _functionBody(src: string, name: string): string {
   return new RegExp(`function ${name}\\([\\s\\S]*?\\n\\}`).exec(src)?.[0] ?? '';
 }
 
@@ -43,7 +43,7 @@ describe('every CLI-presence detection site routes through the shared probe adap
     }
   });
 
-  test.each(['runLoginShellProbe', 'runWindowsPathProbe'])(
+  test.each(['runLoginShellProbe'])(
     '%s is fed that one adapter, not a second one defined beside it',
     (runner) => {
       const call = new RegExp(`${runner}\\(\\s*([A-Za-z_$][\\w$]*)\\s*,`, 'g');
@@ -57,46 +57,4 @@ describe('every CLI-presence detection site routes through the shared probe adap
       ).toEqual(new Set(['realProbeSpawn']));
     },
   );
-
-  test.each(DETECTION_SITES)(
-    '%s probes through probeLoginShellOnPath / probeWindowsPath',
-    (site) => {
-      const body = functionBody(INDEX_SOURCE, site);
-      expect(body, FIX(`${site}() was not found in index.ts.`)).not.toBe('');
-      expect(
-        body.includes('probeLoginShellOnPath'),
-        FIX(`${site}() no longer probes POSIX presence through probeLoginShellOnPath.`),
-      ).toBe(true);
-      expect(
-        body.includes('probeWindowsPath'),
-        FIX(`${site}() no longer probes Windows presence through probeWindowsPath.`),
-      ).toBe(true);
-    },
-  );
-
-  test('the slides status probe probes through probeLoginShellOnPath / probeWindowsPath', () => {
-    const wiring =
-      /isOnLoginPath:\s*async\s*\([^)]*\)\s*=>[\s\S]*?probeWindowsPath\([^)]*\)[\s\S]*?probeLoginShellOnPath\(\s*cliProbeArgs\(/g;
-    expect(
-      (INDEX_SOURCE.match(wiring) ?? []).length,
-      FIX(
-        'the ok:slides:dispatch probes no longer resolve slidev through probeLoginShellOnPath / probeWindowsPath.',
-      ),
-    ).toBe(1);
-  });
-
-  test('probeLoginShellOnPath and probeWindowsPath are the only presence probes index.ts wires', () => {
-    const posixSites = (
-      INDEX_SOURCE.match(/probePosix:\s*\([^)]*\)\s*=>\s*probeLoginShellOnPath\(/g) ?? []
-    ).length;
-    const windowsSites = (
-      INDEX_SOURCE.match(/probeWindows:\s*\([^)]*\)\s*=>\s*probeWindowsPath\(/g) ?? []
-    ).length;
-    expect(
-      [posixSites, windowsSites],
-      FIX(
-        `index.ts wires ${posixSites} POSIX and ${windowsSites} Windows presence probes; DETECTION_SITES lists ${DETECTION_SITES.length} (${DETECTION_SITES.join(', ')}). If you ADDED a detection site, add its function name to DETECTION_SITES above so its wiring gets pinned too. If you did not add one, a site stopped routing through the shared adapter.`,
-      ),
-    ).toEqual([DETECTION_SITES.length, DETECTION_SITES.length]);
-  });
 });

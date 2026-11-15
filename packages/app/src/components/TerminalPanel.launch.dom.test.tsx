@@ -12,7 +12,6 @@ import type {
   CliReadiness,
   OkDesktopBridge,
   OkPtyData,
-  OkPtyNotice,
 } from '@/lib/desktop-bridge-types';
 
 class MockFitAddon {
@@ -109,7 +108,6 @@ function makeBridge(
   cliCommandName: string | null = 'ok',
 ) {
   const dataSubs: Array<(m: OkPtyData) => void> = [];
-  const noticeSubs: Array<(m: OkPtyNotice) => void> = [];
   const terminal = {
     create: vi.fn(
       async (_opts: {
@@ -143,10 +141,6 @@ function makeBridge(
       return vi.fn(() => {});
     }),
     onExit: vi.fn(() => vi.fn(() => {})),
-    onNotice: vi.fn((cb: (m: OkPtyNotice) => void) => {
-      noticeSubs.push(cb);
-      return vi.fn(() => {});
-    }),
     claudePreflight: vi.fn(async () => preflight),
     cliPreflight: vi.fn(async (_cli: TerminalCli) => cliReadiness),
   };
@@ -161,9 +155,6 @@ function makeBridge(
     terminal,
     pushData: (m: OkPtyData) => {
       for (const f of dataSubs) f(m);
-    },
-    pushNotice: (m: OkPtyNotice) => {
-      for (const f of noticeSubs) f(m);
     },
   };
 }

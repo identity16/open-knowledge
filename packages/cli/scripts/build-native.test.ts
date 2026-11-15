@@ -37,19 +37,16 @@ function runBuildNative(binaries: string[]) {
   return { status: result.status, copied: existsSync(dist) ? readdirSync(dist).sort() : [] };
 }
 
-describe.skipIf(process.platform === 'win32')(
-  'build:native, which pnpm runs through sh on POSIX hosts',
-  () => {
-    test('fails when native-config holds no binary, instead of shipping a CLI without its addon', () => {
-      expect(runBuildNative([]).status).not.toBe(0);
-    });
+describe('build:native, which pnpm runs through sh on POSIX hosts', () => {
+  test('fails when native-config holds no binary, instead of shipping a CLI without its addon', () => {
+    expect(runBuildNative([]).status).not.toBe(0);
+  });
 
-    test('copies the loader and every binary native-config holds', () => {
-      const binaries = ['native-config.darwin-arm64.node', 'native-config.win32-x64-msvc.node'];
-      expect(runBuildNative(binaries)).toEqual({
-        status: 0,
-        copied: [...LOADER, ...binaries].sort(),
-      });
+  test('copies the loader and every binary native-config holds', () => {
+    const binaries = ['native-config.darwin-arm64.node', 'native-config.linux-x64-gnu.node'];
+    expect(runBuildNative(binaries)).toEqual({
+      status: 0,
+      copied: [...LOADER, ...binaries].sort(),
     });
-  },
-);
+  });
+});

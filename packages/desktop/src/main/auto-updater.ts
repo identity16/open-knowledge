@@ -22,7 +22,6 @@ import {
   resolveUpdateMode,
   type UpdateChannel,
 } from './state-store.ts';
-import type { WindowsUpdateSurvivorSweepResult } from './windows-update-survivor-sweep.ts';
 
 const GITHUB_OWNER = DESKTOP_VARIANT.name === 'openknowledge16' ? 'identity16' : 'inkeep';
 const GITHUB_REPO = 'open-knowledge';
@@ -139,7 +138,6 @@ interface StartAutoUpdaterOpts {
   };
   whenRendererReady?: (fn: () => void) => void;
   prepareForRelaunch?: () => void | Promise<void>;
-  sweepUpdateSurvivors?: () => WindowsUpdateSurvivorSweepResult | undefined;
   reclaimStagedUpdateCache?: () => undefined | Promise<unknown>;
   linuxInstallSupport?: {
     hasGraphicalAuth: () => boolean;
@@ -1476,18 +1474,6 @@ export function startAutoUpdater(opts: StartAutoUpdaterOpts): StartAutoUpdaterHa
         logger.warn('prepareForRelaunch threw — proceeding to quitAndInstall anyway', {
           err,
         });
-      }
-    }
-    if (opts.sweepUpdateSurvivors) {
-      try {
-        const result = opts.sweepUpdateSurvivors();
-        if (result && (result.scanFailed || result.revalidationFailed || result.failedCount > 0)) {
-          logger.warn('update survivor sweep incomplete — proceeding to quitAndInstall anyway', {
-            result,
-          });
-        }
-      } catch (err) {
-        logger.warn('update survivor sweep threw — proceeding to quitAndInstall anyway', { err });
       }
     }
     logger.info('relaunch-now invoked — calling autoUpdater.quitAndInstall', {

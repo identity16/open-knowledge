@@ -47,8 +47,6 @@ afterEach(() => {
 const cases = [
   { platform: 'darwin', requested: 'SIGTERM' },
   { platform: 'darwin', requested: 'SIGKILL' },
-  { platform: 'win32', requested: 'SIGTERM' },
-  { platform: 'win32', requested: 'SIGKILL' },
 ] as const;
 
 describe('Slidev signal exit', () => {

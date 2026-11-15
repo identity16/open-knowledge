@@ -84,25 +84,6 @@ describe('isFilesystemRoot', () => {
     expect(isFilesystemRoot('/opt', 'linux')).toBe(false);
   });
 
-  test.each(['C:\\', 'C:/', 'd:\\'])('true for the Windows drive root %s', (dir) => {
-    expect(isFilesystemRoot(dir, 'win32')).toBe(true);
-  });
-
-  test.skipIf(process.platform === 'win32').each(['\\\\server\\share', '\\\\server\\share\\'])(
-    'true for the Windows share root %s',
-    (dir) => {
-      expect(isFilesystemRoot(dir, 'win32')).toBe(true);
-    },
-  );
-
-  test.each(['C:\\Users', 'C:\\notes'])('false for the Windows folder %s', (dir) => {
-    expect(isFilesystemRoot(dir, 'win32')).toBe(false);
-  });
-
-  test.skipIf(process.platform === 'win32')('false for a folder inside a Windows share', () => {
-    expect(isFilesystemRoot('\\\\server\\share\\notes', 'win32')).toBe(false);
-  });
-
   test('the macOS data volume counts as a root on darwin only', () => {
     expect(isFilesystemRoot('/System/Volumes/Data', 'darwin')).toBe(true);
     expect(isFilesystemRoot('/System/Volumes/Data/notes', 'darwin')).toBe(false);

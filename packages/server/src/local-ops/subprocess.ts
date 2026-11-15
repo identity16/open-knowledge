@@ -1,11 +1,10 @@
 import { spawn } from 'node:child_process';
-import { posix, win32 } from 'node:path';
+import { posix } from 'node:path';
 import {
   envWithoutDevChannel,
   type OkCliCommand,
   type OkCliRefusal,
 } from '@inkeep/open-knowledge-core';
-import { withHiddenWindowsConsole } from '../child-process-windows-hide.ts';
 import type { LocalOpSubprocessLifetime } from './subprocess-lifetime.ts';
 
 interface ParsedLine {
@@ -59,29 +58,19 @@ function overlayEnvEntry(
   env: NodeJS.ProcessEnv,
   key: string,
   value: string | undefined,
-  platform: NodeJS.Platform,
+  _platform: NodeJS.Platform,
 ): void {
-  if (platform === 'win32') {
-    const folded = key.toLowerCase();
-    for (const existing of Object.keys(env)) {
-      if (existing !== key && existing.toLowerCase() === folded) delete env[existing];
-    }
-  }
   if (value === undefined) delete env[key];
   else env[key] = value;
 }
 
-function pathDelimiterFor(platform: NodeJS.Platform): string {
-  return platform === 'win32' ? win32.delimiter : posix.delimiter;
+function pathDelimiterFor(_platform: NodeJS.Platform): string {
+  return posix.delimiter;
 }
 
-function readPathEntry(env: NodeJS.ProcessEnv, platform: NodeJS.Platform): string {
+function readPathEntry(env: NodeJS.ProcessEnv, _platform: NodeJS.Platform): string {
   if (env.PATH !== undefined) return env.PATH;
-  if (platform === 'win32') {
-    for (const key of Object.keys(env)) {
-      if (key.toLowerCase() === 'path') return env[key] ?? '';
-    }
-  }
+
   return '';
 }
 
@@ -156,15 +145,11 @@ export function runSubprocess(opts: SubprocessRunOptions): SubprocessController 
   let child: ReturnType<typeof spawn>;
   try {
     const launch = () =>
-      spawn(
-        cmd,
-        argv,
-        withHiddenWindowsConsole({
-          stdio,
-          cwd: opts.cwd,
-          env: childEnv,
-        }),
-      );
+      spawn(cmd, argv, {
+        stdio,
+        cwd: opts.cwd,
+        env: childEnv,
+      });
     child = opts.lifetime ? opts.lifetime.spawn(launch) : launch();
   } catch (err) {
     return {

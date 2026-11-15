@@ -475,50 +475,42 @@ describe('removeOwnMcpEntry — Pi managed extension file', () => {
 });
 
 describe('removeOwnMcpEntry — symlinks', () => {
-  test.skipIf(process.platform === 'win32')(
-    'preserves an unreadable configuration target and its symlink',
-    () => {
-      const dir = tmp();
-      try {
-        const configPath = join(dir, 'config.json');
-        const targetPath = join(dir, 'target.json');
-        const raw = '{ malformed user settings ]';
-        writeFileSync(targetPath, raw);
-        symlinkSync('target.json', configPath);
-        expect(removeOwnMcpEntry(EDITOR_TARGETS.claude, dir, undefined, configPath)).toEqual({
-          kind: 'declined',
-          reason: 'unparseable',
-        });
-        expect(lstatSync(configPath).isSymbolicLink()).toBe(true);
-        expect(readFileSync(targetPath, 'utf8')).toBe(raw);
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    },
-  );
+  test('preserves an unreadable configuration target and its symlink', () => {
+    const dir = tmp();
+    try {
+      const configPath = join(dir, 'config.json');
+      const targetPath = join(dir, 'target.json');
+      const raw = '{ malformed user settings ]';
+      writeFileSync(targetPath, raw);
+      symlinkSync('target.json', configPath);
+      expect(removeOwnMcpEntry(EDITOR_TARGETS.claude, dir, undefined, configPath)).toEqual({
+        kind: 'declined',
+        reason: 'unparseable',
+      });
+      expect(lstatSync(configPath).isSymbolicLink()).toBe(true);
+      expect(readFileSync(targetPath, 'utf8')).toBe(raw);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 
-  test.skipIf(process.platform === 'win32')(
-    'unlinks a managed extension file without deleting its symlink destination',
-    () => {
-      const dir = tmp();
-      try {
-        const configPath = join(dir, 'extension.ts');
-        const targetPath = join(dir, 'target.ts');
-        const raw = buildPiExtensionSource();
-        writeFileSync(targetPath, raw);
-        symlinkSync('target.ts', configPath);
-        expect(removeOwnMcpEntry(EDITOR_TARGETS.pi, dir, undefined, configPath).kind).toBe(
-          'removed',
-        );
-        expect(existsSync(configPath)).toBe(false);
-        expect(readFileSync(targetPath, 'utf8')).toBe(raw);
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    },
-  );
+  test('unlinks a managed extension file without deleting its symlink destination', () => {
+    const dir = tmp();
+    try {
+      const configPath = join(dir, 'extension.ts');
+      const targetPath = join(dir, 'target.ts');
+      const raw = buildPiExtensionSource();
+      writeFileSync(targetPath, raw);
+      symlinkSync('target.ts', configPath);
+      expect(removeOwnMcpEntry(EDITOR_TARGETS.pi, dir, undefined, configPath).kind).toBe('removed');
+      expect(existsSync(configPath)).toBe(false);
+      expect(readFileSync(targetPath, 'utf8')).toBe(raw);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 
-  test.skipIf(process.platform === 'win32').each(['claude', 'hermes', 'codex'] as const)(
+  test.each(['claude', 'hermes', 'codex'] as const)(
     'preserves the %s config symlink chain and edits only its destination',
     (editorId) => {
       const dir = tmp();
@@ -557,22 +549,19 @@ describe('removeOwnMcpEntry — symlinks', () => {
     },
   );
 
-  test.skipIf(process.platform === 'win32').each(['dangling', 'cycle'])(
-    'declines a %s config symlink without removing it',
-    (kind) => {
-      const dir = tmp();
-      try {
-        const configPath = join(dir, 'config.json');
-        symlinkSync(kind === 'cycle' ? 'config.json' : 'missing.json', configPath);
-        expect(removeOwnMcpEntry(EDITOR_TARGETS.claude, dir, undefined, configPath)).toEqual({
-          kind: 'declined',
-          reason: kind === 'cycle' ? 'unresolved-symlink' : 'missing-symlink-target',
-        });
-        expect(lstatSync(configPath).isSymbolicLink()).toBe(true);
-        expect(existsSync(join(dir, 'missing.json'))).toBe(false);
-      } finally {
-        rmSync(dir, { recursive: true, force: true });
-      }
-    },
-  );
+  test.each(['dangling', 'cycle'])('declines a %s config symlink without removing it', (kind) => {
+    const dir = tmp();
+    try {
+      const configPath = join(dir, 'config.json');
+      symlinkSync(kind === 'cycle' ? 'config.json' : 'missing.json', configPath);
+      expect(removeOwnMcpEntry(EDITOR_TARGETS.claude, dir, undefined, configPath)).toEqual({
+        kind: 'declined',
+        reason: kind === 'cycle' ? 'unresolved-symlink' : 'missing-symlink-target',
+      });
+      expect(lstatSync(configPath).isSymbolicLink()).toBe(true);
+      expect(existsSync(join(dir, 'missing.json'))).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });

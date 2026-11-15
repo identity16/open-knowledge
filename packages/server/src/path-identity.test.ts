@@ -104,8 +104,8 @@ function spelledRoot(spelling: RootSpelling): SpelledRoot {
 
 function aliasOwedOnThisLeg(spelling: RootSpelling): boolean {
   if (process.env.RUNNER_ENVIRONMENT !== 'github-hosted') return false;
-  if (spelling === '8.3 short-name') return process.platform === 'win32';
-  return process.platform === 'darwin' || process.platform === 'win32';
+  if (spelling === '8.3 short-name') return false;
+  return process.platform === 'darwin';
 }
 
 function skipWhereAliasIsAbsent(

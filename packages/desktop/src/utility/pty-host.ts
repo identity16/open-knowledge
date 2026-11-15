@@ -9,8 +9,6 @@ import {
   type TerminalLaunchCommand,
   terminalLaunchEnvSlots,
 } from '@inkeep/open-knowledge-core';
-import { isTerminalShellNoticeReason } from '@inkeep/open-knowledge-core/desktop-bridge';
-import type { TerminalShellNoticeReason } from '../shared/bridge-contract.ts';
 import {
   composeOkChildEnv,
   hasNoResolvableOkHome,
@@ -42,7 +40,6 @@ export interface PtyCreateMessage {
   cols: number;
   rows: number;
   shell?: string;
-  shellInvalidReason?: TerminalShellNoticeReason;
   launchCommand?: string | TerminalLaunchCommand;
 }
 interface PtyInputMessage {
@@ -105,17 +102,7 @@ type PtySpawnErrorMessage =
       shellNeverAttached: true;
       exitCode: number | undefined;
     };
-type PtyShellNoticeMessage = {
-  type: 'shell-notice';
-  ptyId: string;
-  notice: 'invalid-shell-override';
-  reason: TerminalShellNoticeReason;
-};
-export type PtyHostOutgoingMessage =
-  | PtyDataMessage
-  | PtyExitMessage
-  | PtySpawnErrorMessage
-  | PtyShellNoticeMessage;
+export type PtyHostOutgoingMessage = PtyDataMessage | PtyExitMessage | PtySpawnErrorMessage;
 
 export interface PtyProcessLike {
   readonly pid: number;
@@ -455,7 +442,6 @@ function asIncomingMessage(raw: unknown): PtyHostIncomingMessage | null {
         typeof m.cols === 'number' &&
         typeof m.rows === 'number' &&
         (m.shell === undefined || typeof m.shell === 'string') &&
-        (m.shellInvalidReason === undefined || isTerminalShellNoticeReason(m.shellInvalidReason)) &&
         launchValid
         ? (raw as PtyHostIncomingMessage)
         : null;
@@ -483,7 +469,6 @@ export interface PtyHostHandle {
 export interface ResolveShellOptions {
   platform: NodeJS.Platform;
   override?: string;
-  overrideInvalidReason?: TerminalShellNoticeReason;
   userInfoShell?: () => string | null;
   shellExists?: (path: string) => boolean;
   logger?: {
@@ -503,8 +488,6 @@ export type ShellResolutionRung =
 export interface ShellResolution {
   shell: string;
   rung: ShellResolutionRung;
-  invalidOverride: boolean;
-  invalidOverrideReason?: TerminalShellNoticeReason;
 }
 
 function isFalseStyleShell(shell: string): boolean {
@@ -526,24 +509,24 @@ export function resolveShellWithDetails(
   options: ResolveShellOptions,
 ): ShellResolution {
   if (options.override && options.override.length > 0) {
-    return { shell: options.override, rung: 'override', invalidOverride: false };
+    return { shell: options.override, rung: 'override' };
   }
 
   const configuredShell = env.SHELL;
   if (options.platform === 'darwin') {
     return typeof configuredShell === 'string' && configuredShell.length > 0
-      ? { shell: configuredShell, rung: 'env-shell', invalidOverride: false }
-      : { shell: DARWIN_FALLBACK_SHELL, rung: 'platform-fallback', invalidOverride: false };
+      ? { shell: configuredShell, rung: 'env-shell' }
+      : { shell: DARWIN_FALLBACK_SHELL, rung: 'platform-fallback' };
   }
   if (options.platform !== 'linux') {
     return typeof configuredShell === 'string' && configuredShell.length > 0
-      ? { shell: configuredShell, rung: 'env-shell', invalidOverride: false }
-      : { shell: '/bin/sh', rung: 'platform-fallback', invalidOverride: false };
+      ? { shell: configuredShell, rung: 'env-shell' }
+      : { shell: '/bin/sh', rung: 'platform-fallback' };
   }
 
   const shellExists = options.shellExists ?? existsSync;
   if (isUsableShell(configuredShell, shellExists)) {
-    return { shell: configuredShell, rung: 'env-shell', invalidOverride: false };
+    return { shell: configuredShell, rung: 'env-shell' };
   }
 
   let passwdShell: string | null = null;
@@ -558,11 +541,11 @@ export function resolveShellWithDetails(
     passwdShell = null;
   }
   if (isUsableShell(passwdShell, shellExists)) {
-    return { shell: passwdShell, rung: 'passwd-shell', invalidOverride: false };
+    return { shell: passwdShell, rung: 'passwd-shell' };
   }
   return shellExists('/bin/bash')
-    ? { shell: '/bin/bash', rung: 'bash', invalidOverride: false }
-    : { shell: '/bin/sh', rung: 'sh', invalidOverride: false };
+    ? { shell: '/bin/bash', rung: 'bash' }
+    : { shell: '/bin/sh', rung: 'sh' };
 }
 
 export function resolveShell(
@@ -834,7 +817,6 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
       resolution = resolveShellWithDetails(env, {
         platform,
         override: message.shell,
-        overrideInvalidReason: message.shellInvalidReason,
         userInfoShell: deps.userInfoShell,
         shellExists: deps.shellExists,
         logger: deps.logger,
@@ -844,20 +826,6 @@ export function setupPtyHost(deps: SetupPtyHostDeps): PtyHostHandle {
       throw error;
     }
     observe?.({ stage: 'lookup-complete', lookup, rung: resolution.rung });
-    if (resolution.invalidOverride) {
-      const reason = resolution.invalidOverrideReason ?? 'invalid-value';
-      deps.logger?.warn({
-        event: 'pty-host-shell-override-invalid',
-        platform,
-        reason,
-      });
-      post({
-        type: 'shell-notice',
-        ptyId,
-        notice: 'invalid-shell-override',
-        reason,
-      });
-    }
     deps.logger?.info?.({
       event: 'pty-host-shell-resolved',
       platform,

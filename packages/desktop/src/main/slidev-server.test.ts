@@ -28,7 +28,6 @@ import {
   okManagedBinDirs,
 } from '../shared/ok-child-env.ts';
 import { cliProbeArgs } from './claude-readiness.ts';
-import { validateSpawnPath } from './path-containment.ts';
 import {
   adaptSlidevChild,
   buildSlidevInvocation,
@@ -38,7 +37,6 @@ import {
   type ReadinessProbe,
   type SlidevProcess,
   type StartSlidevDeps,
-  signalSlidevChild,
   slidevSpawnEnv,
   startSlidevServer,
 } from './slidev-server.ts';
@@ -504,164 +502,6 @@ describe('buildSlidevInvocation — platform matrix', () => {
       expect(inv.args.slice(0, -2)).toEqual(cliProbeArgs('slidev', platform).slice(0, -2));
     }
   });
-
-  it('Windows project-local targets the .cmd shim via cmd.exe', () => {
-    const inv = buildSlidevInvocation(
-      { source: 'project-local', projectRoot: 'C:\\proj', docPath: deck, shell: '' },
-      4300,
-      'win32',
-      [],
-    );
-    expect(inv.mode).toBe('windows-shell');
-    expect(inv.file).toBe('cmd.exe');
-    const cmdline = inv.args[3] ?? '';
-    expect(cmdline).toContain('slidev.cmd');
-    expect(cmdline).toContain('node_modules');
-    expect(cmdline).toContain(deck);
-    expect(inv.verbatim).toBe(true);
-  });
-
-  it('Windows global lets cmd resolve slidev against PATHEXT', () => {
-    const inv = buildSlidevInvocation(
-      { source: 'global', projectRoot: 'C:\\proj', docPath: deck, shell: '' },
-      4300,
-      'win32',
-      [],
-    );
-    expect(inv.mode).toBe('windows-shell');
-    expect(inv.file).toBe('cmd.exe');
-    expect(inv.args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
-    expect(inv.args[3]).toContain('"slidev"');
-  });
-
-  it('never emits POSIX login-shell flags on Windows', () => {
-    for (const source of ['project-local', 'global'] as const) {
-      const inv = buildSlidevInvocation(
-        { source, projectRoot: 'C:\\proj', docPath: deck, shell: '' },
-        4300,
-        'win32',
-        [],
-      );
-      expect(inv.args).not.toContain('-l');
-      expect(inv.args).not.toContain('-i');
-    }
-  });
-});
-
-describe('buildSlidevInvocation — Windows command-line injection', () => {
-  const evil = 'C:\\proj\\decks\\a&calc.exe&b.md';
-
-  it('does not leave a live cmd.exe separator in the command line', () => {
-    const inv = buildSlidevInvocation(
-      { source: 'global', projectRoot: 'C:\\proj', docPath: evil, shell: '' },
-      4300,
-      'win32',
-      [],
-    );
-    expect(inv.args).not.toContain(evil);
-    const cmdline = inv.args[3] ?? '';
-    expect(cmdline.startsWith('"') && cmdline.endsWith('"')).toBe(true);
-    const parsedByCmd = cmdline.slice(1, -1);
-    const unquoted = parsedByCmd.replace(/"[^"]*"/g, '');
-    expect(unquoted).not.toMatch(/[&|<>^]/);
-    expect(parsedByCmd).toContain(`"${evil}"`);
-  });
-
-  it('refuses a deck path carrying characters cmd.exe quoting cannot neutralize', () => {
-    expect(validateSpawnPath('C:\\proj\\%PATH%.md', 'win32')).toBe(false);
-    expect(validateSpawnPath('C:\\proj\\a"b.md', 'win32')).toBe(false);
-    expect(validateSpawnPath('C:\\proj\\Q1 & Q2.md', 'win32')).toBe(true);
-  });
-});
-
-describe('signalSlidevChild', () => {
-  function fakeChild() {
-    const kill = vi.fn(() => true);
-    return {
-      child: { pid: 4321, exitCode: null, signalCode: null, kill } as unknown as ChildProcess,
-      kill,
-    };
-  }
-
-  it('terminates the complete cmd.exe process tree on Windows', async () => {
-    const { child, kill } = fakeChild();
-    const treeKills: number[] = [];
-
-    await signalSlidevChild(child, 'SIGKILL', {
-      platform: 'win32',
-      killWindowsTree: async (pid) => {
-        treeKills.push(pid);
-      },
-    });
-
-    expect(treeKills).toEqual([4321]);
-    expect(kill).not.toHaveBeenCalled();
-  });
-
-  it('logs a failed Windows tree kill without retrying a bare PID', async () => {
-    slidevLog.warn.mockClear();
-    const { child, kill } = fakeChild();
-    const killWindowsTree = vi.fn(() => Promise.reject(new Error('taskkill failed')));
-
-    await signalSlidevChild(child, 'SIGKILL', { platform: 'win32', killWindowsTree });
-
-    expect(slidevWarnRecords()).toHaveLength(1);
-    expect(killWindowsTree).toHaveBeenCalledTimes(1);
-    expect(kill).not.toHaveBeenCalled();
-    expect(slidevWarnRecords()[0]).toMatchObject({
-      event: 'slides-tree-kill-failed',
-      pid: 4321,
-      signal: 'SIGKILL',
-      err: new Error('taskkill failed'),
-    });
-  });
-
-  it('waits for the Windows tree kill to settle', async () => {
-    const { child } = fakeChild();
-    let release: (() => void) | undefined;
-    const killWindowsTree = vi.fn(() => {
-      const { promise, resolve } = Promise.withResolvers<void>();
-      release = resolve;
-      return promise;
-    });
-    let settled = false;
-
-    const signal = signalSlidevChild(child, 'SIGTERM', {
-      platform: 'win32',
-      killWindowsTree,
-    }).then(() => {
-      settled = true;
-    });
-    await Promise.resolve();
-    expect(settled).toBe(false);
-
-    release?.();
-    await signal;
-    expect(settled).toBe(true);
-  });
-
-  it('bounds a hanging Windows tree kill', async () => {
-    vi.useFakeTimers();
-    slidevLog.warn.mockClear();
-    try {
-      const { child } = fakeChild();
-      const signal = signalSlidevChild(child, 'SIGTERM', {
-        platform: 'win32',
-        killWindowsTree: () => new Promise<void>(() => {}),
-        timeoutMs: 5_000,
-      });
-
-      await vi.advanceTimersByTimeAsync(5_000);
-      await signal;
-
-      expect(slidevWarnRecords()[0]).toMatchObject({
-        event: 'slides-tree-kill-failed',
-        err: new Error('taskkill timed out'),
-      });
-    } finally {
-      vi.useRealTimers();
-    }
-  });
 });
 
 describe('composeSlidevSpawnEnv', () => {
@@ -709,16 +549,6 @@ describe('composeSlidevSpawnEnv', () => {
     expect(entries[0]).toBe('/Users/alice/.ok/bin');
     expect(entries).toContain('/opt/homebrew/bin');
     expect(entries.indexOf('/usr/bin')).toBeLessThan(entries.indexOf('/opt/homebrew/bin'));
-  });
-
-  it('writes through the inherited PATH key casing on win32 rather than adding a second key', () => {
-    const env = composeSlidevSpawnEnv(
-      { Path: 'C:\\Windows\\System32', HOME: 'C:\\Users\\alice' },
-      { platform: 'win32', home: 'C:\\Users\\alice', cliBinDir: 'C:\\ok\\resources\\cli\\bin' },
-      alwaysDir,
-    );
-    expect(env.PATH).toBeUndefined();
-    expect((env.Path ?? '').split(';')[0]).toBe('C:\\ok\\resources\\cli\\bin');
   });
 });
 

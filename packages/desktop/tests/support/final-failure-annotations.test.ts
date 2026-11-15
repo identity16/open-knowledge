@@ -229,18 +229,6 @@ describe('the annotation file path', () => {
   const spec = (root: string, join: (...parts: string[]) => string) =>
     join(root, 'packages', 'desktop', 'tests', 'smoke', 'launch.e2e.ts');
 
-  test('is the repo path with forward slashes on Windows', () => {
-    const okRoot = 'C:\\work\\repo\\public\\open-knowledge';
-    expect(
-      sourcePath(spec(okRoot, path.win32.join), {
-        okRoot,
-        workspace: 'C:\\work\\repo',
-        override: undefined,
-        pathApi: path.win32,
-      }),
-    ).toBe('public/open-knowledge/packages/desktop/tests/smoke/launch.e2e.ts');
-  });
-
   test('is the repo path from the mirror export when the step names the source root, and the export path when it does not', () => {
     const okRoot = '/work/repo/.mirror-output/desktop-export';
     const roots = { okRoot, workspace: '/work/repo', pathApi: path.posix };

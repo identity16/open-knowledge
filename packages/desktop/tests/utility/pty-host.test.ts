@@ -895,21 +895,6 @@ describe('setupPtyHost — incoming message validation (asIncomingMessage guard)
     expect(h.spawnCalls).toHaveLength(0);
     expect(logger.warnings.length).toBeGreaterThan(0);
   });
-
-  test('drops a create whose shellInvalidReason is outside the shared reason set', () => {
-    const logger = makeLogger();
-    const h = makeHarness({ logger });
-    h.fireRaw({
-      type: 'create',
-      ptyId: 'p1',
-      cwd: '/x',
-      cols: 80,
-      rows: 24,
-      shellInvalidReason: 'config-unreadable-ish',
-    });
-    expect(h.spawnCalls).toHaveLength(0);
-    expect(logger.warnings.length).toBeGreaterThan(0);
-  });
 });
 
 describe('buildShellArgs', () => {

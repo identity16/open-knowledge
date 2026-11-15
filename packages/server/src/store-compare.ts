@@ -9,7 +9,6 @@ export const COMPARE_READ_RETRY_DELAYS_MS: readonly number[] = [50, 200, 800];
 
 const ABSENT_CODES = new Set(['ENOENT', 'ENOTDIR']);
 const TRANSIENT_READ_CODES = new Set(['EBUSY', 'EAGAIN', 'EINTR', 'EMFILE', 'ENFILE']);
-const WIN32_TRANSIENT_READ_CODES = new Set(['EPERM', 'EACCES']);
 
 class FileChangedDuringReadError extends Error {
   readonly code = 'EAGAIN';
@@ -66,13 +65,13 @@ export interface DiskCompareInput {
 
 export function isTransientReadError(
   err: unknown,
-  platform: NodeJS.Platform = process.platform,
+  _platform: NodeJS.Platform = process.platform,
 ): boolean {
   if (err instanceof FileChangedDuringReadError) return true;
   const code = errnoCode(err);
   if (code === undefined) return false;
   if (TRANSIENT_READ_CODES.has(code)) return true;
-  return platform === 'win32' && WIN32_TRANSIENT_READ_CODES.has(code);
+  return false;
 }
 
 export function observationOf(stats: BigIntStats): FileObservation {

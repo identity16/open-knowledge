@@ -383,7 +383,7 @@ describe('quarantineManagedRuntime', () => {
     expect(existsSync(again.kind === 'node' ? again.npxBin : again.uvxBin)).toBe(true);
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'reports failure instead of pretending the tree is gone',
     async () => {
       const stage = tmp();

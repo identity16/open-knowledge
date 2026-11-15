@@ -56,16 +56,6 @@ describe('augmentGitSpawnPath', () => {
     expect(augmentGitSpawnPath('', darwinOpts(['/usr/local/bin']))).toBe('/usr/local/bin');
   });
 
-  test('adds nothing on win32 (Git for Windows manages its own PATH)', () => {
-    const out = augmentGitSpawnPath('C:\\Windows', {
-      platform: 'win32',
-      homeDir: 'C:\\Users\\tester',
-      isDir: () => true,
-      delimiter: ';',
-    });
-    expect(out).toBe('C:\\Windows');
-  });
-
   test('darwin dir list covers both Homebrew prefixes and shim dirs', () => {
     const dirs = wellKnownToolDirs('darwin', HOME);
     expect(dirs).toContain('/opt/homebrew/bin');
@@ -131,9 +121,5 @@ describe('agentToolDirs', () => {
       `${HOME}/.npm-global/bin`,
     ]);
     expect(agentToolDirs('linux', HOME)).not.toContain(`${HOME}/Library/pnpm`);
-  });
-
-  test('win32 adds nothing (Explorer inherits the registry user PATH)', () => {
-    expect(agentToolDirs('win32', 'C:\\Users\\tester')).toEqual([]);
   });
 });

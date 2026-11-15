@@ -165,16 +165,6 @@ describe('createLoginShellPathProvider (skip conditions)', () => {
     throw new Error('probe must not spawn');
   };
 
-  test('windows never probes — its PATH comes from the registry, not a shell', async () => {
-    const provider = createLoginShellPathProvider({
-      log,
-      platform: 'win32',
-      shell: 'C:\\Windows\\system32\\cmd.exe',
-      runProbe: neverRuns,
-    });
-    await expect(provider()).resolves.toBeNull();
-  });
-
   test('no $SHELL → no probe', async () => {
     const provider = createLoginShellPathProvider({
       log,
@@ -350,102 +340,99 @@ describe('createLoginShellPathProvider (failed probes stay retryable)', () => {
   });
 });
 
-describe.skipIf(process.platform === 'win32')(
-  'createLoginShellPathProvider (real subprocess)',
-  () => {
-    test('captures the PATH a real shell prints, banner and all', async () => {
-      const shell = fakeShell(
-        `echo "Last login: today"\nprintf %s '${wrap('/opt/fake/bin:/usr/bin')}'`,
-      );
-      const provider = createLoginShellPathProvider({ log, platform: 'darwin', shell });
-      await expect(provider()).resolves.toBe('/opt/fake/bin:/usr/bin');
-    });
+describe('createLoginShellPathProvider (real subprocess)', () => {
+  test('captures the PATH a real shell prints, banner and all', async () => {
+    const shell = fakeShell(
+      `echo "Last login: today"\nprintf %s '${wrap('/opt/fake/bin:/usr/bin')}'`,
+    );
+    const provider = createLoginShellPathProvider({ log, platform: 'darwin', shell });
+    await expect(provider()).resolves.toBe('/opt/fake/bin:/usr/bin');
+  });
 
-    test('the probe script is valid shell — /bin/sh answers with a real PATH', async () => {
-      const provider = createLoginShellPathProvider({ log, platform: 'darwin', shell: '/bin/sh' });
-      const value = await provider();
-      expect(value).not.toBeNull();
-      expect(value).toContain('/');
-    });
+  test('the probe script is valid shell — /bin/sh answers with a real PATH', async () => {
+    const provider = createLoginShellPathProvider({ log, platform: 'darwin', shell: '/bin/sh' });
+    const value = await provider();
+    expect(value).not.toBeNull();
+    expect(value).toContain('/');
+  });
 
-    test('a shell that hangs is killed and yields no verdict', async () => {
-      const provider = createLoginShellPathProvider({
+  test('a shell that hangs is killed and yields no verdict', async () => {
+    const provider = createLoginShellPathProvider({
+      log,
+      platform: 'darwin',
+      shell: fakeShell('sleep 30'),
+      timeoutMs: 250,
+    });
+    const started = Date.now();
+    await expect(provider()).resolves.toBeNull();
+    expect(Date.now() - started).toBeLessThan(5_000);
+  });
+
+  test('a timed-out probe kills the subshells its shell forked', async () => {
+    const heartbeat = join(tmp(), 'heartbeat');
+    const provider = createLoginShellPathProvider({
+      log,
+      platform: 'darwin',
+      shell: forkingStallingShell(heartbeat),
+      timeoutMs: 2_000,
+    });
+    await expect(provider()).resolves.toBeNull();
+    await expectHeartbeatStopped(heartbeat);
+  }, 15_000);
+
+  test('a spawner that exits mid-probe takes the whole probe tree with it', async () => {
+    const heartbeat = join(tmp(), 'heartbeat');
+    const { closed } = await startProbeSpawner(forkingStallingShell(heartbeat), 2_000);
+    await closed;
+    await expectHeartbeatStopped(heartbeat);
+  }, 15_000);
+
+  test('a probe outliving a killed spawner never writes into a dead pipe', async () => {
+    const dir = tmp();
+    const shell = fakeShell(
+      [
+        `trap "touch '${join(dir, 'sigpipe')}'" PIPE`,
+        'sleep 1',
+        'echo "Last login: today"',
+        `touch '${join(dir, 'finished')}'`,
+      ].join('\n'),
+    );
+    const { child, closed } = await startProbeSpawner(shell);
+    child.kill('SIGKILL');
+    await closed;
+    await vi.waitFor(() => expect(existsSync(join(dir, 'finished'))).toBe(true), {
+      timeout: 10_000,
+      interval: 50,
+    });
+    expect(existsSync(join(dir, 'sigpipe'))).toBe(false);
+  }, 15_000);
+
+  test('a shell that cannot be executed yields no verdict', async () => {
+    const provider = createLoginShellPathProvider({
+      log,
+      platform: 'darwin',
+      shell: join(tmp(), 'does-not-exist'),
+    });
+    await expect(provider()).resolves.toBeNull();
+  });
+
+  test('real bash: a .bashrc-only directory is reached', async () => {
+    const home = tmp();
+    writeFileSync(join(home, '.bash_profile'), 'export PATH="/from/profile:$PATH"\n');
+    writeFileSync(join(home, '.bashrc'), 'export PATH="/from/bashrc:$PATH"\n');
+    const realHome = process.env.HOME;
+    process.env.HOME = home;
+    try {
+      const captured = await createLoginShellPathProvider({
         log,
         platform: 'darwin',
-        shell: fakeShell('sleep 30'),
-        timeoutMs: 250,
-      });
-      const started = Date.now();
-      await expect(provider()).resolves.toBeNull();
-      expect(Date.now() - started).toBeLessThan(5_000);
-    });
-
-    test('a timed-out probe kills the subshells its shell forked', async () => {
-      const heartbeat = join(tmp(), 'heartbeat');
-      const provider = createLoginShellPathProvider({
-        log,
-        platform: 'darwin',
-        shell: forkingStallingShell(heartbeat),
-        timeoutMs: 2_000,
-      });
-      await expect(provider()).resolves.toBeNull();
-      await expectHeartbeatStopped(heartbeat);
-    }, 15_000);
-
-    test('a spawner that exits mid-probe takes the whole probe tree with it', async () => {
-      const heartbeat = join(tmp(), 'heartbeat');
-      const { closed } = await startProbeSpawner(forkingStallingShell(heartbeat), 2_000);
-      await closed;
-      await expectHeartbeatStopped(heartbeat);
-    }, 15_000);
-
-    test('a probe outliving a killed spawner never writes into a dead pipe', async () => {
-      const dir = tmp();
-      const shell = fakeShell(
-        [
-          `trap "touch '${join(dir, 'sigpipe')}'" PIPE`,
-          'sleep 1',
-          'echo "Last login: today"',
-          `touch '${join(dir, 'finished')}'`,
-        ].join('\n'),
-      );
-      const { child, closed } = await startProbeSpawner(shell);
-      child.kill('SIGKILL');
-      await closed;
-      await vi.waitFor(() => expect(existsSync(join(dir, 'finished'))).toBe(true), {
-        timeout: 10_000,
-        interval: 50,
-      });
-      expect(existsSync(join(dir, 'sigpipe'))).toBe(false);
-    }, 15_000);
-
-    test('a shell that cannot be executed yields no verdict', async () => {
-      const provider = createLoginShellPathProvider({
-        log,
-        platform: 'darwin',
-        shell: join(tmp(), 'does-not-exist'),
-      });
-      await expect(provider()).resolves.toBeNull();
-    });
-
-    test('real bash: a .bashrc-only directory is reached', async () => {
-      const home = tmp();
-      writeFileSync(join(home, '.bash_profile'), 'export PATH="/from/profile:$PATH"\n');
-      writeFileSync(join(home, '.bashrc'), 'export PATH="/from/bashrc:$PATH"\n');
-      const realHome = process.env.HOME;
-      process.env.HOME = home;
-      try {
-        const captured = await createLoginShellPathProvider({
-          log,
-          platform: 'darwin',
-          shell: '/bin/bash',
-        })();
-        expect(captured).not.toBeNull();
-        expect((captured ?? '').split(delimiter)).toContain('/from/bashrc');
-      } finally {
-        if (realHome === undefined) delete process.env.HOME;
-        else process.env.HOME = realHome;
-      }
-    });
-  },
-);
+        shell: '/bin/bash',
+      })();
+      expect(captured).not.toBeNull();
+      expect((captured ?? '').split(delimiter)).toContain('/from/bashrc');
+    } finally {
+      if (realHome === undefined) delete process.env.HOME;
+      else process.env.HOME = realHome;
+    }
+  });
+});

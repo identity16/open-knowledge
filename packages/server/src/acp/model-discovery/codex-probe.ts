@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { envPath, resolveWindowsCommand, terminateAgentTree, windowsCmdWrap } from '../launch.ts';
+import { terminateAgentTree } from '../launch.ts';
 import type { CodexCatalogModel } from './codex-context.ts';
 
 const PROBE_TIMEOUT_MS = 8_000;
@@ -49,17 +49,13 @@ export type CodexCatalogProbe =
 export function codexProbeCommand(
   codexPath: string,
   env: NodeJS.ProcessEnv,
-  platform: NodeJS.Platform,
-): { cmd: string; args: string[]; wrap: boolean; env: Record<string, string> } {
+  _platform: NodeJS.Platform,
+): { cmd: string; args: string[]; env: Record<string, string> } {
   const stringEnv: Record<string, string> = {};
   for (const [k, v] of Object.entries(env)) if (typeof v === 'string') stringEnv[k] = v;
-  const win = platform === 'win32';
-  const resolved = win ? resolveWindowsCommand(codexPath, envPath(stringEnv)) : codexPath;
-  const wrap = win && /\.(cmd|bat)$/i.test(resolved);
-  const composed = wrap
-    ? windowsCmdWrap(resolved, ['debug', 'models'])
-    : { cmd: resolved, args: ['debug', 'models'] };
-  return { ...composed, wrap, env: stringEnv };
+  const resolved = codexPath;
+  const composed = { cmd: resolved, args: ['debug', 'models'] };
+  return { ...composed, env: stringEnv };
 }
 
 export async function probeCodexCatalog(
@@ -67,7 +63,7 @@ export async function probeCodexCatalog(
   env: NodeJS.ProcessEnv = process.env,
   platform: NodeJS.Platform = process.platform,
 ): Promise<CodexCatalogProbe> {
-  const { cmd, args, wrap, env: stringEnv } = codexProbeCommand(codexPath, env, platform);
+  const { cmd, args, env: stringEnv } = codexProbeCommand(codexPath, env, platform);
   return new Promise<CodexCatalogProbe>((settle) => {
     let child: ReturnType<typeof spawn>;
     try {
@@ -75,9 +71,7 @@ export async function probeCodexCatalog(
         env: stringEnv,
         stdio: ['ignore', 'pipe', 'ignore'],
         shell: false,
-        detached: platform !== 'win32',
-        windowsHide: true,
-        windowsVerbatimArguments: wrap,
+        detached: true,
       });
     } catch (err) {
       settle(

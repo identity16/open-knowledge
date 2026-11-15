@@ -22,7 +22,7 @@ export function describeAuthFailure(err: unknown, host: string): AuthFailure {
       message:
         `Could not verify the TLS certificate for ${host}. If this is a GitHub ` +
         `Enterprise Server with a self-signed or internal-CA certificate, add its ` +
-        `CA to your system trust store (macOS Keychain, Windows certificate store, ` +
+        `CA to your system trust store (macOS Keychain or ` +
         `or your distro's ca-certificates).`,
     };
   }

@@ -1,65 +1,14 @@
 import { expect } from '@playwright/test';
 import type { BootLogSnapshot } from './launch-readiness';
-import {
-  buildInputReadyProbe,
-  WINDOWS_PRIMARY_PROMPT_AT_END,
-  windowsPrimaryPromptAfter,
-} from './terminal-smoke-shell';
 
 const DIAGNOSTIC_ATTACHMENT_MAX_BYTES = 128 * 1024;
 const SCREEN_JPEG_QUALITIES = [60, 40, 20, 10] as const;
 
 export async function waitForShellReady(
   readTerminalText: () => Promise<string>,
-  sendTerminalCommand: (command: string) => Promise<void>,
-  {
-    timeout = 30_000,
-    quietPolls = 3,
-    interval = 250,
-    platform = process.platform,
-    onPrimaryPromptFailure,
-  }: WaitForShellReadyOptions = {},
+  _sendTerminalCommand: (command: string) => Promise<void>,
+  { timeout = 30_000, quietPolls = 3, interval = 250 }: WaitForShellReadyOptions = {},
 ): Promise<void> {
-  if (platform === 'win32') {
-    const startedAt = Date.now();
-    try {
-      await waitForTerminalText(
-        readTerminalText,
-        WINDOWS_PRIMARY_PROMPT_AT_END,
-        'PowerShell primary prompt',
-        timeout,
-        interval,
-      );
-    } catch (error) {
-      await onPrimaryPromptFailure?.().catch((captureError: unknown) => {
-        const reason = captureError instanceof Error ? captureError.message : String(captureError);
-        console.warn(
-          `[terminal-ready] could not capture the PowerShell primary-prompt diagnostics: ${reason}`,
-        );
-      });
-      throw error;
-    }
-    const firstPromptWaitMs = Date.now() - startedAt;
-    const { marker, command } = buildInputReadyProbe('win32');
-    await sendTerminalCommand(command);
-    try {
-      await waitForTerminalText(
-        readTerminalText,
-        windowsPrimaryPromptAfter(marker),
-        'PowerShell primary prompt after the probe output',
-        Math.max(interval, timeout - (Date.now() - startedAt)),
-        interval,
-      );
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `The post-probe prompt wait ended without a match; this waitForShellReady call's timeout is ${timeout} ms and its first-prompt wait took ${firstPromptWaitMs} ms.\n\n${reason}`,
-        { cause: error },
-      );
-    }
-    return;
-  }
-
   await waitForQuietTerminalText(readTerminalText, timeout, quietPolls, interval);
 }
 
@@ -109,7 +58,7 @@ function boundedJson(value: unknown): string {
   return body;
 }
 
-async function waitForTerminalText(
+async function _waitForTerminalText(
   readTerminalText: () => Promise<string>,
   pattern: RegExp,
   label: string,

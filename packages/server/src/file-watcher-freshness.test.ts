@@ -37,7 +37,6 @@ import {
 const SETTLED_TIMESTAMPS_MS = 10_000;
 
 function readCanBeRevoked(): boolean {
-  if (process.platform === 'win32') return false;
   const dir = mkdtempSync(join(tmpdir(), 'ok-revoke-probe-'));
   const probe = join(dir, 'probe');
   try {
@@ -588,20 +587,17 @@ describe('timed freshness re-check', () => {
     expect(handle?.getFileIndex().has('zz-kept')).toBe(true);
   });
 
-  test.runIf(process.platform !== 'win32')(
-    'a re-read of a FIFO or a link to a device returns without reading it',
-    async () => {
-      await watch(null);
-      const fifo = join(contentDir, 'pipe.md');
-      execFileSync('mkfifo', [fifo]);
-      const device = join(contentDir, 'zero.md');
-      symlinkSync('/dev/zero', device);
+  test('a re-read of a FIFO or a link to a device returns without reading it', async () => {
+    await watch(null);
+    const fifo = join(contentDir, 'pipe.md');
+    execFileSync('mkfifo', [fifo]);
+    const device = join(contentDir, 'zero.md');
+    symlinkSync('/dev/zero', device);
 
-      const result = await (handle as WatcherHandle).recheckPaths([fifo, device]);
-      expect(result).toEqual({ checked: 2, found: 0 });
-      expect(events).toHaveLength(0);
-    },
-  );
+    const result = await (handle as WatcherHandle).recheckPaths([fifo, device]);
+    expect(result).toEqual({ checked: 2, found: 0 });
+    expect(events).toHaveLength(0);
+  });
 
   test.runIf(CAN_REVOKE_READ)(
     'the per-pass hook says whether a completed pass observed the whole tree',

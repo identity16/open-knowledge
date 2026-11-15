@@ -1,5 +1,4 @@
 import { execFile } from 'node:child_process';
-import { withHiddenWindowsConsole } from '@inkeep/open-knowledge-server';
 
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 
@@ -27,10 +26,9 @@ export function openBrowser(url: string): void {
     return;
   }
 
-  const cmd =
-    process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'cmd' : 'xdg-open';
-  const args = process.platform === 'win32' ? ['/c', 'start', '', url] : [url];
-  execFile(cmd, args, withHiddenWindowsConsole({}), (err) => {
+  const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open';
+  const args = [url];
+  execFile(cmd, args, {}, (err) => {
     if (err) console.warn(`Could not auto-open browser (${err.message}); visit ${url} manually`);
   });
 }

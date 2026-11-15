@@ -245,7 +245,6 @@ export async function showDesktopUninstallResult(
       {
         cwd: '/',
         stdio: 'ignore',
-        windowsHide: true,
       },
     );
     child.once('error', reject);
@@ -369,7 +368,6 @@ export async function launchDesktopUninstallHandoff(
       execFileSync('/bin/ps', ['-p', String(process.pid), '-o', 'lstart='], {
         encoding: 'utf8',
         timeout: 5000,
-        windowsHide: true,
       }).trim();
     const spawn = deps.spawn ?? spawnChild;
     const script = buildDesktopUninstallHandoffScript(
@@ -385,7 +383,6 @@ export async function launchDesktopUninstallHandoff(
         cwd: '/',
         detached: true,
         stdio: ['ignore', 'pipe', 'ignore'],
-        windowsHide: true,
       });
       if (child.stdout === null) {
         child.kill();

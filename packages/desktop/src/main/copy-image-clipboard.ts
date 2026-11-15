@@ -2,7 +2,6 @@ import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { resolve as resolvePath } from 'node:path';
 import * as pathPosix from 'node:path/posix';
-import * as pathWin32 from 'node:path/win32';
 import type {
   CopyImageFailureReason,
   CopyImageRequest,
@@ -74,7 +73,7 @@ async function loadImageBytes(
   }
   if (url.origin === deps.assetOrigin) {
     const relPath = decodeURIComponent(url.pathname).replace(/^\/+/, '');
-    const p = deps.platform === 'win32' ? pathWin32 : pathPosix;
+    const p = pathPosix;
     if (p.isAbsolute(relPath)) {
       return { ok: false, reason: 'path-escape', detail: `absolute rel path: ${relPath}` };
     }

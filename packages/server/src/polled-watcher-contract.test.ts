@@ -271,8 +271,8 @@ describe('startManagedArtifactWatcher when a skill directory stops being a reada
     );
   });
 
-  describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-    'while a directory on the path is unreadable (EACCES; chmod does not bind root or Windows)',
+  describe.skipIf(process.geteuid?.() === 0)(
+    'while a directory on the path is unreadable (EACCES; requires non-root POSIX permissions)',
     () => {
       test.each([{ unreadable: 'skill directory' }, { unreadable: 'skills root' }])(
         'keeps a SKILL.md, reporting it neither unlinked nor changed, while its $unreadable is briefly unreadable, then reports its next edit',
@@ -384,44 +384,41 @@ describe('closing a watcher', () => {
   );
 });
 
-describe.skipIf(process.platform === 'win32')(
-  'a watcher never begins a sample of a path while its previous sample is in flight (the threadpool barrier is a POSIX FIFO)',
-  () => {
-    test.each(ENTRIES)(
-      '$watcher begins no further sample of a changed file while that sample is held on the only libuv worker, then reports the change',
-      async ({ entry }) => {
-        const { watch, target } = watchedFile(entry, 'edit');
-        const barrier = join(fixture, 'threadpool-barrier');
-        execFileSync('mkfifo', [barrier]);
-        const run = await watchFrom(entry, watch);
+describe('a watcher never begins a sample of a path while its previous sample is in flight (the threadpool barrier is a POSIX FIFO)', () => {
+  test.each(ENTRIES)(
+    '$watcher begins no further sample of a changed file while that sample is held on the only libuv worker, then reports the change',
+    async ({ entry }) => {
+      const { watch, target } = watchedFile(entry, 'edit');
+      const barrier = join(fixture, 'threadpool-barrier');
+      execFileSync('mkfifo', [barrier]);
+      const run = await watchFrom(entry, watch);
 
-        run.send({ op: 'hold-next-sample', path: target, content: HELD_CHANGE, barrier });
-        await run.until(
-          `the watcher to begin sampling ${target} after it changed`,
-          (reports) => reportOf(reports, 'sample-held') !== undefined,
-        );
-        await run.until(
-          'every timer the watcher had pending while that sample was held to fire or be cleared (this over-constrains, by design, a watcher that keeps a timer pending for longer than the test budget)',
-          (reports) => reportOf(reports, 'overlap-checked') !== undefined,
-        );
-        const checked = reportOf(run.reports(), 'overlap-checked');
-        expect(
-          checked?.samplesBegunWhileHeld,
-          `the watcher began another sample of ${target} (or another listing of its skills root) while the previous sample was still in flight ` +
-            `(${checked?.timersWaitedOut} pending timer(s) waited out): a slow filesystem would pile samples up behind the libuv threadpool the server shares`,
-        ).toBe(0);
+      run.send({ op: 'hold-next-sample', path: target, content: HELD_CHANGE, barrier });
+      await run.until(
+        `the watcher to begin sampling ${target} after it changed`,
+        (reports) => reportOf(reports, 'sample-held') !== undefined,
+      );
+      await run.until(
+        'every timer the watcher had pending while that sample was held to fire or be cleared (this over-constrains, by design, a watcher that keeps a timer pending for longer than the test budget)',
+        (reports) => reportOf(reports, 'overlap-checked') !== undefined,
+      );
+      const checked = reportOf(run.reports(), 'overlap-checked');
+      expect(
+        checked?.samplesBegunWhileHeld,
+        `the watcher began another sample of ${target} (or another listing of its skills root) while the previous sample was still in flight ` +
+          `(${checked?.timersWaitedOut} pending timer(s) waited out): a slow filesystem would pile samples up behind the libuv threadpool the server shares`,
+      ).toBe(0);
 
-        await run.until(
-          `onChange to report the change to ${target} once the held sample was released`,
-          (reports) => delivered(reports, target, HELD_CHANGE),
-        );
-      },
-    );
-  },
-);
+      await run.until(
+        `onChange to report the change to ${target} once the held sample was released`,
+        (reports) => delivered(reports, target, HELD_CHANGE),
+      );
+    },
+  );
+});
 
-describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-  'an error the watcher keeps silent to its callers is reported at some logger level, and not again while it persists (EACCES; chmod does not bind root or Windows)',
+describe.skipIf(process.geteuid?.() === 0)(
+  'an error the watcher keeps silent to its callers is reported at some logger level, and not again while it persists (EACCES; requires non-root POSIX permissions)',
   () => {
     test.each(UNREADABLE_CASES)(
       '$watcher reports the EACCES of every path it cannot read while its $unreadable is unreadable, at least once, and not again in a further poll',
@@ -462,8 +459,8 @@ describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
   },
 );
 
-describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-  'an error the watcher reported is reported again once the path has read as present or absent and then fails once more (EACCES; chmod does not bind root or Windows)',
+describe.skipIf(process.geteuid?.() === 0)(
+  'an error the watcher reported is reported again once the path has read as present or absent and then fails once more (EACCES; requires non-root POSIX permissions)',
   () => {
     test.each(RECOVERY_CASES)(
       '$watcher reports the EACCES of every path it cannot read in each episode when its $unreadable is unreadable, then $recovery, then unreadable once more',
@@ -513,8 +510,8 @@ describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
   },
 );
 
-describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-  'an error the watcher keeps silent to its callers is reported once per error code, so a path that keeps failing with a new code is reported again (EACCES, then ELOOP; chmod does not bind root or Windows)',
+describe.skipIf(process.geteuid?.() === 0)(
+  'an error the watcher keeps silent to its callers is reported once per error code, so a path that keeps failing with a new code is reported again (EACCES, then ELOOP; requires non-root POSIX permissions)',
   () => {
     test.each(UNREADABLE_CASES)(
       '$watcher reports the ELOOP of every path it cannot read once its $unreadable, unreadable until then, becomes a symlink loop, and not again while it stays one',
@@ -633,8 +630,8 @@ describe('closing a watcher between polls', () => {
   });
 });
 
-describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-  'a watcher started while its file is unreadable (EACCES; chmod does not bind root or Windows)',
+describe.skipIf(process.geteuid?.() === 0)(
+  'a watcher started while its file is unreadable (EACCES; requires non-root POSIX permissions)',
   () => {
     test.each(ENTRIES.filter(({ entry }) => entry !== 'multi-config'))(
       '$watcher resolves its start and reports an edit made once the file is readable',
@@ -659,8 +656,8 @@ describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
 );
 
 describe('a file whose two-step write is interrupted between its halves is reported only once its size holds after the interruption', () => {
-  test.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-    'startConfigFileWatcher never reports an edit half-written when a sample between the halves fails with EACCES (chmod does not bind root or Windows)',
+  test.skipIf(process.geteuid?.() === 0)(
+    'startConfigFileWatcher never reports an edit half-written when a sample between the halves fails with EACCES (requires non-root POSIX permissions)',
     async () => {
       const { watch, target } = watchedFile('config', 'edit');
       const dir = dirname(target);
@@ -768,8 +765,8 @@ describe('a watched file rewritten in place at its size inside the timestamp gra
   });
 });
 
-describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-  'an error the watcher reported is reported again once its directory has been a regular file (EACCES, then ENOTDIR, then EACCES; chmod does not bind root or Windows)',
+describe.skipIf(process.geteuid?.() === 0)(
+  'an error the watcher reported is reported again once its directory has been a regular file (EACCES, then ENOTDIR, then EACCES; requires non-root POSIX permissions)',
   () => {
     test.each(
       UNREADABLE_CASES.filter(
@@ -821,8 +818,8 @@ describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
   },
 );
 
-describe.skipIf(process.platform === 'win32' || process.geteuid?.() === 0)(
-  'closing a watcher whose in-flight sample has not settled (the threadpool barrier is a POSIX FIFO; chmod does not bind root or Windows)',
+describe.skipIf(process.geteuid?.() === 0)(
+  'closing a watcher whose in-flight sample has not settled (the threadpool barrier is a POSIX FIFO; requires non-root POSIX permissions)',
   () => {
     test.each(ENTRIES)(
       '$watcher cleanup resolves while its sample of a watched file is held on the only libuv worker, and reports nothing once that sample fails',

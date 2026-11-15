@@ -87,12 +87,6 @@ describe('detectRootWiredEditors', () => {
     expect(editors).not.toContain('openclaw');
   });
 
-  test('accepts the Windows sentinel too', () => {
-    const root = tmp();
-    wireEditorAtRoot(root, '.mcp.json', '# ok-mcp-win-v1');
-    expect(detectRootWiredEditors(root)).toContain('claude');
-  });
-
   test('survives a sentinel version bump — detection keys on the version-independent prefix', () => {
     const rootUnix = tmp();
     wireEditorAtRoot(rootUnix, '.mcp.json', '# ok-mcp-v2');

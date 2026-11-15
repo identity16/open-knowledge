@@ -1,5 +1,6 @@
-import { execFileSync } from 'node:child_process';
+import childProcess, { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -1497,13 +1498,16 @@ describe('clone stores the remote URL verbatim, userinfo included', () => {
 
 describe('runClone git preflight', () => {
   it('git unusable everywhere → runClone surfaces the recoverable GitNotAvailableError', async () => {
-    const originalPath = process.env.PATH;
-    const originalPlatform = process.platform;
-    process.env.PATH = '/nonexistent';
-    Object.defineProperty(process, 'platform', {
-      value: originalPlatform === 'win32' ? 'linux' : 'win32',
-      configurable: true,
+    const spawn = vi.spyOn(childProcess, 'spawnSync').mockReturnValue({
+      pid: 0,
+      output: [],
+      stdout: '',
+      stderr: '',
+      status: null,
+      signal: null,
+      error: Object.assign(new Error('Git is unavailable'), { code: 'ENOENT' }),
     });
+    syncBuiltinESMExports();
     try {
       const { GitNotAvailableError } = await import('@inkeep/open-knowledge-server');
       const cwd = join(
@@ -1514,11 +1518,8 @@ describe('runClone git preflight', () => {
         runClone('inkeep/playbooks', { json: true }, {} as unknown as Config, cwd),
       ).rejects.toBeInstanceOf(GitNotAvailableError);
     } finally {
-      Object.defineProperty(process, 'platform', {
-        value: originalPlatform,
-        configurable: true,
-      });
-      process.env.PATH = originalPath;
+      spawn.mockRestore();
+      syncBuiltinESMExports();
     }
   });
 });

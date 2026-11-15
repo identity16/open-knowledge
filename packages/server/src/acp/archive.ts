@@ -25,15 +25,12 @@ export function extractArchive(
   const [cmd, args] = isZip
     ? process.platform === 'darwin'
       ? ['ditto', ['-x', '-k', archivePath, destDir]]
-      : process.platform === 'win32'
-        ? ['tar', ['-xf', archivePath, '-C', destDir]]
-        : ['unzip', ['-q', archivePath, '-d', destDir]]
+      : ['unzip', ['-q', archivePath, '-d', destDir]]
     : ['tar', ['-xf', archivePath, '-C', destDir]];
   return new Promise((resolvePromise, rejectPromise) => {
     const child: ChildProcess = spawn(cmd, args as string[], {
       stdio: ['ignore', 'ignore', 'pipe'],
       shell: false,
-      windowsHide: true,
     });
     const timer = setTimeout(() => {
       child.kill('SIGKILL');

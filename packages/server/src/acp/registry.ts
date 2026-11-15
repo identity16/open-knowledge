@@ -69,8 +69,7 @@ const DEFAULT_TTL_MS = 60 * 60 * 1000;
 export function registryPlatformKey(): string | null {
   const os = platform();
   const cpu = arch();
-  const osKey =
-    os === 'darwin' ? 'darwin' : os === 'linux' ? 'linux' : os === 'win32' ? 'windows' : null;
+  const osKey = os === 'darwin' ? 'darwin' : os === 'linux' ? 'linux' : null;
   const cpuKey = cpu === 'arm64' ? 'aarch64' : cpu === 'x64' ? 'x86_64' : null;
   if (osKey === null || cpuKey === null) return null;
   return `${osKey}-${cpuKey}`;

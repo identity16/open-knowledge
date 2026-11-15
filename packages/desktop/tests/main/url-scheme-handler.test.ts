@@ -236,7 +236,7 @@ describe('registerProtocolHandler — setAsDefaultProtocolClient', () => {
     expect(env.openEphemeralFile).toHaveBeenCalledWith('/Users/me/notes/beta.md');
   });
 
-  for (const platform of ['darwin', 'win32', 'linux'] as const) {
+  for (const platform of ['darwin', 'linux'] as const) {
     test(`packaged ${platform} builds self-heal the scheme binding per boot`, () => {
       const env = makeEnv({ isPackaged: true });
       registerProtocolHandler({

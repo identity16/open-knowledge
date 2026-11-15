@@ -39,16 +39,6 @@ describe('openBrowser', () => {
     expect(args).toEqual(['http://localhost:3000']);
   });
 
-  it('uses "cmd /c start" on win32', () => {
-    Object.defineProperty(process, 'platform', { value: 'win32' });
-    openBrowser('http://localhost:3000');
-
-    expect(execFileMock).toHaveBeenCalledTimes(1);
-    const [cmd, args] = execFileMock.mock.calls[0] as [string, string[]];
-    expect(cmd).toBe('cmd');
-    expect(args).toEqual(['/c', 'start', '', 'http://localhost:3000']);
-  });
-
   it('prints fallback message when launcher fails', () => {
     Object.defineProperty(process, 'platform', { value: 'linux' });
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -100,7 +90,7 @@ describe('openBrowser URL validation', () => {
 
   for (const url of malicious) {
     it(`rejects ${JSON.stringify(url)} without spawning a launcher`, () => {
-      Object.defineProperty(process, 'platform', { value: 'win32' });
+      Object.defineProperty(process, 'platform', { value: 'darwin' });
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       openBrowser(url);

@@ -824,28 +824,6 @@ describe('machine-level death suppression', () => {
     expect(breadcrumb?.prevBootSessionUuid).toBe('boot-epoch-a');
   });
 
-  test('the reasons Windows gives reach the suppression breadcrumb', () => {
-    const rig = makeRig();
-    const warnLines: Array<Record<string, unknown>> = [];
-    rig.deps.logger = {
-      info: () => {},
-      warn: (payload: Record<string, unknown>) => {
-        warnLines.push(payload);
-      },
-    };
-    const sessionA = createCrashDetection(rig.deps);
-    sessionA.detectBootCrash();
-    sessionA.noteOsShutdown(['shutdown', 'logoff']);
-
-    createCrashDetection(rig.deps).detectBootCrash();
-
-    const breadcrumb = warnLines.find(
-      (line) => line.event === 'crash-detection.machine-level-death',
-    );
-    expect(breadcrumb?.reason).toBe('os-shutdown');
-    expect(breadcrumb?.osShutdownReasons).toEqual(['shutdown', 'logoff']);
-  });
-
   test('an OS shutdown that named no cause reads as null, not an empty list', () => {
     const rig = makeRig();
     const warnLines: Array<Record<string, unknown>> = [];
@@ -1750,7 +1728,7 @@ describe('non-crash minidumps', () => {
     expect(createCrashDetection(rig.deps).detectBootCrash()).not.toBeNull();
   });
 
-  test.each<NodeJS.Platform>(['linux', 'win32'])(
+  test.each<NodeJS.Platform>(['linux'])(
     'on %s the snapshot still arms, because the predicate is gated off there',
     (platform) => {
       const rig = makeRig();
@@ -1860,20 +1838,6 @@ describe('auto-update install kill suppression', () => {
     if (armed?.kind === 'boot') {
       expect(armed.context.dirtyShutdown).toBe(true);
     }
-  });
-
-  test('the win32 installer-swap shape is suppressed', () => {
-    const rig = makeRig();
-    rig.deps.platform = 'win32';
-    rig.setAppVersion('0.58.8');
-    createCrashDetection(rig.deps).detectBootCrash();
-
-    rig.setInstallInFlight(IN_FLIGHT);
-    rig.setAppVersion('0.61.3');
-    const sessionB = createCrashDetection(rig.deps);
-    expect(sessionB.detectBootCrash()).toBeNull();
-    sessionB.notifyRendererReady();
-    expect(rig.emitted).toHaveLength(0);
   });
 
   test('a staging-fallback handoff suppresses too', () => {

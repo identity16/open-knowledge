@@ -1071,32 +1071,6 @@ export type OkPtyExit =
       readonly hostExited?: true;
     };
 
-const TERMINAL_SHELL_NOTICE_REASON_VOCABULARY = [
-  'config-unreadable',
-  'invalid-value',
-  'not-absolute',
-  'not-found',
-] as const;
-
-export type TerminalShellNoticeReason = (typeof TERMINAL_SHELL_NOTICE_REASON_VOCABULARY)[number];
-
-export const TERMINAL_SHELL_NOTICE_REASONS: ReadonlySet<TerminalShellNoticeReason> = new Set(
-  TERMINAL_SHELL_NOTICE_REASON_VOCABULARY,
-);
-
-export function isTerminalShellNoticeReason(value: unknown): value is TerminalShellNoticeReason {
-  return (
-    typeof value === 'string' &&
-    TERMINAL_SHELL_NOTICE_REASONS.has(value as TerminalShellNoticeReason)
-  );
-}
-
-export type OkPtyNotice = {
-  readonly ptyId: string;
-  readonly notice: 'invalid-shell-override';
-  readonly reason: TerminalShellNoticeReason;
-};
-
 export interface ClaudeReadiness {
   readonly claude: 'present' | 'not-found' | 'unknown';
   readonly mcpPreApprovable?: boolean;
@@ -1468,7 +1442,6 @@ export interface OkDesktopBridge {
     setDockState(state: OkTerminalDockStateUpdate): Promise<OkTerminalDockStateWriteResult>;
     onData(cb: (msg: OkPtyData) => void): OkUnsubscribe;
     onExit(cb: (msg: OkPtyExit) => void): OkUnsubscribe;
-    onNotice(cb: (msg: OkPtyNotice) => void): OkUnsubscribe;
     claudePreflight(): Promise<ClaudeReadiness>;
     cliPreflight(cli: TerminalCli): Promise<CliReadiness>;
     cliInstalledMap(): Promise<Partial<Record<TerminalCli, boolean>>>;

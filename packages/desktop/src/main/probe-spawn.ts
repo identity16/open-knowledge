@@ -17,7 +17,7 @@ import {
 import type { ProbeChild, ProbeTimers } from './claude-readiness.ts';
 import { getLogger } from './desktop-logger.ts';
 
-export type ProbeReassert = 'applied' | 'skipped-shape' | 'skipped-win32';
+export type ProbeReassert = 'applied' | 'skipped-shape';
 
 export interface ProbeSpawnArgv {
   readonly args: readonly string[];
@@ -50,7 +50,6 @@ const REASSERT_WARNINGS: Record<ProbeReassert, string | null> = {
   applied: null,
   'skipped-shape':
     'POSIX probe argv does not end in -c <command>, so the OK-managed bin dir was not reasserted after shell startup files ran',
-  'skipped-win32': null,
 };
 
 export function probeEnvVerdict(
@@ -98,9 +97,6 @@ export function probeSpawnArgs(
   spawnArgs: readonly string[],
   options: OkManagedBinDirsOptions,
 ): ProbeSpawnArgv {
-  if (options.platform === 'win32') {
-    return { args: spawnArgs, reassert: 'skipped-win32', family: undefined };
-  }
   const family = shellCommandFamily(shell);
   const command = spawnArgs.at(-2) === '-c' ? spawnArgs.at(-1) : undefined;
   if (command === undefined) return { args: spawnArgs, reassert: 'skipped-shape', family };
@@ -114,8 +110,8 @@ export function probeSpawnArgs(
   };
 }
 
-export function probeSpawnDetached(platform: NodeJS.Platform): boolean {
-  return platform !== 'win32';
+export function probeSpawnDetached(_platform: NodeJS.Platform): boolean {
+  return true;
 }
 
 export function killProbeGroup(child: ChildProcess): void {
@@ -152,7 +148,7 @@ export function realProbeSpawn(file: string, spawnArgs: readonly string[]): Prob
     stdio: 'ignore',
     shell: false,
     detached: probeSpawnDetached(options.platform),
-    windowsHide: true,
+
     env: okProbeSpawnEnv(options, argv),
   });
   return {

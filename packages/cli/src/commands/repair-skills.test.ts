@@ -230,7 +230,7 @@ describe('repairSkills — project sweep create-if-wired gate', () => {
   let logEvents: RepairSkillsLogEvent[];
 
   const UNWIRED_MCP_JSON = JSON.stringify({ mcpServers: { other: { command: 'node' } } });
-  const OK_WIRED_MCP_JSON_WIN = JSON.stringify({
+  const _OK_WIRED_MCP_JSON_WIN = JSON.stringify({
     mcpServers: {
       'open-knowledge': {
         command: 'powershell',
@@ -286,31 +286,6 @@ describe('repairSkills — project sweep create-if-wired gate', () => {
     expect(readFileSync(skillFile, 'utf-8')).toContain('bundled-9.9.9-content');
     expect(
       logEvents.some((e) => e.event === 'project-skill-reclaim-created' && e.editorId === 'claude'),
-    ).toBe(true);
-  });
-
-  it('creates a project SKILL.md for a host wired with the Windows chain sentinel', async () => {
-    writeFileSync(join(scratch.project, '.mcp.json'), OK_WIRED_MCP_JSON_WIN);
-
-    const written: Array<{ home: string; version: string }> = [];
-    const result = await repairSkills({
-      projectDir: scratch.project,
-      home: scratch.home,
-      logger: (event) => logEvents.push(event),
-      deps: depsBuilder({
-        projectBundleDir,
-        discoveryBundleDir,
-        bundledVersion: '9.9.9',
-        recordedVersion: '9.9.9',
-        writtenVersions: written,
-      }),
-    });
-
-    if (result.status !== 'done' || result.project.outcome !== 'done')
-      throw new Error('unreachable');
-    expect(result.project.entries.find((e) => e.editorId === 'claude')?.outcome).toBe('created');
-    expect(
-      existsSync(join(scratch.project, '.claude', 'skills', PROJECT_SKILL_DIR_NAME, 'SKILL.md')),
     ).toBe(true);
   });
 

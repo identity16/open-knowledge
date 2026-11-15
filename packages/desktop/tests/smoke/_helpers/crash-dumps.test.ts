@@ -35,12 +35,12 @@ const DARWIN_SIMULATED_DUMP = 0x4350_7378;
 const EXCEPTION_STREAM_BYTES = 168;
 const NTDLL = { base: 0x7ffa_1000_0000n, size: 0x20_0000 };
 const ELECTRON_IMAGE = { base: 0x7ff6_0000_0000n, size: 0x1000_0000 };
-const PNPM_CONPTY_ADDON =
-  'D:\\a\\agents-private\\node_modules\\.pnpm\\node-pty@1.2.0-beta.15\\node_modules\\node-pty\\prebuilds\\win32-x64\\conpty.node';
-const PNPM_CONPTY_DLL =
-  'D:\\a\\agents-private\\node_modules\\.pnpm\\node-pty@1.2.0-beta.15\\node_modules\\node-pty\\prebuilds\\win32-x64\\conpty\\conpty.dll';
+const PNPM_PTY_ADDON =
+  'D:\\a\\agents-private\\node_modules\\.pnpm\\node-pty@1.2.0-beta.15\\node_modules\\node-pty\\prebuilds\\darwin-arm64\\pty.node';
+const PNPM_PTY_LIBRARY =
+  'D:\\a\\agents-private\\node_modules\\.pnpm\\node-pty@1.2.0-beta.15\\node_modules\\node-pty\\prebuilds\\darwin-arm64\\conpty\\libuv.dylib';
 const PARCEL_WATCHER_ADDON =
-  'D:\\a\\agents-private\\node_modules\\.pnpm\\@parcel+watcher-win32-x64@2.5.6\\node_modules\\@parcel\\watcher-win32-x64\\watcher.node';
+  'D:\\a\\agents-private\\node_modules\\.pnpm\\@parcel+watcher-darwin-arm64@2.5.6\\node_modules\\@parcel\\watcher-darwin-arm64\\watcher.node';
 const TERMINAL_HOST: AppProcess = {
   pid: 5678,
   type: 'Utility',
@@ -113,19 +113,16 @@ describe('readCrashDumpFacts', () => {
     const fixture = windowsFixture();
     const path = fixture.writeDump(
       'reports/facts.dmp',
-      buildMinidump(
-        ['C:\\app\\electron.exe', 'C:\\Windows\\System32\\ntdll.dll', PNPM_CONPTY_ADDON],
-        {
-          moduleImages: [ELECTRON_IMAGE, NTDLL, { base: 0x7ff9_2000_0000n, size: 0x4_0000 }],
-        },
-      ),
+      buildMinidump(['C:\\app\\electron.exe', 'C:\\Windows\\System32\\ntdll.dll', PNPM_PTY_ADDON], {
+        moduleImages: [ELECTRON_IMAGE, NTDLL, { base: 0x7ff9_2000_0000n, size: 0x4_0000 }],
+      }),
       QUIT_REQUESTED_AT_MS,
     );
 
     expect(readCrashDumpFacts(path).modules).toEqual([
       { path: 'C:\\app\\electron.exe', base: ELECTRON_IMAGE.base, size: ELECTRON_IMAGE.size },
       { path: 'C:\\Windows\\System32\\ntdll.dll', base: NTDLL.base, size: NTDLL.size },
-      { path: PNPM_CONPTY_ADDON, base: 0x7ff9_2000_0000n, size: 0x4_0000 },
+      { path: PNPM_PTY_ADDON, base: 0x7ff9_2000_0000n, size: 0x4_0000 },
     ]);
   });
 
@@ -237,10 +234,10 @@ describe('readCrashDumpFacts', () => {
 
 describe('processRoleOf', () => {
   test.each([
-    ['the pnpm development layout', PNPM_CONPTY_ADDON],
+    ['the pnpm development layout', PNPM_PTY_ADDON],
     [
       'the packaged Windows layout',
-      'C:\\Users\\me\\AppData\\Local\\Programs\\OpenKnowledge\\resources\\app.asar.unpacked\\node_modules\\node-pty\\prebuilds\\win32-x64\\conpty.node',
+      'C:\\Users\\me\\AppData\\Local\\Programs\\OpenKnowledge\\resources\\app.asar.unpacked\\node_modules\\node-pty\\prebuilds\\darwin-arm64\\pty.node',
     ],
     [
       'a macOS build of the addon',
@@ -254,19 +251,6 @@ describe('processRoleOf', () => {
       QUIT_REQUESTED_AT_MS,
     );
     expect(processRoleOf(readCrashDumpFacts(path))).toMatch(/^pty-host/);
-  });
-
-  test('the console-list agent node-pty forks on kill is told apart from the pty-host', () => {
-    const fixture = windowsFixture();
-    const path = fixture.writeDump(
-      'reports/agent.dmp',
-      buildMinidump([
-        'C:\\app\\electron.exe',
-        PNPM_CONPTY_ADDON.replace('conpty.node', 'conpty_console_list.node'),
-      ]),
-      QUIT_REQUESTED_AT_MS,
-    );
-    expect(processRoleOf(readCrashDumpFacts(path))).toBe('node-pty console-list agent');
   });
 
   test('a process with @parcel/watcher and no node-pty addon is the project server', () => {
@@ -283,7 +267,7 @@ describe('processRoleOf', () => {
     const fixture = windowsFixture();
     const path = fixture.writeDump(
       'reports/lookalike.dmp',
-      buildMinidump(['C:\\app\\electron.exe', 'C:\\Tools\\conpty.node']),
+      buildMinidump(['C:\\app\\electron.exe', 'C:\\Tools\\pty.node']),
       QUIT_REQUESTED_AT_MS,
     );
     expect(processRoleOf(readCrashDumpFacts(path))).toBe('no identifying addon loaded');
@@ -298,7 +282,7 @@ describe('crashDumpVerdict names the process a clean quit crashed', () => {
       'reports/8c1f.dmp',
       utilityDump(
         fixture.mainModule,
-        ['C:\\Windows\\System32\\ntdll.dll', PNPM_CONPTY_ADDON, PNPM_CONPTY_DLL],
+        ['C:\\Windows\\System32\\ntdll.dll', PNPM_PTY_ADDON, PNPM_PTY_LIBRARY],
         {
           moduleImages: [
             ELECTRON_IMAGE,
@@ -319,11 +303,11 @@ describe('crashDumpVerdict names the process a clean quit crashed', () => {
     expect(verdict.headline).toBe(
       'the quit left 1 crash dump(s) from the app; first: ' +
         'pid 5678 Utility "OpenKnowledge Terminal Host 1"; pty-host (node-pty terminal addon loaded); ' +
-        'exception 0xC0000005 EXCEPTION_ACCESS_VIOLATION at 0x7FFA10009ABC in ntdll.dll; ' +
+        'exception 0xC0000005 at 0x7FFA10009ABC in ntdll.dll; ' +
         'written 463 ms after quit was requested',
     );
     expect(verdict.lines[0]).toContain('process_type=utility');
-    expect(verdict.lines[0]).toContain('native addons: node-pty/conpty.node, node-pty/conpty.dll');
+    expect(verdict.lines[0]).toContain('native addons: node-pty/pty.node');
     expect(verdict.lines[0]).toContain('main module electron.exe');
   });
 
@@ -342,7 +326,7 @@ describe('crashDumpVerdict names the process a clean quit crashed', () => {
     const { headline } = verdictFor(watch);
     expect(headline).toContain('pid 999 (not among the app processes listed before quit)');
     expect(headline).toContain('project server (@parcel/watcher addon loaded)');
-    expect(headline).toContain('0xC0000409 STATUS_STACK_BUFFER_OVERRUN');
+    expect(headline).toContain('0xC0000409');
     expect(headline).toContain('written 1500 ms before quit was requested');
   });
 
@@ -508,7 +492,7 @@ describe('collectCrashDumps', () => {
     const watch = fixture.watch();
     const owned = fixture.writeDump(
       'reports/kept.dmp',
-      utilityDump(fixture.mainModule, [PNPM_CONPTY_ADDON], {
+      utilityDump(fixture.mainModule, [PNPM_PTY_ADDON], {
         miscInfo: { processId: TERMINAL_HOST.pid },
       }),
       QUIT_REQUESTED_AT_MS + 7,
@@ -659,21 +643,6 @@ describe('collectCrashDumps', () => {
 describe('runningAppProcesses', () => {
   const table = (read: ProcessTableRead) => (): ProcessTableRead => read;
 
-  test('reads the Windows process table and keeps only the app processes still listed', () => {
-    const tasklist = [
-      '"System Idle Process","0","Services","0","8 K"',
-      `"electron.exe","${TERMINAL_HOST.pid}","Console","1","41,220 K"`,
-      '"pwsh.exe","9999","Console","1","80,100 K"',
-    ].join('\r\n');
-
-    expect(
-      runningAppProcesses([TERMINAL_HOST, PROJECT_SERVER], {
-        platform: 'win32',
-        read: table({ status: 0, stdout: tasklist }),
-      }),
-    ).toEqual([TERMINAL_HOST]);
-  });
-
   test('ps finding none of the pids means every app process has exited', () => {
     expect(
       runningAppProcesses([TERMINAL_HOST, PROJECT_SERVER], {
@@ -686,21 +655,10 @@ describe('runningAppProcesses', () => {
   test('a process table that cannot be read leaves every app process counted as running', () => {
     expect(
       runningAppProcesses([TERMINAL_HOST, PROJECT_SERVER], {
-        platform: 'win32',
+        platform: 'darwin',
         read: table({ status: null, stdout: '' }),
       }),
     ).toEqual([TERMINAL_HOST, PROJECT_SERVER]);
-  });
-
-  test('a Windows process table that exits 0 with no row it can parse leaves every app process counted as running', () => {
-    for (const stdout of ['', 'INFO: No tasks are running which match the specified criteria.']) {
-      expect(
-        runningAppProcesses([TERMINAL_HOST, PROJECT_SERVER], {
-          platform: 'win32',
-          read: table({ status: 0, stdout }),
-        }),
-      ).toEqual([TERMINAL_HOST, PROJECT_SERVER]);
-    }
   });
 
   test('the real process table lists this process and not a child that already exited', () => {

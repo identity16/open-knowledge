@@ -34,7 +34,6 @@ import {
   type ProjectAiIntegrationsResult,
   previewContent,
   readExistingMcpEntry,
-  registerWindowsProcessStartReader,
   removeOwnMcpEntry,
   removeProjectSkill,
   removeUserGlobalSkillBundle,
@@ -164,7 +163,6 @@ import { registerPendingDelivery, sendToRenderer } from '../shared/ipc-send.ts';
 import { createPtyPhaseTrace } from '../shared/pty-phase-trace.ts';
 import { releasesPageUrl } from '../shared/release-links.ts';
 import { UNINSTALL_PRELOAD_ARG } from '../shared/uninstall-preload-arg.ts';
-import { getWindowsEnvValue } from '../shared/windows-env.ts';
 import { resolveShell } from '../utility/pty-host.ts';
 import { buildAboutPanelOptions } from './about-panel.ts';
 import {
@@ -231,7 +229,6 @@ import {
   resolveCliOnPath,
   resolvePlatformCliInstalledMap,
   runLoginShellProbe,
-  runWindowsPathProbe,
 } from './claude-readiness.ts';
 import { withCliCommandNameArg } from './cli-command-name-arg.ts';
 import { requestUserConsent } from './consent-dialog.ts';
@@ -240,7 +237,6 @@ import {
   type CrashDetection,
   createCrashDetection,
   isProcessCrashReason,
-  readInstalledAppChangeSync,
   SENTINEL_HEARTBEAT_INTERVAL_MS,
   startLocalCrashReporter,
 } from './crash-detection.ts';
@@ -517,11 +513,7 @@ import {
 import { stopCommandLine } from './stop-command.ts';
 import { createMacMemoryPressureProbe, readSystemMemorySample } from './system-memory-sample.ts';
 import { isTerminalAvailable, withTerminalCapabilityArg } from './terminal-capability.ts';
-import {
-  isTerminalConsented,
-  isTerminalConsentedWithGrace,
-  readTerminalShellSetting,
-} from './terminal-consent.ts';
+import { isTerminalConsented, isTerminalConsentedWithGrace } from './terminal-consent.ts';
 import {
   commitTerminalDockState,
   resolveRestoredAgentPanelVisible,
@@ -605,10 +597,7 @@ import {
 } from './window-manager.ts';
 import { WINDOW_MIN_SIZE } from './window-min-size.ts';
 import { resolveRestoredPlacement, sortWindowsByFocusSequence } from './window-placement.ts';
-import {
-  sweepWindowsUpdateSurvivors,
-  type WindowsUpdateSurvivorSweepResult,
-} from './windows-update-survivor-sweep.ts';
+
 import { isAllowedInventoryAnchor, WorktreeInventoryService } from './worktree-inventory.ts';
 import { classifyRecentGitAsync, readWorktreeBranchAsync } from './worktree-recents.ts';
 import {
@@ -1048,17 +1037,6 @@ let announcedShutdownCause: AppShutdownCause = 'quit';
 const noteRestartPending = (): void => {
   announcedShutdownCause = 'relaunch';
 };
-
-function sweepConsoleHostsBeforeUpdate(): WindowsUpdateSurvivorSweepResult {
-  const logger = getLogger('updater');
-  return sweepWindowsUpdateSurvivors({
-    installTree: process.resourcesPath,
-    logger: {
-      info: (event) => logger.info(event, 'Windows update console-host sweep complete'),
-      warn: (event) => logger.warn(event, 'Windows update console-host sweep warning'),
-    },
-  });
-}
 const slidesDeckRegistry = createSlidesDeckRegistry();
 const dockVisibleForWindow = new Map<number, boolean>();
 const agentPanelVisibleForWindow = new Map<number, boolean>();
@@ -1453,7 +1431,6 @@ function ensureWindowManager() {
     try {
       childRef = spawn(spawnArgs.file, spawnArgs.args, {
         ...spawnArgs.opts,
-        windowsHide: true,
       });
     } catch (spawnErr) {
       try {
@@ -3787,16 +3764,6 @@ function formatUnknownError(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-function probeWindowsPath(bin: string): Promise<number | null> {
-  const systemRoot = getWindowsEnvValue(process.env, 'SystemRoot') ?? 'C:\\Windows';
-  return runWindowsPathProbe(
-    realProbeSpawn,
-    join(systemRoot, 'System32', 'where.exe'),
-    bin,
-    realProbeTimers,
-  );
-}
-
 function probeLoginShellOnPath(args?: readonly string[]): Promise<number | null> {
   return runLoginShellProbe(
     realProbeSpawn,
@@ -3815,7 +3782,6 @@ function resolveTerminalClaudeReadiness(projectRoot: string | undefined): Promis
         platform: process.platform,
         bin: 'claude',
         probePosix: (args) => probeLoginShellOnPath(args),
-        probeWindows: (bin) => probeWindowsPath(bin),
       }),
     classifyMcpEntry: () => scopes.globalKind,
     isProjectMcpPreApprovable: () => scopes.projectOwn,
@@ -3832,7 +3798,6 @@ function resolveTerminalCliOnPath(cli: TerminalCli): Promise<CliReadiness> {
         platform: process.platform,
         bin: TERMINAL_CLIS[cli].bin,
         probePosix: (args) => probeLoginShellOnPath(args),
-        probeWindows: (bin) => probeWindowsPath(bin),
       }),
     ...(cli === 'codex'
       ? {
@@ -3858,7 +3823,6 @@ function resolveTerminalCliInstalledMap(): Promise<Partial<Record<TerminalCli, b
   const value = resolvePlatformCliInstalledMap({
     platform: process.platform,
     probePosix: (args) => probeLoginShellOnPath(args),
-    probeWindows: (bin) => probeWindowsPath(bin),
   }).catch((err) => {
     cliInstalledMapCache = null;
     throw err;
@@ -3970,7 +3934,6 @@ function registerIpcHandlers() {
     sendData: (wc, payload) => sendToRenderer(wc, 'ok:pty:data', payload),
     phaseTrace,
     sendExit: (wc, payload) => sendToRenderer(wc, 'ok:pty:exit', payload),
-    sendNotice: (wc, payload) => sendToRenderer(wc, 'ok:pty:notice', payload),
     newPtyId: () => randomUUID(),
     setTimer: (cb, ms) => setTimeout(cb, ms),
     clearTimer: (token) => clearTimeout(token as ReturnType<typeof setTimeout>),
@@ -4030,10 +3993,6 @@ function registerIpcHandlers() {
         });
       }
       phaseTrace?.mark('configured-shell', 'begin', traceContext);
-      const shellSetting =
-        process.platform === 'win32'
-          ? readTerminalShellSetting(projectPath)
-          : { kind: 'unset' as const };
       phaseTrace?.mark('configured-shell', 'end', traceContext);
       phaseTrace?.mark('reservation', 'begin', traceContext);
       const result = terminalManager.create({
@@ -4042,8 +4001,6 @@ function registerIpcHandlers() {
         projectRoot: projectPath,
         cols: clampPtyDimension(opts.cols, DEFAULT_PTY_COLS),
         rows: clampPtyDimension(opts.rows, DEFAULT_PTY_ROWS),
-        ...(shellSetting.kind === 'configured' ? { shell: shellSetting.shell } : {}),
-        ...(shellSetting.kind === 'invalid' ? { shellInvalidReason: shellSetting.reason } : {}),
         launchCommand: opts.launchCommand,
       });
       phaseTrace?.mark('reservation', 'end', {
@@ -4300,7 +4257,6 @@ function registerIpcHandlers() {
                 shell: false,
                 timeout: timeoutMs,
                 stdio: ['ignore', 'ignore', 'pipe'],
-                windowsHide: true,
               });
               child.stderr?.on('data', () => {});
               child.once('spawn', () => resolve({ ok: true }));
@@ -4479,11 +4435,7 @@ function registerIpcHandlers() {
       },
       confirmReveal: async (p) => {
         const revealQuestion =
-          process.platform === 'darwin'
-            ? 'Reveal it in Finder?'
-            : process.platform === 'win32'
-              ? 'Reveal it in File Explorer?'
-              : 'Open its containing folder?';
+          process.platform === 'darwin' ? 'Reveal it in Finder?' : 'Open its containing folder?';
         const opts: MessageBoxOptions = {
           type: 'question',
           buttons: [revealMenuLabel(process.platform), 'Cancel'],
@@ -4768,9 +4720,7 @@ function registerIpcHandlers() {
     const probes = {
       isExecutableFile: realIsExecutableFile,
       isOnLoginPath: async (bin: string) =>
-        (await (process.platform === 'win32'
-          ? probeWindowsPath(bin)
-          : probeLoginShellOnPath(cliProbeArgs(bin, process.platform)))) === 0,
+        (await probeLoginShellOnPath(cliProbeArgs(bin, process.platform))) === 0,
     };
     if (request.kind === 'status') {
       return handleSlidesStatus(projectRoot, probes);
@@ -6085,7 +6035,6 @@ installStdioBrokenPipeGuard(process, {
 
 app.commandLine.appendSwitch('use-system-ca');
 trustSystemCertificates();
-registerWindowsProcessStartReader(getLogger('process-start'));
 
 applyDevShmPosture({
   platform: process.platform,
@@ -6272,9 +6221,6 @@ function bootPrimaryInstance(): void {
       ),
     ...(process.platform === 'darwin'
       ? { processTermination: (query) => findJetsamKillSync(query) }
-      : {}),
-    ...(process.platform === 'win32'
-      ? { installedAppChange: () => readInstalledAppChangeSync(app.getPath('exe')) }
       : {}),
     mainThreadWatchdog: createMainThreadWatchdog({
       path: join(app.getPath('userData'), 'bug-report-main-thread-liveness.json'),
@@ -6964,7 +6910,6 @@ function bootPrimaryInstance(): void {
           await wm?.stopAllOwnedServers();
           flushDesktopLogger();
         },
-        sweepUpdateSurvivors: sweepConsoleHostsBeforeUpdate,
         showCheckNowResult: (result) => {
           const target = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
           if (!target) return;
@@ -7125,15 +7070,7 @@ function bootPrimaryInstance(): void {
     getLogger('updater').info({}, 'before-quit-for-update — update install will relaunch the app');
     freezeFocusTracking('before-quit-for-update');
     captureWindowRestoreSnapshot('before-quit-for-update');
-    void (terminalReaper?.killAll('update-install') ?? Promise.resolve()).then(() => {
-      const result = sweepConsoleHostsBeforeUpdate();
-      if (result.scanFailed || result.revalidationFailed || result.failedCount > 0) {
-        getLogger('updater').warn(
-          { result },
-          'Silent update console-host sweep incomplete — continuing shutdown',
-        );
-      }
-    });
+    void terminalReaper?.killAll('update-install');
     wm?.signalStopAllOwnedServers();
     flushDesktopLogger();
   });

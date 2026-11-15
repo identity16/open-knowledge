@@ -985,432 +985,406 @@ describe('a context window change superseding a thread first launch', () => {
     ).toEqual([{ pid: live[0]?.pid, initialPrompt: true }]);
   }, 45_000);
 
-  test.skipIf(process.platform === 'win32')(
-    'a change requested at the failed first launch failure report sends no initial prompt',
-    async () => {
-      const binDir = tmp();
-      const agentNode = join(binDir, 'agent-node');
+  test('a change requested at the failed first launch failure report sends no initial prompt', async () => {
+    const binDir = tmp();
+    const agentNode = join(binDir, 'agent-node');
+    symlinkSync(process.execPath, agentNode);
+    const harness = scriptedHarness({}, { command: agentNode });
+    harness.hold(true);
+    const info = await harness.manager.createThread({
+      agent: { source: 'custom', id: CODEX },
+      prompt: 'hello first',
+    });
+    const change: { outcome?: Promise<Settled> } = {};
+    await harness.manager.subscribe(info.threadId, 0, (frame) => {
+      if (change.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
+        return;
+      }
       symlinkSync(process.execPath, agentNode);
-      const harness = scriptedHarness({}, { command: agentNode });
-      harness.hold(true);
-      const info = await harness.manager.createThread({
-        agent: { source: 'custom', id: CODEX },
-        prompt: 'hello first',
-      });
-      const change: { outcome?: Promise<Settled> } = {};
-      await harness.manager.subscribe(info.threadId, 0, (frame) => {
-        if (change.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
-          return;
-        }
-        symlinkSync(process.execPath, agentNode);
-        change.outcome = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldCount() === 1,
-        WAIT,
-      );
-      unlinkSync(agentNode);
-      harness.release(0);
-      await waitWithinTestBudget(
-        'the restart to wait before spawning',
-        () => harness.heldCount() === 2,
-        WAIT,
-      );
-      await quietPeriod();
-      harness.hold(false);
-      harness.release(1);
+      change.outcome = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldCount() === 1,
+      WAIT,
+    );
+    unlinkSync(agentNode);
+    harness.release(0);
+    await waitWithinTestBudget(
+      'the restart to wait before spawning',
+      () => harness.heldCount() === 2,
+      WAIT,
+    );
+    await quietPeriod();
+    harness.hold(false);
+    harness.release(1);
 
-      expect(change.outcome).toBeDefined();
-      expect
-        .soft(await change.outcome)
-        .toMatchObject({ ok: true, info: { status: 'ready', contextWindow: NEW_WINDOW } });
-      await quietPeriod();
+    expect(change.outcome).toBeDefined();
+    expect
+      .soft(await change.outcome)
+      .toMatchObject({ ok: true, info: { status: 'ready', contextWindow: NEW_WINDOW } });
+    await quietPeriod();
 
-      expect.soft(userMessagesIn(view)).toEqual([]);
-      expect.soft(harness.received()).toEqual([]);
-      const live = harness.liveAgents();
-      expect.soft(live.map(({ window }) => window)).toEqual([NEW_WINDOW]);
-      expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
-        refused: null,
-        stopReason: 'end_turn',
-        servedBy: live[0]?.pid,
-      });
-    },
-    45_000,
-  );
+    expect.soft(userMessagesIn(view)).toEqual([]);
+    expect.soft(harness.received()).toEqual([]);
+    const live = harness.liveAgents();
+    expect.soft(live.map(({ window }) => window)).toEqual([NEW_WINDOW]);
+    expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
+      refused: null,
+      stopReason: 'end_turn',
+      servedBy: live[0]?.pid,
+    });
+  }, 45_000);
 
-  test.skipIf(process.platform === 'win32')(
-    'a change requested at the failed first launch failure report sends no initial prompt while the failed agent is still exiting',
-    async () => {
-      const harness = scriptedHarness({ FAIL_FIRST_INIT_AND_LINGER: '1' });
-      const info = await harness.manager.createThread({
-        agent: { source: 'custom', id: CODEX },
-        prompt: 'hello first',
-      });
-      const change: { outcome?: Promise<Settled> } = {};
-      await harness.manager.subscribe(info.threadId, 0, (frame) => {
-        if (change.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
-          return;
-        }
-        change.outcome = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the change to start a second agent',
-        () => harness.started().length === 2,
-        WAIT,
-      );
-      const [failed] = harness.started();
-      expect(change.outcome).toBeDefined();
-      expect(failed !== undefined && !processEnded(failed.pid)).toBe(true);
-      harness.open('first-exit-open');
+  test('a change requested at the failed first launch failure report sends no initial prompt while the failed agent is still exiting', async () => {
+    const harness = scriptedHarness({ FAIL_FIRST_INIT_AND_LINGER: '1' });
+    const info = await harness.manager.createThread({
+      agent: { source: 'custom', id: CODEX },
+      prompt: 'hello first',
+    });
+    const change: { outcome?: Promise<Settled> } = {};
+    await harness.manager.subscribe(info.threadId, 0, (frame) => {
+      if (change.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
+        return;
+      }
+      change.outcome = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the change to start a second agent',
+      () => harness.started().length === 2,
+      WAIT,
+    );
+    const [failed] = harness.started();
+    expect(change.outcome).toBeDefined();
+    expect(failed !== undefined && !processEnded(failed.pid)).toBe(true);
+    harness.open('first-exit-open');
 
-      expect
-        .soft(await change.outcome)
-        .toMatchObject({ ok: true, info: { status: 'ready', contextWindow: NEW_WINDOW } });
-      await waitWithinTestBudget(
-        'the failed first agent to exit',
-        () => failed !== undefined && processEnded(failed.pid),
-        WAIT,
-      );
-      await quietPeriod();
+    expect
+      .soft(await change.outcome)
+      .toMatchObject({ ok: true, info: { status: 'ready', contextWindow: NEW_WINDOW } });
+    await waitWithinTestBudget(
+      'the failed first agent to exit',
+      () => failed !== undefined && processEnded(failed.pid),
+      WAIT,
+    );
+    await quietPeriod();
 
-      expect.soft(userMessagesIn(view)).toEqual([]);
-      expect.soft(harness.received()).toEqual([]);
-      const live = harness.liveAgents();
-      expect.soft(live.map(({ window }) => window)).toEqual([NEW_WINDOW]);
-      expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
-        refused: null,
-        stopReason: 'end_turn',
-        servedBy: live[0]?.pid,
-      });
-    },
-    45_000,
-  );
+    expect.soft(userMessagesIn(view)).toEqual([]);
+    expect.soft(harness.received()).toEqual([]);
+    const live = harness.liveAgents();
+    expect.soft(live.map(({ window }) => window)).toEqual([NEW_WINDOW]);
+    expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
+      refused: null,
+      stopReason: 'end_turn',
+      servedBy: live[0]?.pid,
+    });
+  }, 45_000);
 });
 
 describe('a retry superseding a thread first launch', () => {
-  test.skipIf(process.platform === 'win32')(
-    'a retry requested at the failed first launch failure report reports no failure after its own spawning status and serves the thread from one agent',
-    async () => {
-      const binDir = tmp();
-      const agentNode = join(binDir, 'agent-node');
+  test('a retry requested at the failed first launch failure report reports no failure after its own spawning status and serves the thread from one agent', async () => {
+    const binDir = tmp();
+    const agentNode = join(binDir, 'agent-node');
+    symlinkSync(process.execPath, agentNode);
+    const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
+    harness.hold(true);
+    const info = await harness.manager.createThread({
+      agent: { source: 'custom', id: 'retried-agent' },
+    });
+    const retry: { outcome?: Promise<Settled>; afterSeq?: number } = {};
+    await harness.manager.subscribe(info.threadId, 0, (frame) => {
+      if (retry.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
+        return;
+      }
       symlinkSync(process.execPath, agentNode);
-      const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
-      harness.hold(true);
-      const info = await harness.manager.createThread({
-        agent: { source: 'custom', id: 'retried-agent' },
-      });
-      const retry: { outcome?: Promise<Settled>; afterSeq?: number } = {};
-      await harness.manager.subscribe(info.threadId, 0, (frame) => {
-        if (retry.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
-          return;
-        }
-        symlinkSync(process.execPath, agentNode);
-        retry.afterSeq = frame.info.lastSeq;
-        retry.outcome = settle(harness.manager.retryThread(info.threadId));
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldCount() === 1,
-        WAIT,
-      );
-      unlinkSync(agentNode);
-      harness.release(0);
-      await waitWithinTestBudget(
-        'the retry to wait before spawning',
-        () => harness.heldCount() === 2,
-        WAIT,
-      );
-      await quietPeriod();
+      retry.afterSeq = frame.info.lastSeq;
+      retry.outcome = settle(harness.manager.retryThread(info.threadId));
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldCount() === 1,
+      WAIT,
+    );
+    unlinkSync(agentNode);
+    harness.release(0);
+    await waitWithinTestBudget(
+      'the retry to wait before spawning',
+      () => harness.heldCount() === 2,
+      WAIT,
+    );
+    await quietPeriod();
 
-      const takeover = view
-        .events(retry.afterSeq)
-        .find(({ event }) => event.kind === 'status' && event.status === 'spawning');
-      expect(takeover).toBeDefined();
-      expect.soft(errorsIn(view.statuses(takeover?.seq))).toEqual([]);
-      harness.hold(false);
-      harness.release(1);
-      expect.soft(await retry.outcome).toMatchObject({ ok: true, info: { status: 'ready' } });
-      const live = harness.liveAgents();
-      expect.soft(live).toHaveLength(1);
-      expect
-        .soft(await promptTurn(harness.manager, info.threadId, view, 'hello'))
-        .toEqual({ refused: null, stopReason: 'end_turn', servedBy: live[0]?.pid });
-      expect(await closeAndAwaitAgentsGone(harness, info.threadId)).toEqual([]);
-    },
-    45_000,
-  );
+    const takeover = view
+      .events(retry.afterSeq)
+      .find(({ event }) => event.kind === 'status' && event.status === 'spawning');
+    expect(takeover).toBeDefined();
+    expect.soft(errorsIn(view.statuses(takeover?.seq))).toEqual([]);
+    harness.hold(false);
+    harness.release(1);
+    expect.soft(await retry.outcome).toMatchObject({ ok: true, info: { status: 'ready' } });
+    const live = harness.liveAgents();
+    expect.soft(live).toHaveLength(1);
+    expect
+      .soft(await promptTurn(harness.manager, info.threadId, view, 'hello'))
+      .toEqual({ refused: null, stopReason: 'end_turn', servedBy: live[0]?.pid });
+    expect(await closeAndAwaitAgentsGone(harness, info.threadId)).toEqual([]);
+  }, 45_000);
 
-  test.skipIf(process.platform === 'win32')(
-    'a retry requested at the failed first launch failure report sends no initial prompt',
-    async () => {
-      const binDir = tmp();
-      const agentNode = join(binDir, 'agent-node');
+  test('a retry requested at the failed first launch failure report sends no initial prompt', async () => {
+    const binDir = tmp();
+    const agentNode = join(binDir, 'agent-node');
+    symlinkSync(process.execPath, agentNode);
+    const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
+    harness.hold(true);
+    const info = await harness.manager.createThread({
+      agent: { source: 'custom', id: 'retried-agent' },
+      prompt: 'hello first',
+    });
+    const retry: { outcome?: Promise<Settled> } = {};
+    await harness.manager.subscribe(info.threadId, 0, (frame) => {
+      if (retry.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
+        return;
+      }
       symlinkSync(process.execPath, agentNode);
-      const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
-      harness.hold(true);
-      const info = await harness.manager.createThread({
-        agent: { source: 'custom', id: 'retried-agent' },
-        prompt: 'hello first',
-      });
-      const retry: { outcome?: Promise<Settled> } = {};
-      await harness.manager.subscribe(info.threadId, 0, (frame) => {
-        if (retry.outcome !== undefined || frame.op !== 'info' || frame.info.status !== 'error') {
-          return;
-        }
-        symlinkSync(process.execPath, agentNode);
-        retry.outcome = settle(harness.manager.retryThread(info.threadId));
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldCount() === 1,
-        WAIT,
-      );
-      unlinkSync(agentNode);
-      harness.release(0);
-      await waitWithinTestBudget(
-        'the retry to wait before spawning',
-        () => harness.heldCount() === 2,
-        WAIT,
-      );
-      await quietPeriod();
-      harness.hold(false);
-      harness.release(1);
+      retry.outcome = settle(harness.manager.retryThread(info.threadId));
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldCount() === 1,
+      WAIT,
+    );
+    unlinkSync(agentNode);
+    harness.release(0);
+    await waitWithinTestBudget(
+      'the retry to wait before spawning',
+      () => harness.heldCount() === 2,
+      WAIT,
+    );
+    await quietPeriod();
+    harness.hold(false);
+    harness.release(1);
 
-      expect(retry.outcome).toBeDefined();
-      expect.soft(await retry.outcome).toMatchObject({ ok: true, info: { status: 'ready' } });
-      await quietPeriod();
+    expect(retry.outcome).toBeDefined();
+    expect.soft(await retry.outcome).toMatchObject({ ok: true, info: { status: 'ready' } });
+    await quietPeriod();
 
-      expect.soft(userMessagesIn(view)).toEqual([]);
-      expect.soft(harness.received()).toEqual([]);
-      const live = harness.liveAgents();
-      expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
-        refused: null,
-        stopReason: 'end_turn',
-        servedBy: live[0]?.pid,
-      });
-    },
-    45_000,
-  );
+    expect.soft(userMessagesIn(view)).toEqual([]);
+    expect.soft(harness.received()).toEqual([]);
+    const live = harness.liveAgents();
+    expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
+      refused: null,
+      stopReason: 'end_turn',
+      servedBy: live[0]?.pid,
+    });
+  }, 45_000);
 });
 
-describe.skipIf(process.platform === 'win32')(
-  'a context window change while the catalog agent npx package installs',
-  () => {
-    function heldCodexManager(held: HeldInstallRegistry): AcpThreadManager {
-      const localDir = mkdtempSync(join(held.home, 'local-'));
-      const contentDir = mkdtempSync(join(held.home, 'content-'));
-      const agent: RegistryAgent = {
-        id: CODEX,
-        name: 'Held install codex',
-        version: '1.0.0',
-        distribution: { npx: { package: held.npmPackage } },
-      };
-      return new AcpThreadManager({
-        contentDir,
+describe('a context window change while the catalog agent npx package installs', () => {
+  function heldCodexManager(held: HeldInstallRegistry): AcpThreadManager {
+    const localDir = mkdtempSync(join(held.home, 'local-'));
+    const contentDir = mkdtempSync(join(held.home, 'content-'));
+    const agent: RegistryAgent = {
+      id: CODEX,
+      name: 'Held install codex',
+      version: '1.0.0',
+      distribution: { npx: { package: held.npmPackage } },
+    };
+    return new AcpThreadManager({
+      contentDir,
+      localDir,
+      globalDir: null,
+      registry: new AcpRegistry({
         localDir,
-        globalDir: null,
-        registry: new AcpRegistry({
-          localDir,
-          log,
-          fetchImpl: (async () =>
-            new Response(JSON.stringify({ agents: [agent] }))) as typeof fetch,
-        }),
-        permissions: new AcpPermissionStore(localDir, log),
-        sessionManager,
-        isExcludedPath: () => false,
-        isIgnoredPath: () => false,
         log,
-        resolveLoginShellPath: async () => null,
-        projectSkillSourceDir: null,
-      });
-    }
+        fetchImpl: (async () => new Response(JSON.stringify({ agents: [agent] }))) as typeof fetch,
+      }),
+      permissions: new AcpPermissionStore(localDir, log),
+      sessionManager,
+      isExcludedPath: () => false,
+      isIgnoredPath: () => false,
+      log,
+      resolveLoginShellPath: async () => null,
+      projectSkillSourceDir: null,
+    });
+  }
 
-    test('the change starts one agent, reports ready once, and leaves nothing the thread started alive after close', async () => {
-      expect(
-        () => descendantsOf(process.pid),
-        'this test reads the process table with ps',
-      ).not.toThrow();
-      await withHeldInstallRegistry(async (held) => {
-        const preexisting = new Set(descendantsOf(process.pid));
-        const started = new Set<number>();
-        const liveSinceStart = (): number[] => {
-          const live = descendantsOf(process.pid).filter((pid) => !preexisting.has(pid));
-          for (const pid of live) started.add(pid);
-          return live;
-        };
-        const manager = heldCodexManager(held);
-        try {
-          const info = await manager.createThread({ agent: { source: 'registry', id: CODEX } });
-          const view = await observe(manager, info.threadId);
-          await waitWithinTestBudget(
-            'npm to request the held dependency tarball mid-install',
-            () => {
-              liveSinceStart();
-              return held.requested('npm-dependency') === 1;
-            },
-            { timeoutMs: 60_000 },
-          );
-          const changed = settle(manager.setContextWindow(info.threadId, NEW_WINDOW));
-          await waitWithinTestBudget(
-            'the restart to join the in-flight install',
-            () => {
-              liveSinceStart();
-              return view.statuses().filter((status) => status === 'installing').length >= 2;
-            },
-            { timeoutMs: 30_000 },
-          );
-          held.release('npm-dependency');
-
-          expect
-            .soft(await changed)
-            .toMatchObject({ ok: true, info: { status: 'ready', contextWindow: NEW_WINDOW } });
-          await anchorOrQuiet('a second ready from the superseded launch', () => {
+  test('the change starts one agent, reports ready once, and leaves nothing the thread started alive after close', async () => {
+    expect(
+      () => descendantsOf(process.pid),
+      'this test reads the process table with ps',
+    ).not.toThrow();
+    await withHeldInstallRegistry(async (held) => {
+      const preexisting = new Set(descendantsOf(process.pid));
+      const started = new Set<number>();
+      const liveSinceStart = (): number[] => {
+        const live = descendantsOf(process.pid).filter((pid) => !preexisting.has(pid));
+        for (const pid of live) started.add(pid);
+        return live;
+      };
+      const manager = heldCodexManager(held);
+      try {
+        const info = await manager.createThread({ agent: { source: 'registry', id: CODEX } });
+        const view = await observe(manager, info.threadId);
+        await waitWithinTestBudget(
+          'npm to request the held dependency tarball mid-install',
+          () => {
             liveSinceStart();
-            return readiesIn(view.statuses()).length >= 2;
-          });
-          expect.soft(readiesIn(view.statuses())).toEqual(['ready']);
-          await manager.closeThread(info.threadId);
-          await waitWithinTestBudget(
-            'every process the thread started to exit after close',
-            () => liveSinceStart().length === 0 && [...started].every(processEnded),
-            { timeoutMs: 15_000 },
-          ).catch(() => {});
-          expect(liveSinceStart()).toEqual([]);
-        } finally {
-          held.release('npm-dependency');
-          await manager.destroy();
-        }
-      });
-    }, 150_000);
-  },
-);
+            return held.requested('npm-dependency') === 1;
+          },
+          { timeoutMs: 60_000 },
+        );
+        const changed = settle(manager.setContextWindow(info.threadId, NEW_WINDOW));
+        await waitWithinTestBudget(
+          'the restart to join the in-flight install',
+          () => {
+            liveSinceStart();
+            return view.statuses().filter((status) => status === 'installing').length >= 2;
+          },
+          { timeoutMs: 30_000 },
+        );
+        held.release('npm-dependency');
 
-describe.skipIf(process.platform === 'win32')(
-  'a Pi bridge step of a launch that is no longer current',
-  () => {
-    test('a sign-in the retry superseded asks for no Pi bridge consent once its bridge probe returns', async () => {
-      const harness = piHarness({ AUTH_MODE: '1' });
-      const info = await harness.manager.createThread({ agent: { source: 'registry', id: PI } });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to park on sign-in',
-        () => harness.manager.getInfo(info.threadId)?.status === 'auth_required',
-        WAIT,
-      );
-      harness.holdProbes(true);
-      const signIn = settle(harness.manager.authenticateThread(info.threadId, 'login'));
-      await waitWithinTestBudget(
-        'the sign-in to probe the Pi bridge',
-        () => harness.heldProbes() === 1,
-        WAIT,
-      );
-      harness.holdProbes(false);
-      expect(await settle(harness.manager.retryThread(info.threadId))).toMatchObject({
-        ok: true,
-        info: { status: 'ready' },
-      });
+        expect
+          .soft(await changed)
+          .toMatchObject({ ok: true, info: { status: 'ready', contextWindow: NEW_WINDOW } });
+        await anchorOrQuiet('a second ready from the superseded launch', () => {
+          liveSinceStart();
+          return readiesIn(view.statuses()).length >= 2;
+        });
+        expect.soft(readiesIn(view.statuses())).toEqual(['ready']);
+        await manager.closeThread(info.threadId);
+        await waitWithinTestBudget(
+          'every process the thread started to exit after close',
+          () => liveSinceStart().length === 0 && [...started].every(processEnded),
+          { timeoutMs: 15_000 },
+        ).catch(() => {});
+        expect(liveSinceStart()).toEqual([]);
+      } finally {
+        held.release('npm-dependency');
+        await manager.destroy();
+      }
+    });
+  }, 150_000);
+});
 
-      harness.releaseProbe(0, PI_BRIDGE_ABSENT);
-      expect
-        .soft(await signIn)
-        .toEqual({ ok: false, error: 'the thread was restarted during the sign-in' });
-      await anchorOrQuiet(
-        'the superseded sign-in to touch the Pi bridge',
-        () => piBridgeEventsIn(view).length > 0,
-      );
-      expect(piBridgeEventsIn(view)).toEqual([]);
-    }, 45_000);
+describe('a Pi bridge step of a launch that is no longer current', () => {
+  test('a sign-in the retry superseded asks for no Pi bridge consent once its bridge probe returns', async () => {
+    const harness = piHarness({ AUTH_MODE: '1' });
+    const info = await harness.manager.createThread({ agent: { source: 'registry', id: PI } });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to park on sign-in',
+      () => harness.manager.getInfo(info.threadId)?.status === 'auth_required',
+      WAIT,
+    );
+    harness.holdProbes(true);
+    const signIn = settle(harness.manager.authenticateThread(info.threadId, 'login'));
+    await waitWithinTestBudget(
+      'the sign-in to probe the Pi bridge',
+      () => harness.heldProbes() === 1,
+      WAIT,
+    );
+    harness.holdProbes(false);
+    expect(await settle(harness.manager.retryThread(info.threadId))).toMatchObject({
+      ok: true,
+      info: { status: 'ready' },
+    });
 
-    test('a resume closed while its bridge probe is pending reports no Pi bridge status on the archived thread', async () => {
-      const harness = piHarness();
-      await harness.manager.init();
-      const info = await harness.manager.createThread({ agent: { source: 'registry', id: PI } });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to be ready',
-        () => harness.manager.getInfo(info.threadId)?.status === 'ready',
-        WAIT,
-      );
-      expect(await promptTurn(harness.manager, info.threadId, view, 'first turn')).toMatchObject({
-        stopReason: 'end_turn',
-      });
-      await harness.manager.closeThread(info.threadId);
-      harness.holdProbes(true);
-      const resumed = settle(harness.manager.resumeThread(info.threadId));
-      await waitWithinTestBudget(
-        'the resume to probe the Pi bridge',
-        () => harness.heldProbes() === 1,
-        WAIT,
-      );
-      await harness.manager.closeThread(info.threadId);
-      expect(harness.manager.getInfo(info.threadId)?.archived).toBe(true);
+    harness.releaseProbe(0, PI_BRIDGE_ABSENT);
+    expect
+      .soft(await signIn)
+      .toEqual({ ok: false, error: 'the thread was restarted during the sign-in' });
+    await anchorOrQuiet(
+      'the superseded sign-in to touch the Pi bridge',
+      () => piBridgeEventsIn(view).length > 0,
+    );
+    expect(piBridgeEventsIn(view)).toEqual([]);
+  }, 45_000);
 
-      harness.releaseProbe(0, PI_BRIDGE_FOREIGN);
-      expect.soft(await resumed).toEqual({ ok: false, error: 'thread closed during resume' });
-      await anchorOrQuiet(
-        'the closed resume to touch the Pi bridge',
-        () => piBridgeEventsIn(view).length > 0,
-      );
-      expect(piBridgeEventsIn(view)).toEqual([]);
-    }, 45_000);
-  },
-);
+  test('a resume closed while its bridge probe is pending reports no Pi bridge status on the archived thread', async () => {
+    const harness = piHarness();
+    await harness.manager.init();
+    const info = await harness.manager.createThread({ agent: { source: 'registry', id: PI } });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to be ready',
+      () => harness.manager.getInfo(info.threadId)?.status === 'ready',
+      WAIT,
+    );
+    expect(await promptTurn(harness.manager, info.threadId, view, 'first turn')).toMatchObject({
+      stopReason: 'end_turn',
+    });
+    await harness.manager.closeThread(info.threadId);
+    harness.holdProbes(true);
+    const resumed = settle(harness.manager.resumeThread(info.threadId));
+    await waitWithinTestBudget(
+      'the resume to probe the Pi bridge',
+      () => harness.heldProbes() === 1,
+      WAIT,
+    );
+    await harness.manager.closeThread(info.threadId);
+    expect(harness.manager.getInfo(info.threadId)?.archived).toBe(true);
 
-describe.skipIf(process.platform === 'win32')(
-  'a browser step of a launch that is no longer current',
-  () => {
-    test('a first launch a context window change supersedes while it looks up its login shell for the browser never finds the browser npx or installs the browser', async () => {
-      const harness = catalogHarness({ browser: true });
-      harness.holdShell(true);
-      const info = await harness.manager.createThread({ agent: { source: 'registry', id: CODEX } });
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldShells() === 1,
-        WAIT,
-      );
-      harness.releaseShell(0);
-      await waitWithinTestBudget(
-        'the first launch to look up its login shell for the browser',
-        () => harness.heldShells() === 2,
-        WAIT,
-      );
-      const changed = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
-      await waitWithinTestBudget(
-        'the restart to wait before spawning',
-        () => harness.heldShells() === 3,
-        WAIT,
-      );
-      harness.holdShell(false);
-      harness.releaseShell(2);
-      expect(await changed).toMatchObject({
-        ok: true,
-        info: { status: 'ready', contextWindow: NEW_WINDOW },
-      });
-      expect({
-        lookups: harness.browserNpxLookups(),
-        installs: harness.browserInstalls(),
-      }).toEqual({ lookups: 1, installs: 1 });
+    harness.releaseProbe(0, PI_BRIDGE_FOREIGN);
+    expect.soft(await resumed).toEqual({ ok: false, error: 'thread closed during resume' });
+    await anchorOrQuiet(
+      'the closed resume to touch the Pi bridge',
+      () => piBridgeEventsIn(view).length > 0,
+    );
+    expect(piBridgeEventsIn(view)).toEqual([]);
+  }, 45_000);
+});
 
-      harness.releaseShell(1);
-      await anchorOrQuiet(
-        'the superseded launch to look up the browser npx',
-        () => harness.browserNpxLookups() > 1,
-      );
+describe('a browser step of a launch that is no longer current', () => {
+  test('a first launch a context window change supersedes while it looks up its login shell for the browser never finds the browser npx or installs the browser', async () => {
+    const harness = catalogHarness({ browser: true });
+    harness.holdShell(true);
+    const info = await harness.manager.createThread({ agent: { source: 'registry', id: CODEX } });
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldShells() === 1,
+      WAIT,
+    );
+    harness.releaseShell(0);
+    await waitWithinTestBudget(
+      'the first launch to look up its login shell for the browser',
+      () => harness.heldShells() === 2,
+      WAIT,
+    );
+    const changed = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
+    await waitWithinTestBudget(
+      'the restart to wait before spawning',
+      () => harness.heldShells() === 3,
+      WAIT,
+    );
+    harness.holdShell(false);
+    harness.releaseShell(2);
+    expect(await changed).toMatchObject({
+      ok: true,
+      info: { status: 'ready', contextWindow: NEW_WINDOW },
+    });
+    expect({
+      lookups: harness.browserNpxLookups(),
+      installs: harness.browserInstalls(),
+    }).toEqual({ lookups: 1, installs: 1 });
 
-      expect({
-        lookups: harness.browserNpxLookups(),
-        installs: harness.browserInstalls(),
-      }).toEqual({ lookups: 1, installs: 1 });
-      expect(harness.manager.getInfo(info.threadId)?.status).toBe('ready');
-    }, 45_000);
-  },
-);
+    harness.releaseShell(1);
+    await anchorOrQuiet(
+      'the superseded launch to look up the browser npx',
+      () => harness.browserNpxLookups() > 1,
+    );
+
+    expect({
+      lookups: harness.browserNpxLookups(),
+      installs: harness.browserInstalls(),
+    }).toEqual({ lookups: 1, installs: 1 });
+    expect(harness.manager.getInfo(info.threadId)?.status).toBe('ready');
+  }, 45_000);
+});
 
 describe('a first launch that stays current', () => {
   test('a change refused before it takes over leaves the first launch to start the thread and deliver its prompt once', async () => {
@@ -1453,148 +1427,136 @@ describe('a first launch that stays current', () => {
     ).toEqual([{ pid: live[0]?.pid, initialPrompt: true }]);
   }, 45_000);
 
-  test.skipIf(process.platform === 'win32')(
-    'a change refused while the first launch moves past a check leaves that launch to start the thread and deliver its prompt once',
-    async () => {
-      const harness = catalogHarness();
-      harness.holdShell(true);
-      const info = await harness.manager.createThread({
-        agent: { source: 'registry', id: CODEX },
-        prompt: 'hello first',
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldShells() === 1,
-        WAIT,
-      );
-      harness.holdCatalog(true);
-      const changed = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
-      await waitWithinTestBudget(
-        'the change to look its agent up in the catalog',
-        () => harness.heldCatalogs() === 1,
-        WAIT,
-      );
-      harness.holdShell(false);
-      harness.releaseShell(0);
-      await waitWithinTestBudget(
-        'the initial prompt turn to end',
-        () => view.events().some(({ event }) => event.kind === 'turn_ended'),
-        WAIT,
-      ).catch(() => {});
-      harness.releaseCatalog(0, [{ ...harness.agent, id: 'another-agent' }]);
+  test('a change refused while the first launch moves past a check leaves that launch to start the thread and deliver its prompt once', async () => {
+    const harness = catalogHarness();
+    harness.holdShell(true);
+    const info = await harness.manager.createThread({
+      agent: { source: 'registry', id: CODEX },
+      prompt: 'hello first',
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldShells() === 1,
+      WAIT,
+    );
+    harness.holdCatalog(true);
+    const changed = settle(harness.manager.setContextWindow(info.threadId, NEW_WINDOW));
+    await waitWithinTestBudget(
+      'the change to look its agent up in the catalog',
+      () => harness.heldCatalogs() === 1,
+      WAIT,
+    );
+    harness.holdShell(false);
+    harness.releaseShell(0);
+    await waitWithinTestBudget(
+      'the initial prompt turn to end',
+      () => view.events().some(({ event }) => event.kind === 'turn_ended'),
+      WAIT,
+    ).catch(() => {});
+    harness.releaseCatalog(0, [{ ...harness.agent, id: 'another-agent' }]);
 
-      expect
-        .soft(await changed)
-        .toEqual({ ok: false, error: `agent '${CODEX}' is not in the registry` });
-      await quietPeriod();
-      const live = harness.liveAgents();
-      expect.soft(errorsIn(view.statuses())).toEqual([]);
-      expect.soft(launchReadiesBeforeFirstUserMessage(view)).toEqual(['ready']);
-      expect.soft(userMessagesIn(view)).toEqual(['hello first']);
-      expect.soft(harness.manager.getInfo(info.threadId)?.contextWindow).toBeNull();
-      expect(
-        harness
-          .received()
-          .map(({ pid, text }) => ({ pid, initialPrompt: text.includes('hello first') })),
-      ).toEqual([{ pid: live[0]?.pid, initialPrompt: true }]);
-    },
-    45_000,
-  );
+    expect
+      .soft(await changed)
+      .toEqual({ ok: false, error: `agent '${CODEX}' is not in the registry` });
+    await quietPeriod();
+    const live = harness.liveAgents();
+    expect.soft(errorsIn(view.statuses())).toEqual([]);
+    expect.soft(launchReadiesBeforeFirstUserMessage(view)).toEqual(['ready']);
+    expect.soft(userMessagesIn(view)).toEqual(['hello first']);
+    expect.soft(harness.manager.getInfo(info.threadId)?.contextWindow).toBeNull();
+    expect(
+      harness
+        .received()
+        .map(({ pid, text }) => ({ pid, initialPrompt: text.includes('hello first') })),
+    ).toEqual([{ pid: live[0]?.pid, initialPrompt: true }]);
+  }, 45_000);
 
-  test.skipIf(process.platform === 'win32')(
-    'a retry after the first launch has failed sends no initial prompt',
-    async () => {
-      const binDir = tmp();
-      const agentNode = join(binDir, 'agent-node');
-      symlinkSync(process.execPath, agentNode);
-      const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
-      harness.hold(true);
-      const info = await harness.manager.createThread({
-        agent: { source: 'custom', id: 'retried-agent' },
-        prompt: 'hello first',
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldCount() === 1,
-        WAIT,
-      );
-      unlinkSync(agentNode);
-      harness.hold(false);
-      harness.release(0);
-      await waitWithinTestBudget(
-        'the first launch to fail',
-        () => errorsIn(view.statuses()).length > 0,
-        WAIT,
-      );
-      await quietPeriod();
+  test('a retry after the first launch has failed sends no initial prompt', async () => {
+    const binDir = tmp();
+    const agentNode = join(binDir, 'agent-node');
+    symlinkSync(process.execPath, agentNode);
+    const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
+    harness.hold(true);
+    const info = await harness.manager.createThread({
+      agent: { source: 'custom', id: 'retried-agent' },
+      prompt: 'hello first',
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldCount() === 1,
+      WAIT,
+    );
+    unlinkSync(agentNode);
+    harness.hold(false);
+    harness.release(0);
+    await waitWithinTestBudget(
+      'the first launch to fail',
+      () => errorsIn(view.statuses()).length > 0,
+      WAIT,
+    );
+    await quietPeriod();
 
-      symlinkSync(process.execPath, agentNode);
-      expect
-        .soft(await settle(harness.manager.retryThread(info.threadId)))
-        .toMatchObject({ ok: true, info: { status: 'ready' } });
-      await quietPeriod();
+    symlinkSync(process.execPath, agentNode);
+    expect
+      .soft(await settle(harness.manager.retryThread(info.threadId)))
+      .toMatchObject({ ok: true, info: { status: 'ready' } });
+    await quietPeriod();
 
-      expect.soft(userMessagesIn(view)).toEqual([]);
-      expect.soft(harness.received()).toEqual([]);
-      const live = harness.liveAgents();
-      expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
-        refused: null,
-        stopReason: 'end_turn',
-        servedBy: live[0]?.pid,
-      });
-    },
-    45_000,
-  );
+    expect.soft(userMessagesIn(view)).toEqual([]);
+    expect.soft(harness.received()).toEqual([]);
+    const live = harness.liveAgents();
+    expect(await promptTurn(harness.manager, info.threadId, view, 'hello')).toEqual({
+      refused: null,
+      stopReason: 'end_turn',
+      servedBy: live[0]?.pid,
+    });
+  }, 45_000);
 });
 
 describe('a launch requested while the thread is closing', () => {
-  test.skipIf(process.platform === 'win32')(
-    'a retry requested while the thread is closing is refused and starts no agent',
-    async () => {
-      const binDir = tmp();
-      const agentNode = join(binDir, 'agent-node');
-      symlinkSync(process.execPath, agentNode);
-      const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
-      harness.hold(true);
-      const info = await harness.manager.createThread({
-        agent: { source: 'custom', id: 'retried-agent' },
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldCount() === 1,
-        WAIT,
-      );
-      unlinkSync(agentNode);
-      harness.hold(false);
-      harness.release(0);
-      await waitWithinTestBudget(
-        'the first launch to fail',
-        () => errorsIn(view.statuses()).length > 0,
-        WAIT,
-      );
-      await quietPeriod();
+  test('a retry requested while the thread is closing is refused and starts no agent', async () => {
+    const binDir = tmp();
+    const agentNode = join(binDir, 'agent-node');
+    symlinkSync(process.execPath, agentNode);
+    const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
+    harness.hold(true);
+    const info = await harness.manager.createThread({
+      agent: { source: 'custom', id: 'retried-agent' },
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldCount() === 1,
+      WAIT,
+    );
+    unlinkSync(agentNode);
+    harness.hold(false);
+    harness.release(0);
+    await waitWithinTestBudget(
+      'the first launch to fail',
+      () => errorsIn(view.statuses()).length > 0,
+      WAIT,
+    );
+    await quietPeriod();
 
-      harness.holdClose();
-      const closing = harness.manager.closeThread(info.threadId);
-      await waitWithinTestBudget('the close to clean up sessions', () => harness.closeHeld(), WAIT);
-      symlinkSync(process.execPath, agentNode);
-      const retried = await settle(harness.manager.retryThread(info.threadId));
-      harness.releaseClose();
-      await closing;
-      await anchorOrQuiet(
-        'an agent to start for the closed thread',
-        () => harness.started().length > 0,
-      );
+    harness.holdClose();
+    const closing = harness.manager.closeThread(info.threadId);
+    await waitWithinTestBudget('the close to clean up sessions', () => harness.closeHeld(), WAIT);
+    symlinkSync(process.execPath, agentNode);
+    const retried = await settle(harness.manager.retryThread(info.threadId));
+    harness.releaseClose();
+    await closing;
+    await anchorOrQuiet(
+      'an agent to start for the closed thread',
+      () => harness.started().length > 0,
+    );
 
-      expect.soft(retried).toEqual({ ok: false, error: 'the thread is closing' });
-      expect.soft(harness.manager.getInfo(info.threadId)?.archived).toBe(true);
-      expect(harness.started()).toEqual([]);
-    },
-    45_000,
-  );
+    expect.soft(retried).toEqual({ ok: false, error: 'the thread is closing' });
+    expect.soft(harness.manager.getInfo(info.threadId)?.archived).toBe(true);
+    expect(harness.started()).toEqual([]);
+  }, 45_000);
 
   test('a context window change requested while the thread is closing is refused and starts no agent', async () => {
     const harness = scriptedHarness();
@@ -1621,51 +1583,47 @@ describe('a launch requested while the thread is closing', () => {
     expect(harness.started()).toEqual(first);
   }, 45_000);
 
-  test.skipIf(process.platform === 'win32')(
-    'a retry requested just before a close begins is refused when its agent lookup returns and starts no agent',
-    async () => {
-      const binDir = tmp();
-      const agentNode = join(binDir, 'agent-node');
-      symlinkSync(process.execPath, agentNode);
-      const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
-      harness.hold(true);
-      const info = await harness.manager.createThread({
-        agent: { source: 'custom', id: 'retried-agent' },
-      });
-      const view = await observe(harness.manager, info.threadId);
-      await waitWithinTestBudget(
-        'the first launch to wait before spawning',
-        () => harness.heldCount() === 1,
-        WAIT,
-      );
-      unlinkSync(agentNode);
-      harness.hold(false);
-      harness.release(0);
-      await waitWithinTestBudget(
-        'the first launch to fail',
-        () => errorsIn(view.statuses()).length > 0,
-        WAIT,
-      );
-      await quietPeriod();
-      symlinkSync(process.execPath, agentNode);
+  test('a retry requested just before a close begins is refused when its agent lookup returns and starts no agent', async () => {
+    const binDir = tmp();
+    const agentNode = join(binDir, 'agent-node');
+    symlinkSync(process.execPath, agentNode);
+    const harness = scriptedHarness({}, { id: 'retried-agent', command: agentNode });
+    harness.hold(true);
+    const info = await harness.manager.createThread({
+      agent: { source: 'custom', id: 'retried-agent' },
+    });
+    const view = await observe(harness.manager, info.threadId);
+    await waitWithinTestBudget(
+      'the first launch to wait before spawning',
+      () => harness.heldCount() === 1,
+      WAIT,
+    );
+    unlinkSync(agentNode);
+    harness.hold(false);
+    harness.release(0);
+    await waitWithinTestBudget(
+      'the first launch to fail',
+      () => errorsIn(view.statuses()).length > 0,
+      WAIT,
+    );
+    await quietPeriod();
+    symlinkSync(process.execPath, agentNode);
 
-      harness.holdClose();
-      const retried = settle(harness.manager.retryThread(info.threadId));
-      const closing = harness.manager.closeThread(info.threadId);
-      await waitWithinTestBudget('the close to clean up sessions', () => harness.closeHeld(), WAIT);
-      expect.soft(await retried).toEqual({ ok: false, error: 'the thread is closing' });
-      harness.releaseClose();
-      await closing;
-      await anchorOrQuiet(
-        'an agent to start for the closed thread',
-        () => harness.started().length > 0,
-      );
+    harness.holdClose();
+    const retried = settle(harness.manager.retryThread(info.threadId));
+    const closing = harness.manager.closeThread(info.threadId);
+    await waitWithinTestBudget('the close to clean up sessions', () => harness.closeHeld(), WAIT);
+    expect.soft(await retried).toEqual({ ok: false, error: 'the thread is closing' });
+    harness.releaseClose();
+    await closing;
+    await anchorOrQuiet(
+      'an agent to start for the closed thread',
+      () => harness.started().length > 0,
+    );
 
-      expect.soft(harness.manager.getInfo(info.threadId)?.archived).toBe(true);
-      expect(harness.started()).toEqual([]);
-    },
-    45_000,
-  );
+    expect.soft(harness.manager.getInfo(info.threadId)?.archived).toBe(true);
+    expect(harness.started()).toEqual([]);
+  }, 45_000);
 
   test('a context window change requested just before a close begins is refused when its agent lookup returns and starts no agent', async () => {
     const harness = scriptedHarness();

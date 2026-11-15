@@ -396,43 +396,9 @@ describe('agentBrowserMcpServer', () => {
     expect(env('linux', { XAUTHORITY: '/home/me/.Xauthority' })).toEqual(npm);
     expect(env('darwin', { DISPLAY: ':0' })).toEqual(npm);
   });
-
-  test('on Windows runs npm through the node that ships beside npx, or not at all', () => {
-    const npx = { npx: join('C:', 'nodejs', 'npx'), path: join('C:', 'nodejs') };
-    const node = join('C:', 'nodejs', 'node.exe');
-    const npxCli = join('C:', 'nodejs', 'node_modules', 'npm', 'bin', 'npx-cli.js');
-    const server = agentBrowserMcpServer({
-      npx,
-      folders: FOLDERS,
-      platform: 'win32',
-      env: {},
-      exists: (path) => path === node || path === npxCli,
-    });
-    expect(server?.command).toBe(node);
-    expect(server?.args[0]).toBe('-e');
-    expect(server?.args.slice(2, 10)).toEqual([
-      FOLDERS.npm,
-      FOLDERS.files,
-      node,
-      npxCli,
-      '--prefix',
-      FOLDERS.npm,
-      '--yes=false',
-      AGENT_BROWSER_MCP_PACKAGE,
-    ]);
-    expect(
-      agentBrowserMcpServer({
-        npx,
-        folders: FOLDERS,
-        platform: 'win32',
-        env: {},
-        exists: () => false,
-      }),
-    ).toBeNull();
-  });
 });
 
-describe.skipIf(process.platform === 'win32')('the browser server relay', () => {
+describe('the browser server relay', () => {
   function relayArgs(): string[] {
     const server = agentBrowserMcpServer({
       npx: NPX,
@@ -739,7 +705,7 @@ describe.skipIf(process.platform === 'win32')('the browser server relay', () => 
   });
 });
 
-describe.skipIf(process.platform === 'win32')('the browser server launch, run for real', () => {
+describe('the browser server launch, run for real', () => {
   const PROBE_PACKAGE = 'ok-browser-probe';
 
   function plantProbe(root: string, identity: string): void {
@@ -890,19 +856,6 @@ describe('resolveBrowserNpx', () => {
   });
 });
 
-describe('browserNpxRunnable', () => {
-  test("needs the node that ships beside npx, and on Windows npm's own files too", () => {
-    const npx = join('C:', 'shims', 'npx');
-    expect(browserNpxRunnable(npx, { platform: 'darwin', exists: () => false })).toBe(false);
-    expect(browserNpxRunnable(npx, { platform: 'darwin', exists: () => true })).toBe(true);
-    expect(browserNpxRunnable(npx, { platform: 'win32', exists: () => false })).toBe(false);
-    expect(
-      browserNpxRunnable(npx, { platform: 'win32', exists: (path) => path.endsWith('node.exe') }),
-    ).toBe(false);
-    expect(browserNpxRunnable(npx, { platform: 'win32', exists: () => true })).toBe(true);
-  });
-});
-
 describe('browser folders', () => {
   test('are private to the user, keep saved files across launches, and rebuild only the npm folder', async () => {
     const root = tmp();
@@ -911,15 +864,13 @@ describe('browser folders', () => {
       npm: join(root, 'agent-browser', THREAD, 'npm'),
       files: join(root, 'agent-browser', THREAD, 'files'),
     });
-    if (process.platform !== 'win32') {
-      for (const dir of [
-        join(root, 'agent-browser'),
-        join(root, 'agent-browser', THREAD),
-        first.npm,
-        first.files,
-      ]) {
-        expect(statSync(dir).mode & 0o777).toBe(0o700);
-      }
+    for (const dir of [
+      join(root, 'agent-browser'),
+      join(root, 'agent-browser', THREAD),
+      first.npm,
+      first.files,
+    ]) {
+      expect(statSync(dir).mode & 0o777).toBe(0o700);
     }
     writeFileSync(join(first.npm, '.npmrc'), 'script-shell=/tmp/planted.sh\n');
     mkdirSync(join(first.npm, 'node_modules', '.bin'), { recursive: true });
@@ -956,5 +907,15 @@ describe('browser folders', () => {
     }
     expect(existsSync(join(other, 'shot.png'))).toBe(true);
     expect(existsSync(join(parent, 'keep.txt'))).toBe(true);
+  });
+});
+
+describe('browserNpxRunnable', () => {
+  test.each(['darwin', 'linux'] as const)('requires Node beside npx on %s', (platform) => {
+    const npx = '/opt/runtime/bin/npx';
+    expect(browserNpxRunnable(npx, { platform, exists: () => false })).toBe(false);
+    expect(
+      browserNpxRunnable(npx, { platform, exists: (path) => path === '/opt/runtime/bin/node' }),
+    ).toBe(true);
   });
 });

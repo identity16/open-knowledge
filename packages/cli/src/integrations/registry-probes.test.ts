@@ -25,7 +25,6 @@ import {
   type CliProbeContext,
   collectCliHostSnapshot,
   createCliProbeResolver,
-  displayPath,
 } from './registry-probes.ts';
 
 let root: string;
@@ -132,16 +131,6 @@ describe('an MCP entry', () => {
   it('names the file it read, so a remove confirmation can show it', async () => {
     const answer = await answerFor('claude/mcp/user/config-entry');
     expect(answer?.path).toBe('~/.claude.json');
-  });
-
-  it('abbreviates a Windows-shaped home too, so the account name stays out of the UI', () => {
-    expect(displayPath('C:\\Users\\alice\\.lmstudio\\mcp.json', 'C:\\Users\\alice')).toBe(
-      '~/.lmstudio/mcp.json',
-    );
-    expect(displayPath('C:\\Users\\bob\\.lmstudio\\mcp.json', 'C:\\Users\\alice')).toBe(
-      'C:\\Users\\bob\\.lmstudio\\mcp.json',
-    );
-    expect(displayPath('/home/alice/we\\ird.json', '/home/alice')).toBe('~/we\\ird.json');
   });
 
   it('reads our own canonical entry as satisfied and names every predicate that passed', async () => {

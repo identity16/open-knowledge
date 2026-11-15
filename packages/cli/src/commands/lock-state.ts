@@ -33,7 +33,6 @@ export type LockState =
 interface InspectLockOptions {
   isAlive?: (pid: number) => boolean;
   readProcessStart?: ProcessStartReader;
-  readBootInstant?: () => number | null;
   host?: string;
   machineId?: string;
 }
@@ -82,7 +81,6 @@ export function inspectLock(
   const assessment = assessLockHolder(lock, {
     isAlive: opts.isAlive,
     readProcessStart: opts.readProcessStart,
-    readBootInstant: opts.readBootInstant,
     sameMachine: hasOwner,
   });
   switch (assessment.verdict) {
@@ -113,8 +111,8 @@ export function describeForeignOwner(lock: ProcessLockMetadata): string {
     : `records only the host ${escapeDisplayPath(lock.hostname)}, not this machine's ${hostname()}`;
 }
 
-function homeFolderVariable(platform: NodeJS.Platform): string {
-  return platform === 'win32' ? 'USERPROFILE' : 'HOME';
+function homeFolderVariable(_platform: NodeJS.Platform): string {
+  return 'HOME';
 }
 
 function describeMissingProcessStart(lock: ProcessLockMetadata): string {

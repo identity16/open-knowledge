@@ -45,7 +45,7 @@ export function validateProbe(result, root, negative = false) {
     !/^keyring.*\.node$/i.test(basename(path)) ||
     !rel ||
     rel === '..' ||
-    rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) ||
+    rel.startsWith(`..${'/'}`) ||
     isAbsolute(rel)
   )
     throw new Error('Keyring binding is outside packaged tree');
@@ -71,11 +71,9 @@ function main(rootArg) {
     executable = app.helper;
     resources = join(apps[0], 'Contents', 'Resources');
   } else {
-    const dir = join(root, process.platform === 'win32' ? 'win-unpacked' : 'linux-unpacked');
+    const dir = join(root, 'linux-unpacked');
     resources = join(dir, 'resources');
-    const candidates = readdirSync(dir).filter((name) =>
-      process.platform === 'win32' ? name.endsWith('.exe') : name === 'openknowledge',
-    );
+    const candidates = readdirSync(dir).filter((name) => name === 'openknowledge');
     if (candidates.length !== 1) throw new Error('Expected one packaged executable');
     executable = join(dir, candidates[0]);
   }

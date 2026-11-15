@@ -116,7 +116,7 @@ async function witnessLiveSend(owned: Awaited<ReturnType<typeof ownedSlidevChild
 }
 
 describe('Slidev child lifetime', () => {
-  it.each(['darwin', 'win32'] as const)('dispatches a live child stop on %s', async (platform) => {
+  it.each(['darwin'] as const)('dispatches a live child stop on %s', async (platform) => {
     const owned = await ownedSlidevChild();
     const killWindowsTree = async (target: number) => {
       sends.records.push({ route: 'tree', target });
@@ -130,23 +130,20 @@ describe('Slidev child lifetime', () => {
     expect(owned.adapted.isAlive()).toBe(true);
   });
 
-  it.each(['darwin', 'win32'] as const)(
-    'leaves an exited child untouched on %s',
-    async (platform) => {
-      const owned = await ownedSlidevChild();
-      const killWindowsTree = async (target: number) => {
-        sends.records.push({ route: 'tree', target });
-      };
-      await signalSlidevChild(owned.child, 'SIGTERM', { platform, killWindowsTree });
-      expect(sends.records).not.toEqual([]);
-      sends.records.length = 0;
-      expect(await owned.release()).toEqual({ code: 0, signal: null });
-      expect(owned.adapted.isAlive()).toBe(false);
-      await signalSlidevChild(owned.child, 'SIGTERM', { platform, killWindowsTree });
-      await signalSlidevChild(owned.child, 'SIGKILL', { platform, killWindowsTree });
-      expect(sends.records).toEqual([]);
-    },
-  );
+  it.each(['darwin'] as const)('leaves an exited child untouched on %s', async (platform) => {
+    const owned = await ownedSlidevChild();
+    const killWindowsTree = async (target: number) => {
+      sends.records.push({ route: 'tree', target });
+    };
+    await signalSlidevChild(owned.child, 'SIGTERM', { platform, killWindowsTree });
+    expect(sends.records).not.toEqual([]);
+    sends.records.length = 0;
+    expect(await owned.release()).toEqual({ code: 0, signal: null });
+    expect(owned.adapted.isAlive()).toBe(false);
+    await signalSlidevChild(owned.child, 'SIGTERM', { platform, killWindowsTree });
+    await signalSlidevChild(owned.child, 'SIGKILL', { platform, killWindowsTree });
+    expect(sends.records).toEqual([]);
+  });
 
   it('closes a shown deck after its child exits without another stop', async () => {
     const owned = await ownedSlidevChild();

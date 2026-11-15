@@ -7,7 +7,6 @@ import {
   initContent,
   isFilesystemRoot,
   isHomeDir,
-  withHiddenWindowsConsole,
 } from '@inkeep/open-knowledge-server';
 import { Octokit } from '@octokit/rest';
 import { Command } from 'commander';
@@ -340,10 +339,7 @@ async function runSharePublish(opts: PublishOptions, tokenStore: TokenStore): Pr
   const octokit = new Octokit({ auth: token, ...(baseUrl ? { baseUrl } : {}) });
 
   try {
-    execSync(
-      'git config user.email',
-      withHiddenWindowsConsole({ cwd: projectDir, stdio: 'ignore' }),
-    );
+    execSync('git config user.email', { cwd: projectDir, stdio: 'ignore' });
   } catch {
     process.env.GIT_AUTHOR_NAME ??= 'OpenKnowledge';
     process.env.GIT_AUTHOR_EMAIL ??= 'noreply@inkeep.com';

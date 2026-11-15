@@ -26,7 +26,6 @@ import { discoverLockDirs } from '../utils/process-scan.ts';
 import {
   describeHolderStartReadFailure,
   type HolderProcessStartOptions,
-  type NativeFailure,
   readHolderProcessStart,
 } from './holder-process-start.ts';
 import {
@@ -122,7 +121,6 @@ interface RunStopDeps {
   logger?: PinoLoggerInstance;
   selfChannel?: ReturnType<typeof resolveDesktopProductName>;
   platform?: NodeJS.Platform;
-  readBootInstant?: () => number | null;
   refuseHolderStartedAfterLock?: boolean;
 }
 
@@ -131,7 +129,6 @@ interface UnconfirmedStartHolder {
   readonly pid: number;
   readonly lockPath: string;
   readonly platform: NodeJS.Platform;
-  readonly nativeFailures: readonly NativeFailure[];
 }
 
 type UnverifiedHolder =
@@ -192,15 +189,12 @@ export async function runStop(deps: RunStopDeps): Promise<StopOutcome> {
         lockPid: holder.pid,
         platform,
         cause: holder.cause,
-        ...('nativeFailures' in holder && holder.nativeFailures.length > 0
-          ? { nativeFailures: holder.nativeFailures }
-          : {}),
       },
       'stop declined: lock holder identity unverified',
     );
     failed.push({
       target,
-      error: describeUnverifiedHolderForStop(holder, logger !== undefined),
+      error: describeUnverifiedHolderForStop(holder),
       unverified: holder,
     });
   };
@@ -282,19 +276,13 @@ export async function runStop(deps: RunStopDeps): Promise<StopOutcome> {
   }
 
   for (const target of plan.targets) {
-    const nativeFailures: NativeFailure[] = [];
     const holderStart = (deps.readProcessStart ?? readHolderProcessStart)(target.pid, {
       platform,
-      onNativeFailure: (failure) => {
-        nativeFailures.push(failure);
-      },
     });
     const assessment = assessLockHolder(lock, {
       isAlive: deps.isAlive ?? isProcessAlive,
       readProcessStart: () => holderStart,
       refuseHolderStartedAfterLock: deps.refuseHolderStartedAfterLock,
-      platform,
-      readBootInstant: deps.readBootInstant,
     });
     switch (assessment.verdict) {
       case 'writer':
@@ -322,7 +310,6 @@ export async function runStop(deps: RunStopDeps): Promise<StopOutcome> {
             lockPath: serverState.lockPath,
             lock,
             platform,
-            nativeFailures,
           }),
         );
         break;
@@ -343,7 +330,6 @@ function unverifiedHolder(
     lockPath: string;
     lock: ProcessLockMetadata;
     platform: NodeJS.Platform;
-    nativeFailures: readonly NativeFailure[];
   },
 ): UnverifiedHolder {
   const { pid, lockPath } = found;
@@ -358,14 +344,13 @@ function unverifiedHolder(
         pid,
         lockPath,
         platform: found.platform,
-        nativeFailures: found.nativeFailures,
       };
   }
 }
 
 const STOP_NOT_SIGNALLED = 'it was not signalled, and --force does not override this check.';
 
-function describeUnverifiedHolderForStop(holder: UnverifiedHolder, causeRecorded: boolean): string {
+function describeUnverifiedHolderForStop(holder: UnverifiedHolder): string {
   const { pid, lockPath } = holder;
   switch (holder.cause) {
     case 'foreign-host': {
@@ -393,7 +378,6 @@ function describeUnverifiedHolderForStop(holder: UnverifiedHolder, causeRecorded
         holder,
         STOP_NOT_SIGNALLED,
         `Once you have confirmed no OpenKnowledge server is running for this project, remove ${lockPath}.`,
-        causeRecorded,
       );
       if (holder.cause !== 'writer-identity-unrecorded') return refusal;
       return `${refusal} A server you start again with this release records its machine ID, so \`${currentCliCommandName()} stop\` can confirm it.`;
@@ -405,16 +389,15 @@ export function describeUnconfirmedHolderStart(
   holder: UnconfirmedStartHolder,
   notSignalled: string,
   afterManualStop: string,
-  causeRecorded: boolean,
 ): string {
-  const { pid, lockPath, platform, nativeFailures } = holder;
+  const { pid, lockPath, platform } = holder;
   const confirmFirst = `Before ending process ${pid} yourself, confirm that it is an OpenKnowledge server.`;
   switch (holder.cause) {
     case 'process-start-unreadable':
       return (
         `Could not read when process ${pid} started, so it cannot be confirmed as the server that wrote ${lockPath}; ` +
         `${notSignalled} ` +
-        describeHolderStartReadFailure({ platform, pid, nativeFailures, causeRecorded }) +
+        describeHolderStartReadFailure({ platform, pid }) +
         `${confirmFirst} ${afterManualStop}`
       );
     case 'process-start-incomparable':

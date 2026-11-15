@@ -60,90 +60,15 @@ describe('detectDesktop — platform gate (FR10)', () => {
     const result = detectDesktop(baseDeps({ platform: 'linux', statSync: statForFile(APP_EXEC) }));
     expect(result).toEqual({ available: false, reason: 'no-bundle', cliProduct: 'stable' });
   });
-
-  test('win32 with no install → no-bundle (falls back to browser mode)', () => {
-    const result = detectDesktop(baseDeps({ platform: 'win32', statSync: statForFile(APP_EXEC) }));
-    expect(result).toEqual({ available: false, reason: 'no-bundle', cliProduct: 'stable' });
-  });
 });
 
-describe('detectDesktop — Windows/Linux install resolution', () => {
-  const WIN_EXE =
+describe('detectDesktop — Linux install resolution', () => {
+  const _WIN_EXE =
     'C:\\Users\\u\\AppData\\Local\\Programs\\@inkeepopen-knowledge-desktop\\OpenKnowledge.exe';
-  const BETA_WIN_EXE =
+  const _BETA_WIN_EXE =
     'C:\\Users\\u\\AppData\\Local\\Programs\\openknowledge-beta-desktop\\OpenKnowledge Beta.exe';
   const DEB_EXE = '/opt/OpenKnowledge/openknowledge';
   const BETA_DEB_EXE = '/opt/OpenKnowledge Beta/openknowledge-beta';
-
-  test('win32: %LOCALAPPDATA% per-user install → available', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        env: { LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' },
-        statSync: statForFile(WIN_EXE),
-      }),
-    );
-    expect(result).toEqual({
-      available: true,
-      reason: 'available',
-      bundlePath: WIN_EXE,
-      product: 'stable',
-      cliProduct: 'stable',
-    });
-  });
-
-  test('win32: bundled-CLI introspection (ok.cmd wrapper) → the running exe', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        env: { ELECTRON_RUN_AS_NODE: '1' },
-        execPath: WIN_EXE,
-        statSync: () => null,
-      }),
-    );
-    expect(result).toEqual({
-      available: true,
-      reason: 'available',
-      bundlePath: WIN_EXE,
-      product: 'stable',
-      cliProduct: 'stable',
-    });
-  });
-
-  test('win32: bundled-CLI introspection reports the Beta product for the Beta exe', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        env: { ELECTRON_RUN_AS_NODE: '1' },
-        execPath: BETA_WIN_EXE,
-        statSync: () => null,
-      }),
-    );
-    expect(result).toEqual({
-      available: true,
-      reason: 'available',
-      bundlePath: BETA_WIN_EXE,
-      product: 'beta',
-      cliProduct: 'beta',
-    });
-  });
-
-  test('win32: Beta per-user install → available', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        env: { LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' },
-        statSync: statForFile(BETA_WIN_EXE),
-      }),
-    );
-    expect(result).toEqual({
-      available: true,
-      reason: 'available',
-      bundlePath: BETA_WIN_EXE,
-      product: 'beta',
-      cliProduct: 'stable',
-    });
-  });
 
   test('linux: deb install at /opt → available (with a display)', () => {
     const result = detectDesktop(
@@ -392,7 +317,7 @@ describe('detectDesktop — dev channel', () => {
 });
 
 describe('detectDesktop — headless gate (FR9 — CI is intentionally NOT a trigger)', () => {
-  const WIN_EXE =
+  const _WIN_EXE =
     'C:\\Users\\u\\AppData\\Local\\Programs\\@inkeepopen-knowledge-desktop\\OpenKnowledge.exe';
 
   test('isTTY=false → headless', () => {
@@ -404,60 +329,6 @@ describe('detectDesktop — headless gate (FR9 — CI is intentionally NOT a tri
 
   test('isTTY=undefined → headless (treated as false)', () => {
     const result = detectDesktop(baseDeps({ isTTY: undefined, statSync: statForFile(APP_EXEC) }));
-    expect(result.reason).toBe('headless');
-  });
-
-  test('win32: isTTY=undefined → available (console-wrapper signature)', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        isTTY: undefined,
-        env: { LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' },
-        statSync: statForFile(WIN_EXE),
-      }),
-    );
-    expect(result).toEqual({
-      available: true,
-      reason: 'available',
-      bundlePath: WIN_EXE,
-      product: 'stable',
-      cliProduct: 'stable',
-    });
-  });
-
-  test('win32: isTTY=undefined + CI env → headless', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        isTTY: undefined,
-        env: { LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local', CI: 'true' },
-        statSync: statForFile(WIN_EXE),
-      }),
-    );
-    expect(result.reason).toBe('headless');
-  });
-
-  test('win32: isTTY=undefined + SSH_CONNECTION → headless', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        isTTY: undefined,
-        env: { LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local', SSH_CONNECTION: '10.0.0.1 22' },
-        statSync: statForFile(WIN_EXE),
-      }),
-    );
-    expect(result.reason).toBe('headless');
-  });
-
-  test('win32: isTTY=false stays headless (explicit non-TTY signal)', () => {
-    const result = detectDesktop(
-      baseDeps({
-        platform: 'win32',
-        isTTY: false,
-        env: { LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' },
-        statSync: statForFile(WIN_EXE),
-      }),
-    );
     expect(result.reason).toBe('headless');
   });
 
@@ -588,7 +459,7 @@ describe('launchDesktop — spawn shape (FR11)', () => {
     expect(logs).toEqual(['Desktop launch skipped: no resolved desktop executable (caller bug).']);
   });
 
-  for (const platform of ['win32', 'linux'] as const) {
+  for (const platform of ['linux'] as const) {
     test(`${platform}: spawns the detected desktop executable directly, detached + unref`, () => {
       let captured: { command?: string; args?: readonly string[]; opts?: SpawnOptions } = {};
       let unrefCalled = false;
@@ -601,10 +472,7 @@ describe('launchDesktop — spawn shape (FR11)', () => {
         };
       }) as unknown as Parameters<typeof launchDesktop>[0]['spawn'];
 
-      const exe =
-        platform === 'win32'
-          ? 'C:\\Users\\u\\AppData\\Local\\Programs\\@inkeepopen-knowledge-desktop\\OpenKnowledge.exe'
-          : '/opt/OpenKnowledge/openknowledge';
+      const exe = '/opt/OpenKnowledge/openknowledge';
       launchDesktop(
         { spawn: fakeSpawn, log: () => {}, platform },
         {

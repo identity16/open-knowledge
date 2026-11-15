@@ -2,7 +2,6 @@ import type { McpEntryClassification } from '@inkeep/open-knowledge';
 import { TERMINAL_CLI_IDS, TERMINAL_CLIS, type TerminalCli } from '@inkeep/open-knowledge-core';
 import type { ClaudeReadiness, CliReadiness } from '../shared/bridge-contract.ts';
 import { interactiveShellArgs } from '../shared/terminal-shell.ts';
-import { windowsWherePathArgs } from '../shared/windows-env.ts';
 import { getLogger } from './desktop-logger.ts';
 
 export type ClaudeOnPath = ClaudeReadiness['claude'];
@@ -97,26 +96,6 @@ export function runLoginShellProbe(
     loggerName: 'interactive-shell-probe',
     label: 'interactive-shell',
     attrs: { shell, args },
-  });
-}
-
-export function runWindowsPathProbe(
-  spawn: ProbeSpawn,
-  whereExe: string,
-  bin: string,
-  timers: ProbeTimers,
-  timeoutMs: number = PROBE_TIMEOUT_MS,
-): Promise<number | null> {
-  const args = windowsWherePathArgs(bin);
-  return runInjectedProbe({
-    spawn,
-    file: whereExe,
-    args,
-    timers,
-    timeoutMs,
-    loggerName: 'windows-path-probe',
-    label: 'where.exe',
-    attrs: { bin, args },
   });
 }
 
@@ -263,7 +242,6 @@ export async function resolveCliInstalledMap(
 export interface ResolvePlatformCliInstalledMapDeps {
   readonly platform: NodeJS.Platform;
   readonly probePosix: (args: readonly string[]) => Promise<number | null>;
-  readonly probeWindows: (bin: string) => Promise<number | null>;
 }
 
 export interface ProbePlatformCliOnPathDeps extends ResolvePlatformCliInstalledMapDeps {
@@ -271,7 +249,6 @@ export interface ProbePlatformCliOnPathDeps extends ResolvePlatformCliInstalledM
 }
 
 export function probePlatformCliOnPath(deps: ProbePlatformCliOnPathDeps): Promise<number | null> {
-  if (deps.platform === 'win32') return deps.probeWindows(deps.bin);
   return deps.probePosix(cliProbeArgs(deps.bin, deps.platform));
 }
 

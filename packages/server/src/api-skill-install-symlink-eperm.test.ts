@@ -92,8 +92,7 @@ test('without symlink rights, add falls back to a copy and convert-to-link keeps
   expect(toLink.status, toLink.body).toBe(403);
   expect(JSON.parse(toLink.body)).toMatchObject({
     type: 'urn:ok:error:links-not-permitted',
-    title:
-      'This system does not allow creating symlinks, so that location was left as a copy. On Windows, creating symlinks needs administrator rights or Developer Mode.',
+    title: 'This system does not allow creating symlinks, so that location was left as a copy.',
   });
   expect(isRealDirWithSkill(added)).toBe(true);
   expect(placement(name, `.cursor/skills/${name}`)).toMatchObject({ mode: 'copy', hash });
@@ -115,7 +114,7 @@ test('place with mode link records the copy it made, with its hash', async () =>
   expect(placed.status, placed.body).toBe(200);
   expect(warningCodes(placed.body)).toContain('links-not-permitted');
   expect((JSON.parse(placed.body) as { warnings: string[] }).warnings).toEqual([
-    'This system does not allow creating symlinks, so team/bundles got a copy instead of a link. On Windows, creating symlinks needs administrator rights or Developer Mode.',
+    'This system does not allow creating symlinks, so team/bundles got a copy instead of a link.',
   ]);
   expect(isRealDirWithSkill(join(root, 'team/bundles', name))).toBe(true);
   expect(placement(name, `team/bundles/${name}`)).toMatchObject({
@@ -157,7 +156,7 @@ test('a link request over an existing custom-root copy keeps it recorded as a co
   expect(asLink.status, asLink.body).toBe(200);
   expect(warningCodes(asLink.body)).toContain('links-not-permitted');
   expect((JSON.parse(asLink.body) as { warnings: string[] }).warnings).toContain(
-    'This system does not allow creating symlinks, so .relink/skills got a copy instead of a link. On Windows, creating symlinks needs administrator rights or Developer Mode.',
+    'This system does not allow creating symlinks, so .relink/skills got a copy instead of a link.',
   );
   expect(isRealDirWithSkill(join(root, '.relink/skills', name))).toBe(true);
   expect(placement(name, `.relink/skills/${name}`)).toMatchObject({ mode: 'copy', hash });

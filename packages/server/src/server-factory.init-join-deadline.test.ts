@@ -89,7 +89,6 @@ async function prepareFactoryProbe(ctx: TestContext) {
 const preparedProbes = new WeakMap<TestContext, Awaited<ReturnType<typeof prepareFactoryProbe>>>();
 
 beforeEach(async (ctx) => {
-  if (process.platform === 'win32') return;
   preparedProbes.set(ctx, await prepareFactoryProbe(ctx));
 });
 
@@ -100,25 +99,13 @@ async function runFactoryProbe(ctx: TestContext, expireInit: boolean, target: Wa
 }
 
 test('factory control releases real native subscriptions after initialization', async (ctx) => {
-  ctx.skip(
-    process.platform === 'win32',
-    'requires POSIX process-group ownership for the real fixture Git descendants; Node v24.21.0 rejects Windows process-group kills, and this file has no Windows CI lane',
-  );
   await runFactoryProbe(ctx, false, 'content');
 });
 
 test('factory releases a native acquisition crossing the initialization deadline', async (ctx) => {
-  ctx.skip(
-    process.platform === 'win32',
-    'requires POSIX process-group ownership for the real fixture Git descendants; Node v24.21.0 rejects Windows process-group kills, and this file has no Windows CI lane',
-  );
   await runFactoryProbe(ctx, true, 'content');
 });
 
 test('factory releases a HEAD acquisition crossing the initialization deadline', async (ctx) => {
-  ctx.skip(
-    process.platform === 'win32',
-    'requires POSIX process-group ownership for the real fixture Git descendants; Node v24.21.0 rejects Windows process-group kills, and this file has no Windows CI lane',
-  );
   await runFactoryProbe(ctx, true, 'head');
 });

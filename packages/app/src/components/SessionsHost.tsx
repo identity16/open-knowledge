@@ -501,7 +501,7 @@ export function SessionsHost({
   const shortcutPlatform: ShortcutPlatform | undefined =
     bridge?.platform === 'darwin'
       ? 'mac'
-      : bridge?.platform === 'linux' || bridge?.platform === 'win32'
+      : bridge?.platform === 'linux'
         ? 'windowsLinux'
         : undefined;
 

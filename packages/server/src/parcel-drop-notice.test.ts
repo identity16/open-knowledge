@@ -3269,27 +3269,6 @@ test('release drains an admitted notice and closes delivery before later or nati
   expect(subscription.nativeReleases()).toBe(1);
 });
 
-test('Windows release closes admission without native unsubscribe after a notice', async () => {
-  const events: DiskEvent[] = [];
-  const watcher = await startWatcher(
-    contentDir,
-    async (event) => {
-      events.push(event);
-    },
-    undefined,
-    { forceBackend: 'parcel', platform: 'win32' },
-  );
-  handles.push(watcher);
-  const subscription = nativeSubscriptionOn(contentDir);
-  await watcher.unsubscribe();
-  const late = writeDoc('late.md', '# Late\n');
-  await subscription.deliver([{ type: 'create', path: late }], new Error(notices[0]));
-
-  expect(events).toEqual([]);
-  expect(watcher.getFileIndex().has('late')).toBe(false);
-  expect(subscription.nativeReleases()).toBe(0);
-});
-
 test('an empty HEAD notice settles a same-branch OID movement', async () => {
   const gitDir = createGitDir();
   const watched = await watchHead();

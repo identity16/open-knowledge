@@ -303,17 +303,6 @@ describe('buildMenuTemplate', () => {
         expect(settingsInFile).toBeUndefined();
       });
     } else {
-      test('Windows/Linux: Settings… lives in the File submenu, above the trailing close/quit row', () => {
-        const deps = makeDeps({ openSettings: vi.fn(() => {}) });
-        const template = buildMenuTemplate(deps);
-        const fileMenu = template.find((t) => t.label === 'File');
-        const sub = fileMenu?.submenu as MenuItemConstructorOptions[] | undefined;
-        if (!sub) throw new Error('File submenu missing');
-        const settingsIdx = sub.findIndex((i) => i.label === 'Settings…');
-        const trailingRoleIdx = sub.findIndex((i) => i.role === 'close' || i.role === 'quit');
-        expect(settingsIdx).toBeGreaterThanOrEqual(0);
-        expect(settingsIdx).toBeLessThan(trailingRoleIdx);
-      });
     }
   });
 
@@ -453,14 +442,14 @@ describe('buildMenuTemplate', () => {
       expect(openExternalUrl).toHaveBeenCalledWith(url);
     });
 
-    test.each([
-      ['win32', 'About OpenKnowledge'],
-      ['linux', 'About'],
-    ] as const)('%s ends the Help menu with a separated About entry', (platform, label) => {
-      const sub = helpSubmenu(platform, makeDeps({ onCheckForUpdates: vi.fn(() => {}) }));
-      expect(sub.at(-1)).toMatchObject({ role: 'about', label });
-      expect(sub.at(-2)?.type).toBe('separator');
-    });
+    test.each([['linux', 'About']] as const)(
+      '%s ends the Help menu with a separated About entry',
+      (platform, label) => {
+        const sub = helpSubmenu(platform, makeDeps({ onCheckForUpdates: vi.fn(() => {}) }));
+        expect(sub.at(-1)).toMatchObject({ role: 'about', label });
+        expect(sub.at(-2)?.type).toBe('separator');
+      },
+    );
 
     test('macOS keeps About in the App menu only', () => {
       const deps = makeDeps();
@@ -1475,47 +1464,6 @@ describe('buildMenuTemplate — top-level Terminal menu', () => {
     expect(findByLabel(linux, 'Kill Terminal')?.enabled).toBe(true);
   });
 
-  test('PTY-backed commands are enabled on supported Windows builds', () => {
-    const windows = buildMenuTemplateForPlatform(
-      'win32',
-      makeDeps({
-        onToggleTerminal: vi.fn(() => {}),
-        onMoveTerminal: vi.fn(() => {}),
-        onNewTerminal: vi.fn(() => {}),
-        onNewTerminalWindow: vi.fn(() => {}),
-        onKillTerminal: vi.fn(() => {}),
-        terminalLive: true,
-      }),
-    );
-
-    expect(findByLabel(windows, 'Show Terminal')?.enabled).toBe(true);
-    expect(findByLabel(windows, 'Move Terminal to right')?.enabled).toBe(true);
-    expect(findByLabel(windows, 'New Terminal')?.enabled).toBe(true);
-    expect(findByLabel(windows, 'New Terminal Window')?.enabled).toBe(true);
-    expect(findByLabel(windows, 'Kill Terminal')?.enabled).toBe(true);
-  });
-
-  test('pre-floor Windows disables every PTY-backed menu affordance', () => {
-    const windows = buildMenuTemplateForPlatform(
-      'win32',
-      makeDeps({
-        terminalCapable: false,
-        onToggleTerminal: vi.fn(() => {}),
-        onMoveTerminal: vi.fn(() => {}),
-        onNewTerminal: vi.fn(() => {}),
-        onNewTerminalWindow: vi.fn(() => {}),
-        onKillTerminal: vi.fn(() => {}),
-        terminalLive: true,
-      }),
-    );
-
-    expect(findByLabel(windows, 'Show Terminal')?.enabled).toBe(false);
-    expect(findByLabel(windows, 'Move Terminal to right')?.enabled).toBe(false);
-    expect(findByLabel(windows, 'New Terminal')?.enabled).toBe(false);
-    expect(findByLabel(windows, 'New Terminal Window')?.enabled).toBe(false);
-    expect(findByLabel(windows, 'Kill Terminal')?.enabled).toBe(false);
-  });
-
   test('the View → Show/Hide Terminal toggle is preserved alongside the Terminal menu', () => {
     const template = buildMenuTemplate(makeDeps({ onToggleTerminal: vi.fn(() => {}) }));
     expect(findByLabel(template, 'Show Terminal')).toBeDefined();
@@ -1734,7 +1682,7 @@ describe('Window → Open in New Window', () => {
   });
 
   test('sits in the Window menu on both platform branches', () => {
-    for (const platform of ['darwin', 'win32'] as const) {
+    for (const platform of ['darwin'] as const) {
       const template = buildMenuTemplateForPlatform(
         platform,
         makeDeps({

@@ -24,7 +24,7 @@ import { Terminal } from '@xterm/xterm';
 import { useTheme } from 'next-themes';
 import { use, useEffect, useRef, useState } from 'react';
 import { ConfigContext } from '@/lib/config-context';
-import type { OkDesktopBridge, OkPtyNotice } from '@/lib/desktop-bridge-types';
+import type { OkDesktopBridge } from '@/lib/desktop-bridge-types';
 import { revealEditor } from '@/lib/reveal-editor';
 import { cn } from '@/lib/utils';
 import { getPageListCache } from '../editor/page-list-cache';
@@ -144,7 +144,6 @@ function TerminalSession({
   const [hasOutput, setHasOutput] = useState(false);
   const [connectionCli, setConnectionCli] = useState<TerminalCli | null>(null);
   const [exitInfo, setExitInfo] = useState<TerminalExitInfo | null>(null);
-  const [shellNotice, setShellNotice] = useState<OkPtyNotice | null>(null);
   const [pathDropNotice, setPathDropNotice] = useState(false);
   const ptyIdRef = useRef<string | null>(null);
   const terminalInputEnabledRef = useRef(false);
@@ -169,7 +168,6 @@ function TerminalSession({
 
     setConnectionCli(null);
     setCliNotice(null);
-    setShellNotice(null);
     setPathDropNotice(false);
     terminalInputEnabledRef.current = false;
 
@@ -179,8 +177,6 @@ function TerminalSession({
     let ptyId: string | null = null;
     let unsubData: (() => void) | undefined;
     let unsubExit: (() => void) | undefined;
-    let unsubNotice: (() => void) | undefined;
-    let pendingShellNotices: OkPtyNotice[] = [];
     let readinessScan: ((data: string) => void) | undefined;
     const armReadinessScan = (marker: string, onReady: () => void): void => {
       let acc = '';
@@ -210,15 +206,6 @@ function TerminalSession({
     };
     window.addEventListener('pagehide', markDocumentUnloading);
     document.addEventListener('visibilitychange', markDocumentVisible);
-
-    unsubNotice = bridge.terminal.onNotice((msg) => {
-      if (ptyId === null) {
-        pendingShellNotices.push(msg);
-        return;
-      }
-      if (msg.ptyId !== ptyId) return;
-      setShellNotice(msg);
-    });
 
     const screenReaderModeAtMount =
       bridge.config.e2eSmoke === true || (bridge.accessibility?.isScreenReaderActive() ?? true);
@@ -504,11 +491,6 @@ function TerminalSession({
         () => term.modes.bracketedPasteMode,
       );
       onPtyIdRef.current?.(livePtyId);
-      for (const notice of pendingShellNotices) {
-        if (notice.ptyId !== livePtyId) continue;
-        setShellNotice(notice);
-      }
-      pendingShellNotices = [];
 
       term.onData((data) => {
         sendInput(data);
@@ -828,7 +810,6 @@ function TerminalSession({
       ptyResizeThrottle?.cancel();
       unsubData?.();
       unsubExit?.();
-      unsubNotice?.();
       titleDisposable?.dispose();
       linkProviderDisposable?.dispose();
       term.dispose();
@@ -912,19 +893,6 @@ function TerminalSession({
             onDismiss={() => setPathDropNotice(false)}
           >
             {t`Some dropped files could not be inserted safely.`}
-          </TerminalNoticeBanner>
-        ) : shellNotice ? (
-          <TerminalNoticeBanner
-            testId="terminal-shell-notice-banner"
-            onDismiss={() => setShellNotice(null)}
-          >
-            {shellNotice.reason === 'config-unreadable'
-              ? t`OpenKnowledge couldn't read terminal.shell in .ok/local/config.yml. Using an available Windows shell instead.`
-              : shellNotice.reason === 'invalid-value'
-                ? t`terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead.`
-                : shellNotice.reason === 'not-absolute'
-                  ? t`terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead.`
-                  : t`The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead.`}
           </TerminalNoticeBanner>
         ) : null
       ) : null}

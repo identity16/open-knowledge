@@ -9,7 +9,6 @@ import {
 import { EDITOR_TARGETS, type EditorMcpTarget } from './editors.ts';
 import { writeEditorMcpConfig } from './init.ts';
 
-const unix = process.platform !== 'win32';
 const dirs: string[] = [];
 
 function tempDir(prefix: string): string {
@@ -35,7 +34,7 @@ afterEach(() => {
 });
 
 describe('symlink write-through on the harness write path', () => {
-  it.skipIf(!unix)('writes a JSON harness through a symlink, leaving the symlink intact', () => {
+  it('writes a JSON harness through a symlink, leaving the symlink intact', () => {
     const home = tempDir('ok-symlink-home-');
     const repo = tempDir('ok-symlink-repo-');
     const target = join(repo, 'mcp.json');
@@ -62,42 +61,39 @@ describe('symlink write-through on the harness write path', () => {
     expect(after).toContain('open-knowledge');
   });
 
-  it.skipIf(!unix)(
-    'writes the Codex TOML harness through a symlink, preserving comments on the real target',
-    () => {
-      const engine = createTomlConfigEngine();
-      if (engine.backend !== 'native') {
-        throw new Error('native toml_edit addon must be built for the TOML write-through gate');
-      }
-      setTomlConfigEngineForTesting(engine);
+  it('writes the Codex TOML harness through a symlink, preserving comments on the real target', () => {
+    const engine = createTomlConfigEngine();
+    if (engine.backend !== 'native') {
+      throw new Error('native toml_edit addon must be built for the TOML write-through gate');
+    }
+    setTomlConfigEngineForTesting(engine);
 
-      const home = tempDir('ok-symlink-home-');
-      const repo = tempDir('ok-symlink-repo-');
-      const target = join(repo, 'config.toml');
-      const original = [
-        '# dotfiles-managed codex config',
-        'model = "gpt-5"',
-        '',
-        '[mcp_servers.other]',
-        'command = "other-cmd"  # keep',
-        '',
-      ].join('\n');
-      writeFileSync(target, original);
-      const config = join(home, 'config.toml');
-      symlinkSync(target, config);
+    const home = tempDir('ok-symlink-home-');
+    const repo = tempDir('ok-symlink-repo-');
+    const target = join(repo, 'config.toml');
+    const original = [
+      '# dotfiles-managed codex config',
+      'model = "gpt-5"',
+      '',
+      '[mcp_servers.other]',
+      'command = "other-cmd"  # keep',
+      '',
+    ].join('\n');
+    writeFileSync(target, original);
+    const config = join(home, 'config.toml');
+    symlinkSync(target, config);
 
-      const result = write(EDITOR_TARGETS.codex, config);
-      expect(result.action).toBe('written');
+    const result = write(EDITOR_TARGETS.codex, config);
+    expect(result.action).toBe('written');
 
-      expect(lstatSync(config).isSymbolicLink()).toBe(true);
-      const after = readFileSync(target, 'utf-8');
-      expect(after).toContain('# dotfiles-managed codex config');
-      expect(after).toContain('command = "other-cmd"  # keep');
-      expect(after).toContain('[mcp_servers.open-knowledge]');
-    },
-  );
+    expect(lstatSync(config).isSymbolicLink()).toBe(true);
+    const after = readFileSync(target, 'utf-8');
+    expect(after).toContain('# dotfiles-managed codex config');
+    expect(after).toContain('command = "other-cmd"  # keep');
+    expect(after).toContain('[mcp_servers.open-knowledge]');
+  });
 
-  it.skipIf(!unix)('breaks a cyclic symlink into a regular file carrying our entry', () => {
+  it('breaks a cyclic symlink into a regular file carrying our entry', () => {
     const home = tempDir('ok-symlink-home-');
     symlinkSync('b.json', join(home, 'a.json'));
     symlinkSync('a.json', join(home, 'b.json'));

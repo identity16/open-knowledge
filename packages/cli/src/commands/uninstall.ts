@@ -2,13 +2,8 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import {
-  currentCliCommandName,
-  DESKTOP_PRODUCTS,
-  desktopWindowsExecutableName,
-  desktopWindowsInstallDirNames,
-} from '@inkeep/open-knowledge-core';
-import { findEnclosingProjectRoot, withHiddenWindowsConsole } from '@inkeep/open-knowledge-server';
+import { currentCliCommandName, DESKTOP_PRODUCTS } from '@inkeep/open-knowledge-core';
+import { findEnclosingProjectRoot } from '@inkeep/open-knowledge-server';
 import checkbox from '@inquirer/checkbox';
 import { Command } from 'commander';
 import { PACKAGE_VERSION } from '../constants.ts';
@@ -71,28 +66,6 @@ export function detectInstallMethods(
         }
       }
     }
-  } else if (platform === 'win32') {
-    const localAppData = env.LOCALAPPDATA;
-    if (localAppData) {
-      for (const product of desktopProducts) {
-        for (const dirName of desktopWindowsInstallDirNames(product)) {
-          const exe = join(
-            localAppData,
-            'Programs',
-            dirName,
-            desktopWindowsExecutableName(product),
-          );
-          if (exists(exe)) {
-            methods.push({
-              method: 'app',
-              label: `${product.productName} (${exe})`,
-              instruction: `Uninstall from Windows Settings → Apps → Installed apps → ${product.productName}`,
-            });
-            break;
-          }
-        }
-      }
-    }
   } else if (platform === 'linux') {
     const query = opts.queryPackageDatabase ?? defaultRunCommand;
     for (const product of desktopProducts) {
@@ -139,15 +112,11 @@ export function detectInstallMethods(
 
 function defaultRunCommand(command: string, args: string[]): string | null {
   try {
-    return execFileSync(
-      command,
-      args,
-      withHiddenWindowsConsole({
-        encoding: 'utf-8',
-        timeout: 5000,
-        stdio: ['ignore', 'pipe', 'ignore'],
-      }),
-    );
+    return execFileSync(command, args, {
+      encoding: 'utf-8',
+      timeout: 5000,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
   } catch {
     return null;
   }
@@ -190,11 +159,9 @@ function formatInstallInstructions(
   ];
   if (methods.length === 0) {
     const appFallback =
-      platform === 'win32'
-        ? 'uninstall from Settings → Apps → Installed apps → OpenKnowledge'
-        : platform === 'linux'
-          ? 'remove the openknowledge package with your package manager (apt / dnf)'
-          : 'move /Applications/OpenKnowledge.app to the Trash';
+      platform === 'linux'
+        ? 'remove the openknowledge package with your package manager (apt / dnf)'
+        : 'move /Applications/OpenKnowledge.app to the Trash';
     lines.push(dim('  Install method not detected. If you installed it, remove it via:'));
     lines.push(`    ${info('OK Desktop')} — ${appFallback}`);
     lines.push(`    ${info('npm global')} — npm uninstall -g @inkeep/open-knowledge`);

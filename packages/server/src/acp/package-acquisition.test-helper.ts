@@ -1,6 +1,5 @@
 import { type ChildProcess, execFile } from 'node:child_process';
 import {
-  copyFileSync,
   existsSync,
   mkdtempDisposableSync,
   readFileSync,
@@ -9,26 +8,19 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, delimiter, dirname, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { findNodeAtLocation, type ParseError, parseTree } from 'jsonc-parser';
 import { z } from 'zod';
 import {
   npmPackResult,
   type ResolvedLaunch,
   resetAcquisitionCache,
-  resolveWindowsCommand,
   spawnAcpAgent,
   terminateAgentTree,
-  windowsCmdWrap,
 } from './launch.ts';
 import type { RegistryAgent } from './registry.ts';
 
 function executable(name: string): string {
-  if (process.platform === 'win32') {
-    const path = resolveWindowsCommand(name, process.env.PATH);
-    if (!existsSync(path)) throw new Error(`Missing test prerequisite: ${name}`);
-    return realpathSync(path);
-  }
   const path = (process.env.PATH ?? '')
     .split(delimiter)
     .map((dir) => join(dir, name))
@@ -39,17 +31,13 @@ function executable(name: string): string {
 
 export function npmCli(name: 'npm' | 'npx'): string {
   const command = executable('npx');
-  const path =
-    process.platform === 'win32'
-      ? join(dirname(command), 'node_modules', 'npm', 'bin', `${name}-cli.js`)
-      : join(dirname(command), `${name}-cli.js`);
+  const path = join(dirname(command), `${name}-cli.js`);
   if (!existsSync(path)) throw new Error(`Missing test prerequisite: ${path}`);
   return path;
 }
 
 export function installNodeFixture(bin: string): void {
-  if (process.platform === 'win32') copyFileSync(process.execPath, join(bin, 'node.exe'));
-  else symlinkSync(process.execPath, join(bin, 'node'));
+  symlinkSync(process.execPath, join(bin, 'node'));
 }
 
 export function writeRecordingNpm(bin: string, probeLog: string): void {
@@ -90,7 +78,6 @@ export function isolateNpmHome(
     Object.entries(source).find(([name]) => name.toLowerCase() === key.toLowerCase())?.[1];
   const env: Record<string, string | undefined> = {
     PATH: inherited('PATH'),
-    PATHEXT: inherited('PATHEXT'),
     SystemRoot: inherited('SystemRoot'),
     ComSpec: inherited('ComSpec'),
     HOME: home,
@@ -165,10 +152,8 @@ export function registryPackage(
 }
 
 export function native(cmd: string, args: string[], env: NodeJS.ProcessEnv = process.env) {
-  const path = Object.entries(env).find(([key]) => key.toLowerCase() === 'path')?.[1];
-  const resolved = process.platform === 'win32' ? resolveWindowsCommand(cmd, path) : cmd;
-  const wrap = process.platform === 'win32' && /\.(cmd|bat)$/i.test(resolved);
-  const command = wrap ? windowsCmdWrap(resolved, args) : { cmd: resolved, args };
+  const resolved = cmd;
+  const command = { cmd: resolved, args };
   return new Promise<{ code: number | string; stdout: string; stderr: string }>((resolve) => {
     execFile(
       command.cmd,
@@ -177,8 +162,7 @@ export function native(cmd: string, args: string[], env: NodeJS.ProcessEnv = pro
         cwd: process.env.HOME,
         env,
         shell: false,
-        windowsHide: true,
-        windowsVerbatimArguments: wrap,
+
         timeout: 60_000,
         maxBuffer: 16 * 1024 * 1024,
       },
@@ -230,15 +214,6 @@ export async function captureChild(
 }
 
 export function writeExecutable(path: string, body: string): string {
-  if (process.platform === 'win32') {
-    const script = `${path}.cjs`;
-    writeFileSync(script, `${body}\n`);
-    writeFileSync(
-      `${path}.cmd`,
-      `@echo off\r\n"${process.execPath}" "%~dp0${basename(script)}" %*\r\n`,
-    );
-    return script;
-  }
   writeFileSync(path, `#!${process.execPath}\n${body}\n`, { mode: 0o755 });
   return path;
 }

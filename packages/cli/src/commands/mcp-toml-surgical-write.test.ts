@@ -58,19 +58,16 @@ describe('surgical TOML MCP write', () => {
     return join(dir, name);
   }
 
-  it.skipIf(process.platform === 'win32')(
-    'preserves a user-tightened file mode (0600) on an in-place rewrite',
-    () => {
-      const configPath = tempFile('config.toml');
-      writeFileSync(configPath, '# my codex config\nmodel = "gpt-5"\n');
-      chmodSync(configPath, 0o600);
+  it('preserves a user-tightened file mode (0600) on an in-place rewrite', () => {
+    const configPath = tempFile('config.toml');
+    writeFileSync(configPath, '# my codex config\nmodel = "gpt-5"\n');
+    chmodSync(configPath, 0o600);
 
-      const result = writeCodex(configPath);
-      expect(result.action).toBe('written');
+    const result = writeCodex(configPath);
+    expect(result.action).toBe('written');
 
-      expect(statSync(configPath).mode & 0o777).toBe(0o600);
-    },
-  );
+    expect(statSync(configPath).mode & 0o777).toBe(0o600);
+  });
 
   it('inserts only our entry, preserving comments, siblings, key order, and value types', () => {
     const configPath = tempFile('config.toml');

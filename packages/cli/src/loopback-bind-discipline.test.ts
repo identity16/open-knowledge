@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { basename, dirname, join, relative, win32 } from 'node:path';
+import { basename, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 import { isTestOnlySourceFile } from '../../../test-support/test-only-source-file.mjs';
@@ -90,11 +90,6 @@ describe('loopback bind discipline (cli test sources)', () => {
   test('there are test files to scan (sanity)', () => {
     expect(files.length).toBeGreaterThan(0);
     expect(files.some((f) => f.path.endsWith('commands/start.test.ts'))).toBe(true);
-  });
-
-  test('win32 path semantics still yield the /-separated sanity key', () => {
-    const win32Files = listScannedTestFiles(win32.relative);
-    expect(win32Files.some((f) => f.path.endsWith('commands/start.test.ts'))).toBe(true);
   });
 
   test('every .listen( call binds an explicit loopback host literal', () => {

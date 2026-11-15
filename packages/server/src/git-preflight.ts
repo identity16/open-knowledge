@@ -3,7 +3,6 @@ import { accessSync, existsSync, constants as fsConstants, readFileSync, statSyn
 import { homedir } from 'node:os';
 import { isAbsolute, join, delimiter as PATH_DELIM } from 'node:path';
 import { currentCliCommandName } from '@inkeep/open-knowledge-core';
-import { withHiddenWindowsConsole } from './child-process-windows-hide.ts';
 
 export const MIN_GIT_VERSION = '2.31.0';
 
@@ -152,11 +151,11 @@ type ProbeResult =
   | { kind: 'fail'; reason: GitProbeFailureReason };
 
 function probeGit(command: string): ProbeResult {
-  const opts: SpawnSyncOptions = withHiddenWindowsConsole({
+  const opts: SpawnSyncOptions = {
     encoding: 'utf-8',
     timeout: PROBE_TIMEOUT_MS,
     env: { ...process.env, LANG: 'C', LC_ALL: 'C' },
-  });
+  };
   const result = spawnSync(command, ['--version'], opts);
   if (result.error) {
     if ('signal' in result && result.signal === 'SIGTERM')
@@ -193,28 +192,17 @@ export function __seedResolveOnPathCacheForTests(name: string, resolvedPath: str
 }
 
 function envValue(name: string): string | undefined {
-  if (process.platform !== 'win32') return process.env[name];
-  const key = Object.keys(process.env).find((k) => k.toUpperCase() === name);
-  return key === undefined ? undefined : process.env[key];
+  return process.env[name];
 }
 
 function commandFileNames(name: string): readonly string[] {
-  if (process.platform !== 'win32') return [name];
-  const configured = (envValue('PATHEXT') ?? '')
-    .split(';')
-    .map((ext) => ext.trim().toLowerCase())
-    .filter((ext) => ext.startsWith('.'));
-  const extensions = configured.length > 0 ? configured : ['.com', '.exe', '.bat', '.cmd'];
-  const lower = name.toLowerCase();
-  return extensions.some((ext) => lower.endsWith(ext))
-    ? [name]
-    : extensions.map((ext) => `${name}${ext}`);
+  return [name];
 }
 
 function isRunnableFile(path: string): boolean {
   try {
     if (!statSync(path).isFile()) return false;
-    if (process.platform !== 'win32') accessSync(path, fsConstants.X_OK);
+    accessSync(path, fsConstants.X_OK);
     return true;
   } catch {
     return false;
@@ -252,19 +240,16 @@ export function fallbackPaths(platform: NodeJS.Platform): readonly string[] {
         '/Library/Developer/CommandLineTools/usr/bin/git',
         '/usr/bin/git',
       ];
-    case 'win32':
-      return [
-        'C:\\Program Files\\Git\\cmd\\git.exe',
-        'C:\\Program Files (x86)\\Git\\cmd\\git.exe',
-        join(homedir(), 'scoop', 'apps', 'git', 'current', 'cmd', 'git.exe'),
-      ];
-    default:
+
+    case 'linux':
       return [
         '/usr/bin/git',
         '/usr/local/bin/git',
         join(homedir(), '.local', 'bin', 'git'),
         '/snap/bin/git',
       ];
+    default:
+      return [];
   }
 }
 
@@ -290,40 +275,7 @@ export function buildGuidance(platform: NodeJS.Platform): InstallGuidance {
         options,
       };
     }
-    case 'win32': {
-      const options: InstallOption[] = [];
-      if (hasWinget()) {
-        options.push({
-          label: 'Install with winget',
-          command: 'winget install --id Git.Git -e --source winget',
-          requiresAdmin: true,
-        });
-      }
-      if (hasScoop()) {
-        options.push({
-          label: 'Install with Scoop (no admin)',
-          command: 'scoop install git',
-          requiresAdmin: false,
-        });
-      }
-      if (hasChoco()) {
-        options.push({
-          label: 'Install with Chocolatey',
-          command: 'choco install git -y',
-          requiresAdmin: true,
-        });
-      }
-      options.push({
-        label: 'Download the official installer',
-        command: 'Open https://gitforwindows.org/ in your browser',
-        requiresAdmin: false,
-      });
-      return {
-        product: 'Git for Windows',
-        url: 'https://gitforwindows.org/',
-        options,
-      };
-    }
+
     default:
       return {
         product: 'Git',
@@ -388,15 +340,6 @@ function hasCommand(name: string): boolean {
 
 function hasBrew(): boolean {
   return hasCommand('brew');
-}
-function hasWinget(): boolean {
-  return hasCommand('winget');
-}
-function hasScoop(): boolean {
-  return hasCommand('scoop');
-}
-function hasChoco(): boolean {
-  return hasCommand('choco');
 }
 
 function buildMissingMessage(g: InstallGuidance): string {

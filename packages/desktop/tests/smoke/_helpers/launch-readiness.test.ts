@@ -2905,10 +2905,7 @@ interface RecordedFirstWait {
 
 const RECORDED_FIRST_WAIT = JSON.parse(
   readFileSync(
-    new URL(
-      './fixtures/recorded-first-wait-windows-terminal-tabs-2026-09-24.json',
-      import.meta.url,
-    ),
+    new URL('./fixtures/recorded-first-window-wait-2026-09-24.json', import.meta.url),
     'utf8',
   ),
 ) as RecordedFirstWait;

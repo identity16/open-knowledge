@@ -22,7 +22,7 @@ export async function harvestShellAuthSock(
   opts: HarvestShellAuthSockOpts = {},
 ): Promise<string | null> {
   const platform = opts.platform ?? process.platform;
-  if (platform === 'win32') return null;
+
   const env = opts.env ?? process.env;
   const shell = env.SHELL ?? (platform === 'linux' ? '/bin/bash' : '/bin/zsh');
   const spawn = opts.spawn ?? defaultSpawn;

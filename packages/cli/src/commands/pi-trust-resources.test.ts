@@ -114,20 +114,17 @@ describe('Pi trust dependent resources', () => {
     ).toEqual({ kind: 'none' });
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'inspects a symlinked skill root and preserves foreign resources',
-    () => {
-      const target = join(root, 'user-skills');
-      mkdirSync(join(target, 'foreign'), { recursive: true });
-      symlinkSync(target, join(cwd, '.pi', 'skills'));
-      expect(inspectPiTrustResources(cwd, home, bridgePath)).toEqual({
-        kind: 'shared',
-        paths: [join(cwd, '.pi', 'skills', 'foreign')],
-      });
-    },
-  );
+  test('inspects a symlinked skill root and preserves foreign resources', () => {
+    const target = join(root, 'user-skills');
+    mkdirSync(join(target, 'foreign'), { recursive: true });
+    symlinkSync(target, join(cwd, '.pi', 'skills'));
+    expect(inspectPiTrustResources(cwd, home, bridgePath)).toEqual({
+      kind: 'shared',
+      paths: [join(cwd, '.pi', 'skills', 'foreign')],
+    });
+  });
 
-  test.skipIf(process.platform === 'win32')('refuses an unresolved resource symlink', () => {
+  test('refuses an unresolved resource symlink', () => {
     const path = join(cwd, '.pi', 'prompts');
     symlinkSync(join(root, 'missing-prompts'), path);
     const outcome = inspectPiTrustResources(cwd, home, bridgePath);
@@ -140,42 +137,36 @@ describe('Pi trust dependent resources', () => {
     }
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'escapes terminal controls in an unreadable resource path',
-    () => {
-      const project = join(root, 'project\u001b[2K\r\n\u202e');
-      mkdirSync(join(project, '.pi'), { recursive: true });
-      symlinkSync(join(root, 'missing-prompts'), join(project, '.pi', 'prompts'));
-      const outcome = inspectPiTrustResources(
-        project,
-        home,
-        join(project, '.pi', 'extensions', 'open-knowledge.ts'),
-      );
-      expect(outcome).toMatchObject({ kind: 'unreadable' });
-      if (outcome.kind === 'unreadable') {
-        expect(outcome.error).toContain('project\\u001b[2K\\u000d\\u000a\\u202e');
-        expect(outcome.error).not.toMatch(/[\p{Cc}\p{Zl}\p{Zp}]/u);
-        expect(outcome.error).not.toContain('\u202e');
-        expect(outcome.error).toContain('restore the target or correct the symlink');
-      }
-    },
-  );
+  test('escapes terminal controls in an unreadable resource path', () => {
+    const project = join(root, 'project\u001b[2K\r\n\u202e');
+    mkdirSync(join(project, '.pi'), { recursive: true });
+    symlinkSync(join(root, 'missing-prompts'), join(project, '.pi', 'prompts'));
+    const outcome = inspectPiTrustResources(
+      project,
+      home,
+      join(project, '.pi', 'extensions', 'open-knowledge.ts'),
+    );
+    expect(outcome).toMatchObject({ kind: 'unreadable' });
+    if (outcome.kind === 'unreadable') {
+      expect(outcome.error).toContain('project\\u001b[2K\\u000d\\u000a\\u202e');
+      expect(outcome.error).not.toMatch(/[\p{Cc}\p{Zl}\p{Zp}]/u);
+      expect(outcome.error).not.toContain('\u202e');
+      expect(outcome.error).toContain('restore the target or correct the symlink');
+    }
+  });
 
-  test.skipIf(process.platform === 'win32')(
-    'reports a resource symlink cycle with its repair',
-    () => {
-      const path = join(cwd, '.pi', 'prompts');
-      symlinkSync(path, path);
-      const outcome = inspectPiTrustResources(cwd, home, bridgePath);
-      expect(outcome).toMatchObject({ kind: 'unreadable' });
-      if (outcome.kind === 'unreadable') {
-        expect(outcome.error).toContain(path);
-        expect(outcome.error).toContain('repair any symlink cycle');
-      }
-    },
-  );
+  test('reports a resource symlink cycle with its repair', () => {
+    const path = join(cwd, '.pi', 'prompts');
+    symlinkSync(path, path);
+    const outcome = inspectPiTrustResources(cwd, home, bridgePath);
+    expect(outcome).toMatchObject({ kind: 'unreadable' });
+    if (outcome.kind === 'unreadable') {
+      expect(outcome.error).toContain(path);
+      expect(outcome.error).toContain('repair any symlink cycle');
+    }
+  });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'refuses an unreadable skill root rather than treating it as empty',
     () => {
       const path = join(cwd, '.pi', 'skills');

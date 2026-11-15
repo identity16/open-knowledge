@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { homedir as nodeHomedir } from 'node:os';
-import { dirname, isAbsolute, join, posix, relative, resolve, win32 } from 'node:path';
+import { dirname, isAbsolute, join, posix, relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { okUserHomeDisplayPath } from '@inkeep/open-knowledge-core';
 import { resolveGitDirDetailed } from '@inkeep/open-knowledge-core/shadow-repo-layout';
@@ -96,32 +96,14 @@ const POSIX_SYSTEM_DIRECTORIES: ReadonlySet<string> = new Set([
   '/Volumes',
 ]);
 
-const WINDOWS_SYSTEM_DIRECTORY_ENV_KEYS = [
-  'SystemRoot',
-  'ProgramFiles',
-  'ProgramFiles(x86)',
-  'ProgramData',
-] as const;
-
 export function isSystemDirectory(
   dir: string,
   home: string,
   platform: NodeJS.Platform = process.platform,
-  env: NodeJS.ProcessEnv = process.env,
+  _env: NodeJS.ProcessEnv = process.env,
 ): boolean {
   const canonical = (p: string) => (platform === process.platform ? canonicalizeForCompare(p) : p);
-  if (platform === 'win32') {
-    const key = (p: string) => canonical(win32.resolve(p)).toLowerCase();
-    const targets = new Set([win32.resolve(dir).toLowerCase(), key(dir)]);
-    const candidates = [
-      win32.dirname(canonical(win32.resolve(home))),
-      ...WINDOWS_SYSTEM_DIRECTORY_ENV_KEYS.flatMap((name) => {
-        const value = env[name];
-        return value === undefined || value.length === 0 ? [] : [value];
-      }),
-    ];
-    return candidates.some((candidate) => targets.has(key(candidate)));
-  }
+
   const resolved = posix.resolve(dir);
   const homeParent = posix.dirname(canonicalizeForCompare(posix.resolve(home)));
   return [resolved, canonical(resolved)].some(
@@ -322,7 +304,6 @@ export async function defaultGitTopLevel(cwd: string): Promise<string | null> {
   try {
     const { stdout } = await execFileAsync('git', ['rev-parse', '--show-toplevel'], {
       cwd,
-      windowsHide: true,
     });
     const trimmed = stdout.trim();
     return trimmed.length > 0 ? trimmed : null;

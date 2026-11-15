@@ -8,9 +8,8 @@ import { execFile } from 'node:child_process';
 import { access, constants as fsConstants } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { homedir } from 'node:os';
-import { posix as pathPosix, win32 as pathWin32 } from 'node:path';
+import { posix as pathPosix } from 'node:path';
 import { SpawnCursorSuccessSchema } from '@inkeep/open-knowledge-core';
-import { withHiddenWindowsConsole } from './child-process-windows-hide.ts';
 import { errorResponse } from './http/error-response.ts';
 import {
   PayloadTooLargeError,
@@ -184,10 +183,6 @@ export const CURSOR_BUNDLE_PATHS_BY_PLATFORM: Partial<
     () => '/Applications/Cursor.app/Contents/Resources/app/bin/cursor',
     (home) => `${home}/Applications/Cursor.app/Contents/Resources/app/bin/cursor`,
   ],
-  win32: [
-    (home) => `${home}\\AppData\\Local\\Programs\\cursor\\resources\\app\\bin\\cursor.cmd`,
-    () => 'C:\\Program Files\\Cursor\\resources\\app\\bin\\cursor.cmd',
-  ],
 };
 
 export async function resolveCursorBinaryDefault(timeoutMs: number): Promise<string | null> {
@@ -211,20 +206,15 @@ export async function resolveCursorBinaryDefault(timeoutMs: number): Promise<str
     }
   }
   return new Promise((resolve) => {
-    const cmd = process.platform === 'win32' ? 'where' : 'which';
-    execFile(
-      cmd,
-      ['cursor'],
-      withHiddenWindowsConsole({ timeout: timeoutMs, encoding: 'utf-8' }),
-      (err, stdout) => {
-        if (err) {
-          resolve(null);
-          return;
-        }
-        const first = stdout.split(/\r?\n/)[0]?.trim();
-        resolve(first && first.length > 0 ? first : null);
-      },
-    );
+    const cmd = 'which';
+    execFile(cmd, ['cursor'], { timeout: timeoutMs, encoding: 'utf-8' }, (err, stdout) => {
+      if (err) {
+        resolve(null);
+        return;
+      }
+      const first = stdout.split(/\r?\n/)[0]?.trim();
+      resolve(first && first.length > 0 ? first : null);
+    });
   });
 }
 
@@ -237,47 +227,31 @@ export function resolveCursorSpawnInvocation(
     const bundle = resolvedPath.replace(/\/$/, '');
     return { exec: '/usr/bin/open', args: ['-a', bundle, userPath] };
   }
-  if (platform === 'win32' && /\.(cmd|bat)$/i.test(resolvedPath)) {
-    return {
-      exec: process.env.ComSpec || 'cmd.exe',
-      args: ['/d', '/c', resolvedPath, userPath],
-    };
-  }
+
   return { exec: resolvedPath, args: [userPath] };
 }
 
 export function isPathWithinDir(
   userPath: string,
   contentDir: string,
-  platform: NodeJS.Platform,
+  _platform: NodeJS.Platform,
 ): boolean {
   if (!userPath || typeof userPath !== 'string') return false;
   if (userPath.includes('\0')) return false;
   if (!contentDir || typeof contentDir !== 'string') return false;
-  if (platform === 'win32') {
-    if (!/^([a-zA-Z]:[\\/]|\\\\)/.test(userPath)) return false;
-    if (!/^([a-zA-Z]:[\\/]|\\\\)/.test(contentDir)) return false;
-  } else {
-    if (!userPath.startsWith('/')) return false;
-    if (!contentDir.startsWith('/')) return false;
-  }
-  const p = platform === 'win32' ? pathWin32 : pathPosix;
+  if (!userPath.startsWith('/')) return false;
+  if (!contentDir.startsWith('/')) return false;
+  const p = pathPosix;
   try {
     const canonicalUser = p.resolve(userPath);
     const canonicalDir = p.resolve(contentDir);
-    if (platform === 'win32') {
-      const userRoot = p.parse(canonicalUser).root.toLowerCase();
-      const dirRoot = p.parse(canonicalDir).root.toLowerCase();
-      if (!userRoot || !dirRoot || userRoot !== dirRoot) return false;
-    }
+
     if (canonicalUser === canonicalDir) return true;
     const rel = p.relative(canonicalDir, canonicalUser);
     if (rel === '' || rel === '.') return true;
     if (rel === '..' || rel.startsWith(`..${p.sep}`)) return false;
-    if (platform === 'win32' && (/^[a-zA-Z]:[\\/]/.test(rel) || rel.startsWith('\\\\'))) {
-      return false;
-    }
-    if (platform !== 'win32' && rel.startsWith('/')) return false;
+
+    if (rel.startsWith('/')) return false;
     return true;
   } catch (err) {
     getLogger('spawn-cursor').warn({ err }, 'unexpected path-resolution error');

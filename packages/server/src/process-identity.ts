@@ -1,15 +1,9 @@
 import { type ExecFileSyncOptionsWithStringEncoding, execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { hostname, uptime } from 'node:os';
-import {
-  LOCAL_OP_PIPE_STDIO_OPTIONS,
-  withHiddenWindowsConsole,
-} from './child-process-windows-hide.ts';
-import { getLogger } from './logger.ts';
 import { getMachineId } from './machine-id.ts';
 import { isProcessAlive } from './process-alive.ts';
-
-const log = getLogger('process-identity');
+import { LOCAL_OP_PIPE_STDIO_OPTIONS } from './subprocess-options.ts';
 
 export interface ProcessStart {
   startedAtMs: number;
@@ -60,8 +54,6 @@ export interface LockHolderIdentity {
   hostname?: string;
 }
 
-export type NativeProcessStartReader = (pid: number) => number | null;
-
 type PsRunner = (
   command: string,
   args: string[],
@@ -76,7 +68,6 @@ export interface PsProcessStartOptions {
 export interface ReadProcessStartOptions {
   platform?: NodeJS.Platform;
   readFile?: (path: string) => string;
-  readNative?: NativeProcessStartReader;
 }
 
 export interface RecentProcessStartReaderOptions {
@@ -91,14 +82,11 @@ export interface ClassifyLockHolderOptions {
   sameMachine?: boolean;
   formatRecordsMachineId?: boolean;
   refuseHolderStartedAfterLock?: boolean;
-  platform?: NodeJS.Platform;
-  readBootInstant?: () => number | null;
 }
 
 const TOKEN_TOLERANCE_MS = 1000;
 const LEGACY_MARGIN_CREATION_MS = 10_000;
 const LEGACY_MARGIN_BOOT_DERIVED_MS = 300_000;
-const LOCK_BEFORE_BOOT_MARGIN_MS = 300_000;
 
 const MAX_PROCESS_ID = 0xffff_ffff;
 const MAX_BOOT_ID_LENGTH = 64;
@@ -108,17 +96,8 @@ const BOOT_ID_PATH = '/proc/sys/kernel/random/boot_id';
 const PS_PROCESS_START_QUERY_TIMEOUT_MS = 5000;
 const PS_LSTART_PATTERN = /^\w{3}\s+\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\d{4}$/;
 
-const NATIVE_PROCESS_START_READER: unique symbol = Symbol.for(
-  '@inkeep/open-knowledge/native-process-start-reader',
-);
-
-const nativeReaderHost = globalThis as typeof globalThis & {
-  [NATIVE_PROCESS_START_READER]?: NativeProcessStartReader;
-};
-
 let ownProcessStart: ProcessStart | undefined;
 let ownBootId: string | undefined;
-let missingReaderWarned = false;
 
 function isReadableProcessId(pid: number): boolean {
   return Number.isSafeInteger(pid) && pid > 0 && pid <= MAX_PROCESS_ID;
@@ -143,12 +122,12 @@ export function readPsProcessStart(
   if (!isReadableProcessId(pid)) return null;
   const env = options.env ?? process.env;
   const run = options.run ?? execFileSync;
-  const commandOptions: ExecFileSyncOptionsWithStringEncoding = withHiddenWindowsConsole({
+  const commandOptions: ExecFileSyncOptionsWithStringEncoding = {
     encoding: 'utf8',
     ...LOCAL_OP_PIPE_STDIO_OPTIONS,
     timeout: PS_PROCESS_START_QUERY_TIMEOUT_MS,
     env: { ...env, LC_ALL: 'C', TZ: 'UTC0' },
-  });
+  };
   try {
     const raw = run('ps', ['-p', String(pid), '-o', 'lstart='], commandOptions).trim();
     if (!PS_LSTART_PATTERN.test(raw)) return null;
@@ -157,16 +136,6 @@ export function readPsProcessStart(
   } catch {
     return null;
   }
-}
-
-export function registerNativeProcessStartReader(read: NativeProcessStartReader): () => void {
-  nativeReaderHost[NATIVE_PROCESS_START_READER] = read;
-  return () => {
-    if (nativeReaderHost[NATIVE_PROCESS_START_READER] === read) {
-      delete nativeReaderHost[NATIVE_PROCESS_START_READER];
-      missingReaderWarned = false;
-    }
-  };
 }
 
 function parseProcStatStartTicks(stat: string): number | null {
@@ -220,30 +189,10 @@ function readLinuxProcessStart(
   return bootId === undefined ? start : { ...start, bootId };
 }
 
-function readWindowsProcessStart(
-  pid: number,
-  readNative: NativeProcessStartReader | undefined,
-): ProcessStart | null {
-  const read = readNative ?? nativeReaderHost[NATIVE_PROCESS_START_READER];
-  if (read === undefined) {
-    if (!missingReaderWarned) {
-      missingReaderWarned = true;
-      log.warn(
-        { event: 'process-start-reader-missing' },
-        '[process-identity] no Windows process-start reader is registered, so lock holders cannot be verified; later reads are not recorded again while it stays missing',
-      );
-    }
-    return null;
-  }
-  const startedAtMs = read(pid);
-  return isNonNegativeSafeInteger(startedAtMs) ? { startedAtMs, clock: 'creation' } : null;
-}
-
 function readUncachedProcessStart(
   pid: number,
   platform: NodeJS.Platform,
   readFile: (path: string) => string,
-  readNative: NativeProcessStartReader | undefined,
 ): ProcessStart | null {
   try {
     if (platform === 'linux') return readLinuxProcessStart(pid, readFile);
@@ -251,7 +200,7 @@ function readUncachedProcessStart(
       const startedAtMs = readPsProcessStart(pid);
       return startedAtMs === null ? null : { startedAtMs, clock: 'creation' };
     }
-    if (platform === 'win32') return readWindowsProcessStart(pid, readNative);
+
     return null;
   } catch {
     return null;
@@ -263,16 +212,12 @@ export function readProcessStart(
   options: ReadProcessStartOptions = {},
 ): ProcessStart | null {
   if (!isReadableProcessId(pid)) return null;
-  const usesHost =
-    options.platform === undefined &&
-    options.readFile === undefined &&
-    options.readNative === undefined;
+  const usesHost = options.platform === undefined && options.readFile === undefined;
   if (usesHost && pid === process.pid && ownProcessStart !== undefined) return ownProcessStart;
   const start = readUncachedProcessStart(
     pid,
     options.platform ?? process.platform,
     options.readFile ?? readFileUtf8,
-    options.readNative,
   );
   if (usesHost && pid === process.pid && start !== null) ownProcessStart = start;
   return start;
@@ -401,22 +346,6 @@ export function readBootStartedAtMs(
   }
 }
 
-function lockWrittenAtMs(lock: LockHolderIdentity): number | null {
-  const token = parseProcessStartToken(lock.processStart);
-  const writtenAtMs = [
-    token !== undefined && 'startedAtMs' in token ? token.startedAtMs : Number.NaN,
-    typeof lock.startedAt === 'string' ? Date.parse(lock.startedAt) : Number.NaN,
-  ].filter(Number.isFinite);
-  return writtenAtMs.length === 0 ? null : Math.max(...writtenAtMs);
-}
-
-function lockPredatesBoot(lock: LockHolderIdentity, readBootInstant: () => number | null): boolean {
-  const writtenAtMs = lockWrittenAtMs(lock);
-  if (writtenAtMs === null) return false;
-  const bootStartedAtMs = readBootInstant();
-  return bootStartedAtMs !== null && bootStartedAtMs - writtenAtMs > LOCK_BEFORE_BOOT_MARGIN_MS;
-}
-
 function recordsProcessStart(lock: LockHolderIdentity): boolean {
   return parseProcessStartToken(lock.processStart) !== undefined;
 }
@@ -433,14 +362,7 @@ export function assessLockHolder(
   const read = options.readProcessStart ?? readProcessStart;
   const start = read(lock.pid);
   if (start === null && !isAlive(lock.pid)) return { verdict: 'gone' };
-  if (
-    start === null &&
-    sameMachine &&
-    (options.platform ?? process.platform) === 'win32' &&
-    lockPredatesBoot(lock, options.readBootInstant ?? (() => readBootStartedAtMs()))
-  ) {
-    return { verdict: 'replaced' };
-  }
+
   const comparison = compareLockHolderStart(
     lock,
     start,

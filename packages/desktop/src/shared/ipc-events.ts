@@ -12,7 +12,6 @@ import type {
   OkMenuActionDispatch,
   OkPtyData,
   OkPtyExit,
-  OkPtyNotice,
   OkRecentRemovedMissingInfo,
   OkServerRestartedInfo,
   OkServerVersionDriftInfo,
@@ -72,7 +71,6 @@ export interface EventChannels {
 
   'ok:pty:data': { payload: OkPtyData };
   'ok:pty:exit': { payload: OkPtyExit };
-  'ok:pty:notice': { payload: OkPtyNotice };
   'ok:accessibility:changed': { payload: { screenReaderActive: boolean } };
   'ok:bug-report:crash-detected': { payload: OkBugReportCrashDetectedEvent };
   'ok:user-config:changed': { payload: OkUserConfigSnapshot };

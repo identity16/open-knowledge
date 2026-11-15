@@ -84,9 +84,8 @@ function versionOf(kind: ManagedRuntimeKind): string {
 }
 
 function launcherNames(kind: ManagedRuntimeKind): string[] {
-  const win = process.platform === 'win32';
-  if (kind === 'node') return win ? ['npx.cmd', 'npx.exe'] : ['npx'];
-  return win ? ['uvx.exe'] : ['uvx'];
+  if (kind === 'node') return ['npx'];
+  return ['uvx'];
 }
 
 interface ArtifactSpec {
@@ -99,12 +98,11 @@ interface ArtifactSpec {
 function nodeArtifact(): ArtifactSpec | null {
   const os = platform();
   const cpu = arch();
-  const osKey =
-    os === 'darwin' ? 'darwin' : os === 'linux' ? 'linux' : os === 'win32' ? 'win' : null;
+  const osKey = os === 'darwin' ? 'darwin' : os === 'linux' ? 'linux' : null;
   const cpuKey = cpu === 'arm64' ? 'arm64' : cpu === 'x64' ? 'x64' : null;
   if (osKey === null || cpuKey === null) return null;
-  const isZip = os === 'win32';
-  const ext = isZip ? 'zip' : 'tar.gz';
+  const isZip = false;
+  const ext = 'tar.gz';
   const archiveName = `node-${PINNED_NODE_VERSION}-${osKey}-${cpuKey}.${ext}`;
   return {
     archiveUrl: `${NODE_DIST_BASE}/${PINNED_NODE_VERSION}/${archiveName}`,
@@ -121,13 +119,11 @@ function uvArtifact(): ArtifactSpec | null {
     'darwin-x64': 'x86_64-apple-darwin',
     'linux-arm64': 'aarch64-unknown-linux-gnu',
     'linux-x64': 'x86_64-unknown-linux-gnu',
-    'win32-x64': 'x86_64-pc-windows-msvc',
-    'win32-arm64': 'aarch64-pc-windows-msvc',
   };
   const target = triple[key];
   if (target === undefined) return null;
-  const isZip = platform() === 'win32';
-  const ext = isZip ? 'zip' : 'tar.gz';
+  const isZip = false;
+  const ext = 'tar.gz';
   const archiveName = `uv-${target}.${ext}`;
   return {
     archiveUrl: `${UV_RELEASE_BASE}/${PINNED_UV_VERSION}/${archiveName}`,
@@ -149,7 +145,7 @@ async function isExecutable(path: string): Promise<boolean> {
   try {
     const st = await stat(path);
     if (!st.isFile() && !st.isSymbolicLink()) return false;
-    if (process.platform === 'win32') return true;
+
     await access(path, constants.X_OK);
     return true;
   } catch {

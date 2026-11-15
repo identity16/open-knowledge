@@ -589,7 +589,7 @@ async function executeOp(op: RemovalOp, deps: ResolvedDeps): Promise<RemovalOpRe
         return {
           op,
           status: 'failed',
-          detail: `${message} Native credentials, if any, are under OS credential manager service "${currentDesktopProduct().keyringService}-embeddings" (Keychain Access on macOS, Credential Manager on Windows, or a Secret Service password manager on Linux).`,
+          detail: `${message} Native credentials, if any, are under OS credential manager service "${currentDesktopProduct().keyringService}-embeddings" (Keychain Access on macOS or a Secret Service password manager on Linux).`,
         };
       }
     }

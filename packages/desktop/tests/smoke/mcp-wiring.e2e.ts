@@ -27,19 +27,11 @@ import { expect, test } from './_helpers/smoke-test';
 const TARGET = resolveDesktopTarget();
 const PRODUCT = smokeDesktopProduct();
 
-const WINDOWS = process.platform === 'win32';
-
-const EXPECTED_CHAIN = WINDOWS
-  ? {
-      command: 'powershell',
-      prefixArgs: ['-NoProfile', '-NonInteractive', '-Command'] as const,
-      sentinel: `# ok-mcp${PRODUCT.mcpChainTag}-win-v1`,
-    }
-  : {
-      command: '/bin/sh',
-      prefixArgs: ['-l', '-c'] as const,
-      sentinel: `# ok-mcp${PRODUCT.mcpChainTag}-v2`,
-    };
+const EXPECTED_CHAIN = {
+  command: '/bin/sh',
+  prefixArgs: ['-l', '-c'] as const,
+  sentinel: `# ok-mcp${PRODUCT.mcpChainTag}-v2`,
+};
 
 interface LaunchOpts {
   tmpHome: string;
@@ -320,7 +312,6 @@ test.describe('M6b first-launch MCP-wiring smoke (US-010)', () => {
   test('partial-failure — read-only Cursor dir leaves marker absent, other writes succeed', async ({
     captureStderrFor,
   }) => {
-    test.skip(WINDOWS, 'chmod-based read-only-directory injection is POSIX-only (see comment).');
     const tmpHome = createTmpHome('partial');
     seedEditorDetectionDirs(tmpHome, ['.claude', '.cursor']);
     const cursorDir = join(tmpHome, '.cursor');
@@ -353,7 +344,7 @@ test.describe('M6b first-launch MCP-wiring smoke (US-010)', () => {
     captureStderrFor,
   }) => {
     test.skip(
-      WINDOWS || TARGET.mode === 'packaged',
+      TARGET.mode === 'packaged',
       'Open finding: consent dialog never fires on the editor-first boot path — intermittently on Windows, always against a packaged bundle (see comment).',
     );
     const tmpHome = createTmpHome('f1');

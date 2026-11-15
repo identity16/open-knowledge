@@ -1525,7 +1525,6 @@ export function listTestFiles(root) {
       encoding: 'utf8',
       env: gitCleanEnv(),
       maxBuffer: 1 << 28,
-      windowsHide: true,
     },
   );
   if (listed.error || listed.status !== 0) {

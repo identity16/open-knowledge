@@ -6,7 +6,6 @@ import {
   buildTrashConfirmCopyElectron,
   selectTrashConfirmCopy,
   trashDetailMacos,
-  trashDetailWindows,
   trashTargetDisplayName,
 } from '@/components/file-tree-trash-copy';
 
@@ -92,15 +91,7 @@ describe('file-tree-trash-copy — buildTrashConfirmCopyElectron VSCode-verbatim
   });
 });
 
-describe('file-tree-trash-copy — Windows destination noun (Recycle Bin)', () => {
-  test('win32 swaps the detail and confirm label; title is unchanged', () => {
-    const copy = buildTrashConfirmCopyElectron([file('notes')], 'win32');
-    expect(copy.title).toBe('Are you sure you want to delete "notes"?');
-    expect(copy.detail).toBe(trashDetailWindows());
-    expect(copy.detail).toBe('You can restore this file from the Recycle Bin.');
-    expect(copy.confirmLabel).toBe('Move to Recycle Bin');
-  });
-
+describe('file-tree-trash-copy — POSIX destination noun', () => {
   test('darwin and linux keep the Trash strings', () => {
     for (const platform of ['darwin', 'linux', undefined]) {
       const copy = buildTrashConfirmCopyElectron([file('notes')], platform);
@@ -110,8 +101,8 @@ describe('file-tree-trash-copy — Windows destination noun (Recycle Bin)', () =
   });
 
   test('selectTrashConfirmCopy threads the platform through', () => {
-    const copy = selectTrashConfirmCopy('electron', [file('a')], 'win32');
-    expect(copy?.confirmLabel).toBe('Move to Recycle Bin');
+    const copy = selectTrashConfirmCopy('electron', [file('a')], 'linux');
+    expect(copy?.confirmLabel).toBe('Move to Trash');
   });
 });
 

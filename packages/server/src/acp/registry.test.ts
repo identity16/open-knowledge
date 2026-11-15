@@ -244,6 +244,6 @@ describe('loadCustomAgents', () => {
 
 describe('registryPlatformKey', () => {
   test('returns a supported key on this host', () => {
-    expect(registryPlatformKey()).toMatch(/^(darwin|linux|windows)-(aarch64|x86_64)$/);
+    expect(registryPlatformKey()).toMatch(/^(darwin|linux)-(aarch64|x86_64)$/);
   });
 });

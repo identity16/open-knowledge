@@ -373,7 +373,6 @@ function readBlobs(
       cwd: repoRoot,
       env: blobReadEnv(env),
       stdio: ['pipe', 'pipe', 'pipe'],
-      windowsHide: true,
     });
     const timer = setTimeout(() => {
       child.kill('SIGKILL');

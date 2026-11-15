@@ -36,11 +36,4 @@ describe('isExecutableFileSync', () => {
   it('rejects a path that does not exist', () => {
     expect(isExecutableFileSync(join(dir, 'missing'), 'linux')).toBe(false);
   });
-
-  it('treats any regular file as executable on Windows', () => {
-    const file = join(dir, 'tool.cmd');
-    writeFileSync(file, '@echo off\n');
-    chmodSync(file, 0o644);
-    expect(isExecutableFileSync(file, 'win32')).toBe(true);
-  });
 });

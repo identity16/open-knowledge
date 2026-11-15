@@ -10,22 +10,6 @@ import {
 } from './updater-cache.ts';
 
 describe('getUpdaterBaseCacheDir', () => {
-  test('win32 prefers %LOCALAPPDATA%', () => {
-    expect(
-      getUpdaterBaseCacheDir({
-        platform: 'win32',
-        env: { LOCALAPPDATA: 'C:\\Users\\u\\AppData\\Local' },
-        homeDir: 'C:\\Users\\u',
-      }),
-    ).toBe('C:\\Users\\u\\AppData\\Local');
-  });
-
-  test('win32 falls back to <home>/AppData/Local when LOCALAPPDATA is unset', () => {
-    expect(getUpdaterBaseCacheDir({ platform: 'win32', env: {}, homeDir: 'C:\\Users\\u' })).toBe(
-      join('C:\\Users\\u', 'AppData', 'Local'),
-    );
-  });
-
   test('darwin uses ~/Library/Caches', () => {
     expect(getUpdaterBaseCacheDir({ platform: 'darwin', env: {}, homeDir: '/Users/u' })).toBe(
       '/Users/u/Library/Caches',

@@ -10,7 +10,6 @@ import {
 import {
   buildManagedServerEntry,
   CHAIN_V2,
-  CHAIN_WIN_V1,
   DEV_CHANNEL_LAUNCHER_REFUSAL,
   EDITOR_TARGETS,
   isEntryUpToDate,
@@ -32,32 +31,6 @@ done
 echo "OpenKnowledge: install OK Desktop or Node.js 24+, then restart your editor" >&2
 exit 127`;
 
-const STABLE_WIN_CHAIN = `# ok-mcp-win-v1
-if ($env:PATHEXT -notmatch 'CMD') { $env:PATHEXT = '.COM;.EXE;.BAT;.CMD;' + $env:PATHEXT }
-if ($env:APPDATA) {
-  $shim = Join-Path $env:APPDATA 'npm\\ok.cmd'
-  if (Test-Path -LiteralPath $shim -PathType Leaf) { & $shim mcp; exit $LASTEXITCODE }
-}
-$ok = Get-Command ok.cmd -CommandType Application -ErrorAction SilentlyContinue
-if ($ok) { & $ok.Source mcp; exit $LASTEXITCODE }
-$npx = Get-Command npx.cmd -CommandType Application -ErrorAction SilentlyContinue
-if ($npx) { & $npx.Source -y '@inkeep/open-knowledge@latest' mcp; exit $LASTEXITCODE }
-$dirs = @()
-if ($env:ProgramFiles) { $dirs += Join-Path $env:ProgramFiles 'nodejs' }
-if ($env:NVM_SYMLINK) { $dirs += $env:NVM_SYMLINK }
-if ($env:LOCALAPPDATA) {
-  $dirs += Join-Path $env:LOCALAPPDATA 'fnm\\aliases\\default'
-  $dirs += Join-Path $env:LOCALAPPDATA 'Volta\\bin'
-  $dirs += Join-Path $env:LOCALAPPDATA 'pnpm'
-}
-if ($env:USERPROFILE) { $dirs += Join-Path $env:USERPROFILE 'scoop\\shims' }
-foreach ($d in $dirs) {
-  $probe = Join-Path $d 'npx.cmd'
-  if (Test-Path -LiteralPath $probe -PathType Leaf) { & $probe -y '@inkeep/open-knowledge@latest' mcp; exit $LASTEXITCODE }
-}
-[Console]::Error.WriteLine('OpenKnowledge: install Node.js 24+ (npm i -g @inkeep/open-knowledge), then restart your editor')
-exit 127`;
-
 const BETA_UNIX_CHAIN = `# ok-mcp-beta-v2
 export OK_CHANNEL=beta
 USER_BUNDLE="$HOME/Applications/OpenKnowledge Beta.app/Contents/Resources/cli/bin/ok.sh"
@@ -71,33 +44,6 @@ for d in "$HOME/.nvm/versions/node"/*/bin "$HOME/.fnm/node-versions"/*/installat
   [ -f "$d/npx" ] && [ -x "$d/npx" ] && exec "$d/npx" -y @inkeep/open-knowledge@beta mcp
 done
 echo "OpenKnowledge: install OK Desktop or Node.js 24+, then restart your editor" >&2
-exit 127`;
-
-const BETA_WIN_CHAIN = `# ok-mcp-beta-win-v1
-$env:OK_CHANNEL = 'beta'
-if ($env:PATHEXT -notmatch 'CMD') { $env:PATHEXT = '.COM;.EXE;.BAT;.CMD;' + $env:PATHEXT }
-if ($env:APPDATA) {
-  $shim = Join-Path $env:APPDATA 'npm\\ok-beta.cmd'
-  if (Test-Path -LiteralPath $shim -PathType Leaf) { & $shim mcp; exit $LASTEXITCODE }
-}
-$ok = Get-Command ok-beta.cmd -CommandType Application -ErrorAction SilentlyContinue
-if ($ok) { & $ok.Source mcp; exit $LASTEXITCODE }
-$npx = Get-Command npx.cmd -CommandType Application -ErrorAction SilentlyContinue
-if ($npx) { & $npx.Source -y '@inkeep/open-knowledge@beta' mcp; exit $LASTEXITCODE }
-$dirs = @()
-if ($env:ProgramFiles) { $dirs += Join-Path $env:ProgramFiles 'nodejs' }
-if ($env:NVM_SYMLINK) { $dirs += $env:NVM_SYMLINK }
-if ($env:LOCALAPPDATA) {
-  $dirs += Join-Path $env:LOCALAPPDATA 'fnm\\aliases\\default'
-  $dirs += Join-Path $env:LOCALAPPDATA 'Volta\\bin'
-  $dirs += Join-Path $env:LOCALAPPDATA 'pnpm'
-}
-if ($env:USERPROFILE) { $dirs += Join-Path $env:USERPROFILE 'scoop\\shims' }
-foreach ($d in $dirs) {
-  $probe = Join-Path $d 'npx.cmd'
-  if (Test-Path -LiteralPath $probe -PathType Leaf) { & $probe -y '@inkeep/open-knowledge@beta' mcp; exit $LASTEXITCODE }
-}
-[Console]::Error.WriteLine('OpenKnowledge: install Node.js 24+ (npm i -g @inkeep/open-knowledge@beta), then restart your editor')
 exit 127`;
 
 describe('per-channel MCP registration', () => {
@@ -160,34 +106,25 @@ describe('per-channel MCP registration', () => {
 
   it('stable chains are pinned byte-for-byte to the shipped launcher', () => {
     expect(CHAIN_V2).toBe(STABLE_UNIX_CHAIN);
-    expect(CHAIN_WIN_V1).toBe(STABLE_WIN_CHAIN);
     const unix = buildManagedServerEntry({ mode: 'published', platformName: 'darwin' });
-    const win = buildManagedServerEntry({ mode: 'published', platformName: 'win32' });
     expect((unix.args as string[])[2]).toBe(STABLE_UNIX_CHAIN);
-    expect((win.args as string[])[3]).toBe(STABLE_WIN_CHAIN);
   });
 
   it('beta chains are pinned byte-for-byte so no launch target falls back to stable', () => {
     vi.stubEnv('OK_CHANNEL', 'beta');
     const unix = buildManagedServerEntry({ mode: 'published', platformName: 'linux' });
-    const win = buildManagedServerEntry({ mode: 'published', platformName: 'win32' });
     expect((unix.args as string[])[2]).toBe(BETA_UNIX_CHAIN);
-    expect((win.args as string[])[3]).toBe(BETA_WIN_CHAIN);
   });
 
   it('each channel only counts its own chain as current and owned', () => {
     const stableEntry = buildManagedServerEntry({ mode: 'published', platformName: 'darwin' });
     vi.stubEnv('OK_CHANNEL', 'beta');
     const betaEntry = buildManagedServerEntry({ mode: 'published', platformName: 'darwin' });
-    const betaWin = buildManagedServerEntry({ mode: 'published', platformName: 'win32' });
 
     expect(isEntryUpToDate(betaEntry)).toBe(true);
     expect(isOwnManagedEntry(betaEntry)).toBe(true);
     expect(isEntryUpToDate(stableEntry)).toBe(false);
     expect(isOwnManagedEntry(stableEntry)).toBe(false);
-    expect((betaWin.args as string[])[3]).toMatch(/^# ok-mcp-beta-win-v1\n/);
-    expect((betaWin.args as string[])[3]).toContain('Get-Command ok-beta.cmd');
-    expect((betaWin.args as string[])[3].split('\n')[1]).toBe("$env:OK_CHANNEL = 'beta'");
     expect((betaEntry.args as string[])[2].split('\n')[1]).toBe('export OK_CHANNEL=beta');
 
     vi.stubEnv('OK_CHANNEL', 'stable');
@@ -259,7 +196,7 @@ describe('per-channel MCP registration', () => {
     expect(() => buildManagedServerEntry({ mode: 'published', platformName: 'darwin' })).toThrow(
       DEV_CHANNEL_LAUNCHER_REFUSAL,
     );
-    expect(() => buildManagedServerEntry({ mode: 'published', platformName: 'win32' })).toThrow(
+    expect(() => buildManagedServerEntry({ mode: 'published', platformName: 'linux' })).toThrow(
       DEV_CHANNEL_LAUNCHER_REFUSAL,
     );
     expect(() => buildPiExtensionSource({ mode: 'published' })).toThrow(

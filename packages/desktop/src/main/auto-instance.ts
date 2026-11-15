@@ -17,7 +17,6 @@ function runGit(args: readonly string[], dir: string): string | null {
       encoding: 'utf8',
       timeout: 2_000,
       stdio: ['ignore', 'pipe', 'ignore'],
-      windowsHide: true,
     }).trim();
     return out.length > 0 ? out : null;
   } catch {

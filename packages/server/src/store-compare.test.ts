@@ -184,17 +184,15 @@ describe('isTransientReadError', () => {
     ['EBUSY', 'linux', true],
     ['EAGAIN', 'darwin', true],
     ['EMFILE', 'linux', true],
-    ['EPERM', 'win32', true],
-    ['EACCES', 'win32', true],
     ['EPERM', 'linux', false],
     ['EACCES', 'darwin', false],
-    ['EISDIR', 'win32', false],
+    ['EISDIR', 'darwin', false],
   ] as const)('%s on %s is transient: %s', (code, platform, expected) => {
     expect(isTransientReadError(errno(code), platform)).toBe(expected);
   });
 
   test('an error without a code is not transient', () => {
-    expect(isTransientReadError(new Error('boom'), 'win32')).toBe(false);
+    expect(isTransientReadError(new Error('boom'), 'darwin')).toBe(false);
   });
 });
 

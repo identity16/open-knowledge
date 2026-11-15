@@ -89,51 +89,6 @@ describe('openTarget', () => {
     expect(capture.args).toEqual([target]);
   });
 
-  test('Windows ignores a desktopBundlePath — the option is darwin-only', async () => {
-    const capture: SpawnCapture = {};
-    const target = 'openknowledge://open?project=C%3A%5CUsers%5Cme%5Cnotes&doc=specs%2Flaunch';
-
-    const outcome = await openTarget(target, {
-      platform: 'win32',
-      desktopBundlePath: '/Applications/OpenKnowledge.app',
-      spawn: makeSpawn(capture, { type: 'spawn' }),
-    });
-
-    expect(outcome).toEqual({ ok: true });
-    expect(capture.command).toBe('rundll32.exe');
-    expect(capture.args).toEqual(['url.dll,FileProtocolHandler', target]);
-  });
-
-  test('Windows opens the complete URL without cmd.exe parsing ampersands', async () => {
-    const capture: SpawnCapture = {};
-    const target = 'openknowledge://open?project=C%3A%5CUsers%5Cme%5Cnotes&doc=specs%2Flaunch';
-
-    const outcome = await openTarget(target, {
-      platform: 'win32',
-      spawn: makeSpawn(capture, { type: 'spawn' }),
-    });
-
-    expect(outcome).toEqual({ ok: true });
-    expect(capture.command).toBe('rundll32.exe');
-    expect(capture.args).toEqual(['url.dll,FileProtocolHandler', target]);
-    expect(capture.options?.shell).toBe(false);
-  });
-
-  test('Windows preserves browser URL fragments through Explorer', async () => {
-    const capture: SpawnCapture = {};
-    const target = 'http://localhost:5173/#/specs/launch?mode=source&line=12';
-
-    const outcome = await openTarget(target, {
-      platform: 'win32',
-      spawn: makeSpawn(capture, { type: 'spawn' }),
-    });
-
-    expect(outcome).toEqual({ ok: true });
-    expect(capture.command).toBe('explorer.exe');
-    expect(capture.args).toEqual([target]);
-    expect(capture.options?.shell).toBe(false);
-  });
-
   test('Linux ignores a desktopBundlePath — the option is darwin-only', async () => {
     const capture: SpawnCapture = {};
     const target = 'openknowledge://open?project=%2FUsers%2Fme%2Fnotes&doc=specs%2Flaunch';

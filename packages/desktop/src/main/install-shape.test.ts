@@ -21,26 +21,6 @@ describe('classifyInstallShape', () => {
     });
   });
 
-  test('win32 NSIS layout → resources\\cli\\bin\\ok.cmd', () => {
-    const shape = classifyInstallShape(
-      'win32',
-      'C:\\Users\\u\\AppData\\Local\\Programs\\OpenKnowledge\\OpenKnowledge.exe',
-      {},
-    );
-    expect(shape).toEqual({
-      kind: 'windows',
-      installRoot: 'C:\\Users\\u\\AppData\\Local\\Programs\\OpenKnowledge',
-      wrapperPath:
-        'C:\\Users\\u\\AppData\\Local\\Programs\\OpenKnowledge\\resources\\cli\\bin\\ok.cmd',
-    });
-  });
-
-  test('win32 non-exe is unsupported', () => {
-    expect(classifyInstallShape('win32', 'C:\\weird\\electron', {})).toEqual({
-      kind: 'unsupported',
-    });
-  });
-
   test('linux deb layout → resources/cli/bin/ok.sh', () => {
     const shape = classifyInstallShape('linux', '/opt/OpenKnowledge/openknowledge', {});
     expect(shape).toEqual({
@@ -67,12 +47,6 @@ describe('wrapperPathInBundle per-platform layouts', () => {
     expect(
       wrapperPathInBundle('/Applications/OpenKnowledge.app/Contents/MacOS/OpenKnowledge', 'darwin'),
     ).toBe('/Applications/OpenKnowledge.app/Contents/Resources/cli/bin/ok.sh');
-  });
-
-  test('win32 maps beside the exe under resources\\', () => {
-    expect(wrapperPathInBundle('C:\\Programs\\OpenKnowledge\\OpenKnowledge.exe', 'win32')).toBe(
-      'C:\\Programs\\OpenKnowledge\\resources\\cli\\bin\\ok.cmd',
-    );
   });
 
   test('linux maps beside the executable under resources/', () => {

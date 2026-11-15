@@ -151,7 +151,6 @@ function hostSession(host: ModelledHost, token: string) {
       return () => {};
     }),
     onExit: vi.fn(() => () => {}),
-    onNotice: vi.fn(() => () => {}),
     claudePreflight: vi.fn(async () => ({ claude: 'present' as const })),
     cliPreflight: vi.fn(async () => ({ onPath: 'present' as const })),
   };

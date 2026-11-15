@@ -102,7 +102,7 @@ describe('buildNonDarwinChromeOpts', () => {
 
 describe('windowChromeOptsForKind', () => {
   test('a compact window keeps every shared default on every platform', () => {
-    for (const platform of ['darwin', 'win32', 'linux'] as const) {
+    for (const platform of ['darwin', 'linux'] as const) {
       expect(windowChromeOptsForKind('compact', platform, true)).toEqual({});
     }
     expect(TRAFFIC_LIGHT_POSITION).toEqual({ x: 22, y: 24 });
@@ -134,12 +134,12 @@ describe('windowChromeOptsForKind', () => {
     expect((position?.y ?? 0) + MACOS_TRAFFIC_LIGHT_DIAMETER_PX / 2).toBe(
       remToPx(APP_HEADER_HEIGHT) / 2,
     );
-    expect(windowChromeOptsForKind(SINGLE_FILE_WINDOW_CHROME_KIND, 'win32', true)).toEqual({
+    expect(windowChromeOptsForKind(SINGLE_FILE_WINDOW_CHROME_KIND, 'linux', true)).toEqual({
       titleBarOverlay: computeTitleBarOverlay(true, undefined, remToPx(APP_HEADER_HEIGHT)),
     });
   });
 
-  test.each(['win32', 'linux'] as const)(
+  test.each(['linux'] as const)(
     'an app-header window shrinks the %s overlay to the header height',
     (platform) => {
       expect(windowChromeOptsForKind('app-header', platform, true)).toEqual({
@@ -176,13 +176,6 @@ describe('applyThemeToWindow', () => {
     expect(calls.overlay).toHaveLength(0);
   });
 
-  test('win32 recolors background AND overlay', () => {
-    const { win, calls } = makeWin();
-    applyThemeToWindow(win, 'win32', true);
-    expect(calls.bg).toEqual([CHROME_BG.dark]);
-    expect(calls.overlay).toEqual([computeTitleBarOverlay(true)]);
-  });
-
   test('linux recolors background AND overlay', () => {
     const { win, calls } = makeWin();
     applyThemeToWindow(win, 'linux', false);
@@ -192,21 +185,21 @@ describe('applyThemeToWindow', () => {
 
   test('destroyed window is skipped entirely', () => {
     const { win, calls } = makeWin({ destroyed: true });
-    applyThemeToWindow(win, 'win32', true);
+    applyThemeToWindow(win, 'linux', true);
     expect(calls.bg).toHaveLength(0);
     expect(calls.overlay).toHaveLength(0);
   });
 
   test('an overlay-less window (setTitleBarOverlay throws) never propagates', () => {
     const { win, calls } = makeWin({ overlayThrows: true });
-    expect(() => applyThemeToWindow(win, 'win32', false)).not.toThrow();
+    expect(() => applyThemeToWindow(win, 'linux', false)).not.toThrow();
     expect(calls.bg).toEqual([CHROME_BG.light]);
   });
 
   test('a theme repaint keeps an app-header window on the header-sized overlay', () => {
     const { win, calls } = makeWin();
     rememberWindowChromeKind(win, 'app-header');
-    applyThemeToWindow(win, 'win32', true);
+    applyThemeToWindow(win, 'linux', true);
     expect(calls.overlay).toEqual([
       computeTitleBarOverlay(true, undefined, APP_HEADER_TITLEBAR_OVERLAY_HEIGHT),
     ]);
@@ -214,15 +207,8 @@ describe('applyThemeToWindow', () => {
 
   test('a theme repaint leaves an unregistered window on the shared 48px overlay', () => {
     const { win, calls } = makeWin();
-    applyThemeToWindow(win, 'win32', true);
+    applyThemeToWindow(win, 'linux', true);
     expect(calls.overlay).toEqual([computeTitleBarOverlay(true, undefined, 48)]);
-  });
-
-  test('win32 repaints background AND overlay from the live palette', () => {
-    const { win, calls } = makeWin();
-    applyThemeToWindow(win, 'win32', true, LIVE);
-    expect(calls.bg).toEqual([LIVE.bg]);
-    expect(calls.overlay).toEqual([computeTitleBarOverlay(true, LIVE)]);
   });
 
   test('linux repaints the background AND overlay from the live palette', () => {

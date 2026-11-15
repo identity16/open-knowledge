@@ -10,7 +10,6 @@ import type {
   OkPtyCreateResult,
   OkPtyData,
   OkPtyExit,
-  OkPtyNotice,
 } from '@/lib/desktop-bridge-types';
 import {
   __resetPaneVisibilityStoreForTests,
@@ -250,7 +249,6 @@ function makeBridge(
 ) {
   const dataSubs: Array<(m: OkPtyData) => void> = [];
   const exitSubs: Array<(m: OkPtyExit) => void> = [];
-  const noticeSubs: Array<(m: OkPtyNotice) => void> = [];
   const unsubData = vi.fn(() => {});
   const unsubExit = vi.fn(() => {});
   const unsubNotice = vi.fn(() => {});
@@ -286,10 +284,6 @@ function makeBridge(
       exitSubs.push(cb);
       return unsubExit;
     }),
-    onNotice: vi.fn((cb: (m: OkPtyNotice) => void) => {
-      noticeSubs.push(cb);
-      return unsubNotice;
-    }),
     claudePreflight: vi.fn(async () => preflight),
     cliPreflight: vi.fn(async () => ({ onPath: 'present' as const })),
   };
@@ -316,9 +310,6 @@ function makeBridge(
     },
     pushExit: (m: OkPtyExit) => {
       for (const f of exitSubs) f(m);
-    },
-    pushNotice: (m: OkPtyNotice) => {
-      for (const f of noticeSubs) f(m);
     },
   };
 }
@@ -1703,46 +1694,8 @@ describe('TerminalPanel', () => {
     expect(lastTerm?.write.mock.calls[0]?.[0]).toBe('mine');
   });
 
-  test('shows a translated pane notice when an invalid shell override is skipped', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
-      { ok: true, ptyId: 'pty-1' },
-      WIRED,
-      undefined,
-      'darwin',
-    );
-    render(<TerminalPanel bridge={bridge} />);
-    await waitFor(() => expect(terminal.onNotice).toHaveBeenCalledTimes(1));
-
-    act(() =>
-      pushNotice({ ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' }),
-    );
-
-    const banner = screen.getByTestId('terminal-shell-notice-banner');
-    expect(banner.textContent).toMatch(/terminal\.shell executable.*was not found/i);
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.queryByTestId('terminal-shell-notice-banner')).toBeNull();
-  });
-
-  test('does not lose a shell notice delivered before create resolves', async () => {
-    const h = makeBridge({ ok: true, ptyId: 'pty-1' }, WIRED);
-    h.terminal.create.mockImplementationOnce(async () => {
-      h.pushNotice({
-        ptyId: 'pty-1',
-        notice: 'invalid-shell-override',
-        reason: 'not-found',
-      });
-      return { ok: true as const, ptyId: 'pty-1' };
-    });
-
-    render(<TerminalPanel bridge={h.bridge} />);
-
-    expect((await screen.findByTestId('terminal-shell-notice-banner')).textContent).toMatch(
-      /terminal\.shell executable.*was not found/i,
-    );
-  });
-
-  test('a new launch clears shell and dropped-path notices from the previous session', async () => {
-    const { bridge, terminal, pushNotice } = makeBridge(
+  test('a new launch clears dropped-path notices from the previous session', async () => {
+    const { bridge, terminal } = makeBridge(
       { ok: true, ptyId: 'pty-1' },
       WIRED,
       undefined,
@@ -1753,11 +1706,8 @@ describe('TerminalPanel', () => {
     const { rerender } = render(
       <TerminalPanel bridge={bridge} launch={{ prompt: null, cli: 'claude', nonce: 1 }} />,
     );
-    await waitFor(() => expect(terminal.onNotice).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(terminal.onData).toHaveBeenCalledTimes(1));
 
-    act(() => {
-      pushNotice({ ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' });
-    });
     const container = document.querySelector('[data-terminal-status]');
     if (container === null) throw new Error('terminal container not found');
     fireEvent.drop(container, {
@@ -1769,7 +1719,6 @@ describe('TerminalPanel', () => {
 
     rerender(<TerminalPanel bridge={bridge} launch={{ prompt: null, cli: 'claude', nonce: 2 }} />);
     await waitFor(() => expect(terminal.create).toHaveBeenCalledTimes(2));
-    expect(screen.queryByTestId('terminal-shell-notice-banner')).toBeNull();
     expect(screen.queryByTestId('terminal-path-drop-notice-banner')).toBeNull();
   });
 
@@ -1830,7 +1779,6 @@ describe('TerminalPanel', () => {
       drain: vi.fn(() => {}),
       onData: vi.fn(() => vi.fn(() => {})),
       onExit: vi.fn(() => vi.fn(() => {})),
-      onNotice: vi.fn(() => vi.fn(() => {})),
     };
     const bridge = { terminal, config: { e2eSmoke: false } } as unknown as OkDesktopBridge;
 
@@ -2014,7 +1962,6 @@ describe('TerminalPanel', () => {
       drain: vi.fn(() => {}),
       onData: vi.fn(() => vi.fn(() => {})),
       onExit: vi.fn(() => vi.fn(() => {})),
-      onNotice: vi.fn(() => vi.fn(() => {})),
       claudePreflight: vi.fn(async () => WIRED),
       cliPreflight: vi.fn(async () => ({ onPath: 'present' as const })),
     };
@@ -2335,7 +2282,6 @@ describe('TerminalPanel', () => {
         exitSubs.push(cb);
         return vi.fn(() => {});
       }),
-      onNotice: vi.fn(() => vi.fn(() => {})),
       claudePreflight: vi.fn(async () => WIRED),
     };
     const bridge = {

@@ -16,8 +16,7 @@ export function wellKnownToolDirs(platform: NodeJS.Platform, homeDir: string): r
         `${homeDir}/.asdf/shims`,
         `${homeDir}/.local/share/mise/shims`,
       ];
-    case 'win32':
-      return [];
+
     default:
       return [
         '/usr/local/bin',
@@ -64,8 +63,7 @@ export function agentToolDirs(platform: NodeJS.Platform, homeDir: string): reado
         `${homeDir}/.yarn/bin`,
         `${homeDir}/.npm-global/bin`,
       ];
-    case 'win32':
-      return [];
+
     default:
       return [
         `${homeDir}/.local/share/pnpm`,

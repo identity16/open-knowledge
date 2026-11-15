@@ -226,18 +226,6 @@ describe('buildUninstallPlan ordering', () => {
       ],
     },
     {
-      platform: 'win32' as const,
-      home: 'C:\\Users\\x',
-      env: {
-        APPDATA: 'C:\\Users\\x\\AppData\\Roaming',
-        LOCALAPPDATA: 'C:\\Users\\x\\AppData\\Local',
-      },
-      expected: [
-        'C:\\Users\\x\\AppData\\Roaming\\OpenKnowledge',
-        `C:\\Users\\x\\AppData\\Local\\${DESKTOP_UPDATER_CACHE_DIR_NAME}`,
-      ],
-    },
-    {
       platform: 'linux' as const,
       home: '/home/x',
       env: { XDG_CONFIG_HOME: '/xdg/config', XDG_CACHE_HOME: '/xdg/cache' },
@@ -725,7 +713,7 @@ describe('pi trust revocation surfaces through the removal plan', () => {
     }
   });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0).each([true, false])(
+  test.skipIf(process.getuid?.() === 0).each([true, false])(
     'reports bridge deletion failure after trust cleanup with shared resources: %s',
     async (shared) => {
       const cwd = realpathSync(mkdtempSync(join(tmpdir(), 'ok-pi-removal-')));
@@ -788,45 +776,42 @@ describe('pi trust revocation surfaces through the removal plan', () => {
     }
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'quotes resource names, escapes terminal controls, and bounds the retained-resource list',
-    async () => {
-      const cwd = realpathSync(mkdtempSync(join(tmpdir(), 'ok-pi-removal-')));
-      const home = realpathSync(mkdtempSync(join(tmpdir(), 'ok-pi-removal-home-')));
-      try {
-        await ensurePiBridge(cwd, { mode: 'published' }, home);
-        const name = '\u001b[2K\rforged\nnotice\u0085\u2028\u2029\u202e.ts';
-        const commaName = 'a.ts, tailwind.ts';
-        const adviceName = 'b.ts. This "grant" is safe to remove.ts';
-        const names = [name, commaName, adviceName, 'c.ts', 'd.ts'];
-        const trustPath = join(home, '.pi', 'agent', 'trust.json');
-        const trustBefore = readFileSync(trustPath, 'utf8');
-        for (const filename of names) {
-          write(join(cwd, '.pi', 'extensions', filename), '');
-        }
-        const outcome = await runRemoval({ ops: [piOp(cwd, home)] }, stubDeps());
-        const detail = outcome.results[0]?.detail;
-        expect(outcome.results[0]?.status).toBe('removed');
-        expect(detail).toContain('\\u001b[2K\\rforged\\nnotice\\u0085\\u2028\\u2029\\u202e.ts');
-        expect(detail).toContain(JSON.stringify(join(cwd, '.pi', 'extensions', commaName)));
-        expect(detail).toContain(JSON.stringify(join(cwd, '.pi', 'extensions', adviceName)));
-        expect(detail).not.toMatch(/[\p{Cc}\p{Zl}\p{Zp}]/u);
-        expect(detail).not.toContain('\u202e');
-        expect(detail).toContain('(+2 more)');
-        expect(detail).not.toContain(join(cwd, '.pi', 'extensions', 'c.ts'));
-        const rendered = formatRemovalOutcome(outcome);
-        expect(rendered).toContain(detail);
-        expect(rendered).not.toContain('\u001b[2K');
-        expect(rendered).not.toContain(name);
-        expect(readFileSync(trustPath, 'utf8')).toBe(trustBefore);
-        for (const filename of names)
-          expect(readFileSync(join(cwd, '.pi', 'extensions', filename), 'utf8')).toBe('');
-      } finally {
-        rmSync(cwd, { recursive: true, force: true });
-        rmSync(home, { recursive: true, force: true });
+  test('quotes resource names, escapes terminal controls, and bounds the retained-resource list', async () => {
+    const cwd = realpathSync(mkdtempSync(join(tmpdir(), 'ok-pi-removal-')));
+    const home = realpathSync(mkdtempSync(join(tmpdir(), 'ok-pi-removal-home-')));
+    try {
+      await ensurePiBridge(cwd, { mode: 'published' }, home);
+      const name = '\u001b[2K\rforged\nnotice\u0085\u2028\u2029\u202e.ts';
+      const commaName = 'a.ts, tailwind.ts';
+      const adviceName = 'b.ts. This "grant" is safe to remove.ts';
+      const names = [name, commaName, adviceName, 'c.ts', 'd.ts'];
+      const trustPath = join(home, '.pi', 'agent', 'trust.json');
+      const trustBefore = readFileSync(trustPath, 'utf8');
+      for (const filename of names) {
+        write(join(cwd, '.pi', 'extensions', filename), '');
       }
-    },
-  );
+      const outcome = await runRemoval({ ops: [piOp(cwd, home)] }, stubDeps());
+      const detail = outcome.results[0]?.detail;
+      expect(outcome.results[0]?.status).toBe('removed');
+      expect(detail).toContain('\\u001b[2K\\rforged\\nnotice\\u0085\\u2028\\u2029\\u202e.ts');
+      expect(detail).toContain(JSON.stringify(join(cwd, '.pi', 'extensions', commaName)));
+      expect(detail).toContain(JSON.stringify(join(cwd, '.pi', 'extensions', adviceName)));
+      expect(detail).not.toMatch(/[\p{Cc}\p{Zl}\p{Zp}]/u);
+      expect(detail).not.toContain('\u202e');
+      expect(detail).toContain('(+2 more)');
+      expect(detail).not.toContain(join(cwd, '.pi', 'extensions', 'c.ts'));
+      const rendered = formatRemovalOutcome(outcome);
+      expect(rendered).toContain(detail);
+      expect(rendered).not.toContain('\u001b[2K');
+      expect(rendered).not.toContain(name);
+      expect(readFileSync(trustPath, 'utf8')).toBe(trustBefore);
+      for (const filename of names)
+        expect(readFileSync(join(cwd, '.pi', 'extensions', filename), 'utf8')).toBe('');
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
 
   test.each(['unrecorded', 'pending'] as const)(
     'explains %s trust retention in human and JSON output without changing the grant',
@@ -882,45 +867,42 @@ describe('pi trust revocation surfaces through the removal plan', () => {
     }
   });
 
-  test.skipIf(process.platform === 'win32')(
-    'retains Pi trust and project state when the bridge symlink has no target',
-    async () => {
-      const home = mkdtempSync(join(tmpdir(), 'ok-pi-missing-'));
-      const cwd = join(home, 'project');
-      try {
-        write(join(cwd, '.ok', 'config.yml'), '{}');
-        await ensurePiBridge(cwd, { mode: 'published' }, home);
-        const op = piOp(cwd, home);
-        const bridge = readFileSync(op.configPath, 'utf8');
-        const trustPath = join(home, '.pi', 'agent', 'trust.json');
-        const trust = readFileSync(trustPath, 'utf8');
-        rmSync(op.configPath);
-        symlinkSync(join(home, 'missing-bridge.ts'), op.configPath);
-        const outcome = await runRemoval({ ops: deinitOps(cwd, home) }, stubDeps());
-        expect(outcome.failed[0]?.op).toMatchObject({ kind: 'mcp-entry', editorId: 'pi' });
-        expect(outcome.failed[0]?.detail).toContain('missing symlink target');
-        expect(outcome.failed[0]?.detail).toContain(
-          "Pi's separate folder trust grant has not been checked or removed",
-        );
-        expect(outcome.failed[0]?.detail).toContain(
-          `Restore the missing target of the OpenKnowledge bridge symlink at ${op.configPath}`,
-        );
-        expect(lstatSync(op.configPath).isSymbolicLink()).toBe(true);
-        expect(readFileSync(trustPath, 'utf8')).toBe(trust);
-        expect(readFileSync(join(cwd, '.ok', 'config.yml'), 'utf8')).toBe('{}');
-        writeFileSync(join(home, 'missing-bridge.ts'), bridge);
-        const retry = await runRemoval({ ops: deinitOps(cwd, home) }, stubDeps());
-        expect(retry.failed).toHaveLength(0);
-        expect(probePiBridgeState(cwd, home).trust).toBe('untrusted');
-        expect(existsSync(op.configPath)).toBe(false);
-        expect(existsSync(join(cwd, '.ok'))).toBe(false);
-      } finally {
-        rmSync(home, { recursive: true, force: true });
-      }
-    },
-  );
+  test('retains Pi trust and project state when the bridge symlink has no target', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'ok-pi-missing-'));
+    const cwd = join(home, 'project');
+    try {
+      write(join(cwd, '.ok', 'config.yml'), '{}');
+      await ensurePiBridge(cwd, { mode: 'published' }, home);
+      const op = piOp(cwd, home);
+      const bridge = readFileSync(op.configPath, 'utf8');
+      const trustPath = join(home, '.pi', 'agent', 'trust.json');
+      const trust = readFileSync(trustPath, 'utf8');
+      rmSync(op.configPath);
+      symlinkSync(join(home, 'missing-bridge.ts'), op.configPath);
+      const outcome = await runRemoval({ ops: deinitOps(cwd, home) }, stubDeps());
+      expect(outcome.failed[0]?.op).toMatchObject({ kind: 'mcp-entry', editorId: 'pi' });
+      expect(outcome.failed[0]?.detail).toContain('missing symlink target');
+      expect(outcome.failed[0]?.detail).toContain(
+        "Pi's separate folder trust grant has not been checked or removed",
+      );
+      expect(outcome.failed[0]?.detail).toContain(
+        `Restore the missing target of the OpenKnowledge bridge symlink at ${op.configPath}`,
+      );
+      expect(lstatSync(op.configPath).isSymbolicLink()).toBe(true);
+      expect(readFileSync(trustPath, 'utf8')).toBe(trust);
+      expect(readFileSync(join(cwd, '.ok', 'config.yml'), 'utf8')).toBe('{}');
+      writeFileSync(join(home, 'missing-bridge.ts'), bridge);
+      const retry = await runRemoval({ ops: deinitOps(cwd, home) }, stubDeps());
+      expect(retry.failed).toHaveLength(0);
+      expect(probePiBridgeState(cwd, home).trust).toBe('untrusted');
+      expect(existsSync(op.configPath)).toBe(false);
+      expect(existsSync(join(cwd, '.ok'))).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
 
-  test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  test.skipIf(process.getuid?.() === 0)(
     'retains the bridge and reports why trust cannot be checked until permissions are repaired',
     async () => {
       const cwd = mkdtempSync(join(tmpdir(), 'ok-pi-removal-'));
@@ -994,7 +976,7 @@ describe.each(['mcp', 'launch', 'shell'] as const)(
       }
     });
 
-    test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+    test.skipIf(process.getuid?.() === 0)(
       'names read permission failures and leaves the existing configuration intact',
       async () => {
         const dir = mkdtempSync(join(tmpdir(), 'ok-config-decline-'));
@@ -1017,31 +999,28 @@ describe.each(['mcp', 'launch', 'shell'] as const)(
       },
     );
 
-    test.skipIf(process.platform === 'win32').each(['dangling', 'cycle'])(
-      'reports a %s symlink while preserving it',
-      async (kind) => {
-        const dir = mkdtempSync(join(tmpdir(), 'ok-config-decline-'));
-        try {
-          const { op, path } = configOp(dir);
-          symlinkSync(kind === 'cycle' ? path : join(dir, 'missing'), path);
-          const outcome = await runRemoval({ scope: 'deinit', ops: [op] }, stubDeps());
-          if (kind === 'dangling') {
-            expect(outcome.failed).toHaveLength(0);
-            expect(outcome.results[0]?.status).toBe('skipped');
-            expect(formatRemovalOutcome(outcome)).toContain('left the dangling');
-            const json = removalOutcomeToJson('deinit', outcome);
-            expect(json.mode === 'applied' && json.skipped[0]?.detail).toContain('no target file');
-          } else {
-            expect(outcome.failed[0]?.detail).toContain('symlink cycle');
-            expect(outcome.failed[0]?.detail).toContain('then retry');
-          }
-          expect(lstatSync(path).isSymbolicLink()).toBe(true);
-          expect(existsSync(join(dir, 'missing'))).toBe(false);
-        } finally {
-          rmSync(dir, { recursive: true, force: true });
+    test.each(['dangling', 'cycle'])('reports a %s symlink while preserving it', async (kind) => {
+      const dir = mkdtempSync(join(tmpdir(), 'ok-config-decline-'));
+      try {
+        const { op, path } = configOp(dir);
+        symlinkSync(kind === 'cycle' ? path : join(dir, 'missing'), path);
+        const outcome = await runRemoval({ scope: 'deinit', ops: [op] }, stubDeps());
+        if (kind === 'dangling') {
+          expect(outcome.failed).toHaveLength(0);
+          expect(outcome.results[0]?.status).toBe('skipped');
+          expect(formatRemovalOutcome(outcome)).toContain('left the dangling');
+          const json = removalOutcomeToJson('deinit', outcome);
+          expect(json.mode === 'applied' && json.skipped[0]?.detail).toContain('no target file');
+        } else {
+          expect(outcome.failed[0]?.detail).toContain('symlink cycle');
+          expect(outcome.failed[0]?.detail).toContain('then retry');
         }
-      },
-    );
+        expect(lstatSync(path).isSymbolicLink()).toBe(true);
+        expect(existsSync(join(dir, 'missing'))).toBe(false);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
   },
 );
 
@@ -1175,65 +1154,59 @@ describe('describeAttachedClients', () => {
 });
 
 describe('safe uninstall cleanup', () => {
-  test.skipIf(process.platform === 'win32')(
-    'identifies each dangling config when two projects have matching relative paths',
-    async () => {
-      const home = mkdtempSync(join(tmpdir(), 'ok-dangling-projects-'));
-      try {
-        const projects = [join(home, 'one'), join(home, 'two')];
-        const paths: string[] = [];
-        for (const project of projects) {
-          for (const relativePath of ['.mcp.json', '.claude/launch.json']) {
-            const path = join(project, relativePath);
-            mkdirSync(dirname(path), { recursive: true });
-            symlinkSync(join(home, 'missing-config.json'), path);
-            paths.push(path);
-          }
-        }
-        const outcome = await runRemoval(
-          { ops: projects.flatMap((project) => deinitOps(project, home)) },
-          stubDeps(),
-        );
-        expect(outcome.failed).toHaveLength(0);
-        const text = formatRemovalOutcome(outcome);
-        const json = removalOutcomeToJson('uninstall', outcome);
-        for (const path of paths) {
-          expect(text).toContain(path);
-          expect(
-            json.mode === 'applied' && json.skipped.some((item) => item.detail?.includes(path)),
-          ).toBe(true);
-          expect(lstatSync(path).isSymbolicLink()).toBe(true);
-        }
-      } finally {
-        rmSync(home, { recursive: true, force: true });
-      }
-    },
-  );
-
-  test.skipIf(process.platform === 'win32')(
-    'preserves dangling editor and launch links without retaining unrelated project state',
-    async () => {
-      const home = mkdtempSync(join(tmpdir(), 'ok-dangling-configs-'));
-      const project = join(home, 'project');
-      try {
-        write(join(project, '.ok', 'config.yml'), '{}');
-        write(join(project, 'notes.md'), '# My notes\n');
-        const paths = [join(project, '.mcp.json'), join(project, '.claude', 'launch.json')];
-        for (const path of paths) {
+  test('identifies each dangling config when two projects have matching relative paths', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'ok-dangling-projects-'));
+    try {
+      const projects = [join(home, 'one'), join(home, 'two')];
+      const paths: string[] = [];
+      for (const project of projects) {
+        for (const relativePath of ['.mcp.json', '.claude/launch.json']) {
+          const path = join(project, relativePath);
           mkdirSync(dirname(path), { recursive: true });
           symlinkSync(join(home, 'missing-config.json'), path);
+          paths.push(path);
         }
-        const outcome = await runRemoval({ ops: deinitOps(project, home) }, stubDeps());
-        expect(outcome.failed).toHaveLength(0);
-        expect(existsSync(join(project, '.ok'))).toBe(false);
-        expect(readFileSync(join(project, 'notes.md'), 'utf8')).toBe('# My notes\n');
-        for (const path of paths) expect(lstatSync(path).isSymbolicLink()).toBe(true);
-        expect(formatRemovalOutcome(outcome)).toContain('no target file');
-      } finally {
-        rmSync(home, { recursive: true, force: true });
       }
-    },
-  );
+      const outcome = await runRemoval(
+        { ops: projects.flatMap((project) => deinitOps(project, home)) },
+        stubDeps(),
+      );
+      expect(outcome.failed).toHaveLength(0);
+      const text = formatRemovalOutcome(outcome);
+      const json = removalOutcomeToJson('uninstall', outcome);
+      for (const path of paths) {
+        expect(text).toContain(path);
+        expect(
+          json.mode === 'applied' && json.skipped.some((item) => item.detail?.includes(path)),
+        ).toBe(true);
+        expect(lstatSync(path).isSymbolicLink()).toBe(true);
+      }
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
+
+  test('preserves dangling editor and launch links without retaining unrelated project state', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'ok-dangling-configs-'));
+    const project = join(home, 'project');
+    try {
+      write(join(project, '.ok', 'config.yml'), '{}');
+      write(join(project, 'notes.md'), '# My notes\n');
+      const paths = [join(project, '.mcp.json'), join(project, '.claude', 'launch.json')];
+      for (const path of paths) {
+        mkdirSync(dirname(path), { recursive: true });
+        symlinkSync(join(home, 'missing-config.json'), path);
+      }
+      const outcome = await runRemoval({ ops: deinitOps(project, home) }, stubDeps());
+      expect(outcome.failed).toHaveLength(0);
+      expect(existsSync(join(project, '.ok'))).toBe(false);
+      expect(readFileSync(join(project, 'notes.md'), 'utf8')).toBe('# My notes\n');
+      for (const path of paths) expect(lstatSync(path).isSymbolicLink()).toBe(true);
+      expect(formatRemovalOutcome(outcome)).toContain('no target file');
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
 
   test('explains recovery for a permanently missing Git directory and permits cleanup after manual repair', async () => {
     const home = mkdtempSync(join(tmpdir(), 'ok-orphaned-worktree-'));
@@ -1352,27 +1325,22 @@ describe('safe uninstall cleanup', () => {
 });
 
 describe('shell configuration symlinks', () => {
-  test.skipIf(process.platform === 'win32')(
-    'preserves a dangling shell symlink without retaining unrelated uninstall state',
-    async () => {
-      const home = mkdtempSync(join(tmpdir(), 'ok-shell-missing-'));
-      try {
-        seedHome(home);
-        const rcFile = join(home, '.zshrc');
-        rmSync(rcFile);
-        symlinkSync(join(home, 'missing-dotfiles', 'zshrc'), rcFile);
-        const outcome = await runRemoval(buildUninstallPlan(baseInput(home)), stubDeps());
-        expect(outcome.failed).toHaveLength(0);
-        expect(lstatSync(rcFile).isSymbolicLink()).toBe(true);
-        expect(existsSync(join(home, '.ok', 'auth.yml'))).toBe(false);
-        expect(formatRemovalOutcome(outcome)).toContain(
-          'left the dangling shell symlink untouched',
-        );
-      } finally {
-        rmSync(home, { recursive: true, force: true });
-      }
-    },
-  );
+  test('preserves a dangling shell symlink without retaining unrelated uninstall state', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'ok-shell-missing-'));
+    try {
+      seedHome(home);
+      const rcFile = join(home, '.zshrc');
+      rmSync(rcFile);
+      symlinkSync(join(home, 'missing-dotfiles', 'zshrc'), rcFile);
+      const outcome = await runRemoval(buildUninstallPlan(baseInput(home)), stubDeps());
+      expect(outcome.failed).toHaveLength(0);
+      expect(lstatSync(rcFile).isSymbolicLink()).toBe(true);
+      expect(existsSync(join(home, '.ok', 'auth.yml'))).toBe(false);
+      expect(formatRemovalOutcome(outcome)).toContain('left the dangling shell symlink untouched');
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  });
 
   test.each(['alias ll="ls -la"\n', ''])(
     'keeps the symlink and destination after stripping the managed block with remaining content %j',

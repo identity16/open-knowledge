@@ -569,14 +569,7 @@ function ReportBugDialog({
                               user journal in the past week, each message cut to 200 characters.
                             </Trans>
                           )}
-                          {desktopPlatform === 'win32' && (
-                            <Trans>
-                              It also adds the crash and hang records Windows logged for
-                              OpenKnowledge in the past week, without file paths, and the times of
-                              every shutdown, restart, power loss, and low-memory warning on this
-                              computer in that week, whatever caused them.
-                            </Trans>
-                          )}{' '}
+                          {false}{' '}
                           {isMacOS && (
                             <Trans>
                               It also adds the crash reports macOS recorded for OpenKnowledge and

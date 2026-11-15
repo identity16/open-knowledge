@@ -16,14 +16,9 @@ import { expect, test } from './_helpers/smoke-test';
 import { waitForShellReady } from './_helpers/terminal-ready';
 import {
   buildInputReadyProbe,
-  readWindowsShellProfileFailure,
   seedTerminalShellProfiles,
   terminalSmokeEnvironment,
   terminalSmokeShellCommands,
-  WINDOWS_PSREADLINE_PREDICTION_UNSUPPORTED,
-  type WindowsPSReadLineStateField,
-  windowsPSReadLineStateCommand,
-  windowsPSReadLineStateField,
 } from './_helpers/terminal-smoke-shell';
 import {
   expectTerminalTabOrder,
@@ -39,7 +34,6 @@ const TARGET = resolveDesktopTarget();
 
 const SMOKE_ENABLED = process.env.OK_DESKTOP_E2E_SMOKE === '1';
 const PRIMARY_MODIFIER = process.platform === 'darwin' ? 'Meta' : 'Control';
-const WINDOWS = process.platform === 'win32';
 const SHELL_COMMANDS = terminalSmokeShellCommands();
 
 interface Seed {
@@ -391,48 +385,6 @@ test.describe('Terminal tabs — live Electron', () => {
     await expect(terminalTabs(page)).toHaveText(['LATER_TITLE_XXX'], { timeout: 5_000 });
   });
 
-  test('the seeded profile pins the shell’s PSReadLine state inside the run home', async ({
-    captureStderrFor,
-  }) => {
-    test.setTimeout(sumOfDeclaredBoundsMs(test.info()));
-    test.skip(!WINDOWS, 'PSReadLine state only exists on the Windows shell rungs.');
-    const s = seed('psreadline-state');
-    const app = await launchApp(s);
-    captureStderrFor(app, { home: s.tmpHome, cleanupDirs: [s.tmpHome, s.projectDir] });
-    const page = await findEditorWindow(app);
-    await configureDesktopGitRepositories(page, s.projectDir);
-    await openTerminal(app, page);
-
-    expect(
-      readWindowsShellProfileFailure(s.tmpHome),
-      'kind "record" is the seeded profile reporting its own failure; kind "unreadable" is a runner fault reading the harness log, not evidence about the profile',
-    ).toEqual({ kind: 'absent' });
-
-    const marker = `PSRL_STATE_${Date.now().toString(36)}`;
-    const stateField = async (field: WindowsPSReadLineStateField): Promise<string | null> =>
-      windowsPSReadLineStateField(marker, await readActiveText(page), field);
-    await typeInActive(page, `${windowsPSReadLineStateCommand(marker, s.tmpHome)}\r`);
-
-    await expect
-      .poll(() => stateField('version'), {
-        message: 'the shell reported no loaded PSReadLine for the profile to configure',
-        timeout: 15_000,
-      })
-      .toMatch(/^\d+\.\d+/);
-    await expect
-      .poll(() => stateField('history'), {
-        message: 'the PSReadLine history file resolved outside the run home',
-        timeout: 5_000,
-      })
-      .toBe('True');
-    await expect
-      .poll(() => stateField('prediction'), {
-        message: 'inline prediction stayed on, so other tests can bleed into the scraped buffer',
-        timeout: 5_000,
-      })
-      .toMatch(new RegExp(`^(None|${WINDOWS_PSREADLINE_PREDICTION_UNSUPPORTED})$`));
-  });
-
   test('keyboard reorder changes order, keeps sticky numbers, and preserves the live shell', async ({
     captureStderrFor,
   }) => {
@@ -445,9 +397,7 @@ test.describe('Terminal tabs — live Electron', () => {
     await openTerminal(app, page);
 
     await typeInActive(page, `${SHELL_COMMANDS.setEnvironment('OK_TABMARK', 'SURVIVED_888')}\r`);
-    if (!WINDOWS) {
-      await typeInActive(page, `${SHELL_COMMANDS.output('BEFORE_REORDER_DDD')}\r`);
-    }
+    await typeInActive(page, `${SHELL_COMMANDS.output('BEFORE_REORDER_DDD')}\r`);
     const beforeReorder = buildInputReadyProbe();
     await typeInActive(page, `${beforeReorder.command}\r`);
     await expect
@@ -466,16 +416,12 @@ test.describe('Terminal tabs — live Electron', () => {
     await page.keyboard.press(`${PRIMARY_MODIFIER}+Shift+ArrowRight`);
 
     await expectTerminalTabOrder(page, [secondTabId, firstTabId]);
-    if (process.platform !== 'win32') {
-      await expect(terminalTabs(page)).toHaveText(['Terminal 2', 'Terminal 1']);
-    }
+    await expect(terminalTabs(page)).toHaveText(['Terminal 2', 'Terminal 1']);
 
     await expect(terminalTabById(page, firstTabId)).toHaveAttribute('aria-selected', 'true');
-    if (!WINDOWS) {
-      await expect
-        .poll(() => readActiveText(page), { timeout: 15_000 })
-        .toContain('BEFORE_REORDER_DDD');
-    }
+    await expect
+      .poll(() => readActiveText(page), { timeout: 15_000 })
+      .toContain('BEFORE_REORDER_DDD');
     await typeInActive(page, `${SHELL_COMMANDS.readEnvironment('OK_TABMARK', 'mk')}\r`);
     await expect
       .poll(() => readActiveText(page), { timeout: 15_000 })
@@ -497,9 +443,7 @@ test.describe('Terminal tabs — live Electron', () => {
       page,
       `${SHELL_COMMANDS.setEnvironment('OK_DRAGMARK', 'DRAG_SURVIVED_444')}\r`,
     );
-    if (!WINDOWS) {
-      await typeInActive(page, `${SHELL_COMMANDS.output('BEFORE_DRAG_EEE')}\r`);
-    }
+    await typeInActive(page, `${SHELL_COMMANDS.output('BEFORE_DRAG_EEE')}\r`);
     const beforeDrag = buildInputReadyProbe();
     await typeInActive(page, `${beforeDrag.command}\r`);
     await expect.poll(() => readActiveText(page), { timeout: 15_000 }).toContain(beforeDrag.marker);
@@ -513,15 +457,11 @@ test.describe('Terminal tabs — live Electron', () => {
     await dragTabOnto(page, terminalTabById(page, firstTabId), terminalTabById(page, secondTabId));
 
     await expectTerminalTabOrder(page, [secondTabId, firstTabId]);
-    if (process.platform !== 'win32') {
-      await expect(terminalTabs(page)).toHaveText(['Terminal 2', 'Terminal 1']);
-    }
+    await expect(terminalTabs(page)).toHaveText(['Terminal 2', 'Terminal 1']);
 
     await activateTab(terminalTabById(page, firstTabId));
     await visibleSection(page).locator('.xterm').click();
-    if (!WINDOWS) {
-      expect(await readActiveText(page)).toContain('BEFORE_DRAG_EEE');
-    }
+    expect(await readActiveText(page)).toContain('BEFORE_DRAG_EEE');
     await typeInActive(page, `${SHELL_COMMANDS.readEnvironment('OK_DRAGMARK', 'dm')}\r`);
     await expect
       .poll(() => readActiveText(page), { timeout: 15_000 })
@@ -543,10 +483,7 @@ test.describe('Terminal tabs — live Electron', () => {
       throw new Error('two terminal tabs were not created');
     }
     await renameTerminalTab(page, terminalTabById(page, firstTabId), 'build');
-    const secondLabel = process.platform === 'win32' ? 'shell' : 'Terminal 2';
-    if (process.platform === 'win32') {
-      await renameTerminalTab(page, terminalTabById(page, secondTabId), secondLabel);
-    }
+    const secondLabel = 'Terminal 2';
     await dragTabOnto(page, terminalTabById(page, firstTabId), terminalTabById(page, secondTabId));
     await expectTerminalTabOrder(page, [secondTabId, firstTabId]);
 

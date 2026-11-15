@@ -35,11 +35,8 @@ export async function stopServerForRemoval(
     options.isAlive ?? ((pid: number) => isLockProcessRunning(pid, probeOptions(pid)));
   const hasProcessEntry = options.isAlive ?? isProcessAlive;
   const platform = options.platform ?? process.platform;
-  const readHolderStart = (
-    pid: number,
-    onNativeFailure?: HolderProcessStartOptions['onNativeFailure'],
-  ): ProcessStart | null =>
-    (options.readProcessStart ?? readHolderProcessStart)(pid, { platform, onNativeFailure });
+  const readHolderStart = (pid: number): ProcessStart | null =>
+    (options.readProcessStart ?? readHolderProcessStart)(pid, { platform });
   const state = inspectLock(lockDir, 'server', { isAlive, readProcessStart: readHolderStart });
   const lockRecovery =
     'Quit OpenKnowledge and stop any OpenKnowledge server processes. ' +
@@ -145,7 +142,7 @@ export async function stopServerForRemoval(
     lockDir,
     inspect: () => state,
     isAlive,
-    readProcessStart: (pid, readOptions) => readHolderStart(pid, readOptions?.onNativeFailure),
+    readProcessStart: readHolderStart,
     platform,
     force: true,
     refuseHolderStartedAfterLock: true,
@@ -177,7 +174,6 @@ export async function stopServerForRemoval(
             unverified,
             'it was not signalled.',
             `Once you have confirmed no OpenKnowledge server is running for this project, remove ${unverified.lockPath} and retry cleanup.`,
-            getCliLogger() !== undefined,
           ),
         );
     }

@@ -309,11 +309,7 @@ export async function startGitHubStandIn(options: {
     encoding: 'utf8',
     env: hermeticGitEnv(options.root),
   }).trim();
-  if (
-    !['git-http-backend', 'git-http-backend.exe'].some((name) =>
-      existsSync(join(gitExecPath, name)),
-    )
-  ) {
+  if (!existsSync(join(gitExecPath, 'git-http-backend'))) {
     throw new Error(
       `git http-backend is not installed in ${gitExecPath}; the GitHub stand-in serves pushes through it`,
     );

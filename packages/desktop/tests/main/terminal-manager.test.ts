@@ -1,4 +1,3 @@
-import { TERMINAL_SHELL_NOTICE_REASONS } from '@inkeep/open-knowledge-core/desktop-bridge';
 import { describe, expect, test, vi } from 'vitest';
 import {
   clampPtyDimension,
@@ -82,12 +81,6 @@ function makeManager(over?: Partial<TerminalManagerDeps>) {
     },
     sendExit: (_wc, payload) => {
       sent.push({ channel: 'ok:pty:exit', payload: payload as unknown as Record<string, unknown> });
-    },
-    sendNotice: (_wc, payload) => {
-      sent.push({
-        channel: 'ok:pty:notice',
-        payload: payload as unknown as Record<string, unknown>,
-      });
     },
     newPtyId: () => `pty-${++idn}`,
     setTimer: (cb, ms) => {
@@ -548,7 +541,7 @@ describe('createTerminalManager — create', () => {
     ]);
   });
 
-  test('forwards configured and invalid shell override state to the host resolver', () => {
+  test('forwards an explicit shell override to the host resolver', () => {
     const h = makeManager();
     const wc = makeWebContents();
     createStartedTerminal(h.mgr, {
@@ -557,8 +550,7 @@ describe('createTerminalManager — create', () => {
       projectRoot: PROJECT,
       cols: 80,
       rows: 24,
-      shell: 'C:\\Tools\\pwsh.exe',
-      shellInvalidReason: 'invalid-value',
+      shell: '/bin/bash',
     });
 
     expect(h.forked[0]?.posted[0]).toEqual({
@@ -567,148 +559,8 @@ describe('createTerminalManager — create', () => {
       cwd: PROJECT,
       cols: 80,
       rows: 24,
-      shell: 'C:\\Tools\\pwsh.exe',
-      shellInvalidReason: 'invalid-value',
+      shell: '/bin/bash',
     });
-  });
-
-  test('forwards an invalid-override notice only to the addressed renderer session', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'invalid-shell-override',
-      reason: 'not-found',
-    });
-
-    expect(h.sent).toContainEqual({
-      channel: 'ok:pty:notice',
-      payload: { ptyId: 'pty-1', notice: 'invalid-shell-override', reason: 'not-found' },
-    });
-  });
-
-  test('does not mark a shell notice as PTY data received, and marks the data that follows it', () => {
-    const trace = tracedRecords();
-    const h = makeManager({ phaseTrace: trace.phaseTrace });
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'invalid-shell-override',
-      reason: 'not-found',
-    });
-
-    expect(trace.records.some((record) => record.phase === 'utility-data-received')).toBe(false);
-
-    h.forked[0]?.emitMessage({ type: 'data', ptyId: 'pty-1', data: 'prompt$ ' });
-
-    expect(trace.stable().filter((record) => record.phase === 'utility-data-received')).toEqual([
-      mainPhase('utility-data-received', 'point', {
-        windowId: 1,
-        ptyId: 'pty-1',
-        currentSession: true,
-      }),
-    ]);
-  });
-
-  test.each([...TERMINAL_SHELL_NOTICE_REASONS])(
-    'forwards the shared invalid-override reason %s to the renderer',
-    (reason) => {
-      const h = makeManager();
-      createStartedTerminal(h.mgr, {
-        windowId: 1,
-        webContents: makeWebContents(),
-        projectRoot: PROJECT,
-        cols: 80,
-        rows: 24,
-      });
-
-      h.forked[0]?.emitMessage({
-        type: 'shell-notice',
-        ptyId: 'pty-1',
-        notice: 'invalid-shell-override',
-        reason,
-      });
-
-      expect(h.sent).toContainEqual({
-        channel: 'ok:pty:notice',
-        payload: { ptyId: 'pty-1', notice: 'invalid-shell-override', reason },
-      });
-    },
-  );
-
-  test('drops a shell notice whose reason or family is outside the shared sets', () => {
-    const h = makeManager();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: makeWebContents(),
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'invalid-shell-override',
-      reason: 'not-found-ish',
-    });
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'shell-resolved',
-      shellFamily: 'zsh',
-    });
-    h.forked[0]?.emitMessage({
-      type: 'shell-notice',
-      ptyId: 'pty-1',
-      notice: 'support-file-degraded',
-      reason: 'escaped',
-    });
-
-    expect(h.sent.filter((s) => s.channel === 'ok:pty:notice')).toEqual([]);
-    expect(h.warns.length).toBeGreaterThan(0);
-  });
-
-  test('drops a shell notice when the addressed WebContents is already destroyed', () => {
-    const sendNotice = vi.fn((wc: SendableWebContents) => {
-      if (wc.isDestroyed?.()) throw new Error('send on destroyed WebContents');
-    });
-    const h = makeManager({ sendNotice });
-    const wc = makeWebContents();
-    createStartedTerminal(h.mgr, {
-      windowId: 1,
-      webContents: wc,
-      projectRoot: PROJECT,
-      cols: 80,
-      rows: 24,
-    });
-    wc.destroyed = true;
-
-    expect(() =>
-      h.forked[0]?.emitMessage({
-        type: 'shell-notice',
-        ptyId: 'pty-1',
-        notice: 'invalid-shell-override',
-        reason: 'not-found',
-      }),
-    ).not.toThrow();
-    expect(sendNotice).not.toHaveBeenCalled();
   });
 
   test('a window with no project root gets no terminal and no fork', () => {
@@ -2249,16 +2101,6 @@ describe('createTerminalManager — telemetry', () => {
     expect(h.shellExits).toEqual([]);
   });
 
-  test('killAll counts only the windows that ran a command', () => {
-    const h = makeTelemetryManager();
-    h.start(1);
-    h.start(2);
-    h.mgr.input({ windowId: 1, ptyId: 'pty-1', data: 'build\r' });
-    h.mgr.killAll('quit');
-    expect(h.sessions).toHaveLength(1);
-    expect(h.shellExits).toEqual([]);
-  });
-
   test('each PTY lifecycle is one session: a post-restart shell with no command is not counted', () => {
     const h = makeTelemetryManager();
     h.start(1);
@@ -2382,6 +2224,16 @@ describe('createTerminalManager — telemetry', () => {
     h.start(1);
     expect(h.concurrent.every((c) => Object.keys(c).join(',') === 'count')).toBe(true);
     expect(h.concurrent.map((c) => c.count)).toEqual([1, 2]);
+  });
+
+  test('killAll counts only the windows that ran a command', () => {
+    const h = makeTelemetryManager();
+    h.start(1);
+    h.start(2);
+    h.mgr.input({ windowId: 1, ptyId: 'pty-1', data: 'build\r' });
+    h.mgr.killAll('quit');
+    expect(h.sessions).toHaveLength(1);
+    expect(h.shellExits).toEqual([]);
   });
 });
 

@@ -214,14 +214,10 @@ export type PaletteLabelKey = keyof typeof PALETTE_COMMAND_LABELS;
 export { PALETTE_COMMAND_LABELS };
 
 const PLATFORM_PALETTE_COMMAND_LABELS = {
-  win32: {
-    revealInFinder: msg`Reveal in File Explorer`,
-    moveToTrash: msg`Move to Recycle Bin`,
-  },
   linux: {
     revealInFinder: msg`Open containing folder`,
   },
-} as const satisfies Record<'win32' | 'linux', Partial<Record<PaletteLabelKey, MessageDescriptor>>>;
+} as const satisfies Record<'linux', Partial<Record<PaletteLabelKey, MessageDescriptor>>>;
 
 export { PLATFORM_PALETTE_COMMAND_LABELS };
 
@@ -229,7 +225,7 @@ function paletteLabelDescriptor(
   key: PaletteLabelKey,
   platform: string | null | undefined,
 ): MessageDescriptor {
-  if (platform === 'win32' || platform === 'linux') {
+  if (platform === 'linux') {
     const override = (
       PLATFORM_PALETTE_COMMAND_LABELS[platform] as Partial<
         Record<PaletteLabelKey, MessageDescriptor>

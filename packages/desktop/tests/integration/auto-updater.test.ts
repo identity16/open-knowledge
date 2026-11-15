@@ -211,7 +211,6 @@ function makeRig(
     updaterSetup?: (u: FakeUpdater) => void;
     extraWindowCount?: number;
     prepareForRelaunch?: () => void;
-    sweepUpdateSurvivors?: Parameters<typeof startAutoUpdater>[0]['sweepUpdateSurvivors'];
     showCheckNowResult?: Parameters<typeof startAutoUpdater>[0]['showCheckNowResult'];
     reclaimStagedUpdateCache?: Parameters<typeof startAutoUpdater>[0]['reclaimStagedUpdateCache'];
     linuxInstallSupport?: Parameters<typeof startAutoUpdater>[0]['linuxInstallSupport'];
@@ -233,7 +232,6 @@ function makeRig(
     updaterSetup,
     extraWindowCount = 0,
     prepareForRelaunch,
-    sweepUpdateSurvivors,
     showCheckNowResult,
     reclaimStagedUpdateCache,
     linuxInstallSupport,
@@ -285,7 +283,6 @@ function makeRig(
     feedUrl,
     proxyFeed,
     prepareForRelaunch,
-    sweepUpdateSurvivors,
     showCheckNowResult,
     reclaimStagedUpdateCache,
     linuxInstallSupport,
@@ -339,11 +336,6 @@ describe('startAutoUpdater — initial configuration (parent §8.10 LOCKED)', ()
     const { rig } = makeRig({ platform: 'linux' });
     expect(rig.updater.autoInstallOnAppQuit).toBe(false);
     expect(rig.updater.autoDownload).toBe(false);
-  });
-
-  test('win32 keeps install-on-quit (NSIS installs silently, like Squirrel.Mac)', () => {
-    const { rig } = makeRig({ platform: 'win32' });
-    expect(rig.updater.autoInstallOnAppQuit).toBe(true);
   });
 
   test('linux: update-downloaded arms the banner but NOT attemptedInstall (no install commit on plain quit)', () => {
@@ -3172,7 +3164,7 @@ describe('relaunch-now dispatch (AC18)', () => {
     expect(rig.ipc.handlers.has('ok:update:dispatch')).toBe(false);
   });
 
-  test('teardown and survivor sweep fire before quitAndInstall in that order', async () => {
+  test('teardown finishes before quitAndInstall', async () => {
     const calls: string[] = [];
     const updater = new FakeUpdater();
     updater.quitAndInstall = vi.fn(() => {
@@ -3194,9 +3186,6 @@ describe('relaunch-now dispatch (AC18)', () => {
       prepareForRelaunch: async () => {
         calls.push('prepareForRelaunch');
       },
-      sweepUpdateSurvivors: () => {
-        calls.push('sweepUpdateSurvivors');
-      },
       clock: makeFakeClock(),
       now: () => new Date(),
       logger: {
@@ -3207,7 +3196,7 @@ describe('relaunch-now dispatch (AC18)', () => {
       },
     });
     await ipc.invoke('ok:update:dispatch', { kind: 'relaunch-now' });
-    expect(calls).toEqual(['prepareForRelaunch', 'sweepUpdateSurvivors', 'quitAndInstall']);
+    expect(calls).toEqual(['prepareForRelaunch', 'quitAndInstall']);
   });
 
   test('prepareForRelaunch does NOT fire when versionPendingInstall is null', () => {
@@ -3227,36 +3216,6 @@ describe('relaunch-now dispatch (AC18)', () => {
     expect(prepareForRelaunch).toHaveBeenCalledTimes(1);
     expect(rig.updater.quitAndInstall).toHaveBeenCalledTimes(1);
     expect(rig.logger.warn).toHaveBeenCalled();
-  });
-
-  test('survivor sweep throw does NOT block quitAndInstall', async () => {
-    const sweepUpdateSurvivors = vi.fn(() => {
-      throw new Error('process query failed');
-    });
-    const { rig } = makeRig({ versionPendingInstall: '0.3.2', sweepUpdateSurvivors });
-    await rig.ipc.invoke('ok:update:dispatch', { kind: 'relaunch-now' });
-    expect(sweepUpdateSurvivors).toHaveBeenCalledTimes(1);
-    expect(rig.updater.quitAndInstall).toHaveBeenCalledTimes(1);
-    expect(rig.logger.warn).toHaveBeenCalled();
-  });
-
-  test('incomplete survivor sweep is observable and does NOT block quitAndInstall', async () => {
-    const sweepUpdateSurvivors = vi.fn(() => ({
-      candidateCount: 2,
-      terminatedCount: 0,
-      failedCount: 0,
-      scanFailed: false,
-      revalidationFailed: true,
-    }));
-    const { rig } = makeRig({ versionPendingInstall: '0.3.2', sweepUpdateSurvivors });
-
-    await rig.ipc.invoke('ok:update:dispatch', { kind: 'relaunch-now' });
-
-    expect(rig.updater.quitAndInstall).toHaveBeenCalledTimes(1);
-    expect(rig.logger.warn).toHaveBeenCalledWith(
-      'update survivor sweep incomplete — proceeding to quitAndInstall anyway',
-      { result: expect.objectContaining({ revalidationFailed: true }) },
-    );
   });
 });
 
@@ -5701,7 +5660,7 @@ describe('single-flight install handoff', () => {
     expect(rig.dispatches).toContain('download-skipped-install-armed' as DispatchKind);
   });
 
-  test.each(['win32', 'linux'] as const)('on %s a newer offer still downloads', (platform) => {
+  test.each(['linux'] as const)('on %s a newer offer still downloads', (platform) => {
     const { rig } = makeRig({ versionPendingInstall: null, platform });
     stageInSession(rig, '0.3.2');
 
@@ -5711,7 +5670,7 @@ describe('single-flight install handoff', () => {
     expect(rig.dispatches).not.toContain('download-skipped-install-armed' as DispatchKind);
   });
 
-  test.each(['win32', 'linux'] as const)(
+  test.each(['linux'] as const)(
     'on %s a manual check for a newer offer reports it as downloading',
     (platform) => {
       const showCheckNowResult = vi.fn(() => {});
@@ -5736,18 +5695,15 @@ describe('single-flight install handoff', () => {
     },
   );
 
-  test.each(['win32', 'linux'] as const)(
-    'on %s the same-version skip still applies',
-    (platform) => {
-      const { rig } = makeRig({ versionPendingInstall: null, platform });
-      stageInSession(rig, '0.3.2');
+  test.each(['linux'] as const)('on %s the same-version skip still applies', (platform) => {
+    const { rig } = makeRig({ versionPendingInstall: null, platform });
+    stageInSession(rig, '0.3.2');
 
-      rig.updater.emit('update-available', { version: '0.3.2' });
+    rig.updater.emit('update-available', { version: '0.3.2' });
 
-      expect(rig.updater.downloadUpdate).not.toHaveBeenCalled();
-      expect(rig.dispatches).toContain('download-skipped-already-staged' as DispatchKind);
-    },
-  );
+    expect(rig.updater.downloadUpdate).not.toHaveBeenCalled();
+    expect(rig.dispatches).toContain('download-skipped-already-staged' as DispatchKind);
+  });
 
   test('a manual check names the build that will install, not the declined offer', () => {
     const showCheckNowResult = vi.fn(() => {});
@@ -5793,7 +5749,7 @@ describe('single-flight install handoff', () => {
     });
   });
 
-  test.each(['win32', 'linux'] as const)(
+  test.each(['linux'] as const)(
     'on %s a manual check for the armed build still reads as ready',
     (platform) => {
       const showCheckNowResult = vi.fn(() => {});
@@ -5819,7 +5775,7 @@ describe('single-flight install handoff', () => {
     },
   );
 
-  test.each(['win32', 'linux'] as const)(
+  test.each(['linux'] as const)(
     'on %s a relaunch that cannot restore its state releases the arm',
     async (platform) => {
       const { rig } = makeRig({ versionPendingInstall: null, platform });
@@ -6769,7 +6725,7 @@ function downloadedSends(captured: CapturedSend[]): unknown[] {
 }
 
 describe('update mode off switch', () => {
-  for (const platform of ['darwin', 'win32', 'linux'] as const) {
+  for (const platform of ['darwin', 'linux'] as const) {
     test(`${platform}: off at boot issues no check, schedules no timer, and disables install-on-quit`, async () => {
       const { rig } = makeRig({ platform, updateMode: 'off' });
       await settleLaunchCheck();
@@ -6812,7 +6768,7 @@ describe('update mode off switch', () => {
     expect(rig.state.lastSuccessfulCheckAt).toBeNull();
   });
 
-  for (const platform of ['darwin', 'win32'] as const) {
+  for (const platform of ['darwin'] as const) {
     test(`${platform}: a build staged while off is re-staged, then committed and offered, when updates come back on`, async () => {
       const { rig } = makeRig({ platform, updateMode: 'off' });
       rig.updater.emit('update-available', { version: '0.3.2' });
@@ -7089,16 +7045,6 @@ describe('update mode off switch', () => {
 });
 
 describe('ready-to-install card dismissal', () => {
-  test('dismissal persists per version and hides the card from later windows', async () => {
-    const { rig, handle } = makeRig();
-    rig.updater.emit('update-downloaded', { version: '0.3.2' });
-    expect(handle.getPendingUpdate()).toEqual({ version: '0.3.2' });
-    await rig.ipc.invoke('ok:update:dispatch', { kind: 'downloaded-dismiss', version: '0.3.2' });
-    expect(rig.state.dismissedUpdateVersion).toBe('0.3.2');
-    expect(rig.state.versionPendingInstall).toBe('0.3.2');
-    expect(handle.getPendingUpdate()).toBeNull();
-  });
-
   test('dismissal in one window retracts the card in every open window', async () => {
     const { rig } = makeRig({ extraWindowCount: 2 });
     rig.updater.emit('update-downloaded', { version: '0.3.2' });
@@ -7152,6 +7098,16 @@ describe('ready-to-install card dismissal', () => {
     rig.updater.emit('update-available', { version: '0.3.2' });
 
     expect(downloadedSends(rig.captured)).toEqual([{ version: '0.3.2' }]);
+  });
+
+  test('dismissal persists per version and hides the card from later windows', async () => {
+    const { rig, handle } = makeRig();
+    rig.updater.emit('update-downloaded', { version: '0.3.2' });
+    expect(handle.getPendingUpdate()).toEqual({ version: '0.3.2' });
+    await rig.ipc.invoke('ok:update:dispatch', { kind: 'downloaded-dismiss', version: '0.3.2' });
+    expect(rig.state.dismissedUpdateVersion).toBe('0.3.2');
+    expect(rig.state.versionPendingInstall).toBe('0.3.2');
+    expect(handle.getPendingUpdate()).toBeNull();
   });
 });
 

@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import childProcess, { execFileSync } from 'node:child_process';
 import {
   chmodSync,
   existsSync,
@@ -14,6 +14,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { resolveBundleEnabled, SKILL_STATE_FILENAME } from '@inkeep/open-knowledge-core';
@@ -439,7 +440,7 @@ describe('runInit', () => {
     },
   );
 
-  it.skipIf(process.platform === 'win32' || process.getuid?.() === 0).each([
+  it.skipIf(process.getuid?.() === 0).each([
     ['claude', '{"mcpServers":{}}\n'],
     ['codex', '[mcp_servers]\n'],
     ['hermes', 'mcp_servers: {}\n'],
@@ -764,7 +765,7 @@ describe('runInit', () => {
       expect(result.editors).toHaveLength(1);
       expect(result.editors[0].action).toBe('failed');
       expect(result.editors[0].error).toMatch(
-        /Claude Desktop is not available on linux\. Supported: macOS, Windows\./,
+        /Claude Desktop is not available on linux\. Supported: macOS\./,
       );
     });
 
@@ -1559,26 +1560,25 @@ describe('runInit', () => {
     });
 
     it('git unusable everywhere → runInit surfaces the recoverable GitNotAvailableError (no content scaffolded)', async () => {
-      const originalPath = process.env.PATH;
-      const originalPlatform = process.platform;
-      process.env.PATH = '/nonexistent';
-      Object.defineProperty(process, 'platform', {
-        value: originalPlatform === 'win32' ? 'linux' : 'win32',
-        configurable: true,
+      const spawn = vi.spyOn(childProcess, 'spawnSync').mockReturnValue({
+        pid: 0,
+        output: [],
+        stdout: '',
+        stderr: '',
+        status: null,
+        signal: null,
+        error: Object.assign(new Error('Git is unavailable'), { code: 'ENOENT' }),
       });
+      syncBuiltinESMExports();
       try {
         const { GitNotAvailableError } = await import('@inkeep/open-knowledge-server');
         await expect(runInitForTest({ editors: ['claude'] })).rejects.toBeInstanceOf(
           GitNotAvailableError,
         );
       } finally {
-        Object.defineProperty(process, 'platform', {
-          value: originalPlatform,
-          configurable: true,
-        });
-        process.env.PATH = originalPath;
+        spawn.mockRestore();
+        syncBuiltinESMExports();
       }
-
       expect(existsSync(join(testDir, OK_DIR))).toBe(false);
       expect(existsSync(join(testDir, '.git'))).toBe(false);
     });
@@ -2979,7 +2979,7 @@ describe('classifyExistingMcpEntry', () => {
     });
   });
 
-  it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+  it.skipIf(process.getuid?.() === 0)(
     'reports an unreadable file as permission denied rather than malformed JSON',
     () => {
       const path = resolveCursorConfigPath({ home: fakeHome });

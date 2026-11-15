@@ -661,38 +661,6 @@ describe('collectReportBundle — full level', () => {
       );
     });
 
-    test('discloses kept records in the README even when one Windows log failed', async () => {
-      const outputPath = join(makeTmpDir(), 'report.zip');
-
-      const { zipPath } = await collectReportBundle({
-        level: 'full',
-        redact: true,
-        outputPath,
-        userLogsDir: makeTmpDir(),
-        diagnosticReportsDir: makeTmpDir(),
-        osTerminationEvidenceDeps: {
-          platform: 'win32',
-          systemRoot: 'C:\\Windows',
-          runCommand: async (_command, args) =>
-            args[1] === 'System'
-              ? {
-                  status: 0,
-                  stdout:
-                    "<Event><System><Provider Name='EventLog'/><EventID>6008</EventID><TimeCreated SystemTime='2026-10-04T11:00:00Z'/></System></Event>",
-                  stderr: '',
-                }
-              : { status: 5, stdout: '', stderr: 'Access is denied.' },
-        },
-      });
-
-      expect(JSON.parse(readZipEntry(zipPath, 'state/os-termination-evidence.json'))).toMatchObject(
-        { outcome: 'partial', events: [{ log: 'System', eventId: 6008 }] },
-      );
-      expect(readZipEntry(zipPath, 'README.md')).toContain(
-        'Termination records: read from the operating system',
-      );
-    });
-
     test('marks the OS termination evidence as not collected at standard level', async () => {
       const outputPath = join(makeTmpDir(), 'report.zip');
 

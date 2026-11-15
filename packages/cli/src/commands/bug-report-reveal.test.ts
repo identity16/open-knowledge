@@ -11,17 +11,6 @@ describe('revealBundle argv shape', () => {
     expect(spawn).toHaveBeenCalledWith('/usr/bin/open', ['-R', SPACED]);
   });
 
-  test('win32 opens the containing folder — never the /select, verb', () => {
-    const spawn = vi.fn();
-    revealBundle('C:\\Users\\Jane Doe\\.ok\\bug-reports\\report.zip', 'win32', spawn);
-    expect(spawn).toHaveBeenCalledTimes(1);
-    const [command, args] = spawn.mock.calls[0] as [string, string[]];
-    expect(command).toBe('explorer.exe');
-    expect(args).toHaveLength(1);
-    expect(args[0]).not.toContain('/select,');
-    expect(args[0]).not.toContain('report.zip');
-  });
-
   test('linux opens the containing folder via xdg-open', () => {
     const spawn = vi.fn();
     revealBundle(SPACED, 'linux', spawn);

@@ -35,15 +35,7 @@ function resolveOpenInvocation(
     }
     return { command: '/usr/bin/open', args: [target] };
   }
-  if (platform === 'win32') {
-    if (target.startsWith('http://') || target.startsWith('https://')) {
-      return { command: 'explorer.exe', args: [target] };
-    }
-    return {
-      command: 'rundll32.exe',
-      args: ['url.dll,FileProtocolHandler', target],
-    };
-  }
+
   return { command: 'xdg-open', args: [target] };
 }
 

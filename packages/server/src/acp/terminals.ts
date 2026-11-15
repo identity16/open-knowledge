@@ -3,12 +3,9 @@ import { isAbsolute, resolve } from 'node:path';
 import type { ThreadEvent } from '@inkeep/open-knowledge-core/acp/thread-protocol';
 import type { PinoLogger } from '../logger.ts';
 import {
-  envPath,
   mergedEnv,
   overlaySetsPath,
-  resolveWindowsCommand,
   terminateAgentTree,
-  windowsCmdWrap,
   withHostedAgentMarker,
   withLoginShellPathEnv,
 } from './launch.ts';
@@ -115,20 +112,14 @@ export class AcpTerminalSet {
           : resolve(this.defaultCwd, params.cwd)
         : this.defaultCwd;
 
-    const win = process.platform === 'win32';
-    const resolved = win ? resolveWindowsCommand(params.command, envPath(env)) : params.command;
-    const wrap = win && /\.(cmd|bat)$/i.test(resolved);
-    const { cmd, args } = wrap
-      ? windowsCmdWrap(resolved, params.args ?? [])
-      : { cmd: resolved, args: params.args ?? [] };
+    const resolved = params.command;
+    const { cmd, args } = { cmd: resolved, args: params.args ?? [] };
     const child = spawn(cmd, args, {
       cwd,
       env,
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: false,
-      detached: !win,
-      windowsHide: true,
-      windowsVerbatimArguments: wrap,
+      detached: true,
     });
 
     const rawLimit = params.outputByteLimit;

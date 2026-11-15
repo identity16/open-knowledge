@@ -84,81 +84,78 @@ const SERVER_ENDINGS = [
   { ending: 'is killed', signal: 'SIGKILL', exit: { code: null, signal: 'SIGKILL' } },
 ] as const;
 
-describe.skipIf(process.platform === 'win32')(
-  'an npx install that outlives the server process that started it',
-  () => {
-    test.each(SERVER_ENDINGS)(
-      'the npx cache entry ends complete or rolled back when the server $ending mid-install',
-      async ({ signal, exit }) => {
-        expect(
-          () => descendantsOf(process.pid),
-          'this test reads the process table with ps',
-        ).not.toThrow();
-        await withHeldInstallRegistry(
-          async (held) => {
-            const agentName = held.npmPackage.slice(0, held.npmPackage.lastIndexOf('@'));
-            const server = startServerProcess(held);
-            let outliving: number[] = [];
-            try {
-              await waitWithinTestBudget(
-                'the server to start installing the agent package',
-                () => {
-                  if (server.exited()) {
-                    throw new Error(`the server process exited early: ${server.output()}`);
-                  }
-                  return held.requested('npm-dependency') > 0;
-                },
-                WAIT,
-              );
-              const entries = npxEntries(held.home);
-              expect(entries).toHaveLength(1);
-              const entry = String(entries[0]);
-              expect(hasManifest(entry)).toBe(false);
-              const serverPid = server.child.pid;
-              if (serverPid === undefined) throw new Error('the server process has no pid');
-              outliving = descendantsOf(serverPid);
-              expect(outliving.length).toBeGreaterThan(0);
+describe('an npx install that outlives the server process that started it', () => {
+  test.each(SERVER_ENDINGS)(
+    'the npx cache entry ends complete or rolled back when the server $ending mid-install',
+    async ({ signal, exit }) => {
+      expect(
+        () => descendantsOf(process.pid),
+        'this test reads the process table with ps',
+      ).not.toThrow();
+      await withHeldInstallRegistry(
+        async (held) => {
+          const agentName = held.npmPackage.slice(0, held.npmPackage.lastIndexOf('@'));
+          const server = startServerProcess(held);
+          let outliving: number[] = [];
+          try {
+            await waitWithinTestBudget(
+              'the server to start installing the agent package',
+              () => {
+                if (server.exited()) {
+                  throw new Error(`the server process exited early: ${server.output()}`);
+                }
+                return held.requested('npm-dependency') > 0;
+              },
+              WAIT,
+            );
+            const entries = npxEntries(held.home);
+            expect(entries).toHaveLength(1);
+            const entry = String(entries[0]);
+            expect(hasManifest(entry)).toBe(false);
+            const serverPid = server.child.pid;
+            if (serverPid === undefined) throw new Error('the server process has no pid');
+            outliving = descendantsOf(serverPid);
+            expect(outliving.length).toBeGreaterThan(0);
 
-              server.child.kill(signal);
-              await waitWithinTestBudget('the server process to exit', server.exited, WAIT);
+            server.child.kill(signal);
+            await waitWithinTestBudget('the server process to exit', server.exited, WAIT);
+            held.release('npm-dependency');
+            await waitWithinTestBudget(
+              'every process the server started to exit',
+              () => outliving.every(processEnded),
+              WAIT,
+            );
+            await waitWithinTestBudget('the server process output to close', server.closed, WAIT);
+            expect(server.exitStatus(), server.output()).toEqual(exit);
+
+            expect(
+              npmDebugLogs(held.home),
+              'npm wrote its deprecation warning after the server ended',
+            ).toMatch(/warn deprecated \S*ok-held-install-dependency/);
+            const outcome = entryOutcome(entry, agentName);
+            expect(['complete', 'rolled-back'], JSON.stringify(outcome)).toContain(outcome.state);
+          } finally {
+            try {
+              if (!server.exited() && outliving.length === 0 && server.child.pid !== undefined) {
+                outliving = descendantsOf(server.child.pid);
+              }
+            } finally {
+              if (!server.exited()) {
+                server.child.kill('SIGKILL');
+                await waitWithinTestBudget('the server process to exit', server.exited, WAIT);
+              }
               held.release('npm-dependency');
               await waitWithinTestBudget(
                 'every process the server started to exit',
                 () => outliving.every(processEnded),
                 WAIT,
               );
-              await waitWithinTestBudget('the server process output to close', server.closed, WAIT);
-              expect(server.exitStatus(), server.output()).toEqual(exit);
-
-              expect(
-                npmDebugLogs(held.home),
-                'npm wrote its deprecation warning after the server ended',
-              ).toMatch(/warn deprecated \S*ok-held-install-dependency/);
-              const outcome = entryOutcome(entry, agentName);
-              expect(['complete', 'rolled-back'], JSON.stringify(outcome)).toContain(outcome.state);
-            } finally {
-              try {
-                if (!server.exited() && outliving.length === 0 && server.child.pid !== undefined) {
-                  outliving = descendantsOf(server.child.pid);
-                }
-              } finally {
-                if (!server.exited()) {
-                  server.child.kill('SIGKILL');
-                  await waitWithinTestBudget('the server process to exit', server.exited, WAIT);
-                }
-                held.release('npm-dependency');
-                await waitWithinTestBudget(
-                  'every process the server started to exit',
-                  () => outliving.every(processEnded),
-                  WAIT,
-                );
-              }
             }
-          },
-          { dependencyDeprecated: 'this dependency is no longer maintained' },
-        );
-      },
-      150_000,
-    );
-  },
-);
+          }
+        },
+        { dependencyDeprecated: 'this dependency is no longer maintained' },
+      );
+    },
+    150_000,
+  );
+});

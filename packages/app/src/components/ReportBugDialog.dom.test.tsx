@@ -294,7 +294,7 @@ describe('ReportBugDialog', () => {
   test.each([
     ['darwin', /low-memory reports macOS wrote/],
     ['linux', /out-of-memory kills of OpenKnowledge that the system journal recorded/],
-    ['win32', /crash and hang records Windows logged/],
+    [/crash and hang records Windows logged/],
   ])('shows only the %s operating-system records sentence', async (platform, own) => {
     installBridge({ platform });
     await renderDialog();
