@@ -5,6 +5,7 @@ on:
 cache-mode: none
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true
@@ -37,12 +38,21 @@ jobs:
           node scripts/create-turbo-cache-key.mjs
       - name: Build core for packages that run its dist
         run: pnpm --dir packages/core run build
-      - name: Lint, typecheck and test what this push changed
+      - name: Find the last successful main verification
+        id: baseline
         env:
-          BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
-            pnpm verify:changed "$BEFORE"
-          else
-            pnpm verify:changed HEAD~1
-          fi
+          VERIFICATION_BASE_SHA=$(node scripts/release/verification.mjs base "$GITHUB_SHA")
+          echo "base_sha=$VERIFICATION_BASE_SHA" >> "$GITHUB_OUTPUT"
+      - name: Lint, typecheck and test the accumulated changes
+        env:
+          VERIFICATION_BASE_SHA: ${{ steps.baseline.outputs.base_sha }}
+        run: pnpm verify:changed "$VERIFICATION_BASE_SHA" "$RUNNER_TEMP/verification/receipt.json"
+      - name: Preserve verification completion evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: verification-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/verification/receipt.json
+          if-no-files-found: error

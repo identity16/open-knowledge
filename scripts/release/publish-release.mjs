@@ -9,6 +9,7 @@ import {
   validateReleaseInventory,
   versionFromTag,
 } from './release-identity.mjs';
+import { requireSourceVerification } from './verification.mjs';
 
 const REPOSITORY = 'identity16/open-knowledge';
 
@@ -135,6 +136,7 @@ export function preflightRelease(version, sourceSha, env = process.env, invoke =
   if (release && !release.draft)
     throw new Error('This release is already published; choose a new version.');
   context.checkLatest();
+  requireSourceVerification(sourceSha, invoke);
   return release;
 }
 
@@ -220,6 +222,7 @@ export function promoteRelease(proof, env = process.env, invoke = gh) {
     return release.html_url;
   }
   checkLatest();
+  requireSourceVerification(proof.sourceSha, invoke);
   if (!existingTag)
     invoke([
       'api',

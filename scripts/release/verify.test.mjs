@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { planVerify } from './verify.mjs';
+import { planVerify, verificationCommands } from './verify.mjs';
 
 test('an app-only change lints, typechecks app and its consumers, and runs related app tests', () => {
   const plan = planVerify(['packages/app/src/App.tsx', 'packages/app/src/globals.css']);
@@ -42,4 +42,18 @@ test('root config files stay in biome scope', () => {
     'package.json',
     'biome.json',
   ]);
+});
+
+test('deleting a core source still verifies every consumer and tooling changes run their tests', () => {
+  const plan = planVerify([
+    'packages/core/src/deleted.ts',
+    'scripts/release/verification.mjs',
+    '.github/workflows/verify.yml',
+  ]);
+  const commands = verificationCommands(plan);
+  assert.deepEqual(plan.typecheck, ['app', 'cli', 'core', 'desktop', 'server']);
+  assert.ok(commands.some((entry) => entry.label === 'related tooling tests'));
+  assert.ok(commands.some((entry) => entry.label === 'workflow contracts'));
+  assert.ok(commands.some((entry) => entry.label === 'release script tests'));
+  assert.equal(new Set(commands.map((entry) => entry.label)).size, commands.length);
 });

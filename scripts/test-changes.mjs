@@ -1,8 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 import { gitCleanEnv } from './git-clean-env.mjs';
 
@@ -209,7 +207,7 @@ export function renderTestChanges(report) {
   return lines.join('\n');
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+if (import.meta.main) {
   const [base, head = 'HEAD', output, summary] = process.argv.slice(2);
   if (!base) throw new Error('Usage: node scripts/test-changes.mjs <base> [head] [report.json]');
   const report = inspectTestChanges(base, head);

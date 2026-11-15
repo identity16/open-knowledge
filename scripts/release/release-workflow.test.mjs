@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { afterEach, expect, test } from 'vitest';
 import { createCandidate } from './release-checkpoint.mjs';
 import { releasePlan } from './release-identity.mjs';
+import { verificationGithub } from './verification.test-helper.mjs';
 
 const fixtures = [];
 afterEach(() => {
@@ -32,8 +33,13 @@ test('bootstraps release recovery and preflight without installing workspace dep
     'release-checkpoint',
     'notarize-release',
     'publish-release',
+    'verification',
   ])
     copyFileSync(new URL(`./${file}.mjs`, import.meta.url), join(scripts, `${file}.mjs`));
+  copyFileSync(
+    new URL('../git-clean-env.mjs', import.meta.url),
+    join(root, 'scripts/git-clean-env.mjs'),
+  );
   const backend = join(root, 'github.cjs');
   writeFileSync(
     backend,
@@ -42,14 +48,19 @@ const fs = require('node:fs');
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.RELEASE_TEST_COMMANDS, JSON.stringify(args) + '\\n');
 const path = args[1];
+if (args[0] === 'run' && args[1] === 'download') {
+  fs.writeFileSync(require('node:path').join(args[args.indexOf('--dir') + 1], 'receipt.json'), JSON.stringify(${JSON.stringify(verificationGithub().receipt)}));
+  process.exit(0);
+}
 if (args[0] !== 'api' || args.includes('POST')) throw new Error('Unexpected mutation');
-if (path.endsWith('/actions/runs/303')) console.log(JSON.stringify({
+if (path.includes('/actions/workflows/verify.yml/runs?')) console.log(JSON.stringify([{workflow_runs: [${JSON.stringify(verificationGithub().run)}]}]));
+else if (path.endsWith('/actions/runs/303')) console.log(JSON.stringify({
   id: 303, path: '.github/workflows/release.yml', event: 'workflow_dispatch',
   head_branch: 'main', head_sha: 'a'.repeat(40),
   repository: { full_name: 'identity16/open-knowledge' },
   head_repository: { full_name: 'identity16/open-knowledge' },
 }));
-else if (path.includes('/artifacts?')) console.log('[{"artifacts":[]}]');
+else if (path.includes('/artifacts?')) console.log('[{"artifacts":[{"name":"verification-1","expired":false}]}]');
 else if (path.includes('/releases?')) console.log('[[]]');
 else if (path.includes('/git/ref/') || path.endsWith('/releases/latest')) {
   process.stderr.write('(HTTP 404)'); process.exitCode = 1;
@@ -99,8 +110,13 @@ function workspace() {
     'release-checkpoint',
     'notarize-release',
     'publish-release',
+    'verification',
   ])
     copyFileSync(new URL(`./${file}.mjs`, import.meta.url), join(scripts, `${file}.mjs`));
+  copyFileSync(
+    new URL('../git-clean-env.mjs', import.meta.url),
+    join(root, 'scripts/git-clean-env.mjs'),
+  );
   writeFileSync(join(bin, 'gh'), `#!/bin/sh\necho '[{"artifacts":[]}]'\n`, { mode: 0o700 });
   const background = join(root, '.release/notary-run');
   const env = {
