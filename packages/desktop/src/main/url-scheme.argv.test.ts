@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { describe, expect, test, vi } from 'vitest';
 import { registerProtocolHandler } from './url-scheme.ts';
 
-const executable = resolve(tmpdir(), 'OpenKnowledge.exe');
+const executable = resolve(tmpdir(), 'OpenKnowledge');
 const documentPath = (name: string) => resolve(tmpdir(), 'open-knowledge-argv', name);
 
 function makeHandler(
@@ -34,7 +34,7 @@ function makeHandler(
     getAnyReadyWindow: () => null,
     getInitialArgv: () => argv,
     onRelaunchWithoutTarget,
-    platform: options.platform ?? 'win32',
+    platform: options.platform ?? 'darwin',
     log: { info: infoLog, warn: vi.fn(), error: vi.fn() },
     setTimeout: (cb) => scheduled.push(cb),
   });
@@ -53,7 +53,7 @@ function makeHandler(
   };
 }
 
-const _names = [
+const names = [
   'notes.md',
   'notes.mdx',
   'notes.MD',
@@ -65,6 +65,34 @@ const _names = [
   'literal%00name.md',
   'Q4 #1 & follow-up.md',
 ];
+
+describe('document links in argv', () => {
+  test.each(names)('preserves the document name %s in a custom-scheme link', (name) => {
+    const file = documentPath(name);
+    const args = [executable, `openknowledge://open?file=${encodeURIComponent(file)}`];
+    for (const platform of ['darwin', 'linux'] as const) {
+      for (const delivery of ['cold', 'second-instance']) {
+        const h = makeHandler(delivery === 'cold' ? args : undefined, { platform });
+        if (delivery === 'second-instance') h.secondInstance(args);
+        expect(h.control.urlLaunchOwnsWindow()).toBe(true);
+        h.control.drainQueuedUrls();
+        expect(h.openEphemeralFile).toHaveBeenCalledExactlyOnceWith(file);
+      }
+    }
+  });
+
+  test.each<NodeJS.Platform>(['darwin', 'linux'])(
+    'ignores bare document argv on %s',
+    (platform) => {
+      const file = documentPath('notes.md');
+      const h = makeHandler([executable, file], { platform });
+      h.secondInstance([executable, file]);
+      h.control.drainQueuedUrls();
+      expect(h.openEphemeralFile).not.toHaveBeenCalled();
+      expect(h.control.urlLaunchOwnsWindow()).toBe(false);
+    },
+  );
+});
 
 describe('relaunch without a target', () => {
   test.each<NodeJS.Platform>(['linux', 'darwin'])(

@@ -2510,10 +2510,11 @@ exec /bin/sleep "$1"`,
           '../../src/main/desktop-uninstall-handoff.ts'
         );
         const declaredWaitSeconds = Math.ceil(PROGRESS_READY_DECLARED_WAIT_MS / 1000);
-        const oneSecondMs = inMilliseconds(1);
         const f = fixture();
         const recorder = signalRecorder(f);
         const sleeps = join(f.dir, 'sleeps');
+        const clock = join(f.dir, 'clock');
+        writeFileSync(clock, '0');
         const script = buildWithDeclaredWait(
           handoffInput(f),
           withSignalSeam(
@@ -2521,10 +2522,12 @@ exec /bin/sleep "$1"`,
               ...f.commands,
               ps: f.executable('ps', 'exit 1'),
               psTimeoutSeconds: HANDOFF_WATCHDOG_SECONDS,
+              date: f.executable('counted-date', `exec /bin/cat '${clock}'`),
               sleep: f.executable(
                 'dated-sleep',
-                `printf '%s %s\\n' "$(/bin/date +%s)" "$1" >> '${sleeps}'
-exec /bin/sleep "$1"`,
+                `second=$(/bin/cat '${clock}')
+printf '%s %s\\n' "$second" "$1" >> '${sleeps}'
+printf '%s\\n' "$((second + 1))" > '${clock}'`,
               ),
               result: [
                 f.executable(
@@ -2537,10 +2540,6 @@ exec /bin/sleep "$1"`,
           ),
         );
         expectEverySignalRoutedThrough(recorder.path, script);
-        const waitingFromSecond = Math.floor(Date.now() / oneSecondMs);
-        while (Math.floor(Date.now() / oneSecondMs) === waitingFromSecond) {
-          await delay(oneSecondMs - (Date.now() % oneSecondMs));
-        }
         const run = await runKeepingTheBoundFailure({
           shell,
           script,
@@ -2553,7 +2552,7 @@ exec /bin/sleep "$1"`,
         if (run instanceof BoundedSpawnTimeoutError) throw run;
         expect(
           countRecordedLines(sleeps),
-          'the readiness wait never slept through commands.sleep, so no poll read the clock the script reads, and there is no poll to hold to the declared wait',
+          'the readiness wait must poll through commands.sleep before its injected clock passes the declared wait',
         ).toBeGreaterThan(0);
         expect(
           readProgressGiveUp(f.dir, run),
@@ -2569,18 +2568,12 @@ exec /bin/sleep "$1"`,
           .filter((line) => line !== '');
         expect(
           polls.filter((poll) => !/^\d+ /.test(poll)),
-          'each poll records the whole second /bin/date reads just before it sleeps, and these records carry none, so the fixture could not read the clock the script reads and these polls cannot be placed against the declared wait',
+          'each poll must record the injected clock before advancing it by one second',
         ).toEqual([]);
         const polledSeconds = polls.map((poll) => Number(poll.split(' ')[0]));
-        const [firstPolledSecond] = polledSeconds;
-        const secondsPastFirstPoll = polledSeconds.map((second) => second - firstPolledSecond);
-        const polledPastTheWait = secondsPastFirstPoll
-          .slice(0, -1)
-          .filter((seconds) => seconds > declaredWaitSeconds);
-        expect(
-          polledPastTheWait,
-          `the handoff kept polling a progress window that never became ready after the clock it reads had counted past the declared wait: ${polledPastTheWait.length} of its ${polls.length} polls, not counting the last, were taken more than ${declaredWaitSeconds} whole seconds after the first poll's second (whole seconds after the first poll's second, poll by poll: ${secondsPastFirstPoll.join(' ')}). Each poll reads the clock after the script has read it for that poll and before the script reads it again, and the first poll's second is no earlier than the second the wait started counting from, so a poll taken past the first poll's second plus ${declaredWaitSeconds} puts the script's next read past its deadline, where it must give up: only the last poll can lie past it, and polling on means the wait read a clock past its deadline and kept waiting, so it lasts longer than it was declared to. ${declaredWaitSeconds} is not a performance figure but that declared wait, the constant this test mocks into the product rounded up to whole seconds, and this measures no elapsed time and bounds nothing by host speed: it only orders whole-second readings of the clock the script reads, an order host load cannot change. Load can only lower the number of polls or move the first one later, which can let a late give-up through but never fails a wait that gives up on its first read past its deadline`,
-        ).toEqual([]);
+        expect(polledSeconds).toEqual(
+          Array.from({ length: declaredWaitSeconds + 1 }, (_, second) => second),
+        );
       } finally {
         vi.doUnmock('../../src/main/desktop-uninstall-result.ts');
         vi.resetModules();
@@ -2638,7 +2631,7 @@ function readRecordedIdentity(path: string): RecordedIdentity {
   return { pid, parent };
 }
 
-async function _awaitRecordedIdentity(path: string, boundMs: number) {
+async function awaitRecordedIdentity(path: string, boundMs: number) {
   const deadline = Date.now() + boundMs;
   let identity = readRecordedIdentity(path);
   while (!(RECORDED_PID.test(identity.pid) && RECORDED_PID.test(identity.parent))) {
@@ -3436,12 +3429,12 @@ const RESULT_PROFILE_PREFIX = RESULT_PROFILE_TEMPLATE.replace(/X+$/, '');
 const RESULT_WINDOW_TOKEN = 'watched';
 const QUERY_PROBE_TEMPLATE = 'ok-uninstall-ps.XXXXXX';
 const QUERY_PROBE_OUTPUT = 'output';
-const _RESULT_WINDOW_UNSTARTED_STATUS = 1;
+const RESULT_WINDOW_UNSTARTED_STATUS = 1;
 const KILLED_WINDOW_EXIT_STATUS = 137;
 const WINDOW_WATCH_FAILED = 'Could not keep watching the uninstall window; it was stopped.';
-const _SUCCESS_DIALOG_TITLE = 'OpenKnowledge files were removed';
+const SUCCESS_DIALOG_TITLE = 'OpenKnowledge files were removed';
 
-function _resultWindowFellBack(exitStatus: number) {
+function resultWindowFellBack(exitStatus: number) {
   return `Could not show the completion window (exit ${exitStatus}); using the system dialog.`;
 }
 
@@ -4213,6 +4206,221 @@ const RESULT_WINDOW_CHOICES = [
   { exitStatus: 11, reveals: 'the app bundle' },
 ] as const;
 
-const _resultWindowChoiceRows = UNINSTALL_SHELLS.flatMap((shell) =>
+const resultWindowChoiceRows = UNINSTALL_SHELLS.flatMap((shell) =>
   RESULT_WINDOW_CHOICES.map(({ exitStatus, reveals }) => [exitStatus, shell, reveals] as const),
+);
+
+describe.skipIf(process.platform === 'win32')(
+  'result windows the result script starts itself',
+  () => {
+    test.each(resultWindowChoiceRows)(
+      'characterization: the result script acts on the choice its own result window reports by exiting %i under %s',
+      (exitStatus, shell, reveals) => {
+        const f = fixture();
+        const recorder = signalRecorder(f);
+        const logPath = join(f.dir, 'cleanup.log');
+        const appBundlePath = join(f.dir, 'OpenKnowledge.app');
+        const profilePath = join(f.dir, 'profile-path');
+        const windowModes = join(f.dir, 'window-modes');
+        const script = buildDesktopUninstallResultScript(
+          { appBundlePath, logPath, cleanup: { ok: true } },
+          withSignalSeam(
+            {
+              ...f.commands,
+              open: f.executable('finder', `printf 'reveal:%s\\n' "$2" >> '${f.events}'`),
+              result: [
+                f.executable(
+                  'result-ui',
+                  `printf '%s' "${'$'}{1#--user-data-dir=}" > '${profilePath}'
+printf '%s\\n' "$2" >> '${windowModes}'
+exit ${exitStatus}`,
+                ),
+              ],
+            },
+            recorder.path,
+          ),
+        );
+        const result = spawnSyncBounded(shell, ['-c', script], {
+          timeoutMs: HANDOFF_LIVENESS_BOUND_MS,
+          cwd: '/',
+          env: { ...process.env, TMPDIR: f.dir },
+        });
+        expect(signalsTheirSenderDidNotHold(recorder.read()), UNHELD_SIGNAL_FAILURE).toEqual([]);
+        expect(
+          {
+            status: result.status,
+            windowModes: readTextOrDescribeWhyNot(windowModes).trim().split('\n'),
+            events: existsSync(f.events) ? readFileSync(f.events, 'utf8').trim().split('\n') : [],
+            logged: readCleanupLog(f.dir).trimEnd().split('\n'),
+            profileLeftBehind: existsSync(readFileSync(profilePath, 'utf8')),
+          },
+          `the result script started its own result window, which exited ${exitStatus}. Today that makes the script reveal ${reveals}, show no fallback dialog, log nothing past the outcome and remove the window's profile. This pins behaviour the result script already has: the window's exit status is the only channel that carries the user's choice back from the result window, so it has to survive any change to how the script starts, watches or stops that window, and the pin retires only if that choice comes back by some other channel`,
+        ).toEqual({
+          status: 0,
+          windowModes: ['--ok-uninstall-result'],
+          events:
+            reveals === 'the cleanup log'
+              ? [`reveal:${logPath}`]
+              : reveals === 'the app bundle'
+                ? [`reveal:${appBundlePath}`]
+                : [],
+          logged: [CLEANUP_SUCCEEDED_OUTCOME],
+          profileLeftBehind: false,
+        });
+      },
+    );
+
+    test.each(UNINSTALL_SHELLS)(
+      'stops its own result window through its supervisor when the result script is interrupted under %s',
+      { timeout: HANDOFF_EXECUTION_TIMEOUT_MS },
+      async (shell) => {
+        const f = fixture();
+        const recorder = signalRecorder(f);
+        const windowIdentity = join(f.dir, 'window-identity');
+        const profilePath = join(f.dir, 'profile-path');
+        const script = buildDesktopUninstallResultScript(
+          {
+            appBundlePath: '/owned/App.app',
+            logPath: join(f.dir, 'cleanup.log'),
+            cleanup: { ok: true },
+          },
+          withSignalSeam(
+            {
+              ...f.commands,
+              result: [
+                f.executable(
+                  'waiting-result-ui',
+                  `printf '%s' "${'$'}{1#--user-data-dir=}" > '${profilePath}'
+${recordsItsOwnIdentity(windowIdentity)}
+exec /bin/sleep ${STUCK_QUERY_SECONDS}`,
+                ),
+              ],
+            },
+            recorder.path,
+          ),
+        );
+        expectEverySignalRoutedThrough(recorder.path, script);
+        expect(
+          inMilliseconds(STUCK_QUERY_SECONDS),
+          `the result window this interrupts parks for ${inMilliseconds(STUCK_QUERY_SECONDS)}ms, which must be at least ${HANDOFF_STALL_OVER_BOUND}x the ${HANDOFF_LIVENESS_BOUND_MS}ms bound, or closing inside the bound is no proof the window was stopped`,
+        ).toBeGreaterThanOrEqual(HANDOFF_STALL_OVER_BOUND * HANDOFF_LIVENESS_BOUND_MS);
+        const child = spawn(shell, ['-c', script], {
+          stdio: 'ignore',
+          env: { ...process.env, TMPDIR: f.dir },
+        });
+        try {
+          const window = await awaitRecordedIdentity(windowIdentity, HANDOFF_LIVENESS_BOUND_MS);
+          const closed = once(child, 'close');
+          child.kill('SIGTERM');
+          expect(
+            await settledInsideBound(closed, HANDOFF_LIVENESS_BOUND_MS),
+            `the interrupted result script was still running ${HANDOFF_LIVENESS_BOUND_MS}ms after it was sent TERM, so the window it waits on was never stopped`,
+          ).not.toBe(NOT_SETTLED);
+          const records = recorder.read();
+          expect(signalsTheirSenderDidNotHold(records), UNHELD_SIGNAL_FAILURE).toEqual([]);
+          expect(
+            window.parent,
+            'the result window is a direct child of the result script, so the script signals a pid it does not observe while it waits for the user',
+          ).not.toBe(String(child.pid));
+          expect(
+            listedInProcessTable(window.pid),
+            `the result window, pid ${window.pid}, is still in the process table after the interrupted result script exited, so the script left a window it started running`,
+          ).toBe(false);
+          expect(
+            killsDeliveredByItsParent(records, window),
+            'the result window was still running when the script was interrupted and is gone now, and a run with no KILL delivered to it by the supervisor that started it stopped it with a signal it could have caught or from a process that does not hold it',
+          ).not.toEqual([]);
+          expect(
+            existsSync(readFileSync(profilePath, 'utf8')),
+            'the result window’s profile directory is still there after the interrupted result script exited',
+          ).toBe(false);
+          expect(
+            existsSync(f.events),
+            'an interrupted result script went on to show a dialog or reveal a file',
+          ).toBe(false);
+        } finally {
+          if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+        }
+      },
+    );
+
+    test.each(UNINSTALL_SHELLS)(
+      'falls back to the system dialog when the token that keeps its result window’s supervisor watching cannot be written, under %s',
+      { timeout: HANDOFF_EXECUTION_TIMEOUT_MS },
+      async (shell) => {
+        const f = fixture();
+        const recorder = signalRecorder(f);
+        const windowIdentity = join(f.dir, 'window-identity');
+        const temporaryDirectory = temporaryDirectoryWithRoomForADirectoryButNotItsFile(
+          f,
+          RESULT_PROFILE_TEMPLATE,
+          RESULT_WINDOW_TOKEN,
+        );
+        const script = buildDesktopUninstallResultScript(
+          {
+            appBundlePath: '/owned/App.app',
+            logPath: join(f.dir, 'cleanup.log'),
+            cleanup: { ok: true },
+          },
+          withSignalSeam(
+            {
+              ...f.commands,
+              result: [
+                f.executable(
+                  'recorded-result-ui',
+                  `${recordsItsOwnIdentity(windowIdentity)}
+exec /bin/sleep ${STUCK_QUERY_SECONDS}`,
+                ),
+              ],
+            },
+            recorder.path,
+          ),
+        );
+        expectEverySignalRoutedThrough(recorder.path, script);
+        expect(
+          tryADirectoryAndItsFile(
+            temporaryDirectory.path,
+            RESULT_PROFILE_TEMPLATE,
+            RESULT_WINDOW_TOKEN,
+          ),
+          `this row needs a temporary directory with room under the ${temporaryDirectory.pathMax}-byte path limit this host reports for a profile but not for the token written into it, and ${temporaryDirectory.path} is not one, so the run below would fail somewhere other than the token write`,
+        ).toEqual({ directory: 'created', file: 'ENAMETOOLONG' });
+        const run = await runKeepingTheBoundFailure({
+          shell: '/bin/sh',
+          script: withTemporaryDirectory(shell, temporaryDirectory.path, script),
+          boundMs: HANDOFF_LIVENESS_BOUND_MS,
+          scriptCompletesWithinMs: 0,
+          scriptStallsForMs: inMilliseconds(STUCK_QUERY_SECONDS),
+          fixtureDir: f.dir,
+        });
+        expect(signalsTheirSenderDidNotHold(recorder.read()), UNHELD_SIGNAL_FAILURE).toEqual([]);
+        if (run instanceof BoundedSpawnTimeoutError) throw run;
+        expect(
+          reportsAFailedWriteOfItsFile(
+            run.stderr,
+            temporaryDirectory.path,
+            RESULT_PROFILE_TEMPLATE,
+            RESULT_WINDOW_TOKEN,
+          ),
+          `the shell reported no failed write of the token into a profile it had created in ${temporaryDirectory.path}, so this run never reached the token write it is here to fail.\nstderr: ${run.stderr.trim()}`,
+        ).toBe(true);
+        expect(
+          {
+            status: run.status,
+            logged: readCleanupLog(f.dir).trimEnd().split('\n'),
+            systemDialogShown: readTextOrDescribeWhyNot(f.events).includes(SUCCESS_DIALOG_TITLE),
+            windowStarted: existsSync(windowIdentity),
+            profilesLeft: resultProfilesIn(temporaryDirectory.path),
+          },
+          `a result window whose token could not be written was never started, so the result script must log that it could not show the completion window (exit ${RESULT_WINDOW_UNSTARTED_STATUS}), show the outcome in the system dialog instead, remove the profile it created and exit 0: a shell that exits on the failed write itself shows the user no outcome at all`,
+        ).toEqual({
+          status: 0,
+          logged: [CLEANUP_SUCCEEDED_OUTCOME, resultWindowFellBack(RESULT_WINDOW_UNSTARTED_STATUS)],
+          systemDialogShown: true,
+          windowStarted: false,
+          profilesLeft: [],
+        });
+      },
+    );
+  },
 );

@@ -7,10 +7,8 @@ import {
   resolveLocalOpCliInvocation,
 } from './local-op-cli-invocation.ts';
 
-const WIN_EXE =
-  'C:\\Users\\q\\AppData\\Local\\Programs\\@inkeepopen-knowledge-desktop\\OpenKnowledge.exe';
-const WIN_RESOURCES =
-  'C:\\Users\\q\\AppData\\Local\\Programs\\@inkeepopen-knowledge-desktop\\resources';
+const MAC_EXE = '/Applications/OpenKnowledge.app/Contents/MacOS/OpenKnowledge';
+const MAC_RESOURCES = '/Applications/OpenKnowledge.app/Contents/Resources';
 
 const WORKSPACE_CLI = '/src/open-knowledge/packages/cli/dist/cli.mjs';
 
@@ -22,16 +20,14 @@ function invocationFor(
   return invocation;
 }
 
-const _isWindowsBatchFile = (file: string): boolean => /\.(cmd|bat)$/i.test(file);
-
 describe('resolveLocalOpCliInvocation', () => {
   test('an unpackaged build pinned to a shipped channel resolves the CLI from PATH with no env overlay', () => {
     expect(
       invocationFor({
-        platform: 'win32',
+        platform: 'darwin',
         isPackaged: false,
-        execPath: WIN_EXE,
-        resourcesPath: WIN_RESOURCES,
+        execPath: MAC_EXE,
+        resourcesPath: MAC_RESOURCES,
         parentEnv: {},
         workspaceCliEntry: WORKSPACE_CLI,
       }),
@@ -92,10 +88,10 @@ describe('resolveLocalOpCliInvocation', () => {
 describe('resolveLocalOpCliArgsForUtilityFork', () => {
   test('returns a detached copy of cliArgs when the invocation carries no env overlay', () => {
     const invocation = invocationFor({
-      platform: 'win32',
+      platform: 'darwin',
       isPackaged: false,
-      execPath: WIN_EXE,
-      resourcesPath: WIN_RESOURCES,
+      execPath: MAC_EXE,
+      resourcesPath: MAC_RESOURCES,
       parentEnv: {},
       workspaceCliEntry: WORKSPACE_CLI,
     });
@@ -118,6 +114,14 @@ describe('resolveLocalOpCliArgsForUtilityFork', () => {
       ),
     ).toEqual(['/Applications/OpenKnowledge.app/Contents/Resources/cli/bin/ok.sh']);
   });
+  test('throws for any invocation carrying a cliEnv overlay, regardless of its source', () => {
+    expect(() =>
+      resolveLocalOpCliArgsForUtilityFork({
+        cliArgs: ['open-knowledge'],
+        cliEnv: { ELECTRON_RUN_AS_NODE: '1' },
+      }),
+    ).toThrow(/cliEnv/);
+  });
 });
 
 describe('mainProcessOkCli', () => {
@@ -136,5 +140,17 @@ describe('mainProcessOkCli', () => {
       cliEnv: {},
     });
     expect(cli.refusalFor(['auth', 'login'])).toContain('pnpm build');
+  });
+
+  test('keeps an invocation environment overlay alongside the channel pin', () => {
+    expect(
+      mainProcessOkCli(
+        { cliArgs: ['node', 'cli.mjs'], cliEnv: { EXAMPLE: '1' } },
+        { OK_CHANNEL: 'beta' },
+      ).runnerInvocation([]),
+    ).toEqual({
+      cliArgs: ['node', 'cli.mjs'],
+      cliEnv: { EXAMPLE: '1', OK_CHANNEL: 'beta' },
+    });
   });
 });
