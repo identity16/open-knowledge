@@ -108,8 +108,15 @@ function isDesktopProductName(value: string): value is DesktopProductName {
   return Object.hasOwn(DESKTOP_PRODUCTS, value);
 }
 
+// MCP launchers written before the product key was renamed export
+// OK_CHANNEL=identity16 and stay on disk until the user re-runs init.
+const LEGACY_CHANNEL_ALIASES: Readonly<Record<string, DesktopProductName>> = {
+  identity16: 'openknowledge16',
+};
+
 function channelOverride(env: Record<string, string | undefined>): string | undefined {
-  return env[OK_CHANNEL_ENV]?.trim().toLowerCase() || undefined;
+  const value = env[OK_CHANNEL_ENV]?.trim().toLowerCase() || undefined;
+  return value === undefined ? undefined : (LEGACY_CHANNEL_ALIASES[value] ?? value);
 }
 
 export function isDevChannel(

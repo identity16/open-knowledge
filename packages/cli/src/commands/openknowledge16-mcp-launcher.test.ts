@@ -30,7 +30,7 @@ describe('fork MCP launcher isolation', () => {
         encoding: 'utf8',
       });
       expect(result.status).toBe(0);
-      expect(result.stdout).toBe('identity16:mcp');
+      expect(result.stdout).toBe('openknowledge16:mcp');
       expect(chain).not.toContain('npx');
       expect(chain).not.toContain('OpenKnowledge.app');
     } finally {
