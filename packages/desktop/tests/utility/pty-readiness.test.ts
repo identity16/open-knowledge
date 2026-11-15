@@ -1284,39 +1284,6 @@ describe('driving a real host through a shell that starts slowly', () => {
       host.killActive();
     }
   });
-
-  test('warnings the host raises reach a logger handed to the probe, so a run can say which ConPTY it used', () => {
-    const warnings: Record<string, unknown>[] = [];
-    const attempts: PtySpawnOptions[] = [];
-    const raceSpawn = createStartupRaceSpawn(0);
-    const host = createPtyHostProbe({
-      spawn: (file, args, options) => {
-        attempts.push(options);
-        if (attempts.length === 1) throw new Error('Cannot find conpty.dll beside conpty.node');
-        return raceSpawn(file, args, options);
-      },
-      env: { SystemRoot: 'C:\\Windows' },
-      platform: 'win32',
-      shellExists: () => true,
-      logger: { warn: (entry) => warnings.push(entry) },
-    });
-    try {
-      host.send({
-        type: 'create',
-        ptyId: 'io',
-        cwd: 'C:\\project',
-        cols: 80,
-        rows: 24,
-        shell: 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
-      });
-      expect(attempts.map((options) => options.useConptyDll)).toEqual([true, false]);
-      expect(warnings).toContainEqual(
-        expect.objectContaining({ event: 'pty-host-conpty-dll-fallback' }),
-      );
-    } finally {
-      host.killActive();
-    }
-  });
 });
 
 const INPUT_READY_MARKER = 'OK_INPUT_READY_deadbeef_42_READY';

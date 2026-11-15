@@ -73,7 +73,7 @@ export function createPtyHostProbe(options: PtyHostProbeOptions): PtyHostProbe {
             msg.ptyId,
             msg.shellNeverAttached === true
               ? `shell never attached (exit code ${msg.exitCode ?? 'none'})`
-              : (msg.message ?? msg.launchFailure),
+              : msg.message,
           );
       },
     },

@@ -3,7 +3,6 @@ import {
   requestTerminalCommand,
   subscribeToTerminalCommandRequests,
   terminalCommandFor,
-  windowsTerminalCommandFor,
 } from './terminal-command-events';
 
 describe('terminalCommandFor', () => {
@@ -17,18 +16,6 @@ describe('terminalCommandFor', () => {
     expect(terminalCommandFor('rm -rf /')).toBeUndefined();
     expect(terminalCommandFor('constructor')).toBeUndefined();
     expect(terminalCommandFor('__proto__')).toBeUndefined();
-  });
-
-  test('keeps the Windows install command structured until shell composition', () => {
-    expect(windowsTerminalCommandFor('install-slidev')).toEqual({
-      executable: 'npm',
-      args: ['install', '-g', '@slidev/cli', '@slidev/theme-default'],
-    });
-    expect(windowsTerminalCommandFor('git-status')).toEqual({
-      executable: 'git',
-      args: ['status'],
-    });
-    expect(windowsTerminalCommandFor('npm publish')).toBeUndefined();
   });
 });
 

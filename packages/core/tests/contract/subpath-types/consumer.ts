@@ -327,7 +327,6 @@ export type {
   buildCursorUrl,
   buildPosixCliLaunch,
   buildStartupInjectionBytes,
-  buildWindowsCliLaunch,
   ComposeSelection,
   CreateScenario,
   composeAskPrompt,
@@ -351,7 +350,6 @@ export type {
   OK_TERMINAL_SURFACE_PREAMBLE,
   OK_THREAD_SURFACE_PREAMBLE,
   PromptTransport,
-  quoteWindowsShellPath,
   shellSingleQuote,
   startupInjectionFor,
   TargetData,
@@ -359,7 +357,6 @@ export type {
   TERMINAL_CLIS,
   TerminalCli,
   TerminalLaunchCommand,
-  WindowsShellFamily,
   withSkillPointer,
 } from '@inkeep/open-knowledge-core/handoff';
 export type { readBrowserLanguages } from '@inkeep/open-knowledge-core/i18n/browser-locale-provider';

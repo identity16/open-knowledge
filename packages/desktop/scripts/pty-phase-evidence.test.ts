@@ -47,8 +47,8 @@ test('the retained artifact attributes a controlled host delay without inferring
     phaseTrace: createPtyPhaseTrace({ OK_PTY_PHASE_TRACE: '1' }, 'utility', (record) =>
       appendFileSync(logPath, `${JSON.stringify(record)}\n`),
     ),
-    env: {},
-    platform: 'win32',
+    env: { SHELL: '/bin/bash' },
+    platform: 'linux',
     parentPort: {
       on(_event, callback) {
         receive = callback;
@@ -68,7 +68,6 @@ test('the retained artifact attributes a controlled host delay without inferring
       cwd: 'C:\\project',
       cols: 80,
       rows: 24,
-      shell: 'C:\\Windows\\System32\\cmd.exe',
     },
   });
   const destination = preservePtyEvidence({
@@ -131,8 +130,8 @@ test('the retained summary measures the wait from native spawn to first output a
     phaseTrace: createPtyPhaseTrace({ OK_PTY_PHASE_TRACE: '1' }, 'utility', (record) =>
       appendFileSync(logPath, `${JSON.stringify(record)}\n`),
     ),
-    env: {},
-    platform: 'win32',
+    env: { SHELL: '/bin/bash' },
+    platform: 'linux',
     parentPort: {
       on(_event, callback) {
         receive = callback;
@@ -151,7 +150,6 @@ test('the retained summary measures the wait from native spawn to first output a
       cwd: 'C:\\project',
       cols: 80,
       rows: 24,
-      shell: 'C:\\Windows\\System32\\cmd.exe',
     },
   });
   clock += SPAWN_TO_OUTPUT_DELAY_MS;

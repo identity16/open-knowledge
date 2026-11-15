@@ -5,8 +5,7 @@ type TerminalStartFailureReason =
   | 'not-started'
   | 'unknown-session'
   | 'host-unavailable'
-  | 'host-exited'
-  | 'launch-unsupported';
+  | 'host-exited';
 
 export type TerminalExitInfo =
   | {
@@ -45,8 +44,6 @@ export function TerminalExitNotice({ info, onRestart }: TerminalExitNoticeProps)
         return t`This terminal session is no longer available.`;
       case 'not-started':
         return t`The shell for this session was never started.`;
-      case 'launch-unsupported':
-        return t`The terminal can't run this command in the configured shell.`;
     }
   };
 

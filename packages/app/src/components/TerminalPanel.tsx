@@ -10,13 +10,10 @@ import {
   buildPosixCliLaunch,
   buildStartupInjectionBytes,
   buildTerminalInputBytes,
-  buildWindowsCliLaunch,
-  quoteWindowsShellPath,
   shellSingleQuote,
   startupInjectionFor,
   type TerminalCli,
   type TerminalLaunchCommand,
-  type WindowsShellFamily,
 } from '@inkeep/open-knowledge-core/handoff';
 import { useLingui } from '@lingui/react/macro';
 import { FitAddon } from '@xterm/addon-fit';
@@ -34,11 +31,7 @@ import { getPageListCache } from '../editor/page-list-cache';
 import { filePathToDocName, hashFromDocName, hashFromFolderPath } from '../lib/doc-hash';
 import type { TerminalCliLaunchIntent, TerminalLaunchIntent } from './EditorPane';
 import { filesFromExternalDrop, isExternalFileDrag } from './file-tree-adapter';
-import {
-  type TerminalCommandId,
-  terminalCommandFor,
-  windowsTerminalCommandFor,
-} from './handoff/terminal-command-events';
+import { type TerminalCommandId, terminalCommandFor } from './handoff/terminal-command-events';
 import { registerBracketedPasteProbe } from './handoff/terminal-paste-mode';
 import { TerminalAgentConnectionBanner } from './TerminalAgentConnectionBanner';
 import { TerminalCliMissingBanner } from './TerminalCliMissingBanner';
@@ -151,16 +144,8 @@ function TerminalSession({
   const [hasOutput, setHasOutput] = useState(false);
   const [connectionCli, setConnectionCli] = useState<TerminalCli | null>(null);
   const [exitInfo, setExitInfo] = useState<TerminalExitInfo | null>(null);
-  const [shellNotice, setShellNotice] = useState<Extract<
-    OkPtyNotice,
-    { notice: 'invalid-shell-override' }
-  > | null>(null);
-  const [supportFileNotice, setSupportFileNotice] = useState<Extract<
-    OkPtyNotice,
-    { notice: 'support-file-degraded' }
-  > | null>(null);
+  const [shellNotice, setShellNotice] = useState<OkPtyNotice | null>(null);
   const [pathDropNotice, setPathDropNotice] = useState(false);
-  const [manualSubmitNotice, setManualSubmitNotice] = useState(false);
   const ptyIdRef = useRef<string | null>(null);
   const terminalInputEnabledRef = useRef(false);
   const terminalInputRef = useRef<(data: string) => void>(() => undefined);
@@ -170,7 +155,6 @@ function TerminalSession({
 
   const configCtx = use(ConfigContext);
   const autoApproveOkToolsRef = useRef(configCtx?.userConfig?.agents?.autoApproveOkTools ?? true);
-  const shellFamilyRef = useRef<WindowsShellFamily | null>(null);
 
   useEffect(() => {
     onExitRef.current = onExit;
@@ -185,8 +169,6 @@ function TerminalSession({
 
     setConnectionCli(null);
     setCliNotice(null);
-    setManualSubmitNotice(false);
-    setSupportFileNotice(null);
     setShellNotice(null);
     setPathDropNotice(false);
     terminalInputEnabledRef.current = false;
@@ -199,7 +181,6 @@ function TerminalSession({
     let unsubExit: (() => void) | undefined;
     let unsubNotice: (() => void) | undefined;
     let pendingShellNotices: OkPtyNotice[] = [];
-    let launchCapabilityLimited = false;
     let readinessScan: ((data: string) => void) | undefined;
     const armReadinessScan = (marker: string, onReady: () => void): void => {
       let acc = '';
@@ -230,24 +211,13 @@ function TerminalSession({
     window.addEventListener('pagehide', markDocumentUnloading);
     document.addEventListener('visibilitychange', markDocumentVisible);
 
-    const applyShellNotice = (notice: OkPtyNotice): void => {
-      if (notice.notice === 'shell-resolved') {
-        shellFamilyRef.current = notice.shellFamily;
-      } else if (notice.notice === 'invalid-shell-override') {
-        if (notice.reason === 'unsupported-family') launchCapabilityLimited = true;
-        setShellNotice(notice);
-      } else {
-        setSupportFileNotice(notice);
-      }
-    };
-
     unsubNotice = bridge.terminal.onNotice((msg) => {
       if (ptyId === null) {
         pendingShellNotices.push(msg);
         return;
       }
       if (msg.ptyId !== ptyId) return;
-      applyShellNotice(msg);
+      setShellNotice(msg);
     });
 
     const screenReaderModeAtMount =
@@ -268,7 +238,6 @@ function TerminalSession({
       scrollback: 10000,
       smoothScrollDuration: 125,
       scrollSensitivity: 3,
-      windowsPty: bridge.platform === 'win32' ? { backend: 'conpty' } : undefined,
       linkHandler: {
         activate: (_event, uri) => openUrl(uri),
       },
@@ -415,7 +384,7 @@ function TerminalSession({
 
       const key = event.key.toLowerCase();
       const platformClipboardKey =
-        (bridge.platform === 'linux' || bridge.platform === 'win32') &&
+        bridge.platform === 'linux' &&
         event.ctrlKey &&
         !event.altKey &&
         !event.metaKey &&
@@ -424,19 +393,16 @@ function TerminalSession({
         event.preventDefault();
 
         if (key === 'c') {
-          const hasSelection = term.hasSelection();
-          const copiesSelection = event.shiftKey || (bridge.platform === 'win32' && hasSelection);
-          if (!copiesSelection) return true;
-          if (hasSelection && navigator.clipboard?.writeText) {
+          if (!event.shiftKey) return true;
+          if (term.hasSelection() && navigator.clipboard?.writeText) {
             void navigator.clipboard
               .writeText(term.getSelection())
               .catch((err) => console.warn('[terminal] clipboard copy failed', err));
           }
-          if (bridge.platform === 'win32') term.clearSelection();
           return false;
         }
 
-        if (!event.shiftKey && bridge.platform !== 'win32') return true;
+        if (!event.shiftKey) return true;
         if (!terminalInputEnabledRef.current) return false;
         if (navigator.clipboard?.readText) {
           void navigator.clipboard
@@ -540,7 +506,7 @@ function TerminalSession({
       onPtyIdRef.current?.(livePtyId);
       for (const notice of pendingShellNotices) {
         if (notice.ptyId !== livePtyId) continue;
-        applyShellNotice(notice);
+        setShellNotice(notice);
       }
       pendingShellNotices = [];
 
@@ -563,9 +529,7 @@ function TerminalSession({
           msg.neverStarted
             ? msg.hostExited === true
               ? { phase: 'start', reason: 'host-exited' }
-              : msg.launchFailure !== undefined
-                ? { phase: 'start', reason: 'launch-unsupported' }
-                : { phase: 'start', detail: msg.error ?? '' }
+              : { phase: 'start', detail: msg.error ?? '' }
             : {
                 phase: 'exit',
                 exitCode: msg.exitCode,
@@ -602,14 +566,6 @@ function TerminalSession({
         if (attached.ok) {
           shellLive = true;
           if (cancelled) return;
-          if (attached.shellFamily !== undefined) shellFamilyRef.current = attached.shellFamily;
-          if (attached.shellNoticeReason !== undefined) {
-            applyShellNotice({
-              ptyId: livePtyId,
-              notice: 'invalid-shell-override',
-              reason: attached.shellNoticeReason,
-            });
-          }
           if (attached.replay !== '') {
             markFirstOutput();
             term.write(attached.replay);
@@ -647,9 +603,7 @@ function TerminalSession({
       intent: TerminalCliLaunchIntent,
     ): Promise<TerminalLaunchCommand | undefined> => {
       const buildLaunch = (opts: Parameters<typeof buildPosixCliLaunch>[2]) =>
-        bridge.platform === 'win32'
-          ? buildWindowsCliLaunch(intent.cli, intent.prompt, opts)
-          : buildPosixCliLaunch(intent.cli, intent.prompt, opts);
+        buildPosixCliLaunch(intent.cli, intent.prompt, opts);
       if (intent.cli === 'claude') {
         try {
           const fresh = await bridge.terminal.claudePreflight();
@@ -718,14 +672,6 @@ function TerminalSession({
         }
         if (cancelled) return;
         if (adopted.ok) {
-          shellFamilyRef.current = adopted.shellFamily ?? null;
-          if (adopted.shellNoticeReason !== undefined) {
-            applyShellNotice({
-              ptyId: adoptPtyId,
-              notice: 'invalid-shell-override',
-              reason: adopted.shellNoticeReason,
-            });
-          }
           const replay = adopted.replay;
           const hasReplay = replay !== '';
           attachSession(adoptPtyId);
@@ -751,10 +697,7 @@ function TerminalSession({
           if (cancelled) return;
         }
       } else if (commandId !== null && adoptPtyId === null) {
-        launchCommand =
-          bridge.platform === 'win32'
-            ? windowsTerminalCommandFor(commandId)
-            : terminalCommandFor(commandId);
+        launchCommand = terminalCommandFor(commandId);
       }
 
       let result: Awaited<ReturnType<typeof bridge.terminal.create>>;
@@ -805,17 +748,13 @@ function TerminalSession({
       const cliLaunch = launch !== null && launch.cli !== null ? launch : null;
       const injectionBytes =
         cliLaunch !== null && launchCommand !== undefined && cliLaunch.prompt != null
-          ? buildStartupInjectionBytes(cliLaunch.cli, cliLaunch.prompt, bridge.platform)
+          ? buildStartupInjectionBytes(cliLaunch.cli, cliLaunch.prompt)
           : null;
       if (injectionBytes != null && cliLaunch !== null) {
-        const cfg = startupInjectionFor(cliLaunch.cli, bridge.platform);
+        const cfg = startupInjectionFor(cliLaunch.cli);
         const settleMs = cfg?.settleMs ?? STAGE_PASTE_SETTLE_MS;
         const marker = cfg?.readyMarker;
         const bytes = injectionBytes;
-        const stagedBytes =
-          bridge.platform === 'win32' && cfg != null && bytes.endsWith(cfg.submit)
-            ? bytes.slice(0, -cfg.submit.length)
-            : bytes;
         let fired = false;
         const inject = (): void => {
           if (fired) return;
@@ -823,12 +762,9 @@ function TerminalSession({
           readinessScan = undefined;
           if (stagePasteTimer !== undefined) clearTimeout(stagePasteTimer);
           if (injectCapTimer !== undefined) clearTimeout(injectCapTimer);
-          if (cancelled || !terminalInputEnabledRef.current || launchCapabilityLimited) return;
-          const isWindowsStagedPaste = bridge.platform === 'win32';
-          const payload = isWindowsStagedPaste ? stagedBytes : bytes;
-          sendInput(payload);
+          if (cancelled || !terminalInputEnabledRef.current) return;
+          sendInput(bytes);
           term.focus();
-          if (isWindowsStagedPaste) setManualSubmitNotice(true);
         };
         injectCapTimer = setTimeout(inject, cfg?.capMs ?? settleMs);
         if (marker != null) {
@@ -851,7 +787,7 @@ function TerminalSession({
           readinessScan = undefined;
           if (stagePasteTimer !== undefined) clearTimeout(stagePasteTimer);
           if (injectCapTimer !== undefined) clearTimeout(injectCapTimer);
-          if (cancelled || !terminalInputEnabledRef.current || launchCapabilityLimited) return;
+          if (cancelled || !terminalInputEnabledRef.current) return;
           sendInput(buildTerminalInputBytes(staged, term.modes.bracketedPasteMode));
           term.focus();
         };
@@ -933,21 +869,8 @@ function TerminalSession({
       const paths = droppedFiles
         .map((file) => bridge.getPathForFile(file))
         .filter((path): path is string => path !== null && path !== '' && !/\p{Cc}/u.test(path));
-      let rejectedCount = droppedFiles.length - paths.length;
-      const escapedPaths = paths.flatMap((path) => {
-        if (bridge.platform !== 'win32') return [shellSingleQuote(path)];
-        const family = shellFamilyRef.current;
-        if (family === null) {
-          rejectedCount += 1;
-          return [];
-        }
-        const quoted = quoteWindowsShellPath(family, path);
-        if (quoted === null) {
-          rejectedCount += 1;
-          return [];
-        }
-        return [quoted];
-      });
+      const rejectedCount = droppedFiles.length - paths.length;
+      const escapedPaths = paths.map(shellSingleQuote);
       if (rejectedCount > 0) setPathDropNotice(true);
       if (escapedPaths.length === 0) return;
       terminalInputRef.current(`${escapedPaths.join(' ')} `);
@@ -990,15 +913,6 @@ function TerminalSession({
           >
             {t`Some dropped files could not be inserted safely.`}
           </TerminalNoticeBanner>
-        ) : supportFileNotice ? (
-          <TerminalNoticeBanner
-            testId="terminal-support-file-notice-banner"
-            onDismiss={() => setSupportFileNotice(null)}
-          >
-            {supportFileNotice.reason === 'containment-refused'
-              ? t`OpenKnowledge couldn't write launch settings under .ok/local/terminal because the folder is not safely contained in this project. Check that it is a real folder inside the project, not a link. Claude will ask you to approve OpenKnowledge.`
-              : t`OpenKnowledge couldn't write launch settings under .ok/local/terminal this time. Check that the folder is writable. Claude will ask you to approve OpenKnowledge.`}
-          </TerminalNoticeBanner>
         ) : shellNotice ? (
           <TerminalNoticeBanner
             testId="terminal-shell-notice-banner"
@@ -1010,16 +924,7 @@ function TerminalSession({
                 ? t`terminal.shell in .ok/local/config.yml must be a string. Using an available Windows shell instead.`
                 : shellNotice.reason === 'not-absolute'
                   ? t`terminal.shell in .ok/local/config.yml must be an absolute Windows path. Using an available Windows shell instead.`
-                  : shellNotice.reason === 'unsupported-family'
-                    ? t`terminal.shell in .ok/local/config.yml supports PowerShell, cmd.exe, or Git Bash for OpenKnowledge-managed launches and dropped-file paths. This shell opens a plain terminal only; agent and command launches do not run in it.`
-                    : t`The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead.`}
-          </TerminalNoticeBanner>
-        ) : manualSubmitNotice ? (
-          <TerminalNoticeBanner
-            testId="terminal-manual-submit-notice-banner"
-            onDismiss={() => setManualSubmitNotice(false)}
-          >
-            {t`The prompt was pasted but not submitted automatically. Review it, then press Enter to send it.`}
+                  : t`The terminal.shell executable in .ok/local/config.yml was not found. Using an available Windows shell instead.`}
           </TerminalNoticeBanner>
         ) : null
       ) : null}

@@ -23,12 +23,6 @@ export function terminalCommandFor(id: string): string | undefined {
   return [command.executable, ...command.args].map(posixCommandToken).join(' ');
 }
 
-export function windowsTerminalCommandFor(id: string): TerminalLaunchCommand | undefined {
-  return Object.hasOwn(TERMINAL_COMMANDS, id)
-    ? TERMINAL_COMMANDS[id as TerminalCommandId]
-    : undefined;
-}
-
 const TERMINAL_COMMAND_EVENT = 'open-knowledge:terminal-command';
 
 export function requestTerminalCommand(

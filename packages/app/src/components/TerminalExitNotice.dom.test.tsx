@@ -80,18 +80,6 @@ describe('TerminalExitNotice', () => {
     expect(screen.getByText('posix_spawnp failed')).toBeTruthy();
   });
 
-  test('a launch composition failure reads as localized copy, never as the machine reason', () => {
-    render(
-      <TerminalExitNotice
-        info={{ phase: 'start', reason: 'launch-unsupported' }}
-        onRestart={() => {}}
-      />,
-    );
-    expect(screen.getByText(/couldn't start/i)).toBeTruthy();
-    expect(screen.getByText(/can't run this command in the configured shell/i)).toBeTruthy();
-    expect(screen.queryByText(/unsafe-argument|unsupported-shell|invalid-launch/)).toBeNull();
-  });
-
   test('the restart control is an accessible button that spawns a fresh session', () => {
     const onRestart = vi.fn(() => {});
     render(

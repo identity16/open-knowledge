@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, win32 } from 'node:path';
-import { psQuoteArg } from '@inkeep/open-knowledge-core';
 import { getWindowsEnvValue, windowsPathKey } from '../../../src/shared/windows-env.ts';
 
 const POSIX_SYSTEM_PATH = '/usr/bin:/bin:/usr/sbin:/sbin';
@@ -14,6 +13,10 @@ const WINDOWS_PROFILE_FAILURE_FILE = 'ok-shell-profile-error.log';
 
 function quotePosix(value: string): string {
   return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
+function psQuoteArg(value: string): string {
+  return `'${value.replace(/['\u2018\u2019\u201A\u201B]/g, '$&$&')}'`;
 }
 
 function validateEnvironmentName(name: string): void {

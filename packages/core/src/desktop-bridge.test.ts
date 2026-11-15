@@ -2,19 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   assetOpenRefusalRevealsInstead,
   isTerminalShellNoticeReason,
-  isTerminalSupportFileNoticeReason,
   TERMINAL_SHELL_NOTICE_REASONS,
-  TERMINAL_SUPPORT_FILE_NOTICE_REASONS,
 } from './desktop-bridge.ts';
 
-const WIRE_REASONS = [
-  'config-unreadable',
-  'invalid-value',
-  'not-absolute',
-  'not-found',
-  'unsupported-family',
-];
-const SUPPORT_FILE_REASONS = ['containment-refused', 'write-failed'];
+const WIRE_REASONS = ['config-unreadable', 'invalid-value', 'not-absolute', 'not-found'];
 
 describe('TERMINAL_SHELL_NOTICE_REASONS', () => {
   it('exposes exactly the wire vocabulary', () => {
@@ -43,19 +34,6 @@ describe('isTerminalShellNoticeReason', () => {
     expect(isTerminalShellNoticeReason(false)).toBe(false);
     expect(isTerminalShellNoticeReason({})).toBe(false);
     expect(isTerminalShellNoticeReason(['invalid-value'])).toBe(false);
-  });
-});
-
-describe('terminal support-file notice reasons', () => {
-  it('exposes and accepts exactly the wire vocabulary', () => {
-    expect([...TERMINAL_SUPPORT_FILE_NOTICE_REASONS].sort()).toEqual(
-      [...SUPPORT_FILE_REASONS].sort(),
-    );
-    for (const reason of SUPPORT_FILE_REASONS) {
-      expect(isTerminalSupportFileNoticeReason(reason)).toBe(true);
-    }
-    expect(isTerminalSupportFileNoticeReason('escape')).toBe(false);
-    expect(isTerminalSupportFileNoticeReason(null)).toBe(false);
   });
 });
 

@@ -1,14 +1,8 @@
 import {
   BRACKETED_PASTE_ENABLE_MARKER,
-  isWindowsShellFamily,
-  isWindowsShellLaunchFailureReason,
   type TerminalLaunchCommand,
-  type WindowsShellFamily,
 } from '@inkeep/open-knowledge-core';
-import {
-  isTerminalShellNoticeReason,
-  isTerminalSupportFileNoticeReason,
-} from '@inkeep/open-knowledge-core/desktop-bridge';
+import { isTerminalShellNoticeReason } from '@inkeep/open-knowledge-core/desktop-bridge';
 import type {
   OkPtyAdoptResult,
   OkPtyCreateResult,
@@ -99,8 +93,6 @@ interface SessionState {
   customLabel: string | null;
   ordinal: number | null;
   order: number;
-  shellFamily: WindowsShellFamily | null;
-  shellNoticeReason: Extract<TerminalShellNoticeReason, 'unsupported-family'> | null;
 }
 
 export type AppShutdownCause = 'quit' | 'update-install' | 'relaunch';
@@ -348,19 +340,14 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
           ? (raw as PtyHostOutgoingMessage)
           : null;
       case 'spawn-error':
-        return (m.shellNeverAttached === undefined &&
-          ((typeof m.message === 'string' && m.launchFailure === undefined) ||
-            (m.message === undefined && isWindowsShellLaunchFailureReason(m.launchFailure)))) ||
+        return (m.shellNeverAttached === undefined && typeof m.message === 'string') ||
           (m.shellNeverAttached === true &&
             m.message === undefined &&
-            m.launchFailure === undefined &&
             (m.exitCode === undefined || typeof m.exitCode === 'number'))
           ? (raw as PtyHostOutgoingMessage)
           : null;
       case 'shell-notice':
-        return (m.notice === 'invalid-shell-override' && isTerminalShellNoticeReason(m.reason)) ||
-          (m.notice === 'shell-resolved' && isWindowsShellFamily(m.shellFamily)) ||
-          (m.notice === 'support-file-degraded' && isTerminalSupportFileNoticeReason(m.reason))
+        return m.notice === 'invalid-shell-override' && isTerminalShellNoticeReason(m.reason)
           ? (raw as PtyHostOutgoingMessage)
           : null;
       default:
@@ -462,44 +449,19 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
           event: 'terminal-manager-spawn-error',
           windowId,
           ptyId,
-          ...(message.launchFailure === undefined
-            ? { message: message.message }
-            : { launchFailure: message.launchFailure }),
+          message: message.message,
           elapsedMs,
           killRequested,
         });
-        pushExit(
-          handle,
-          message.launchFailure === undefined
-            ? { ptyId, error: message.message, neverStarted: true }
-            : { ptyId, launchFailure: message.launchFailure, neverStarted: true },
-        );
+        pushExit(handle, { ptyId, error: message.message, neverStarted: true });
         break;
       }
       case 'shell-notice':
-        if (message.notice === 'shell-resolved') {
-          session.shellFamily = message.shellFamily;
-          pushNotice(handle, {
-            ptyId: message.ptyId,
-            notice: message.notice,
-            shellFamily: message.shellFamily,
-          });
-        } else if (message.notice === 'invalid-shell-override') {
-          if (message.reason === 'unsupported-family') {
-            session.shellNoticeReason = message.reason;
-          }
-          pushNotice(handle, {
-            ptyId: message.ptyId,
-            notice: message.notice,
-            reason: message.reason,
-          });
-        } else {
-          pushNotice(handle, {
-            ptyId: message.ptyId,
-            notice: message.notice,
-            reason: message.reason,
-          });
-        }
+        pushNotice(handle, {
+          ptyId: message.ptyId,
+          notice: message.notice,
+          reason: message.reason,
+        });
         break;
     }
   }
@@ -562,7 +524,6 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
       ...outcome,
       killRequested: session.killRequested,
       sawOutput: session.sawOutput,
-      shellFamily: session.shellFamily,
       uptimeMs: session.spawnedAt === null ? null : Math.max(0, Date.now() - session.spawnedAt),
     });
   }
@@ -631,8 +592,6 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
         customLabel: null,
         ordinal: null,
         order: nextOrder,
-        shellFamily: null,
-        shellNoticeReason: null,
         staleToken: null,
       };
       session.staleToken = deps.setTimer(() => {
@@ -810,10 +769,6 @@ export function createTerminalManager(deps: TerminalManagerDeps): TerminalManage
         replay: session.bracketedPaste
           ? `${BRACKETED_PASTE_ENABLE_MARKER}${session.replay}`
           : session.replay,
-        ...(session.shellFamily === null ? {} : { shellFamily: session.shellFamily }),
-        ...(session.shellNoticeReason === null
-          ? {}
-          : { shellNoticeReason: session.shellNoticeReason }),
       };
     },
 

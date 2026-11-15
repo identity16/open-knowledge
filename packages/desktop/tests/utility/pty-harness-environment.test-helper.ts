@@ -138,8 +138,8 @@ export async function runControlledHarness(
       later(lifecycle.replacementExitAfterCreateMs, () => exit(1));
     }
     if (launch) {
-      if (!Array.isArray(args) || !args.includes('-EncodedCommand')) {
-        throw new Error('structured launch did not provide an encoded command');
+      if (!Array.isArray(args) || !args.includes('-c')) {
+        throw new Error('structured launch did not provide a shell command');
       }
       if (options.phase === 'attach-only') {
         progressingUntil(84_000, 500, '\u001b[?1004h');
