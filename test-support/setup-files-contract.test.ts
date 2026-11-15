@@ -30,6 +30,7 @@ const KNOWN_TEST_PROJECTS = [
   'packages/app/vitest.fidelity.config.ts',
   'packages/app/vitest.integration.config.ts',
   'packages/app/vitest.node.config.ts',
+  'packages/app/vitest.unit.config.ts',
   'packages/app/vitest.worker-lifetime.config.ts',
   'packages/cli/vitest.config.ts',
   'packages/cli/vitest.e2e.config.ts',
@@ -56,7 +57,11 @@ const KNOWN_BUILD_CONFIGS = [
   'packages/desktop/electron.vite.release.config.ts',
 ];
 
-const REQUIRED_BASE_SETUP_FILES = ['bun-global-shim.ts', 'no-net-connect.ts', 'read-declarations.ts'];
+const REQUIRED_BASE_SETUP_FILES = [
+  'bun-global-shim.ts',
+  'no-net-connect.ts',
+  'read-declarations.ts',
+];
 
 const BROWSER_PROJECT_SETUP_FILES: Readonly<Record<string, readonly string[]>> = {
   'packages/app/tests/foundation/fixtures/vitest.browser-fixture.config.ts': ['browser-setup.ts'],

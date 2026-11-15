@@ -11,7 +11,7 @@ const dependents = {
   app: ['cli', 'desktop'],
 };
 const typecheckPackages = new Set(['app', 'cli', 'core', 'desktop', 'server']);
-const unitConfigs = { app: ['vitest.config.ts', 'vitest.dom.config.ts'] };
+const unitConfigs = { app: ['vitest.unit.config.ts', 'vitest.dom.config.ts'] };
 const lintable = /\.(?:[cm]?[jt]sx?|json|jsonc|css)$/;
 const oxlintable = /\.(?:[cm]?[jt]sx?)$/;
 const biomeScope = /^(?:packages\/|docs\/|[^/]+\.(?:json|jsonc|ts)$)/;
