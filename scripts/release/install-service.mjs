@@ -33,6 +33,8 @@ const domain = `gui/${process.getuid()}`;
 const oldLabel = 'com.joon.openknowledge';
 const oldPlist = join(agents, `${oldLabel}.plist`);
 const plist = join(agents, `${service}.plist`);
+const launcherDir = join(home, '.local/libexec/ok-service');
+const launcher = join(launcherDir, 'ok-service');
 const shellQuote = (value) => `'${value.replaceAll("'", "'\\''")}'`;
 const xml = (value) =>
   value
@@ -101,13 +103,23 @@ writeFileSync(
   `#!/bin/sh\nset -e\n${command} update\nlaunchctl kickstart -k ${shellQuote(`${domain}/${service}`)}\n`,
   { mode: 0o755 },
 );
+const launcherIsNew = !existsSync(launcher);
+if (launcherIsNew) {
+  mkdirSync(launcherDir, { recursive: true });
+  const launcherSource = join(launcherDir, 'launcher.c');
+  copyFileSync(join(import.meta.dirname, 'service-launcher.c'), launcherSource);
+  execFileSync('cc', ['-O2', '-o', launcher, launcherSource], { stdio: 'inherit' });
+  execFileSync('codesign', ['-s', '-', '-f', '-i', `${service}.launcher`, launcher], {
+    stdio: 'inherit',
+  });
+}
 writeFileSync(
   plist,
   `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>${service}</string>
-<key>ProgramArguments</key><array><string>${xml(process.execPath)}</string><string>${xml(installedChannel)}</string><string>start</string><string>start</string><string>--mode</string><string>browser</string><string>--no-open-browser</string><string>--port</string><string>8080</string><string>--idle-shutdown</string><string>off</string></array>
+<key>ProgramArguments</key><array><string>${xml(launcher)}</string><string>${xml(process.execPath)}</string><string>${xml(installedChannel)}</string><string>start</string><string>start</string><string>--mode</string><string>browser</string><string>--no-open-browser</string><string>--port</string><string>8080</string><string>--idle-shutdown</string><string>off</string></array>
 <key>WorkingDirectory</key><string>${xml(project)}</string>
 <key>RunAtLoad</key><true/>
 <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
@@ -135,3 +147,7 @@ writeFileSync(
 console.log(
   `Service installed: ${service}\nBackup: ${backup}\nCommands: ${bin}/ok, ${bin}/openknowledge-update`,
 );
+if (launcherIsNew)
+  console.log(
+    `Grant Full Disk Access to ${launcher} in System Settings > Privacy & Security, then restart the service. Agents it starts cannot read ~/Documents without it, and rebuilding the launcher resets the grant.`,
+  );
