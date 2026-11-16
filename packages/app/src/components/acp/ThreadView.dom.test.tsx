@@ -2084,6 +2084,41 @@ describe('ThreadView tool-call grouping', () => {
     expect(screen.getAllByTestId('agent-thread-tool-call')).toHaveLength(3);
   });
 
+  test('an image a call read shows under its collapsed row and opens in the preview', async () => {
+    model = makeModel({
+      turnActive: false,
+      items: [
+        toolCall({
+          title: 'Read shot.png',
+          toolKind: 'read',
+          status: 'completed',
+          locations: [{ path: 'tmp/shot.png' }],
+          images: [{ data: 'aGk=', mimeType: 'image/png' }],
+        }),
+      ],
+    });
+    render(<ThreadView info={makeInfo({ status: 'ready' })} />);
+
+    const thumbnail = screen.getByRole('button', { name: 'shot.png' });
+    expect(thumbnail.querySelector('img')?.getAttribute('src')).toBe('data:image/png;base64,aGk=');
+    await userEvent.click(thumbnail);
+    expect(screen.getByTestId('agent-thread-image-preview')).toBeTruthy();
+  });
+
+  test('a folded run still shows every image its calls read', () => {
+    model = makeModel({
+      turnActive: false,
+      items: reads(3).map((call) => ({
+        ...call,
+        images: [{ data: 'aGk=', mimeType: 'image/png' }],
+      })),
+    });
+    render(<ThreadView info={makeInfo({ status: 'ready' })} />);
+
+    const group = screen.getByTestId('agent-thread-tool-group');
+    expect(group.querySelectorAll('[data-testid="agent-thread-tool-images"] img')).toHaveLength(3);
+  });
+
   test('a call still running holds its own row rather than being folded away', () => {
     const [first, second, third] = reads(3);
     model = makeModel({

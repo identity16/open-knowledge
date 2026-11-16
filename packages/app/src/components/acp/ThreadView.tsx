@@ -3380,6 +3380,46 @@ function stripWrappingFence(text: string): string {
   return lines.slice(1, -1).join('\n');
 }
 
+function toolImageName(call: RenderedToolCall): string {
+  const path = call.locations[0]?.path ?? describeToolCall(call).preview;
+  return path === undefined || path === '' ? call.title : (path.split('/').pop() ?? path);
+}
+
+function ToolCallImages({ calls }: { calls: readonly RenderedToolCall[] }): ReactNode {
+  const openPreview = use(ImagePreviewContext);
+  const images = calls.flatMap((call) =>
+    call.images.map((image) => ({ image, name: toolImageName(call) })),
+  );
+  if (images.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 px-2 pb-1.5" data-testid="agent-thread-tool-images">
+      {images.map(({ image, name }, index) => {
+        const src = `data:${image.mimeType};base64,${image.data}`;
+        return (
+          <Button
+            // biome-ignore lint/suspicious/noArrayIndexKey: images are positional within their calls
+            key={index}
+            type="button"
+            variant="ghost"
+            onClick={() => openPreview?.({ src, name })}
+            disabled={openPreview === null}
+            className="h-auto max-w-full overflow-hidden rounded-md border border-border/60 bg-background p-0 hover:bg-background focus-visible:ring-2"
+            title={name}
+            aria-label={name}
+          >
+            <img
+              src={src}
+              alt={name}
+              className="block max-h-40 max-w-full object-contain"
+              draggable={false}
+            />
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 function ToolCallGroupRow({
   calls,
   onExpand,
@@ -3433,6 +3473,7 @@ function ToolCallGroupRow({
           <ToolTooltipContent text={tooltip} />
         </Tooltip>
       )}
+      <ToolCallImages calls={calls} />
     </div>
   );
 }
@@ -3543,6 +3584,7 @@ function ToolCallCard({
           {row}
         </div>
       )}
+      <ToolCallImages calls={[call]} />
       {expanded ? (
         <div className="flex flex-col gap-1.5 border-border/60 border-t px-2 py-1.5">
           <CappedToolBody>
