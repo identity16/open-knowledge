@@ -224,6 +224,7 @@ function toolCall(overrides?: Partial<Extract<RenderedItem, { kind: 'tool_call' 
     diffs: [],
     terminalIds: [],
     content: [],
+    images: [],
     locations: [],
     rawInput: undefined,
     ...overrides,

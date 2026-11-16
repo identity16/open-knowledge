@@ -23,6 +23,7 @@ function call(overrides: Partial<RenderedToolCall>): RenderedToolCall {
     diffs: [],
     terminalIds: [],
     content: [],
+    images: [],
     locations: [],
     rawInput: undefined,
     ...overrides,
