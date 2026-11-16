@@ -19,6 +19,10 @@ function makeParams(overrides: Partial<ContextMenuHandlerParams> = {}): ContextM
     dictionarySuggestions: [],
     selectionText: '',
     editFlags: allEditFlags,
+    mediaType: 'none',
+    hasImageContents: false,
+    x: 0,
+    y: 0,
     ...overrides,
   };
 }
@@ -36,6 +40,7 @@ function makeWebContents() {
     ),
     replaceMisspelling: vi.fn((_: string) => {}),
     showDefinitionForSelection: vi.fn(() => {}),
+    copyImageAt: vi.fn((_x: number, _y: number) => {}),
     fire(params: ContextMenuHandlerParams) {
       if (!handler) throw new Error('no context-menu handler registered');
       handler({}, params);
@@ -55,6 +60,7 @@ function makeDeps(
     openExternal: vi.fn((_: string) => {}),
     viewInSource: vi.fn(() => {}),
     popMenu: vi.fn((_: BuildSpellcheckMenuTemplateParams) => {}),
+    popImageMenu: vi.fn((_: () => void) => {}),
   };
 }
 
@@ -73,6 +79,42 @@ describe('attachSpellcheckContextMenu — isEditable gate', () => {
     attachSpellcheckContextMenu(wc, deps);
     wc.fire(makeParams({ isEditable: true }));
     expect(deps.popMenu).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('attachSpellcheckContextMenu — images', () => {
+  const image = { mediaType: 'image', hasImageContents: true, x: 120, y: 48 } as const;
+
+  test('an image outside an editable area pops an image menu that copies it at the click', () => {
+    const wc = makeWebContents();
+    const deps = makeDeps();
+    attachSpellcheckContextMenu(wc, deps);
+    wc.fire(makeParams({ ...image, isEditable: false }));
+    expect(deps.popMenu).not.toHaveBeenCalled();
+    const copyImage = deps.popImageMenu.mock.calls[0]?.[0];
+    if (!copyImage) throw new Error('popImageMenu was not called');
+    copyImage();
+    expect(wc.copyImageAt).toHaveBeenCalledWith(120, 48);
+  });
+
+  test('an image inside an editable area adds the copy to the edit menu', () => {
+    const wc = makeWebContents();
+    const deps = makeDeps();
+    attachSpellcheckContextMenu(wc, deps);
+    wc.fire(makeParams({ ...image, isEditable: true }));
+    expect(deps.popImageMenu).not.toHaveBeenCalled();
+    deps.popMenu.mock.calls[0]?.[0]?.actions.copyImage?.();
+    expect(wc.copyImageAt).toHaveBeenCalledWith(120, 48);
+  });
+
+  test('an image that has not loaded offers no copy', () => {
+    const wc = makeWebContents();
+    const deps = makeDeps();
+    attachSpellcheckContextMenu(wc, deps);
+    wc.fire(makeParams({ ...image, hasImageContents: false, isEditable: false }));
+    wc.fire(makeParams({ ...image, hasImageContents: false, isEditable: true }));
+    expect(deps.popImageMenu).not.toHaveBeenCalled();
+    expect(deps.popMenu.mock.calls[0]?.[0]?.actions.copyImage).toBeUndefined();
   });
 });
 

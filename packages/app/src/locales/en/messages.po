@@ -2776,6 +2776,9 @@ msgstr "Copy full path"
 msgid "Copy full path, No workspace"
 msgstr "Copy full path, No workspace"
 
+msgid "Copy Image"
+msgstr "Copy Image"
+
 msgid "Copy in"
 msgstr "Copy in"
 

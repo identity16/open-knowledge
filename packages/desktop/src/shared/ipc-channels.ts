@@ -433,6 +433,7 @@ export interface RequestChannels {
         readonly relPath: string;
         readonly title: string;
         readonly kind: 'asset' | 'wiki-link' | 'image';
+        readonly point?: { readonly x: number; readonly y: number };
       },
     ];
     result: undefined;

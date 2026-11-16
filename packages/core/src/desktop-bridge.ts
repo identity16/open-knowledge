@@ -1167,6 +1167,7 @@ export interface OkDesktopBridge {
       readonly relPath: string;
       readonly title: string;
       readonly kind: 'asset' | 'wiki-link' | 'image';
+      readonly point?: { readonly x: number; readonly y: number };
     }): Promise<void>;
     showItemInFolder(path: string): Promise<void>;
     trashItem(absPath: string): Promise<

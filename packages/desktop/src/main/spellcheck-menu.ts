@@ -1,5 +1,6 @@
 import { NATIVE_MENU_LABELS } from '@inkeep/open-knowledge-core';
 import type { BrowserWindow, EditFlags, Menu, MenuItemConstructorOptions } from 'electron';
+import { buildImageMenuSection } from './image-menu.ts';
 import { type MenuTranslator, translateEnglish } from './menu-translator.ts';
 
 export interface SpellcheckMenuParams {
@@ -16,6 +17,7 @@ export interface SpellcheckMenuActions {
   readonly lookUp: () => void;
   readonly search: (query: string) => void;
   readonly viewInSource: () => void;
+  readonly copyImage?: () => void;
 }
 
 export interface BuildSpellcheckMenuTemplateParams {
@@ -110,8 +112,11 @@ export function buildSpellcheckMenuTemplate(
       ]
     : [];
 
+  const imageSection =
+    actions.copyImage === undefined ? [] : buildImageMenuSection(actions.copyImage, translate);
+
   const template: MenuItemConstructorOptions[] = [];
-  for (const section of [editSection, spellSection, lookupSection, viewSection]) {
+  for (const section of [imageSection, editSection, spellSection, lookupSection, viewSection]) {
     if (section.length === 0) continue;
     if (template.length > 0) template.push({ type: 'separator' });
     template.push(...section);

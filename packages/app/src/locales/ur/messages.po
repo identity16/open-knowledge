@@ -2776,6 +2776,9 @@ msgstr "مکمل راستہ نقل کریں"
 msgid "Copy full path, No workspace"
 msgstr "مکمل راستہ نقل کریں، کوئی ورک اسپیس نہیں"
 
+msgid "Copy Image"
+msgstr "تصویر کاپی کریں"
+
 msgid "Copy in"
 msgstr "یہاں کاپی کریں"
 

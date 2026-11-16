@@ -2776,6 +2776,9 @@ msgstr "전체 경로 복사"
 msgid "Copy full path, No workspace"
 msgstr "전체 경로 복사, 워크스페이스 없음"
 
+msgid "Copy Image"
+msgstr "이미지 복사"
+
 msgid "Copy in"
 msgstr "복사해 넣기"
 

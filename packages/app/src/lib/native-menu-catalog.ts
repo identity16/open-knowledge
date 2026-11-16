@@ -55,6 +55,7 @@ export const NATIVE_MENU_MESSAGES = {
   openInFileManager: msg`Open in file manager`,
   openInDefaultApp: msg`Open in default app`,
   copyLink: msg`Copy link`,
+  copyImage: msg`Copy Image`,
 } satisfies Record<NativeMenuLabelKey, MessageDescriptor>;
 
 export const MENU_LABEL_TEXT_MESSAGES: readonly MessageDescriptor[] = [

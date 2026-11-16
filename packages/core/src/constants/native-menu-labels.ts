@@ -51,6 +51,7 @@ export const NATIVE_MENU_LABELS = {
   openInFileManager: 'Open in file manager',
   openInDefaultApp: 'Open in default app',
   copyLink: 'Copy link',
+  copyImage: 'Copy Image',
 } as const satisfies Record<string, string>;
 
 export type NativeMenuLabelKey = keyof typeof NATIVE_MENU_LABELS;

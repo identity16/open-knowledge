@@ -109,6 +109,42 @@ describe('buildAssetMenuTemplate', () => {
     },
   );
 
+  test('an image with a copy action leads with Copy Image, which copies it', () => {
+    const copyImage = vi.fn(() => {});
+    const template = buildAssetMenuTemplate({
+      kind: 'image',
+      platform: 'darwin',
+      actions: { ...makeActions(), copyImage },
+    });
+    expect(template.map((e) => e.label ?? e.type)).toEqual([
+      'Copy Image',
+      'separator',
+      'Reveal in Finder',
+      'Open in default app',
+      'separator',
+      'Copy link',
+    ]);
+    // biome-ignore lint/suspicious/noExplicitAny: test invokes the click callback
+    (template[0] as any).click();
+    expect(copyImage).toHaveBeenCalledTimes(1);
+  });
+
+  test('Copy Image stays off non-image targets and images without a copy action', () => {
+    const copyImage = vi.fn(() => {});
+    const asset = buildAssetMenuTemplate({
+      kind: 'asset',
+      platform: 'darwin',
+      actions: { ...makeActions(), copyImage },
+    });
+    const image = buildAssetMenuTemplate({
+      kind: 'image',
+      platform: 'darwin',
+      actions: makeActions(),
+    });
+    expect(asset.map((e) => e.label)).not.toContain('Copy Image');
+    expect(image.map((e) => e.label)).not.toContain('Copy Image');
+  });
+
   test('wiki-link kind produces the same template shape (uniform UX)', () => {
     const wikiActions = makeActions();
     const assetActions = makeActions();
