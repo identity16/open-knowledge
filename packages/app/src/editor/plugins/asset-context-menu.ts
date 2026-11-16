@@ -92,23 +92,21 @@ export function createAssetContextMenuPlugin(opts: AssetContextMenuPluginOpts): 
   return new Plugin({
     key: assetContextMenuKey,
     view(editorView: EditorView) {
+      const bridge = globalThis.window?.okDesktop;
       const showAssetMenu =
         opts.showAssetMenu ??
-        ((params) => {
-          const bridge = globalThis.window?.okDesktop;
-          if (!bridge) {
-            return Promise.resolve();
-          }
-          return bridge.shell.showAssetMenu({
-            relPath: params.relPath,
-            title: params.title,
-            kind: params.kind,
-            point: params.point,
-          });
-        });
+        (bridge === undefined
+          ? null
+          : (params: ContextMenuRequest) =>
+              bridge.shell.showAssetMenu({
+                relPath: params.relPath,
+                title: params.title,
+                kind: params.kind,
+                point: params.point,
+              }));
 
       const handler = (event: MouseEvent) => {
-        if (!(event.target instanceof Element)) return;
+        if (showAssetMenu === null || !(event.target instanceof Element)) return;
         const target = classifyContextMenuTarget(event.target, opts.sourceDocName);
         if (!target) return;
         event.preventDefault();
