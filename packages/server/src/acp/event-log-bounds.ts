@@ -39,17 +39,42 @@ function boundToolContent(content: unknown[]): unknown[] | null {
   return changed ? bounded : null;
 }
 
-export function boundSessionUpdateForLog(update: SessionUpdate): SessionUpdate {
-  const u = update as { sessionUpdate?: string; content?: unknown };
-  if (
-    (u.sessionUpdate !== 'tool_call' && u.sessionUpdate !== 'tool_call_update') ||
-    !Array.isArray(u.content)
-  ) {
-    return update;
+function boundStrings(value: unknown): unknown {
+  if (typeof value === 'string') return truncateEventText(value);
+  if (Array.isArray(value)) {
+    const bounded = value.map(boundStrings);
+    return bounded.some((item, index) => item !== value[index]) ? bounded : value;
   }
-  const content = boundToolContent(u.content);
-  if (content === null) return update;
-  return { ...update, content } as SessionUpdate;
+  if (typeof value === 'object' && value !== null) {
+    let changed = false;
+    const entries = Object.entries(value).map(([key, item]) => {
+      const bounded = boundStrings(item);
+      if (bounded !== item) changed = true;
+      return [key, bounded] as const;
+    });
+    return changed ? Object.fromEntries(entries) : value;
+  }
+  return value;
+}
+
+export function boundSessionUpdateForLog(update: SessionUpdate): SessionUpdate {
+  const u = update as {
+    sessionUpdate?: string;
+    content?: unknown;
+    rawOutput?: unknown;
+    _meta?: unknown;
+  };
+  if (u.sessionUpdate !== 'tool_call' && u.sessionUpdate !== 'tool_call_update') return update;
+  const content = Array.isArray(u.content) ? boundToolContent(u.content) : null;
+  const rawOutput = boundStrings(u.rawOutput);
+  const meta = boundStrings(u._meta);
+  if (content === null && rawOutput === u.rawOutput && meta === u._meta) return update;
+  return {
+    ...update,
+    ...(content === null ? {} : { content }),
+    ...(rawOutput === u.rawOutput ? {} : { rawOutput }),
+    ...(meta === u._meta ? {} : { _meta: meta }),
+  } as SessionUpdate;
 }
 
 const COALESCIBLE_CHUNK_KINDS = new Set([
