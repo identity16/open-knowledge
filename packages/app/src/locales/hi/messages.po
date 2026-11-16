@@ -2772,6 +2772,9 @@ msgstr "पूरा पथ कॉपी करें"
 msgid "Copy full path, No workspace"
 msgstr "पूरा पथ कॉपी करें, कोई कार्यक्षेत्र नहीं"
 
+msgid "Copy Image"
+msgstr "छवि कॉपी करें"
+
 msgid "Copy in"
 msgstr "यहाँ कॉपी करें"
 

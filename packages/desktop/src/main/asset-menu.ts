@@ -9,6 +9,7 @@ interface AssetMenuActions {
   readonly reveal: () => void | Promise<void>;
   readonly openInDefault: () => void | Promise<void>;
   readonly copyLink: () => void | Promise<void>;
+  readonly copyImage?: () => void | Promise<void>;
 }
 
 function runAssetMenuAction(name: keyof AssetMenuActions, action: () => void | Promise<void>) {
@@ -38,7 +39,21 @@ export function buildAssetMenuTemplate(
 ): MenuItemConstructorOptions[] {
   const { platform, actions } = params;
   const translate = params.translate ?? translateEnglish;
+  const { copyImage } = actions;
+  const imageSection: MenuItemConstructorOptions[] =
+    params.kind === 'image' && copyImage !== undefined
+      ? [
+          {
+            label: translate(NATIVE_MENU_LABELS.copyImage),
+            click: () => {
+              runAssetMenuAction('copyImage', copyImage);
+            },
+          },
+          { type: 'separator' },
+        ]
+      : [];
   return [
+    ...imageSection,
     {
       label: translate(revealMenuLabel(platform)),
       click: () => {

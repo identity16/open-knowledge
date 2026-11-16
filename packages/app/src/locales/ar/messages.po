@@ -2776,6 +2776,9 @@ msgstr "نسخ المسار الكامل"
 msgid "Copy full path, No workspace"
 msgstr "نسخ المسار الكامل، لا مساحة عمل"
 
+msgid "Copy Image"
+msgstr "نسخ الصورة"
+
 msgid "Copy in"
 msgstr "النسخ إلى هنا"
 

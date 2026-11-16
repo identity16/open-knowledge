@@ -2772,6 +2772,9 @@ msgstr "পূর্ণ পথ কপি করুন"
 msgid "Copy full path, No workspace"
 msgstr "পূর্ণ পথ কপি করুন, কোনো ওয়ার্কস্পেস নেই"
 
+msgid "Copy Image"
+msgstr "ছবি কপি করুন"
+
 msgid "Copy in"
 msgstr "এখানে কপি করুন"
 

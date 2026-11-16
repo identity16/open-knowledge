@@ -232,6 +232,7 @@ import {
 } from './claude-readiness.ts';
 import { withCliCommandNameArg } from './cli-command-name-arg.ts';
 import { requestUserConsent } from './consent-dialog.ts';
+import { copyImageAtClientPoint } from './copy-image.ts';
 import { copyImageToClipboard } from './copy-image-clipboard.ts';
 import {
   type CrashDetection,
@@ -4358,6 +4359,7 @@ function registerIpcHandlers() {
     if (!callerWin || !wm) return undefined;
     const projectPath = windowProjectPath(callerWin);
     if (!projectPath) return undefined;
+    const { point } = params;
     popAssetMenu(
       {
         Menu,
@@ -4398,6 +4400,13 @@ function registerIpcHandlers() {
             }
           },
           copyLink: () => clipboard.writeText(params.relPath),
+          ...(point === undefined
+            ? {}
+            : {
+                copyImage: () => {
+                  copyImageAtClientPoint(event.sender, point);
+                },
+              }),
         },
       },
     );

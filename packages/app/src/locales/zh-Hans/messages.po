@@ -2776,6 +2776,9 @@ msgstr "复制完整路径"
 msgid "Copy full path, No workspace"
 msgstr "复制完整路径，不含工作区"
 
+msgid "Copy Image"
+msgstr "复制图像"
+
 msgid "Copy in"
 msgstr "复制进来"
 

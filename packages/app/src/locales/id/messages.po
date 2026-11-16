@@ -2772,6 +2772,9 @@ msgstr "Salin jalur lengkap"
 msgid "Copy full path, No workspace"
 msgstr "Salin jalur lengkap, tanpa ruang kerja"
 
+msgid "Copy Image"
+msgstr "Salin Gambar"
+
 msgid "Copy in"
 msgstr "Salin ke sini"
 
