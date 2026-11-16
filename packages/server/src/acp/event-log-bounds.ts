@@ -10,16 +10,9 @@ function truncateEventText(text: string): string {
   return `${text.slice(0, EVENT_TEXT_CAP)}\n… [truncated ${text.length - EVENT_TEXT_CAP} chars]`;
 }
 
-export function boundSessionUpdateForLog(update: SessionUpdate): SessionUpdate {
-  const u = update as { sessionUpdate?: string; content?: unknown };
-  if (
-    (u.sessionUpdate !== 'tool_call' && u.sessionUpdate !== 'tool_call_update') ||
-    !Array.isArray(u.content)
-  ) {
-    return update;
-  }
+function boundToolContent(content: unknown[]): unknown[] | null {
   let changed = false;
-  const content = u.content.map((block) => {
+  const bounded = content.map((block) => {
     const b = block as Record<string, unknown>;
     if (b.type === 'diff') {
       const oldText = typeof b.oldText === 'string' ? truncateEventText(b.oldText) : b.oldText;
@@ -43,7 +36,19 @@ export function boundSessionUpdateForLog(update: SessionUpdate): SessionUpdate {
     }
     return block;
   });
-  if (!changed) return update;
+  return changed ? bounded : null;
+}
+
+export function boundSessionUpdateForLog(update: SessionUpdate): SessionUpdate {
+  const u = update as { sessionUpdate?: string; content?: unknown };
+  if (
+    (u.sessionUpdate !== 'tool_call' && u.sessionUpdate !== 'tool_call_update') ||
+    !Array.isArray(u.content)
+  ) {
+    return update;
+  }
+  const content = boundToolContent(u.content);
+  if (content === null) return update;
   return { ...update, content } as SessionUpdate;
 }
 
