@@ -303,6 +303,7 @@ import { createBootBudgetDirSizeProbe } from './fs-walk-budget.ts';
 import { ensureGitAvailable } from './git-preflight-handler.ts';
 import { readCanonicalGitHubRemoteUrl } from './git-remote.ts';
 import { describeStopFailure, failedOpenHolder, promptHolderStop } from './holder-stop-prompt.ts';
+import { popImageMenu } from './image-menu.ts';
 import { agentConnectionsAvailability, isSupportedInstallShape } from './install-shape.ts';
 import {
   formatInstanceAppName,
@@ -1026,6 +1027,9 @@ function attachSpellcheckMenuToWindow(win: BrowserWindow): void {
     },
     popMenu: (input) => {
       popSpellcheckMenu({ Menu, window: win }, { ...input, translate: currentMenuTranslator() });
+    },
+    popImageMenu: (copyImage) => {
+      popImageMenu({ Menu, window: win }, copyImage, currentMenuTranslator());
     },
   });
 }

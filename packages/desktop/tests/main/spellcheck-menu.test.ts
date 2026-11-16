@@ -63,6 +63,23 @@ describe('buildSpellcheckMenuTemplate — section composition', () => {
     ]);
   });
 
+  test('an image under the pointer leads with Copy Image above the edit roles', () => {
+    const copyImage = vi.fn(() => {});
+    const template = build(makeParams(), true, { ...makeActions(), copyImage });
+    expect(shapeOf(template)).toEqual([
+      'Copy Image',
+      '[separator]',
+      'cut',
+      'copy',
+      'paste',
+      'selectAll',
+      '[separator]',
+      VIEW_ROW,
+    ]);
+    template[0]?.click?.({} as never, undefined, {} as never);
+    expect(copyImage).toHaveBeenCalledTimes(1);
+  });
+
   test('edit roles respect editFlags', () => {
     const params = makeParams({
       editFlags: { canCut: false, canCopy: true, canPaste: true, canSelectAll: false },

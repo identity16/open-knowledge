@@ -6,6 +6,10 @@ import type {
 
 export interface ContextMenuHandlerParams extends SpellcheckMenuParams {
   readonly isEditable: boolean;
+  readonly mediaType: string;
+  readonly hasImageContents: boolean;
+  readonly x: number;
+  readonly y: number;
 }
 
 export interface SpellcheckWebContents {
@@ -15,6 +19,7 @@ export interface SpellcheckWebContents {
   ): void;
   replaceMisspelling(text: string): void;
   showDefinitionForSelection(): void;
+  copyImageAt(x: number, y: number): void;
 }
 
 export interface SpellcheckContextMenuDeps {
@@ -25,6 +30,7 @@ export interface SpellcheckContextMenuDeps {
   readonly openExternal: (url: string) => void;
   readonly viewInSource: () => void;
   readonly popMenu: (input: BuildSpellcheckMenuTemplateParams) => void;
+  readonly popImageMenu: (copyImage: () => void) => void;
 }
 
 function googleSearchUrl(query: string): string {
@@ -36,8 +42,18 @@ export function attachSpellcheckContextMenu(
   deps: SpellcheckContextMenuDeps,
 ): void {
   webContents.on('context-menu', (_event, params) => {
-    if (!params.isEditable) return;
+    const copyImage =
+      params.mediaType === 'image' && params.hasImageContents
+        ? () => {
+            webContents.copyImageAt(params.x, params.y);
+          }
+        : undefined;
+    if (!params.isEditable) {
+      if (copyImage !== undefined) deps.popImageMenu(copyImage);
+      return;
+    }
     const actions: SpellcheckMenuActions = {
+      copyImage,
       replaceMisspelling: (suggestion) => {
         webContents.replaceMisspelling(suggestion);
       },
