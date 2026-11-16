@@ -38,8 +38,14 @@ export interface RenderedToolCall {
   diffs: Array<{ path: string; oldText: string | null; newText: string }>;
   terminalIds: string[];
   content: string[];
+  images: ToolCallImage[];
   locations: Array<{ path: string; line?: number }>;
   rawInput: unknown;
+}
+
+export interface ToolCallImage {
+  data: string;
+  mimeType: string;
 }
 
 export interface RenderedPermission {
@@ -567,6 +573,7 @@ export class ThreadRenderModelBuilder {
           diffs: [],
           terminalIds: [],
           content: [],
+          images: [],
           locations: normalizeLocations(update.locations),
           rawInput: (update as { rawInput?: unknown }).rawInput,
         };
@@ -587,6 +594,7 @@ export class ThreadRenderModelBuilder {
           diffs: [...existing.diffs],
           terminalIds: [...existing.terminalIds],
           content: [...existing.content],
+          images: [...existing.images],
         };
         if (update.status) call.status = update.status as RenderedToolCall['status'];
         if (update.title) call.title = update.title;
@@ -706,6 +714,14 @@ function isSameExit(a: ThreadFailureDetail['exit'], b: ThreadFailureDetail['exit
   return a.cause === b.cause && a.exitCode === b.exitCode && a.signal === b.signal;
 }
 
+function imageFromContent(content: unknown): ToolCallImage | null {
+  if (typeof content !== 'object' || content === null) return null;
+  const c = content as { type?: unknown; data?: unknown; mimeType?: unknown };
+  if (c.type !== 'image' || typeof c.data !== 'string' || c.data === '') return null;
+  if (typeof c.mimeType !== 'string' || !c.mimeType.startsWith('image/')) return null;
+  return { data: c.data, mimeType: c.mimeType };
+}
+
 function mergeToolContent(call: RenderedToolCall, content: unknown): void {
   if (!Array.isArray(content)) return;
   for (const block of content) {
@@ -721,6 +737,8 @@ function mergeToolContent(call: RenderedToolCall, content: unknown): void {
     } else if (b.type === 'content') {
       const text = textFromContent(b.content);
       if (text !== null) call.content.push(text);
+      const image = imageFromContent(b.content);
+      if (image !== null) call.images.push(image);
     } else {
       const text = textFromContent(b);
       if (text !== null) call.content.push(text);

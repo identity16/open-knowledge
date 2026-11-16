@@ -137,6 +137,41 @@ describe('buildThreadRenderModel', () => {
     expect(call.diffs).toEqual([{ path: 'a.md', oldText: 'x', newText: 'y' }]);
   });
 
+  test('keeps the image blocks a tool result carries and drops malformed ones', () => {
+    const events: ThreadEvent[] = [
+      ev({
+        kind: 'session_update',
+        ts: 1,
+        update: {
+          sessionUpdate: 'tool_call',
+          toolCallId: 'c1',
+          title: 'Read shot.png',
+          kind: 'read',
+          status: 'in_progress',
+        } as never,
+      }),
+      ev({
+        kind: 'session_update',
+        ts: 2,
+        update: {
+          sessionUpdate: 'tool_call_update',
+          toolCallId: 'c1',
+          status: 'completed',
+          content: [
+            { type: 'content', content: { type: 'image', data: 'AAAA', mimeType: 'image/png' } },
+            { type: 'content', content: { type: 'image', data: '', mimeType: 'image/png' } },
+            { type: 'content', content: { type: 'image', data: 'BBBB', mimeType: 'text/html' } },
+            { type: 'content', content: { type: 'text', text: 'caption' } },
+          ],
+        } as never,
+      }),
+    ];
+    const call = buildThreadRenderModel(events, null).items.find((i) => i.kind === 'tool_call');
+    if (call?.kind !== 'tool_call') throw new Error('unreachable');
+    expect(call.images).toEqual([{ data: 'AAAA', mimeType: 'image/png' }]);
+    expect(call.content).toEqual(['caption']);
+  });
+
   test('marks a permission as resolved when the resolution event follows', () => {
     const events: ThreadEvent[] = [
       ev({

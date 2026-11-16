@@ -19,6 +19,7 @@ function toolCall(toolKind: string, status: RenderedToolCall['status']): Rendere
     diffs: [],
     terminalIds: [],
     content: [],
+    images: [],
     locations: [],
     rawInput: null,
   };

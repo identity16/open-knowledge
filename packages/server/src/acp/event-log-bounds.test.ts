@@ -57,11 +57,38 @@ describe('boundSessionUpdateForLog', () => {
     expect(bounded.content[0].content.text.length).toBeLessThan(17_000);
   });
 
+  test('copies of a read image outside the shown content are truncated', () => {
+    const image = { type: 'image', data: big, mimeType: 'image/png' };
+    const update = {
+      sessionUpdate: 'tool_call_update',
+      toolCallId: 't1',
+      content: [{ type: 'content', content: image }],
+      rawOutput: [{ type: 'image', source: { type: 'base64', data: big } }],
+      _meta: {
+        claudeCode: {
+          toolName: 'Read',
+          toolResponse: { type: 'image', file: { base64: big, type: 'image/png' } },
+        },
+      },
+    } as unknown as SessionUpdate;
+    const bounded = boundSessionUpdateForLog(update) as unknown as {
+      content: Array<{ content: { data: string } }>;
+      rawOutput: Array<{ source: { data: string } }>;
+      _meta: { claudeCode: { toolName: string; toolResponse: { file: { base64: string } } } };
+    };
+    expect(bounded.content[0].content.data).toBe(big);
+    expect(bounded.rawOutput[0].source.data).toContain('[truncated');
+    expect(bounded._meta.claudeCode.toolResponse.file.base64).toContain('[truncated');
+    expect(bounded._meta.claudeCode.toolName).toBe('Read');
+  });
+
   test('within-cap updates pass through by reference (no allocation)', () => {
     const update = {
       sessionUpdate: 'tool_call_update',
       toolCallId: 't1',
       content: [{ type: 'diff', path: 'a.md', oldText: 'small', newText: 'tiny' }],
+      rawOutput: [{ type: 'text', text: 'small' }],
+      _meta: { claudeCode: { toolName: 'Edit' } },
     } as unknown as SessionUpdate;
     expect(boundSessionUpdateForLog(update)).toBe(update);
   });
