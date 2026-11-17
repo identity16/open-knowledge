@@ -186,7 +186,6 @@ import {
 } from '@/lib/acp/thread-event-model';
 import {
   describeToolCall,
-  describeToolPurpose,
   type ToolCallGlyph,
   toolRunKey,
   toolRunLabel,
@@ -226,6 +225,7 @@ import { PlanChecklist } from './PlanChecklist';
 import { appendPresenceWrite, latestAgentWrite, type PresenceWrite } from './presence-follow';
 import { RegisteredAgentIcon } from './RegisteredAgentIcon';
 import { ReferenceRulesContext } from './reference-links-context';
+import { ToolTooltipContent, toolTitleText, toolTooltipText } from './ToolTooltip';
 import {
   clickableAuthMethods,
   isThreadResumable,
@@ -3243,43 +3243,6 @@ function UserMessageAttachments({
 
 const TOOL_MARKDOWN_CLASS =
   '[&_pre]:text-[11px]! [&_code]:text-[11px]! [&_[data-streamdown=code-block-body]]:p-2! [&_[data-streamdown=code-block-body]]:max-h-none!';
-
-interface ToolTooltipText {
-  purpose: string | null;
-  id: string;
-}
-
-function toolTooltipText(
-  call: { title: string; toolKind: string; rawInput: unknown },
-  labelText: string,
-): ToolTooltipText | null {
-  const purpose = describeToolPurpose(call);
-  if (purpose === null && call.title === labelText) return null;
-  return { purpose, id: call.title };
-}
-
-function toolTitleText(text: ToolTooltipText | null): string | undefined {
-  if (text === null) return undefined;
-  return text.purpose === null ? text.id : `${text.purpose}\n${text.id}`;
-}
-
-function ToolTooltipContent({ text }: { text: ToolTooltipText }): ReactNode {
-  return (
-    <TooltipContent
-      side="top"
-      align="start"
-      sideOffset={6}
-      arrow={false}
-      className="max-w-72 flex-col items-start gap-0.5 border border-border bg-popover text-popover-foreground shadow-md"
-      data-testid="agent-thread-tool-tooltip"
-    >
-      {text.purpose !== null ? <span className="block">{text.purpose}</span> : null}
-      <span className="block font-mono text-[10px] text-muted-foreground" dir="ltr">
-        {text.id}
-      </span>
-    </TooltipContent>
-  );
-}
 
 function ToolOutputBlock({ text, mode }: { text: string; mode: ToolOutputMode }): ReactNode {
   const body = stripWrappingFence(text);
