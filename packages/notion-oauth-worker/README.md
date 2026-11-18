@@ -1,6 +1,6 @@
 # Notion OAuth worker
 
-A Cloudflare Worker at `https://ok-notion-oauth.identity16.workers.dev` that holds the Notion OAuth client secret. Notion's token endpoint requires the secret for both the code exchange and every refresh, so a local OpenKnowledge server cannot talk to it directly.
+A Cloudflare Worker at `https://ok-notion-oauth.identity16.workers.dev` that holds the Notion OAuth client secret. Notion's token endpoint requires the secret for the code exchange, every refresh, and revocation, so a local OpenKnowledge server cannot talk to it directly.
 
 ## Routes
 
@@ -9,6 +9,7 @@ A Cloudflare Worker at `https://ok-notion-oauth.identity16.workers.dev` that hol
 | `GET /oauth/notion/callback?code&state` | Notion, through the user's browser | Exchanges the code for a token and parks the result in KV under `state` for five minutes. `error=…` is parked as a refusal. |
 | `POST /oauth/notion/redeem {state, verifier}` | Local server, polling | Answers `202 {"status":"pending"}` until the callback lands, then hands over the parked result once and deletes it. |
 | `POST /oauth/notion/refresh {refresh_token}` | Local server | Forwards the refresh to Notion with the client secret and relays Notion's answer. |
+| `POST /oauth/notion/revoke {token}` | Local server | Revokes an access token on Notion with the client secret, so disconnecting a workspace ends the grant. |
 
 `state` is `<nonce>.<challenge>`: two 43-character base64url parts, where `challenge` is the base64url SHA-256 of `verifier`. The local server keeps `verifier` to itself, so only the server that started the flow can redeem the token.
 

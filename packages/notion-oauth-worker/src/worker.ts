@@ -6,6 +6,8 @@ import {
 } from './handoff-state.ts';
 
 export const NOTION_TOKEN_URL = 'https://api.notion.com/v1/oauth/token';
+export const NOTION_REVOKE_URL = 'https://api.notion.com/v1/oauth/revoke';
+export const NOTION_VERSION = '2026-03-11';
 export const GRANT_TTL_SECONDS = 300;
 
 export interface GrantStore {
@@ -38,6 +40,8 @@ export function createWorker(fetchImpl: Fetch) {
         return handleRedeem(request, env);
       if (url.pathname === '/oauth/notion/refresh' && request.method === 'POST')
         return handleRefresh(request, env, fetchImpl);
+      if (url.pathname === '/oauth/notion/revoke' && request.method === 'POST')
+        return handleRevoke(request, env, fetchImpl);
       return json({ error: 'not_found' }, 404);
     },
   };
@@ -106,6 +110,19 @@ async function handleRefresh(
     method: 'POST',
     headers: notionHeaders(env),
     body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: refreshToken }),
+  });
+  const body: unknown = await response.json().catch(() => null);
+  return json(body, response.status);
+}
+
+async function handleRevoke(request: Request, env: WorkerEnv, fetchImpl: Fetch): Promise<Response> {
+  const input = await readJson(request);
+  const token = typeof input?.token === 'string' ? input.token : '';
+  if (token === '') return json({ error: 'invalid_request' }, 400);
+  const response = await fetchImpl(NOTION_REVOKE_URL, {
+    method: 'POST',
+    headers: { ...notionHeaders(env), 'Notion-Version': NOTION_VERSION },
+    body: JSON.stringify({ token }),
   });
   const body: unknown = await response.json().catch(() => null);
   return json(body, response.status);

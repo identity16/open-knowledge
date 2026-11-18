@@ -4,7 +4,9 @@ import {
   createWorker,
   GRANT_TTL_SECONDS,
   type GrantStore,
+  NOTION_REVOKE_URL,
   NOTION_TOKEN_URL,
+  NOTION_VERSION,
   type WorkerEnv,
 } from './worker.ts';
 
@@ -183,6 +185,32 @@ describe('refresh', () => {
       body: JSON.stringify({ refresh_token: 'revoked' }),
     });
     expect(response.status).toBe(400);
+  });
+});
+
+describe('revoke', () => {
+  test('revokes the token with the client secret and the Notion version header', async () => {
+    const { fetchImpl, call } = setup(() => Response.json({ request_id: 'r' }, { status: 200 }));
+
+    const response = await call('/oauth/notion/revoke', {
+      method: 'POST',
+      body: JSON.stringify({ token: 'access_a' }),
+    });
+
+    expect(response.status).toBe(200);
+    const [url, init] = fetchImpl.mock.calls[0] ?? [];
+    expect(url).toBe(NOTION_REVOKE_URL);
+    const headers = new Headers(init?.headers);
+    expect(headers.get('Authorization')).toBe(`Basic ${btoa('client-id:client-secret')}`);
+    expect(headers.get('Notion-Version')).toBe(NOTION_VERSION);
+    expect(JSON.parse(String(init?.body))).toEqual({ token: 'access_a' });
+  });
+
+  test('rejects a request without a token', async () => {
+    const { fetchImpl, call } = setup();
+    const response = await call('/oauth/notion/revoke', { method: 'POST', body: '{}' });
+    expect(response.status).toBe(400);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
 
