@@ -2919,6 +2919,9 @@ msgstr "GitHub साइन-इन नहीं खोला जा सका।
 msgid "Could not open this document in a new window."
 msgstr "इस दस्तावेज़ को नई विंडो में नहीं खोला जा सका।"
 
+msgid "Could not publish to Notion."
+msgstr "Notion पर प्रकाशित नहीं हो सका।"
+
 msgid "Could not reach server"
 msgstr "सर्वर तक नहीं पहुँचा जा सका"
 
@@ -2930,6 +2933,9 @@ msgstr "सिंक वरीयता नहीं सहेजी जा स�
 
 msgid "Could not save the file order"
 msgstr "फ़ाइल क्रम सहेजा नहीं जा सका"
+
+msgid "Could not save the Notion link in this document."
+msgstr "इस दस्तावेज़ में Notion लिंक सहेजा नहीं जा सका।"
 
 msgid "Could not start creating a new item"
 msgstr "नया आइटम बनाना शुरू नहीं किया जा सका"
@@ -3758,6 +3764,9 @@ msgstr "{file} अक्षम करें"
 msgid "Disable {id}"
 msgstr "{id} को अक्षम करें"
 
+msgid "Disable Notion"
+msgstr "Notion बंद करें"
+
 msgid "Disable semantic search"
 msgstr "अर्थ-आधारित खोज अक्षम करें"
 
@@ -4190,6 +4199,9 @@ msgstr "स्वचालित (केवल खींचें) चालू 
 msgid "Enable indexes"
 msgstr "अनुक्रमणिका सक्षम करें"
 
+msgid "Enable Notion"
+msgstr "Notion चालू करें"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "{0} के लिए Open Knowledge टूल सक्षम करें?"
 
@@ -4613,6 +4625,9 @@ msgstr "सामग्री नियम सहेजने में वि�
 
 msgid "Failed to save Slidev setting"
 msgstr "Slidev सेटिंग सहेजी नहीं जा सकी"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Notion प्लगइन सेटिंग सहेजी नहीं जा सकी"
 
 msgid "Failed to save the schema field"
 msgstr "स्कीमा फ़ील्ड सहेजने में विफल"
@@ -5956,11 +5971,20 @@ msgstr "बदली गई पंक्तियाँ: {additions} जोड�
 msgid "Link"
 msgstr "लिंक"
 
+msgid "Link a Notion page"
+msgstr "Notion पेज लिंक करें"
+
 msgid "Link copied."
 msgstr "लिंक कॉपी किया गया।"
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "दस्तावेज़ों को Notion पेजों से लिंक करें और वहाँ प्रकाशित करें।"
+
 msgid "Link folders"
 msgstr "फ़ोल्डर लिंक करें"
+
+msgid "Link Notion page"
+msgstr "Notion पेज लिंक करें"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "लिंक पूर्वावलोकन सेटिंग अभी लोड नहीं हुई — कुछ देर बाद फिर कोशिश करें"
@@ -6009,6 +6033,12 @@ msgstr "लिंक-ग्राफ़ की प्रतिक्रिया
 
 msgid "Linked theme files aren’t supported"
 msgstr "लिंक की गई थीम फ़ाइलें समर्थित नहीं हैं"
+
+msgid "Linked to {0}"
+msgstr "{0} से लिंक किया गया"
+
+msgid "Linked to the Notion page"
+msgstr "Notion पेज से लिंक किया गया"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "लिंक करने पर दूसरा फ़ोल्डर इस फ़ोल्डर में मर्ज हो जाता है। यह फ़ोल्डर अभी मौजूद नहीं है, इसलिए पहले यहाँ एक स्किल इंस्टॉल करें।"
@@ -6854,6 +6884,9 @@ msgstr "कोई साझा पूर्वज नहीं — दोनो�
 msgid "No conflict is tracked for this path."
 msgstr "इस पथ के लिए कोई टकराव ट्रैक नहीं किया जा रहा है।"
 
+msgid "No connected Notion workspace can open that page."
+msgstr "कोई भी कनेक्टेड Notion वर्कस्पेस वह पेज नहीं खोल सकता।"
+
 msgid "No content changes at this version."
 msgstr "इस संस्करण में सामग्री का कोई बदलाव नहीं।"
 
@@ -7197,6 +7230,9 @@ msgstr "कुछ भी अपलोड नहीं किया गया। 
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Notion पेज लिंक"
 
 msgid "Notion was not connected."
 msgstr "Notion कनेक्ट नहीं हुआ।"
@@ -7950,6 +7986,9 @@ msgstr "छवि URL चिपकाएँ या अपलोड पर क्
 msgid "Paste link"
 msgstr "लिंक चिपकाएँ"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "किसी कनेक्टेड Notion वर्कस्पेस के पेज का लिंक पेस्ट करें।"
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "URL, owner/repo चिपकाएँ, या अपनी रिपॉज़िटरी खोजें"
 
@@ -8287,11 +8326,23 @@ msgstr "प्रकाशित करें"
 msgid "Publish to GitHub"
 msgstr "GitHub पर प्रकाशित करें"
 
+msgid "Publish to Notion"
+msgstr "Notion पर प्रकाशित करें"
+
 msgid "Published"
 msgstr "प्रकाशित"
 
 msgid "Published by {publisher}"
 msgstr "{publisher} द्वारा प्रकाशित"
+
+msgid "Published to Notion"
+msgstr "Notion पर प्रकाशित किया गया"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "प्रकाशित करने पर पेज की मौजूदा सामग्री इस दस्तावेज़ से बदल जाएगी।"
+
+msgid "Publishing to Notion…"
+msgstr "Notion पर प्रकाशित हो रहा है…"
 
 msgid "Publishing..."
 msgstr "प्रकाशित किया जा रहा है…"
@@ -8782,6 +8833,9 @@ msgstr "फ़ील्ड से मौजूदा मेल बदलें"
 
 msgid "Replace key"
 msgstr "कुंजी बदलें"
+
+msgid "Replace Notion content"
+msgstr "Notion सामग्री बदलें"
 
 msgid "Replace the active match from the replace field."
 msgstr "बदलें फ़ील्ड से सक्रिय मेल बदलें।"
@@ -9960,6 +10014,9 @@ msgstr "कुछ स्किलें चेतावनी के साथ �
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "कुछ टेम्पलेट सूची में शायद न दिखें, क्योंकि इस ज्ञान आधार में स्कैन करने के लिए बहुत अधिक फ़ोल्डर हैं। किसी फ़ोल्डर के टेम्पलेट देखने के लिए, फ़ाइल ट्री में उसका मेनू खोलें और \"टेम्पलेट से नया\" चुनें।"
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "आपके पिछली बार प्रकाशित करने के बाद किसी ने Notion में पेज संपादित किया। अभी प्रकाशित करने पर उनके बदलाव इस दस्तावेज़ से बदल जाएँगे।"
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "हो सकता है किसी ने {filePath} का टकराव पहले ही सुलझा दिया हो — अपना संपादन दोबारा करने से पहले दस्तावेज़ की मौजूदा सामग्री देख लें।"
 
@@ -10691,6 +10748,12 @@ msgstr "वह मॉडल id जो आपका एंडपॉइंट द�
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Notion स्वीकृति का समय समाप्त हो गया। फिर से कोशिश करें।"
+
+msgid "The Notion page already has content"
+msgstr "Notion पेज में पहले से सामग्री है"
+
+msgid "The Notion page changed"
+msgstr "Notion पेज बदल गया है"
 
 msgid "the open agent"
 msgstr "खुला हुआ एजेंट"

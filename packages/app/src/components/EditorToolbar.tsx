@@ -24,6 +24,10 @@ import { EditorModeToggle } from './EditorModeToggle';
 import { NotInSidebarIndicator } from './NotInSidebarIndicator';
 import { isSlidesHost } from './slides-host-gate';
 
+const NotionToolbarControls = lazy(async () => ({
+  default: (await import('./NotionToolbarControls')).NotionToolbarControls,
+}));
+
 const SkillToolbarControls = lazy(async () => ({
   default: (await import('./SkillToolbarControls')).SkillToolbarControls,
 }));
@@ -59,7 +63,9 @@ export function EditorToolbar({
   onAddProperty,
   frontmatterProblems = NO_FRONTMATTER_PROBLEMS,
 }: EditorToolbarProps) {
-  const slidesPluginEnabled = useConfigContextOptional()?.merged?.slides?.enabled === true;
+  const config = useConfigContextOptional();
+  const slidesPluginEnabled = config?.merged?.slides?.enabled === true;
+  const notionPluginEnabled = config?.projectConfig?.notion?.enabled === true;
   const managed = activeDocName ? parseManagedArtifactName(activeDocName) : null;
   const projectSkillName = activeDocName ? parseProjectSkillContentDocName(activeDocName) : null;
   const activeSkill: { scope: SkillScope; name: string } | null =
@@ -137,6 +143,11 @@ export function EditorToolbar({
         activeDocName !== null ? (
           <Suspense fallback={null}>
             <SlidesToolbarControls provider={activeProvider} docName={activeDocName} />
+          </Suspense>
+        ) : null}
+        {notionPluginEnabled && activeProvider != null && activeDocName !== null ? (
+          <Suspense fallback={null}>
+            <NotionToolbarControls provider={activeProvider} docName={activeDocName} />
           </Suspense>
         ) : null}
       </div>

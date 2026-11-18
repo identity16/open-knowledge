@@ -2923,6 +2923,9 @@ msgstr "Nie udało się otworzyć logowania do GitHuba. Spróbuj ponownie."
 msgid "Could not open this document in a new window."
 msgstr "Nie udało się otworzyć tego dokumentu w nowym oknie."
 
+msgid "Could not publish to Notion."
+msgstr "Nie udało się opublikować w Notion."
+
 msgid "Could not reach server"
 msgstr "Nie udało się połączyć z serwerem"
 
@@ -2934,6 +2937,9 @@ msgstr "Nie udało się zapisać ustawienia synchronizacji: {detail}"
 
 msgid "Could not save the file order"
 msgstr "Nie udało się zapisać kolejności plików"
+
+msgid "Could not save the Notion link in this document."
+msgstr "Nie udało się zapisać linku Notion w tym dokumencie."
 
 msgid "Could not start creating a new item"
 msgstr "Nie udało się rozpocząć tworzenia nowego elementu"
@@ -3762,6 +3768,9 @@ msgstr "Wyłącz {file}"
 msgid "Disable {id}"
 msgstr "Wyłącz {id}"
 
+msgid "Disable Notion"
+msgstr "Wyłącz Notion"
+
 msgid "Disable semantic search"
 msgstr "Wyłącz wyszukiwanie semantyczne"
 
@@ -4194,6 +4203,9 @@ msgstr "Włącz Auto (tylko pobieranie)?"
 msgid "Enable indexes"
 msgstr "Włącz indeksy"
 
+msgid "Enable Notion"
+msgstr "Włącz Notion"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "Włącz narzędzia Open Knowledge dla {0}?"
 
@@ -4617,6 +4629,9 @@ msgstr "Nie udało się zapisać reguł zawartości — {0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "Nie udało się zapisać ustawienia Slidev"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Nie udało się zapisać ustawienia wtyczki Notion"
 
 msgid "Failed to save the schema field"
 msgstr "Nie udało się zapisać pola schematu"
@@ -5960,11 +5975,20 @@ msgstr "Zmienione linie: dodano {additions}, usunięto {deletions}"
 msgid "Link"
 msgstr "Link"
 
+msgid "Link a Notion page"
+msgstr "Połącz stronę Notion"
+
 msgid "Link copied."
 msgstr "Skopiowano link."
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "Łącz dokumenty ze stronami Notion i publikuj je tam."
+
 msgid "Link folders"
 msgstr "Połącz foldery"
+
+msgid "Link Notion page"
+msgstr "Połącz stronę Notion"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "Ustawienia podglądu linków jeszcze się nie wczytały — spróbuj za chwilę"
@@ -6013,6 +6037,12 @@ msgstr "Odpowiedź grafu linków nie miała oczekiwanej struktury."
 
 msgid "Linked theme files aren’t supported"
 msgstr "Powiązane pliki motywów nie są obsługiwane"
+
+msgid "Linked to {0}"
+msgstr "Połączono z {0}"
+
+msgid "Linked to the Notion page"
+msgstr "Połączono ze stroną Notion"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "Łączenie scala inny folder z tym. Ten folder jeszcze nie istnieje, więc najpierw zainstaluj tutaj umiejętność."
@@ -6858,6 +6888,9 @@ msgstr "Brak wspólnego przodka — obie gałęzie dodały ten plik (konflikt ad
 msgid "No conflict is tracked for this path."
 msgstr "Dla tej ścieżki nie jest śledzony żaden konflikt."
 
+msgid "No connected Notion workspace can open that page."
+msgstr "Żaden połączony obszar roboczy Notion nie może otworzyć tej strony."
+
 msgid "No content changes at this version."
 msgstr "Brak zmian zawartości w tej wersji."
 
@@ -7201,6 +7234,9 @@ msgstr "Nic nie zostało przesłane. Zgłoszenie pozostaje na tym komputerze, do
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Link do strony Notion"
 
 msgid "Notion was not connected."
 msgstr "Notion nie został połączony."
@@ -7954,6 +7990,9 @@ msgstr "Wklej adres URL obrazu lub kliknij, aby wgrać"
 msgid "Paste link"
 msgstr "Wklej link"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "Wklej link do strony z połączonego obszaru roboczego Notion."
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "Wklej adres URL, właściciel/repozytorium lub przeszukaj swoje repozytoria"
 
@@ -8291,11 +8330,23 @@ msgstr "Opublikuj"
 msgid "Publish to GitHub"
 msgstr "Opublikuj w GitHub"
 
+msgid "Publish to Notion"
+msgstr "Opublikuj w Notion"
+
 msgid "Published"
 msgstr "Opublikowano"
 
 msgid "Published by {publisher}"
 msgstr "Opublikowane przez {publisher}"
+
+msgid "Published to Notion"
+msgstr "Opublikowano w Notion"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "Publikacja zastąpi obecną treść strony tym dokumentem."
+
+msgid "Publishing to Notion…"
+msgstr "Publikowanie w Notion…"
 
 msgid "Publishing..."
 msgstr "Publikowanie..."
@@ -8786,6 +8837,9 @@ msgstr "Zamień bieżące wystąpienie zawartością pola"
 
 msgid "Replace key"
 msgstr "Zamień klucz"
+
+msgid "Replace Notion content"
+msgstr "Zastąp treść w Notion"
 
 msgid "Replace the active match from the replace field."
 msgstr "Zamienia aktywne wystąpienie zawartością pola zastępowania."
@@ -9964,6 +10018,9 @@ msgstr "Niektóre umiejętności zostały usunięte z ostrzeżeniem"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "Niektóre szablony mogą nie być widoczne na liście, ponieważ ta baza wiedzy ma zbyt wiele folderów, aby przeskanować je wszystkie. Aby zobaczyć szablony folderu, otwórz jego menu w drzewie plików i wybierz „Nowe z szablonu”."
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "Ktoś edytował stronę w Notion od Twojej ostatniej publikacji. Publikacja teraz zastąpi jego zmiany tym dokumentem."
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "Ktoś mógł już rozwiązać {filePath} — sprawdź aktualną treść dokumentu, zanim ponowisz swoją edycję."
 
@@ -10695,6 +10752,12 @@ msgstr "Identyfikator modelu udostępniany przez Twój punkt końcowy. Jego wymi
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Upłynął czas na zatwierdzenie w Notion. Spróbuj ponownie."
+
+msgid "The Notion page already has content"
+msgstr "Strona Notion ma już treść"
+
+msgid "The Notion page changed"
+msgstr "Strona Notion się zmieniła"
 
 msgid "the open agent"
 msgstr "otwarty agent"

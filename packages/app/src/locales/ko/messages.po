@@ -2923,6 +2923,9 @@ msgstr "GitHub 로그인 화면을 열 수 없습니다. 다시 시도하세요.
 msgid "Could not open this document in a new window."
 msgstr "이 문서를 새 창에서 열지 못했습니다."
 
+msgid "Could not publish to Notion."
+msgstr "Notion에 게시하지 못했습니다."
+
 msgid "Could not reach server"
 msgstr "서버에 연결하지 못했습니다"
 
@@ -2934,6 +2937,9 @@ msgstr "동기화 환경설정을 저장할 수 없습니다: {detail}"
 
 msgid "Could not save the file order"
 msgstr "파일 순서를 저장하지 못했습니다"
+
+msgid "Could not save the Notion link in this document."
+msgstr "이 문서에 Notion 연결을 저장하지 못했습니다."
 
 msgid "Could not start creating a new item"
 msgstr "새 항목 만들기를 시작하지 못했습니다"
@@ -3762,6 +3768,9 @@ msgstr "{file} 비활성화"
 msgid "Disable {id}"
 msgstr "{id} 비활성화"
 
+msgid "Disable Notion"
+msgstr "Notion 끄기"
+
 msgid "Disable semantic search"
 msgstr "의미 기반 검색 사용 안 함"
 
@@ -4194,6 +4203,9 @@ msgstr "자동(풀만)을 활성화할까요?"
 msgid "Enable indexes"
 msgstr "인덱스 사용"
 
+msgid "Enable Notion"
+msgstr "Notion 켜기"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "{0}에서 Open Knowledge 도구를 사용하도록 설정할까요?"
 
@@ -4617,6 +4629,9 @@ msgstr "콘텐츠 규칙을 저장하지 못했습니다: {0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "Slidev 설정을 저장하지 못했습니다"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Notion 플러그인 설정을 저장하지 못했습니다"
 
 msgid "Failed to save the schema field"
 msgstr "스키마 필드를 저장하지 못했습니다"
@@ -5960,11 +5975,20 @@ msgstr "변경된 줄: {additions}줄 추가, {deletions}줄 삭제"
 msgid "Link"
 msgstr "링크"
 
+msgid "Link a Notion page"
+msgstr "Notion 페이지 연결"
+
 msgid "Link copied."
 msgstr "링크가 복사되었습니다."
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "문서를 Notion 페이지에 연결하고 그곳에 게시합니다."
+
 msgid "Link folders"
 msgstr "폴더 연결"
+
+msgid "Link Notion page"
+msgstr "Notion 페이지 연결"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "링크 미리보기 설정을 아직 불러오지 못했습니다. 잠시 후 다시 시도합니다."
@@ -6013,6 +6037,12 @@ msgstr "링크 그래프 응답 형식이 예상과 일치하지 않습니다."
 
 msgid "Linked theme files aren’t supported"
 msgstr "연결된 테마 파일은 지원되지 않습니다"
+
+msgid "Linked to {0}"
+msgstr "{0}에 연결했습니다"
+
+msgid "Linked to the Notion page"
+msgstr "Notion 페이지에 연결했습니다"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "연결하면 다른 폴더가 이 폴더로 병합됩니다. 이 폴더는 아직 없으므로 여기에 먼저 스킬을 설치하세요."
@@ -6858,6 +6888,9 @@ msgstr "공통 조상이 없습니다 — 두 브랜치가 이 파일을 각각 
 msgid "No conflict is tracked for this path."
 msgstr "이 경로에 대해 추적 중인 충돌이 없습니다."
 
+msgid "No connected Notion workspace can open that page."
+msgstr "연결된 Notion 워크스페이스 중 그 페이지를 열 수 있는 곳이 없습니다."
+
 msgid "No content changes at this version."
 msgstr "이 버전에서 내용 변경 없음."
 
@@ -7201,6 +7234,9 @@ msgstr "아무것도 업로드되지 않았습니다. 보고서는 이메일로 
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Notion 페이지 링크"
 
 msgid "Notion was not connected."
 msgstr "Notion이 연결되지 않았습니다."
@@ -7954,6 +7990,9 @@ msgstr "이미지 URL을 붙여넣거나 업로드를 클릭하세요"
 msgid "Paste link"
 msgstr "링크 붙여넣기"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "연결된 Notion 워크스페이스에 있는 페이지의 링크를 붙여넣으세요."
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "URL 또는 owner/repo를 붙여넣거나 저장소 검색"
 
@@ -8291,11 +8330,23 @@ msgstr "게시"
 msgid "Publish to GitHub"
 msgstr "GitHub에 게시"
 
+msgid "Publish to Notion"
+msgstr "Notion에 게시"
+
 msgid "Published"
 msgstr "게시됨"
 
 msgid "Published by {publisher}"
 msgstr "게시자: {publisher}"
+
+msgid "Published to Notion"
+msgstr "Notion에 게시했습니다"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "게시하면 페이지의 현재 내용이 이 문서로 바뀝니다."
+
+msgid "Publishing to Notion…"
+msgstr "Notion에 게시하는 중…"
 
 msgid "Publishing..."
 msgstr "게시 중…"
@@ -8786,6 +8837,9 @@ msgstr "필드에서 현재 일치 항목 바꾸기"
 
 msgid "Replace key"
 msgstr "키 교체"
+
+msgid "Replace Notion content"
+msgstr "Notion 내용 바꾸기"
 
 msgid "Replace the active match from the replace field."
 msgstr "바꾸기 필드에서 활성 일치 항목을 바꿉니다."
@@ -9964,6 +10018,9 @@ msgstr "일부 스킬이 경고와 함께 삭제되었습니다"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "이 지식 베이스에는 폴더가 너무 많아 모두 스캔할 수 없으므로 일부 템플릿이 목록에 표시되지 않을 수 있습니다. 폴더의 템플릿을 보려면 파일 트리에서 해당 폴더의 메뉴를 열고 \"템플릿에서 새로 만들기\"를 선택하세요."
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "마지막으로 게시한 뒤 누군가 Notion에서 페이지를 수정했습니다. 지금 게시하면 그 변경 내용이 이 문서로 바뀝니다."
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "누군가 이미 {filePath}의 충돌을 해결했을 수 있습니다 — 편집을 다시 하기 전에 문서의 현재 내용을 확인하세요."
 
@@ -10695,6 +10752,12 @@ msgstr "엔드포인트가 제공하는 모델 ID입니다. 벡터 크기는 자
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Notion 승인 시간이 지났습니다. 다시 시도하세요."
+
+msgid "The Notion page already has content"
+msgstr "Notion 페이지에 이미 내용이 있습니다"
+
+msgid "The Notion page changed"
+msgstr "Notion 페이지가 바뀌었습니다"
 
 msgid "the open agent"
 msgstr "열린 에이전트"

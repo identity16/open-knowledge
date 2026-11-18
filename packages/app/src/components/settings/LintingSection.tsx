@@ -134,6 +134,40 @@ function PluginManageDescription({ id }: { id: LintPluginId }) {
   }
 }
 
+function NotionPluginToggle() {
+  const { t } = useLingui();
+  const { projectConfig, projectSynced, projectBinding } = useConfigContext();
+  const on = projectConfig?.notion?.enabled === true;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md border px-3 py-3">
+      <div className="min-w-0">
+        <Label
+          htmlFor="settings-plugin-toggle-notion"
+          className="inline-flex items-center gap-1.5 text-sm font-medium"
+        >
+          Notion
+          <PluginBetaBadge />
+        </Label>
+        <p id="settings-plugin-toggle-notion-description" className="text-sm text-muted-foreground">
+          <Trans>Link documents to Notion pages and publish them there.</Trans>
+        </p>
+      </div>
+      <Switch
+        id="settings-plugin-toggle-notion"
+        aria-describedby="settings-plugin-toggle-notion-description"
+        checked={on}
+        disabled={!projectSynced || projectBinding === null}
+        onCheckedChange={(next) => {
+          const result = projectBinding?.patch({ notion: { enabled: next } });
+          if (result && !result.ok) toast.error(t`Failed to save the Notion plugin setting`);
+        }}
+        aria-label={on ? t`Disable Notion` : t`Enable Notion`}
+        data-testid="settings-plugin-toggle-notion"
+      />
+    </div>
+  );
+}
+
 export function ProjectPluginsManageSection() {
   const { t } = useLingui();
   const { contentRules, bindingReady, write } = useLinterConfig();
@@ -189,6 +223,8 @@ export function ProjectPluginsManageSection() {
           );
         })}
       </div>
+
+      <NotionPluginToggle />
 
       <p className="text-sm text-muted-foreground" data-testid="settings-plugins-audit-pointer">
         <Trans>Run a project audit from the Problems panel.</Trans>

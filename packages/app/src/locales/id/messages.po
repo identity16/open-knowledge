@@ -2919,6 +2919,9 @@ msgstr "Halaman masuk GitHub tidak dapat dibuka. Silakan coba lagi."
 msgid "Could not open this document in a new window."
 msgstr "Tidak dapat membuka dokumen ini di jendela baru."
 
+msgid "Could not publish to Notion."
+msgstr "Tidak dapat menerbitkan ke Notion."
+
 msgid "Could not reach server"
 msgstr "Server tidak dapat dihubungi"
 
@@ -2930,6 +2933,9 @@ msgstr "Preferensi sinkronisasi tidak dapat disimpan: {detail}"
 
 msgid "Could not save the file order"
 msgstr "Tidak dapat menyimpan urutan file"
+
+msgid "Could not save the Notion link in this document."
+msgstr "Tidak dapat menyimpan tautan Notion di dokumen ini."
 
 msgid "Could not start creating a new item"
 msgstr "Pembuatan item baru tidak dapat dimulai"
@@ -3758,6 +3764,9 @@ msgstr "Nonaktifkan {file}"
 msgid "Disable {id}"
 msgstr "Nonaktifkan {id}"
 
+msgid "Disable Notion"
+msgstr "Nonaktifkan Notion"
+
 msgid "Disable semantic search"
 msgstr "Nonaktifkan pencarian semantik"
 
@@ -4190,6 +4199,9 @@ msgstr "Aktifkan Otomatis (hanya Pull)?"
 msgid "Enable indexes"
 msgstr "Aktifkan indeks"
 
+msgid "Enable Notion"
+msgstr "Aktifkan Notion"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "Aktifkan alat Open Knowledge untuk {0}?"
 
@@ -4613,6 +4625,9 @@ msgstr "Gagal menyimpan aturan konten — {0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "Gagal menyimpan pengaturan Slidev"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Gagal menyimpan pengaturan plugin Notion"
 
 msgid "Failed to save the schema field"
 msgstr "Gagal menyimpan bidang skema"
@@ -5956,11 +5971,20 @@ msgstr "Baris berubah: {additions} ditambahkan, {deletions} dihapus"
 msgid "Link"
 msgstr "Tautan"
 
+msgid "Link a Notion page"
+msgstr "Tautkan halaman Notion"
+
 msgid "Link copied."
 msgstr "Tautan disalin."
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "Tautkan dokumen ke halaman Notion dan terbitkan di sana."
+
 msgid "Link folders"
 msgstr "Tautkan folder"
+
+msgid "Link Notion page"
+msgstr "Tautkan halaman Notion"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "Pengaturan pratinjau tautan belum dimuat — coba lagi sebentar"
@@ -6009,6 +6033,12 @@ msgstr "Respons graf tautan tidak sesuai bentuk yang diharapkan."
 
 msgid "Linked theme files aren’t supported"
 msgstr "Berkas tema tertaut tidak didukung"
+
+msgid "Linked to {0}"
+msgstr "Tertaut ke {0}"
+
+msgid "Linked to the Notion page"
+msgstr "Tertaut ke halaman Notion"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "Menautkan akan menggabungkan folder lain ke folder ini. Folder ini belum ada, jadi instal dulu sebuah skill di sini."
@@ -6854,6 +6884,9 @@ msgstr "Tidak ada leluhur bersama — kedua cabang menambahkan berkas ini (konfl
 msgid "No conflict is tracked for this path."
 msgstr "Tidak ada konflik yang dilacak untuk jalur ini."
 
+msgid "No connected Notion workspace can open that page."
+msgstr "Tidak ada ruang kerja Notion terhubung yang dapat membuka halaman itu."
+
 msgid "No content changes at this version."
 msgstr "Tidak ada perubahan isi pada versi ini."
 
@@ -7197,6 +7230,9 @@ msgstr "Tidak ada yang diunggah. Laporan tetap di komputer ini sampai Anda mengi
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Tautan halaman Notion"
 
 msgid "Notion was not connected."
 msgstr "Notion tidak terhubung."
@@ -7950,6 +7986,9 @@ msgstr "Tempelkan URL gambar atau klik unggah"
 msgid "Paste link"
 msgstr "Tempel tautan"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "Tempel tautan halaman di ruang kerja Notion yang terhubung."
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "Tempelkan URL, pemilik/repo, atau cari di repo Anda"
 
@@ -8287,11 +8326,23 @@ msgstr "Terbitkan"
 msgid "Publish to GitHub"
 msgstr "Terbitkan ke GitHub"
 
+msgid "Publish to Notion"
+msgstr "Terbitkan ke Notion"
+
 msgid "Published"
 msgstr "Diterbitkan"
 
 msgid "Published by {publisher}"
 msgstr "Diterbitkan oleh {publisher}"
+
+msgid "Published to Notion"
+msgstr "Diterbitkan ke Notion"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "Menerbitkan akan mengganti konten halaman saat ini dengan dokumen ini."
+
+msgid "Publishing to Notion…"
+msgstr "Menerbitkan ke Notion…"
 
 msgid "Publishing..."
 msgstr "Menerbitkan..."
@@ -8782,6 +8833,9 @@ msgstr "Ganti kecocokan saat ini dari bidangnya"
 
 msgid "Replace key"
 msgstr "Ganti kunci"
+
+msgid "Replace Notion content"
+msgstr "Ganti konten Notion"
 
 msgid "Replace the active match from the replace field."
 msgstr "Mengganti kecocokan yang aktif dengan isi bidang penggantian."
@@ -9960,6 +10014,9 @@ msgstr "Beberapa keterampilan dihapus dengan peringatan"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "Beberapa templat mungkin tidak tercantum karena basis pengetahuan ini memiliki terlalu banyak folder untuk dipindai. Untuk melihat templat sebuah folder, buka menunya di pohon berkas lalu pilih \"Baru dari templat\"."
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "Seseorang mengedit halaman di Notion sejak terakhir kali Anda menerbitkan. Menerbitkan sekarang akan mengganti perubahan mereka dengan dokumen ini."
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "Mungkin seseorang sudah menyelesaikan {filePath} — periksa isi dokumen saat ini sebelum mengulangi suntingan Anda."
 
@@ -10691,6 +10748,12 @@ msgstr "Id model yang dilayani endpoint Anda. Ukuran vektornya terdeteksi otomat
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Waktu persetujuan Notion habis. Coba lagi."
+
+msgid "The Notion page already has content"
+msgstr "Halaman Notion sudah memiliki konten"
+
+msgid "The Notion page changed"
+msgstr "Halaman Notion berubah"
 
 msgid "the open agent"
 msgstr "agen yang terbuka"

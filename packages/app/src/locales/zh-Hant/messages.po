@@ -2923,6 +2923,9 @@ msgstr "無法開啟 GitHub 登入頁。請再試一次。"
 msgid "Could not open this document in a new window."
 msgstr "無法在新視窗中開啟此文件。"
 
+msgid "Could not publish to Notion."
+msgstr "無法發布到 Notion。"
+
 msgid "Could not reach server"
 msgstr "無法連上伺服器"
 
@@ -2934,6 +2937,9 @@ msgstr "無法儲存同步偏好設定：{detail}"
 
 msgid "Could not save the file order"
 msgstr "無法儲存檔案順序"
+
+msgid "Could not save the Notion link in this document."
+msgstr "無法在此文件中儲存 Notion 連結。"
 
 msgid "Could not start creating a new item"
 msgstr "無法開始建立新項目"
@@ -3762,6 +3768,9 @@ msgstr "停用 {file}"
 msgid "Disable {id}"
 msgstr "停用 {id}"
 
+msgid "Disable Notion"
+msgstr "停用 Notion"
+
 msgid "Disable semantic search"
 msgstr "關閉語意搜尋"
 
@@ -4194,6 +4203,9 @@ msgstr "啟用自動（僅拉取）？"
 msgid "Enable indexes"
 msgstr "啟用索引"
 
+msgid "Enable Notion"
+msgstr "啟用 Notion"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "要為 {0} 啟用 Open Knowledge 工具嗎？"
 
@@ -4617,6 +4629,9 @@ msgstr "儲存內容規則失敗——{0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "儲存 Slidev 設定失敗"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "無法儲存 Notion 外掛設定"
 
 msgid "Failed to save the schema field"
 msgstr "儲存結構描述欄位失敗"
@@ -5960,11 +5975,20 @@ msgstr "變更的行數：新增 {additions}，刪除 {deletions}"
 msgid "Link"
 msgstr "連結"
 
+msgid "Link a Notion page"
+msgstr "連結 Notion 頁面"
+
 msgid "Link copied."
 msgstr "已複製連結。"
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "將文件連結到 Notion 頁面並發布到那裡。"
+
 msgid "Link folders"
 msgstr "連結資料夾"
+
+msgid "Link Notion page"
+msgstr "連結 Notion 頁面"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "連結預覽設定尚未載入——請稍候再試"
@@ -6013,6 +6037,12 @@ msgstr "連結關係圖回應的結構與預期不符。"
 
 msgid "Linked theme files aren’t supported"
 msgstr "不支援連結的主題檔案"
+
+msgid "Linked to {0}"
+msgstr "已連結到 {0}"
+
+msgid "Linked to the Notion page"
+msgstr "已連結到 Notion 頁面"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "連結會將另一個資料夾合併到此資料夾中。此資料夾尚不存在，因此請先在此處安裝一個技能。"
@@ -6858,6 +6888,9 @@ msgstr "沒有共同祖先 — 兩個分支都新增了此檔案（add/add 衝�
 msgid "No conflict is tracked for this path."
 msgstr "此路徑沒有正在追蹤的衝突。"
 
+msgid "No connected Notion workspace can open that page."
+msgstr "已連接的 Notion 工作區都無法開啟該頁面。"
+
 msgid "No content changes at this version."
 msgstr "這個版本沒有內容變更。"
 
@@ -7201,6 +7234,9 @@ msgstr "未上傳任何內容。在你以電子郵件寄給我們之前，報告
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Notion 頁面連結"
 
 msgid "Notion was not connected."
 msgstr "未連接 Notion。"
@@ -7954,6 +7990,9 @@ msgstr "貼上圖片 URL，或點一下上傳"
 msgid "Paste link"
 msgstr "貼上連結"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "貼上已連接 Notion 工作區中某個頁面的連結。"
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "貼上 URL、owner/repo，或搜尋你的儲存庫"
 
@@ -8291,11 +8330,23 @@ msgstr "發布"
 msgid "Publish to GitHub"
 msgstr "發布到 GitHub"
 
+msgid "Publish to Notion"
+msgstr "發布到 Notion"
+
 msgid "Published"
 msgstr "已發布"
 
 msgid "Published by {publisher}"
 msgstr "由 {publisher} 發布"
+
+msgid "Published to Notion"
+msgstr "已發布到 Notion"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "發布會以此文件取代頁面的目前內容。"
+
+msgid "Publishing to Notion…"
+msgstr "正在發布到 Notion…"
 
 msgid "Publishing..."
 msgstr "正在發布…"
@@ -8786,6 +8837,9 @@ msgstr "用輸入框中的內容取代目前的相符項"
 
 msgid "Replace key"
 msgstr "更換金鑰"
+
+msgid "Replace Notion content"
+msgstr "取代 Notion 內容"
 
 msgid "Replace the active match from the replace field."
 msgstr "用取代輸入框中的內容取代目前的相符項。"
@@ -9964,6 +10018,9 @@ msgstr "部分技能刪除時帶有警告"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "部分範本可能未列出，因為此知識庫的資料夾太多，無法全部掃描。若要查看某個資料夾的範本，請在檔案樹中開啟該資料夾的選單，然後選擇「從範本新增」。"
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "自你上次發布以來，有人在 Notion 中編輯了該頁面。現在發布會以此文件取代他們的變更。"
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "可能已有人解決了 {filePath} 的衝突 — 請先查看文件的目前內容，再重做你的編輯。"
 
@@ -10695,6 +10752,12 @@ msgstr "你的端點提供的模型 id。它的向量維度會自動偵測——
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Notion 核准已逾時。請再試一次。"
+
+msgid "The Notion page already has content"
+msgstr "Notion 頁面已有內容"
+
+msgid "The Notion page changed"
+msgstr "Notion 頁面已變更"
 
 msgid "the open agent"
 msgstr "已開啟的代理"

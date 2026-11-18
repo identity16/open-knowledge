@@ -131,7 +131,6 @@ import {
 } from './editor-area-panel-space';
 import { DOC_PANEL_ID, findResidualPanelId } from './editor-area-rail-registry';
 import { computeStickyRepinLayout } from './editor-area-sticky-repin';
-import { isSlidesHost } from './slides-host-gate';
 import { useLiveXtermTheme } from './use-live-xterm-theme';
 
 const LazyActivityModeContent = lazy(async () => {
@@ -391,7 +390,7 @@ function PaneDocumentToolbar({
   return (
     <EditorToolbar
       activeDocName={docName}
-      activeProvider={isSlidesHost() ? provider : null}
+      activeProvider={provider}
       isSourceMode={isSourceMode}
       sourceDisabled={syncStatus !== 'connected' && syncStatus !== 'synced'}
       onModeChange={onModeChange}
