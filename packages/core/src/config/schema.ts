@@ -822,6 +822,21 @@ export const ConfigSchema = z.looseObject({
         .default(false),
     })
     .default({ enabled: false }),
+  notion: z
+    .looseObject({
+      enabled: z
+        .boolean()
+        .register(fieldRegistry, {
+          scope: 'project',
+          agentSettable: false,
+          reload: 'live',
+          defaultScope: 'project',
+          description:
+            'Whether the Notion plugin is on for this project. When on, a document can be linked to a Notion page through its `notion` frontmatter and published to it. Workspaces are connected per user in Settings → Integrations → Notion. Shared with collaborators (project scope). Default off.',
+        })
+        .default(false),
+    })
+    .default({ enabled: false }),
   telemetry: z
     .looseObject({
       localSink: z

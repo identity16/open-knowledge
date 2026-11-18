@@ -2923,6 +2923,9 @@ msgstr "Could not open GitHub sign-in. Please try again."
 msgid "Could not open this document in a new window."
 msgstr "Could not open this document in a new window."
 
+msgid "Could not publish to Notion."
+msgstr "Could not publish to Notion."
+
 msgid "Could not reach server"
 msgstr "Could not reach server"
 
@@ -2934,6 +2937,9 @@ msgstr "Could not save sync preference: {detail}"
 
 msgid "Could not save the file order"
 msgstr "Could not save the file order"
+
+msgid "Could not save the Notion link in this document."
+msgstr "Could not save the Notion link in this document."
 
 msgid "Could not start creating a new item"
 msgstr "Could not start creating a new item"
@@ -3762,6 +3768,9 @@ msgstr "Disable {file}"
 msgid "Disable {id}"
 msgstr "Disable {id}"
 
+msgid "Disable Notion"
+msgstr "Disable Notion"
+
 msgid "Disable semantic search"
 msgstr "Disable semantic search"
 
@@ -4194,6 +4203,9 @@ msgstr "Enable Auto (Pull only)?"
 msgid "Enable indexes"
 msgstr "Enable indexes"
 
+msgid "Enable Notion"
+msgstr "Enable Notion"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "Enable Open Knowledge tools for {0}?"
 
@@ -4617,6 +4629,9 @@ msgstr "Failed to save content rules — {0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "Failed to save Slidev setting"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Failed to save the Notion plugin setting"
 
 msgid "Failed to save the schema field"
 msgstr "Failed to save the schema field"
@@ -5960,11 +5975,20 @@ msgstr "Lines changed: {additions} added, {deletions} removed"
 msgid "Link"
 msgstr "Link"
 
+msgid "Link a Notion page"
+msgstr "Link a Notion page"
+
 msgid "Link copied."
 msgstr "Link copied."
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "Link documents to Notion pages and publish them there."
+
 msgid "Link folders"
 msgstr "Link folders"
+
+msgid "Link Notion page"
+msgstr "Link Notion page"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "Link preview settings not yet loaded — try again in a moment"
@@ -6013,6 +6037,12 @@ msgstr "Link-graph response did not match expected shape."
 
 msgid "Linked theme files aren’t supported"
 msgstr "Linked theme files aren’t supported"
+
+msgid "Linked to {0}"
+msgstr "Linked to {0}"
+
+msgid "Linked to the Notion page"
+msgstr "Linked to the Notion page"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
@@ -6858,6 +6888,9 @@ msgstr "No common ancestor — both branches added this file (add/add conflict).
 msgid "No conflict is tracked for this path."
 msgstr "No conflict is tracked for this path."
 
+msgid "No connected Notion workspace can open that page."
+msgstr "No connected Notion workspace can open that page."
+
 msgid "No content changes at this version."
 msgstr "No content changes at this version."
 
@@ -7201,6 +7234,9 @@ msgstr "Nothing was uploaded. The report stays on this computer until you email 
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Notion page link"
 
 msgid "Notion was not connected."
 msgstr "Notion was not connected."
@@ -7954,6 +7990,9 @@ msgstr "Paste image URL or click upload"
 msgid "Paste link"
 msgstr "Paste link"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "Paste the link of a page in a connected Notion workspace."
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "Paste URL, owner/repo, or search your repos"
 
@@ -8291,11 +8330,23 @@ msgstr "Publish"
 msgid "Publish to GitHub"
 msgstr "Publish to GitHub"
 
+msgid "Publish to Notion"
+msgstr "Publish to Notion"
+
 msgid "Published"
 msgstr "Published"
 
 msgid "Published by {publisher}"
 msgstr "Published by {publisher}"
+
+msgid "Published to Notion"
+msgstr "Published to Notion"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "Publishing replaces the page's current content with this document."
+
+msgid "Publishing to Notion…"
+msgstr "Publishing to Notion…"
 
 msgid "Publishing..."
 msgstr "Publishing..."
@@ -8786,6 +8837,9 @@ msgstr "Replace current match from field"
 
 msgid "Replace key"
 msgstr "Replace key"
+
+msgid "Replace Notion content"
+msgstr "Replace Notion content"
 
 msgid "Replace the active match from the replace field."
 msgstr "Replace the active match from the replace field."
@@ -9964,6 +10018,9 @@ msgstr "Some skills were deleted with a warning"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 
@@ -10695,6 +10752,12 @@ msgstr "The model id your endpoint serves. Its vector size is detected automatic
 
 msgid "The Notion approval timed out. Try again."
 msgstr "The Notion approval timed out. Try again."
+
+msgid "The Notion page already has content"
+msgstr "The Notion page already has content"
+
+msgid "The Notion page changed"
+msgstr "The Notion page changed"
 
 msgid "the open agent"
 msgstr "the open agent"

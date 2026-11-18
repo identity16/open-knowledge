@@ -2923,6 +2923,9 @@ msgstr "GitHub سائن اِن نہیں کھل سکا۔ براہِ کرم دوب
 msgid "Could not open this document in a new window."
 msgstr "اس دستاویز کو نئی ونڈو میں نہیں کھولا جا سکا۔"
 
+msgid "Could not publish to Notion."
+msgstr "Notion پر شائع نہیں ہو سکا۔"
+
 msgid "Could not reach server"
 msgstr "سرور تک رسائی نہیں ہو سکی"
 
@@ -2934,6 +2937,9 @@ msgstr "مطابقت پذیری کی ترجیح محفوظ نہیں ہو سکی:
 
 msgid "Could not save the file order"
 msgstr "فائلوں کی ترتیب محفوظ نہیں ہو سکی"
+
+msgid "Could not save the Notion link in this document."
+msgstr "اس دستاویز میں Notion لنک محفوظ نہیں ہو سکا۔"
 
 msgid "Could not start creating a new item"
 msgstr "نیا آئٹم بنانا شروع نہیں ہو سکا"
@@ -3762,6 +3768,9 @@ msgstr "{file} بند کریں"
 msgid "Disable {id}"
 msgstr "{id} کو غیر فعال کریں"
 
+msgid "Disable Notion"
+msgstr "Notion بند کریں"
+
 msgid "Disable semantic search"
 msgstr "معنوی تلاش بند کریں"
 
@@ -4194,6 +4203,9 @@ msgstr "خودکار (صرف کھینچیں) فعال کریں؟"
 msgid "Enable indexes"
 msgstr "اشاریہ جات کو فعال کریں۔"
 
+msgid "Enable Notion"
+msgstr "Notion آن کریں"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "کیا {0} کے لیے Open Knowledge ٹولز فعال کریں؟"
 
@@ -4617,6 +4629,9 @@ msgstr "مواد کے قواعد محفوظ نہیں ہو سکے — {0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "Slidev کی ترتیب محفوظ نہیں ہو سکی"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Notion پلگ ان کی ترتیب محفوظ نہیں ہو سکی"
 
 msgid "Failed to save the schema field"
 msgstr "اسکیما کا فیلڈ محفوظ نہیں ہو سکا"
@@ -5960,11 +5975,20 @@ msgstr "تبدیل شدہ لائنیں: {additions} شامل، {deletions} حذ�
 msgid "Link"
 msgstr "لنک"
 
+msgid "Link a Notion page"
+msgstr "Notion صفحہ جوڑیں"
+
 msgid "Link copied."
 msgstr "لنک نقل ہو گیا۔"
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "دستاویزات کو Notion صفحات سے جوڑیں اور وہاں شائع کریں۔"
+
 msgid "Link folders"
 msgstr "فولڈرز لنک کریں"
+
+msgid "Link Notion page"
+msgstr "Notion صفحہ جوڑیں"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "لنک کے پیش منظر کی ترتیبات ابھی لوڈ نہیں ہوئیں — تھوڑی دیر بعد دوبارہ کوشش کریں"
@@ -6013,6 +6037,12 @@ msgstr "لنک گراف کا جواب متوقع ساخت سے میل نہیں �
 
 msgid "Linked theme files aren’t supported"
 msgstr "منسلک تھیم فائلوں کی معاونت نہیں ہے"
+
+msgid "Linked to {0}"
+msgstr "{0} سے جوڑ دیا گیا"
+
+msgid "Linked to the Notion page"
+msgstr "Notion صفحے سے جوڑ دیا گیا"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "لنک کرنے سے دوسرا فولڈر اس فولڈر میں ضم ہو جاتا ہے۔ یہ فولڈر ابھی موجود نہیں ہے، اس لیے پہلے یہاں ایک اسکل انسٹال کریں۔"
@@ -6858,6 +6888,9 @@ msgstr "کوئی مشترکہ سلف نہیں — دونوں برانچوں نے
 msgid "No conflict is tracked for this path."
 msgstr "اس پاتھ کے لیے کوئی تنازع ٹریک نہیں کیا جا رہا ہے۔"
 
+msgid "No connected Notion workspace can open that page."
+msgstr "کوئی جڑی ہوئی Notion ورک اسپیس وہ صفحہ نہیں کھول سکتی۔"
+
 msgid "No content changes at this version."
 msgstr "اس ورژن میں مواد کی کوئی تبدیلی نہیں۔"
 
@@ -7201,6 +7234,9 @@ msgstr "کچھ بھی اپ لوڈ نہیں ہوا۔ جب تک آپ ہمیں ای
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Notion صفحے کا لنک"
 
 msgid "Notion was not connected."
 msgstr "Notion نہیں جڑا۔"
@@ -7954,6 +7990,9 @@ msgstr "تصویر کا URL چسپاں کریں یا اپ لوڈ پر کلک ک�
 msgid "Paste link"
 msgstr "لنک چسپاں کریں"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "جڑی ہوئی Notion ورک اسپیس کے کسی صفحے کا لنک پیسٹ کریں۔"
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "URL، owner/repo چسپاں کریں، یا اپنی ریپوز میں تلاش کریں"
 
@@ -8291,11 +8330,23 @@ msgstr "شائع کریں"
 msgid "Publish to GitHub"
 msgstr "GitHub پر شائع کریں"
 
+msgid "Publish to Notion"
+msgstr "Notion پر شائع کریں"
+
 msgid "Published"
 msgstr "شائع شدہ"
 
 msgid "Published by {publisher}"
 msgstr "{publisher} کی طرف سے شائع کردہ"
+
+msgid "Published to Notion"
+msgstr "Notion پر شائع ہو گیا"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "شائع کرنے سے صفحے کا موجودہ مواد اس دستاویز سے بدل جائے گا۔"
+
+msgid "Publishing to Notion…"
+msgstr "Notion پر شائع ہو رہا ہے…"
 
 msgid "Publishing..."
 msgstr "شائع کیا جا رہا ہے..."
@@ -8786,6 +8837,9 @@ msgstr "فیلڈ سے موجودہ مماثلت تبدیل کریں"
 
 msgid "Replace key"
 msgstr "کلید تبدیل کریں"
+
+msgid "Replace Notion content"
+msgstr "Notion مواد بدلیں"
 
 msgid "Replace the active match from the replace field."
 msgstr "تبدیلی کے فیلڈ سے فعال مماثلت تبدیل کریں۔"
@@ -9964,6 +10018,9 @@ msgstr "کچھ مہارتیں انتباہ کے ساتھ حذف ہوئیں"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "کچھ ٹیمپلیٹس شاید فہرست میں نہ ہوں، کیونکہ اس نالج بیس میں اسکین کرنے کے لیے بہت زیادہ فولڈرز ہیں۔ کسی فولڈر کے ٹیمپلیٹس دیکھنے کے لیے، فائل ٹری میں اس کا مینو کھولیں اور «ٹیمپلیٹ سے نیا» منتخب کریں۔"
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "آپ کی آخری اشاعت کے بعد کسی نے Notion میں صفحہ ترمیم کیا۔ ابھی شائع کرنے سے ان کی تبدیلیاں اس دستاویز سے بدل جائیں گی۔"
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "ہو سکتا ہے کسی نے {filePath} کا تنازع پہلے ہی حل کر دیا ہو — اپنی ترمیم دوبارہ کرنے سے پہلے دستاویز کا موجودہ مواد دیکھ لیں۔"
 
@@ -10695,6 +10752,12 @@ msgstr "وہ ماڈل شناخت جو آپ کا اینڈ پوائنٹ فراہم
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Notion منظوری کا وقت ختم ہو گیا۔ دوبارہ کوشش کریں۔"
+
+msgid "The Notion page already has content"
+msgstr "Notion صفحے میں پہلے سے مواد موجود ہے"
+
+msgid "The Notion page changed"
+msgstr "Notion صفحہ بدل گیا"
 
 msgid "the open agent"
 msgstr "کھلا ہوا ایجنٹ"

@@ -2919,6 +2919,9 @@ msgstr "Não foi possível abrir o login do GitHub. Tente de novo."
 msgid "Could not open this document in a new window."
 msgstr "Não foi possível abrir este documento em uma nova janela."
 
+msgid "Could not publish to Notion."
+msgstr "Não foi possível publicar no Notion."
+
 msgid "Could not reach server"
 msgstr "Não foi possível contatar o servidor"
 
@@ -2930,6 +2933,9 @@ msgstr "Não foi possível salvar a preferência de sincronização: {detail}"
 
 msgid "Could not save the file order"
 msgstr "Não foi possível salvar a ordem dos arquivos"
+
+msgid "Could not save the Notion link in this document."
+msgstr "Não foi possível salvar o link do Notion neste documento."
 
 msgid "Could not start creating a new item"
 msgstr "Não foi possível começar a criar um novo item"
@@ -3758,6 +3764,9 @@ msgstr "Desativar {file}"
 msgid "Disable {id}"
 msgstr "Desativar {id}"
 
+msgid "Disable Notion"
+msgstr "Desativar Notion"
+
 msgid "Disable semantic search"
 msgstr "Desativar a busca semântica"
 
@@ -4190,6 +4199,9 @@ msgstr "Ativar Automático (somente Pull)?"
 msgid "Enable indexes"
 msgstr "Habilitar índices"
 
+msgid "Enable Notion"
+msgstr "Ativar Notion"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "Ativar as ferramentas do Open Knowledge para {0}?"
 
@@ -4613,6 +4625,9 @@ msgstr "Falha ao salvar as regras de conteúdo — {0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "Falha ao salvar a configuração do Slidev"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Não foi possível salvar a configuração do plugin do Notion"
 
 msgid "Failed to save the schema field"
 msgstr "Falha ao salvar o campo do esquema"
@@ -5956,11 +5971,20 @@ msgstr "Linhas alteradas: {additions} adicionadas, {deletions} removidas"
 msgid "Link"
 msgstr "Link"
 
+msgid "Link a Notion page"
+msgstr "Vincular uma página do Notion"
+
 msgid "Link copied."
 msgstr "Link copiado."
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "Vincule documentos a páginas do Notion e publique-os lá."
+
 msgid "Link folders"
 msgstr "Vincular pastas"
+
+msgid "Link Notion page"
+msgstr "Vincular página do Notion"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "As configurações de pré-visualização de links ainda não carregaram — tente de novo em instantes"
@@ -6009,6 +6033,12 @@ msgstr "A resposta do grafo de links não tinha o formato esperado."
 
 msgid "Linked theme files aren’t supported"
 msgstr "Arquivos de tema vinculados não são compatíveis"
+
+msgid "Linked to {0}"
+msgstr "Vinculado a {0}"
+
+msgid "Linked to the Notion page"
+msgstr "Vinculado à página do Notion"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "Vincular mescla outra pasta nesta. Esta pasta ainda não existe, então instale primeiro uma habilidade aqui."
@@ -6854,6 +6884,9 @@ msgstr "Sem ancestral comum: os dois ramos adicionaram este arquivo (conflito ad
 msgid "No conflict is tracked for this path."
 msgstr "Nenhum conflito está sendo rastreado para este caminho."
 
+msgid "No connected Notion workspace can open that page."
+msgstr "Nenhum espaço de trabalho do Notion conectado consegue abrir essa página."
+
 msgid "No content changes at this version."
 msgstr "Nenhuma alteração de conteúdo nesta versão."
 
@@ -7197,6 +7230,9 @@ msgstr "Nada foi enviado. O relatório fica neste computador até você nos envi
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Link da página do Notion"
 
 msgid "Notion was not connected."
 msgstr "O Notion não foi conectado."
@@ -7950,6 +7986,9 @@ msgstr "Cole a URL da imagem ou clique em enviar"
 msgid "Paste link"
 msgstr "Colar link"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "Cole o link de uma página de um espaço de trabalho do Notion conectado."
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "Cole uma URL, dono/repo, ou busque nos seus repositórios"
 
@@ -8287,11 +8326,23 @@ msgstr "Publicar"
 msgid "Publish to GitHub"
 msgstr "Publicar no GitHub"
 
+msgid "Publish to Notion"
+msgstr "Publicar no Notion"
+
 msgid "Published"
 msgstr "Publicado"
 
 msgid "Published by {publisher}"
 msgstr "Publicado por {publisher}"
+
+msgid "Published to Notion"
+msgstr "Publicado no Notion"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "Publicar substitui o conteúdo atual da página por este documento."
+
+msgid "Publishing to Notion…"
+msgstr "Publicando no Notion…"
 
 msgid "Publishing..."
 msgstr "Publicando..."
@@ -8782,6 +8833,9 @@ msgstr "Substituir a ocorrência atual pelo campo"
 
 msgid "Replace key"
 msgstr "Substituir a chave"
+
+msgid "Replace Notion content"
+msgstr "Substituir conteúdo do Notion"
 
 msgid "Replace the active match from the replace field."
 msgstr "Substitui a ocorrência ativa pelo conteúdo do campo de substituição."
@@ -9960,6 +10014,9 @@ msgstr "Algumas habilidades foram excluídas com um aviso"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "Alguns modelos podem não aparecer na lista porque esta base de conhecimento tem pastas demais para serem verificadas. Para ver os modelos de uma pasta, abra o menu dela na árvore de arquivos e escolha \"Novo a partir de um modelo\"."
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "Alguém editou a página no Notion desde sua última publicação. Publicar agora substitui as alterações por este documento."
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "Talvez alguém já tenha resolvido {filePath} — confira o conteúdo atual do documento antes de refazer sua edição."
 
@@ -10691,6 +10748,12 @@ msgstr "O id do modelo que seu endpoint serve. O tamanho do vector é detectado 
 
 msgid "The Notion approval timed out. Try again."
 msgstr "A aprovação do Notion expirou. Tente novamente."
+
+msgid "The Notion page already has content"
+msgstr "A página do Notion já tem conteúdo"
+
+msgid "The Notion page changed"
+msgstr "A página do Notion mudou"
 
 msgid "the open agent"
 msgstr "o agente aberto"

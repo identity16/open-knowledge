@@ -2923,6 +2923,9 @@ msgstr "تعذّر فتح تسجيل الدخول إلى GitHub. يرجى الم
 msgid "Could not open this document in a new window."
 msgstr "تعذر فتح هذا المستند في نافذة جديدة."
 
+msgid "Could not publish to Notion."
+msgstr "تعذّر النشر على Notion."
+
 msgid "Could not reach server"
 msgstr "تعذّر الوصول إلى الخادم"
 
@@ -2934,6 +2937,9 @@ msgstr "تعذّر حفظ تفضيل المزامنة: {detail}"
 
 msgid "Could not save the file order"
 msgstr "تعذّر حفظ ترتيب الملفات"
+
+msgid "Could not save the Notion link in this document."
+msgstr "تعذّر حفظ رابط Notion في هذا المستند."
 
 msgid "Could not start creating a new item"
 msgstr "تعذّر بدء إنشاء عنصر جديد"
@@ -3762,6 +3768,9 @@ msgstr "تعطيل {file}"
 msgid "Disable {id}"
 msgstr "تعطيل {id}"
 
+msgid "Disable Notion"
+msgstr "تعطيل Notion"
+
 msgid "Disable semantic search"
 msgstr "تعطيل البحث الدلالي"
 
@@ -4194,6 +4203,9 @@ msgstr "تفعيل تلقائي (سحب فقط)؟"
 msgid "Enable indexes"
 msgstr "تمكين الفهارس"
 
+msgid "Enable Notion"
+msgstr "تفعيل Notion"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "هل تريد تفعيل أدوات Open Knowledge لـ {0}؟"
 
@@ -4617,6 +4629,9 @@ msgstr "فشل حفظ قواعد المحتوى — {0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "تعذّر حفظ إعداد Slidev"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "تعذّر حفظ إعداد إضافة Notion"
 
 msgid "Failed to save the schema field"
 msgstr "فشل حفظ حقل المخطط"
@@ -5960,11 +5975,20 @@ msgstr "الأسطر المتغيرة: أُضيف {additions}، وحُذف {dele
 msgid "Link"
 msgstr "رابط"
 
+msgid "Link a Notion page"
+msgstr "ربط صفحة Notion"
+
 msgid "Link copied."
 msgstr "تم نسخ الرابط."
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "اربط المستندات بصفحات Notion وانشرها هناك."
+
 msgid "Link folders"
 msgstr "اربط المجلدين"
+
+msgid "Link Notion page"
+msgstr "ربط صفحة Notion"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "لم تُحمَّل إعدادات معاينة الروابط بعد — أعد المحاولة بعد قليل"
@@ -6013,6 +6037,12 @@ msgstr "لم تطابق استجابة رسم الروابط الشكل المت
 
 msgid "Linked theme files aren’t supported"
 msgstr "ملفات السمات المرتبطة غير مدعومة"
+
+msgid "Linked to {0}"
+msgstr "تم الربط بـ {0}"
+
+msgid "Linked to the Notion page"
+msgstr "تم الربط بصفحة Notion"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "الربط يدمج مجلداً آخر في هذا المجلد. هذا المجلد غير موجود بعد، لذا ثبّت مهارة هنا أولاً."
@@ -6858,6 +6888,9 @@ msgstr "لا يوجد سلف مشترك — أضاف كلا الفرعين هذ�
 msgid "No conflict is tracked for this path."
 msgstr "لا يتم تتبّع أي تعارض لهذا المسار."
 
+msgid "No connected Notion workspace can open that page."
+msgstr "لا توجد مساحة عمل Notion متصلة يمكنها فتح تلك الصفحة."
+
 msgid "No content changes at this version."
 msgstr "لا تغييرات في المحتوى في هذه النسخة."
 
@@ -7201,6 +7234,9 @@ msgstr "لم يُرفع أي شيء. يبقى التقرير على هذا ال�
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "رابط صفحة Notion"
 
 msgid "Notion was not connected."
 msgstr "لم يتم ربط Notion."
@@ -7954,6 +7990,9 @@ msgstr "الصق رابط صورة أو انقر «رفع»"
 msgid "Paste link"
 msgstr "لصق الرابط"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "الصق رابط صفحة في مساحة عمل Notion متصلة."
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "الصق رابطًا أو owner/repo، أو ابحث في مستودعاتك"
 
@@ -8291,11 +8330,23 @@ msgstr "نشر"
 msgid "Publish to GitHub"
 msgstr "النشر على GitHub"
 
+msgid "Publish to Notion"
+msgstr "النشر على Notion"
+
 msgid "Published"
 msgstr "منشور"
 
 msgid "Published by {publisher}"
 msgstr "منشور بواسطة {publisher}"
+
+msgid "Published to Notion"
+msgstr "تم النشر على Notion"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "يستبدل النشر محتوى الصفحة الحالي بهذا المستند."
+
+msgid "Publishing to Notion…"
+msgstr "جارٍ النشر على Notion…"
 
 msgid "Publishing..."
 msgstr "يجري النشر..."
@@ -8786,6 +8837,9 @@ msgstr "استبدال التطابق الحالي من الحقل"
 
 msgid "Replace key"
 msgstr "استبدال المفتاح"
+
+msgid "Replace Notion content"
+msgstr "استبدال محتوى Notion"
 
 msgid "Replace the active match from the replace field."
 msgstr "استبدل التطابق النشط من حقل الاستبدال."
@@ -9964,6 +10018,9 @@ msgstr "تم حذف بعض المهارات مع تحذير"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "قد لا تظهر بعض القوالب في القائمة لأن قاعدة المعرفة هذه تحتوي على عدد كبير جدًا من المجلدات يتعذر فحصها كلها. لعرض قوالب مجلد، افتح قائمته في شجرة الملفات واختر «جديد من قالب»."
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "عدّل شخص ما الصفحة في Notion منذ آخر نشر لك. النشر الآن يستبدل تغييراته بهذا المستند."
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "ربما يكون شخص ما قد حلّ التعارض في {filePath} بالفعل — تحقّق من المحتوى الحالي للمستند قبل إعادة تنفيذ تعديلك."
 
@@ -10695,6 +10752,12 @@ msgstr "معرّف النموذج الذي تخدمه نقطة نهايتك. ي�
 
 msgid "The Notion approval timed out. Try again."
 msgstr "انتهت مهلة الموافقة على Notion. حاول مرة أخرى."
+
+msgid "The Notion page already has content"
+msgstr "صفحة Notion تحتوي على محتوى بالفعل"
+
+msgid "The Notion page changed"
+msgstr "تغيّرت صفحة Notion"
 
 msgid "the open agent"
 msgstr "الوكيل المفتوح"

@@ -6,16 +6,27 @@ import {
   NotionConnectStartResponseSchema,
   NotionDisconnectRequestSchema,
   NotionDisconnectResponseSchema,
+  NotionPublishRequestSchema,
+  NotionPublishResponseSchema,
+  NotionResolvePageRequestSchema,
+  NotionResolvePageResponseSchema,
+  type ProblemType,
 } from '@inkeep/open-knowledge-core';
 import type { NotionConnections } from '../notion/notion-connections.ts';
+import {
+  NotionPublishError,
+  type NotionPublisher,
+  type NotionPublishFailure,
+} from '../notion/publisher.ts';
 import { NotionTokenStoreError } from '../notion/token-store.ts';
 import { type ApiRouteGroup, type ApiRouteRecord, createApiRouteGroup } from './api-pipeline.ts';
-import { errorResponse } from './error-response.ts';
+import { errorResponse, type HttpErrorStatus } from './error-response.ts';
 import { withValidation } from './request-validation.ts';
 import { successResponse } from './success-response.ts';
 
 export interface NotionRouteDeps {
   notion: NotionConnections;
+  publisher: NotionPublisher;
   checkLocalOpSecurity: (
     req: IncomingMessage,
     res: ServerResponse,
@@ -24,6 +35,37 @@ export interface NotionRouteDeps {
 }
 
 const NO_STORE = { 'Cache-Control': 'no-store' };
+
+function publishProblem(failure: NotionPublishFailure): [HttpErrorStatus, ProblemType, string] {
+  switch (failure.kind) {
+    case 'doc-not-found':
+      return [404, 'urn:ok:error:doc-not-found', 'Document not found.'];
+    case 'not-linked':
+      return [400, 'urn:ok:error:invalid-request', 'This document is not linked to a Notion page.'];
+    case 'not-connected':
+      return [
+        400,
+        'urn:ok:error:invalid-request',
+        'The Notion workspace this document links to is not connected.',
+      ];
+    case 'page-not-empty':
+      return [409, 'urn:ok:error:notion-page-not-empty', 'The Notion page already has content.'];
+    case 'changed-in-notion':
+      return [
+        409,
+        'urn:ok:error:notion-changed',
+        'The Notion page changed since the last publish.',
+      ];
+    case 'page-unreadable':
+      return [502, 'urn:ok:error:notion-unavailable', 'Notion returned only part of the page.'];
+    case 'notion-error':
+      return [
+        502,
+        'urn:ok:error:notion-unavailable',
+        `Notion refused the request: ${failure.message}`,
+      ];
+  }
+}
 
 export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
   const { notion, checkLocalOpSecurity } = deps;
@@ -133,7 +175,78 @@ export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
     },
   );
 
+  const handleResolvePage = withValidation(
+    NotionResolvePageRequestSchema,
+    async (_req, res, body) => {
+      const handler = 'notion-resolve-page';
+      try {
+        const resolved = await deps.publisher.resolvePage(body.url);
+        if (resolved === null) {
+          errorResponse(
+            res,
+            404,
+            'urn:ok:error:not-found',
+            'No connected Notion workspace can open that page.',
+            { handler },
+          );
+          return;
+        }
+        successResponse(res, 200, NotionResolvePageResponseSchema, resolved, {
+          handler,
+          extraHeaders: NO_STORE,
+        });
+      } catch (cause) {
+        errorResponse(res, 502, 'urn:ok:error:notion-unavailable', 'Notion could not be reached.', {
+          handler,
+          cause,
+        });
+      }
+    },
+    {
+      handler: 'notion-resolve-page',
+      method: 'POST',
+      preBodyGate: (req, res) => checkLocalOpSecurity(req, res, { handler: 'notion-resolve-page' }),
+    },
+  );
+
+  const handlePublish = withValidation(
+    NotionPublishRequestSchema,
+    async (_req, res, body) => {
+      const handler = 'notion-publish';
+      try {
+        const base = await deps.publisher.publish(
+          body.docName,
+          body.overwrite === undefined ? {} : { overwrite: body.overwrite },
+        );
+        successResponse(
+          res,
+          200,
+          NotionPublishResponseSchema,
+          { page: base.page, publishedAt: base.publishedAt },
+          { handler, extraHeaders: NO_STORE },
+        );
+      } catch (cause) {
+        if (cause instanceof NotionPublishError) {
+          const [status, type, title] = publishProblem(cause.failure);
+          errorResponse(res, status, type, title, { handler });
+          return;
+        }
+        errorResponse(res, 502, 'urn:ok:error:notion-unavailable', 'Notion could not be reached.', {
+          handler,
+          cause,
+        });
+      }
+    },
+    {
+      handler: 'notion-publish',
+      method: 'POST',
+      preBodyGate: (req, res) => checkLocalOpSecurity(req, res, { handler: 'notion-publish' }),
+    },
+  );
+
   const routes = {
+    '/api/notion/resolve-page': handleResolvePage,
+    '/api/notion/publish': handlePublish,
     '/api/notion/connections': handleList,
     '/api/notion/connections/flow': handleFlow,
     '/api/notion/connections/start': handleStart,
@@ -141,6 +254,11 @@ export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
   } satisfies ApiRouteRecord;
 
   return createApiRouteGroup(routes, {
-    mutating: ['/api/notion/connections/start', '/api/notion/connections/disconnect'],
+    mutating: [
+      '/api/notion/connections/start',
+      '/api/notion/connections/disconnect',
+      '/api/notion/resolve-page',
+      '/api/notion/publish',
+    ],
   });
 }

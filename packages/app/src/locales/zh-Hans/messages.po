@@ -2923,6 +2923,9 @@ msgstr "无法打开 GitHub 登录页。请重试。"
 msgid "Could not open this document in a new window."
 msgstr "无法在新窗口中打开此文档。"
 
+msgid "Could not publish to Notion."
+msgstr "无法发布到 Notion。"
+
 msgid "Could not reach server"
 msgstr "无法连接到服务器"
 
@@ -2934,6 +2937,9 @@ msgstr "无法保存同步偏好：{detail}"
 
 msgid "Could not save the file order"
 msgstr "无法保存文件顺序"
+
+msgid "Could not save the Notion link in this document."
+msgstr "无法在此文档中保存 Notion 链接。"
 
 msgid "Could not start creating a new item"
 msgstr "无法开始创建新项目"
@@ -3762,6 +3768,9 @@ msgstr "禁用 {file}"
 msgid "Disable {id}"
 msgstr "禁用 {id}"
 
+msgid "Disable Notion"
+msgstr "停用 Notion"
+
 msgid "Disable semantic search"
 msgstr "关闭语义搜索"
 
@@ -4194,6 +4203,9 @@ msgstr "启用自动（仅拉取）？"
 msgid "Enable indexes"
 msgstr "启用索引"
 
+msgid "Enable Notion"
+msgstr "启用 Notion"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "为 {0} 启用 Open Knowledge 工具？"
 
@@ -4617,6 +4629,9 @@ msgstr "保存内容规则失败——{0}"
 
 msgid "Failed to save Slidev setting"
 msgstr "保存 Slidev 设置失败"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "无法保存 Notion 插件设置"
 
 msgid "Failed to save the schema field"
 msgstr "保存架构字段失败"
@@ -5960,11 +5975,20 @@ msgstr "更改的行数：新增 {additions}，删除 {deletions}"
 msgid "Link"
 msgstr "链接"
 
+msgid "Link a Notion page"
+msgstr "关联 Notion 页面"
+
 msgid "Link copied."
 msgstr "链接已复制。"
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "将文档关联到 Notion 页面并发布到那里。"
+
 msgid "Link folders"
 msgstr "链接文件夹"
+
+msgid "Link Notion page"
+msgstr "关联 Notion 页面"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "链接预览设置尚未加载——请稍后再试"
@@ -6013,6 +6037,12 @@ msgstr "链接关系图响应的结构与预期不符。"
 
 msgid "Linked theme files aren’t supported"
 msgstr "不支持链接的主题文件"
+
+msgid "Linked to {0}"
+msgstr "已关联到 {0}"
+
+msgid "Linked to the Notion page"
+msgstr "已关联到 Notion 页面"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "链接会将另一个文件夹合并到此文件夹中。此文件夹尚不存在，因此请先在此处安装一个技能。"
@@ -6858,6 +6888,9 @@ msgstr "没有共同祖先 — 两个分支都新增了此文件（add/add 冲�
 msgid "No conflict is tracked for this path."
 msgstr "此路径没有正在跟踪的冲突。"
 
+msgid "No connected Notion workspace can open that page."
+msgstr "已连接的 Notion 工作区都无法打开该页面。"
+
 msgid "No content changes at this version."
 msgstr "这个版本没有内容改动。"
 
@@ -7201,6 +7234,9 @@ msgstr "未上传任何内容。在你通过电子邮件发送给我们之前，
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Notion 页面链接"
 
 msgid "Notion was not connected."
 msgstr "未连接 Notion。"
@@ -7954,6 +7990,9 @@ msgstr "粘贴图片 URL，或点击上传"
 msgid "Paste link"
 msgstr "粘贴链接"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "粘贴已连接 Notion 工作区中某个页面的链接。"
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "粘贴 URL、owner/repo，或搜索你的仓库"
 
@@ -8291,11 +8330,23 @@ msgstr "发布"
 msgid "Publish to GitHub"
 msgstr "发布到 GitHub"
 
+msgid "Publish to Notion"
+msgstr "发布到 Notion"
+
 msgid "Published"
 msgstr "已发布"
 
 msgid "Published by {publisher}"
 msgstr "由 {publisher} 发布"
+
+msgid "Published to Notion"
+msgstr "已发布到 Notion"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "发布会用此文档替换页面的当前内容。"
+
+msgid "Publishing to Notion…"
+msgstr "正在发布到 Notion…"
 
 msgid "Publishing..."
 msgstr "正在发布…"
@@ -8786,6 +8837,9 @@ msgstr "用输入框中的内容替换当前匹配项"
 
 msgid "Replace key"
 msgstr "替换密钥"
+
+msgid "Replace Notion content"
+msgstr "替换 Notion 内容"
 
 msgid "Replace the active match from the replace field."
 msgstr "用替换输入框中的内容替换当前匹配项。"
@@ -9964,6 +10018,9 @@ msgstr "部分技能删除时带有警告"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "部分模板可能未列出，因为此知识库的文件夹太多，无法全部扫描。要查看某个文件夹的模板，请在文件树中打开该文件夹的菜单，然后选择「从模板新建」。"
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "自你上次发布以来，有人在 Notion 中编辑了该页面。现在发布会用此文档替换他们的更改。"
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "可能已有人解决了 {filePath} 的冲突 — 请先查看文档的当前内容，再重做你的编辑。"
 
@@ -10695,6 +10752,12 @@ msgstr "你的端点提供的模型 id。它的向量维度会自动检测——
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Notion 批准已超时。请重试。"
+
+msgid "The Notion page already has content"
+msgstr "Notion 页面已有内容"
+
+msgid "The Notion page changed"
+msgstr "Notion 页面已更改"
 
 msgid "the open agent"
 msgstr "已打开的智能体"

@@ -153,12 +153,14 @@ import { isAbsentPathError } from './lint/audit-scope.ts';
 import { unmatchedAppliesToProblems } from './lint/frontmatter-schemas.ts';
 import { resolveEffectiveLinterConfig } from './lint/resolve-config.ts';
 import { createProjectValidators } from './lint/validation-audit.ts';
+import { createNotionBaseStore } from './notion/base-store.ts';
 import {
   createNotionConnectionRegistry,
   notionConnectionsPath,
 } from './notion/connection-registry.ts';
 import { createNotionConnections } from './notion/notion-connections.ts';
 import { createNotionOAuthWorkerClient } from './notion/oauth-worker-client.ts';
+import { createNotionPublisher } from './notion/publisher.ts';
 import { createNotionTokenStore } from './notion/token-store.ts';
 import {
   extractPageTitle,
@@ -2000,34 +2002,28 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
     return filePath;
   }
 
+  function readDocSource(docName: string): string | null {
+    try {
+      const doc = hocuspocus.documents.get(docName);
+      if (doc) return doc.getText('source').toString();
+    } catch {}
+    try {
+      const filePath = resolveDocPath(docName);
+      if (filePath && existsSync(filePath)) return readFileSync(filePath, 'utf-8');
+    } catch {}
+    return null;
+  }
+
   const commentService = new CommentService({
     store: new CommentThreadStore(resolve(contentDir, OK_DIR, LOCAL_DIR), log),
     index: new CommentIndex(),
     getDocBody: (docName) => {
-      try {
-        const doc = hocuspocus.documents.get(docName);
-        if (doc) return stripFrontmatter(doc.getText('source').toString()).body;
-      } catch {}
-      try {
-        const filePath = resolveDocPath(docName);
-        if (filePath && existsSync(filePath)) {
-          return stripFrontmatter(readFileSync(filePath, 'utf-8')).body;
-        }
-      } catch {}
-      return null;
+      const source = readDocSource(docName);
+      return source === null ? null : stripFrontmatter(source).body;
     },
     getDocFrontmatter: (docName: string): Record<string, unknown> | null => {
-      try {
-        const doc = hocuspocus.documents.get(docName);
-        if (doc) return parseFrontmatterRecord(doc.getText('source').toString()) ?? {};
-      } catch {}
-      try {
-        const filePath = resolveDocPath(docName);
-        if (filePath && existsSync(filePath)) {
-          return parseFrontmatterRecord(readFileSync(filePath, 'utf-8')) ?? {};
-        }
-      } catch {}
-      return null;
+      const source = readDocSource(docName);
+      return source === null ? null : (parseFrontmatterRecord(source) ?? {});
     },
   });
 
@@ -5756,14 +5752,20 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
   });
   const handoffInstallRoutes = createHandoffInstallRoutes({ checkLocalOpSecurity });
   const notionDispatcher = envProxyDispatcher(log, 'notion', 'Notion');
+  const notionConnections = createNotionConnections({
+    registry: createNotionConnectionRegistry(notionConnectionsPath(homeDirOverride)),
+    tokens: createNotionTokenStore(),
+    worker: createNotionOAuthWorkerClient({ dispatcher: notionDispatcher }),
+    log,
+    dispatcher: notionDispatcher,
+  });
   const notionRoutes = createNotionRoutes({
     checkLocalOpSecurity,
-    notion: createNotionConnections({
-      registry: createNotionConnectionRegistry(notionConnectionsPath(homeDirOverride)),
-      tokens: createNotionTokenStore(),
-      worker: createNotionOAuthWorkerClient({ dispatcher: notionDispatcher }),
-      log,
-      dispatcher: notionDispatcher,
+    notion: notionConnections,
+    publisher: createNotionPublisher({
+      connections: notionConnections,
+      bases: createNotionBaseStore(resolve(contentDir, OK_DIR, LOCAL_DIR, 'notion')),
+      readDocSource,
     }),
   });
   const documentRefreshRoutes = createDocumentRefreshRoutes({

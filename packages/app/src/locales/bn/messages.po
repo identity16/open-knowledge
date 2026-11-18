@@ -2919,6 +2919,9 @@ msgstr "GitHub সাইন-ইন খোলা যায়নি। অনু�
 msgid "Could not open this document in a new window."
 msgstr "এই নথিটি নতুন উইন্ডোতে খোলা যায়নি।"
 
+msgid "Could not publish to Notion."
+msgstr "Notion-এ প্রকাশ করা যায়নি।"
+
 msgid "Could not reach server"
 msgstr "সার্ভারের নাগাল পাওয়া যায়নি"
 
@@ -2930,6 +2933,9 @@ msgstr "সিঙ্ক পছন্দ সংরক্ষণ করা যা�
 
 msgid "Could not save the file order"
 msgstr "ফাইলের ক্রম সংরক্ষণ করা যায়নি"
+
+msgid "Could not save the Notion link in this document."
+msgstr "এই ডকুমেন্টে Notion লিংক সংরক্ষণ করা যায়নি।"
 
 msgid "Could not start creating a new item"
 msgstr "নতুন আইটেম তৈরি শুরু করা যায়নি"
@@ -3758,6 +3764,9 @@ msgstr "{file} নিষ্ক্রিয় করুন"
 msgid "Disable {id}"
 msgstr "নিষ্ক্রিয় করুন {id}"
 
+msgid "Disable Notion"
+msgstr "Notion বন্ধ করুন"
+
 msgid "Disable semantic search"
 msgstr "অর্থভিত্তিক অনুসন্ধান নিষ্ক্রিয় করুন"
 
@@ -4190,6 +4199,9 @@ msgstr "স্বয়ংক্রিয় (শুধু টানুন) চ�
 msgid "Enable indexes"
 msgstr "সূচী সক্রিয় করুন"
 
+msgid "Enable Notion"
+msgstr "Notion চালু করুন"
+
 msgid "Enable Open Knowledge tools for {0}?"
 msgstr "{0}-এর জন্য Open Knowledge টুল সক্ষম করবেন?"
 
@@ -4613,6 +4625,9 @@ msgstr "বিষয়বস্তুর নিয়ম সংরক্ষণ 
 
 msgid "Failed to save Slidev setting"
 msgstr "Slidev সেটিং সংরক্ষণ করা যায়নি"
+
+msgid "Failed to save the Notion plugin setting"
+msgstr "Notion প্লাগইনের সেটিং সংরক্ষণ করা যায়নি"
 
 msgid "Failed to save the schema field"
 msgstr "স্কিমা ফিল্ড সংরক্ষণ করতে ব্যর্থ"
@@ -5956,11 +5971,20 @@ msgstr "পরিবর্তিত লাইন: {additions}টি যোগ, {
 msgid "Link"
 msgstr "লিংক"
 
+msgid "Link a Notion page"
+msgstr "একটি Notion পেজ সংযুক্ত করুন"
+
 msgid "Link copied."
 msgstr "লিংক কপি হয়েছে।"
 
+msgid "Link documents to Notion pages and publish them there."
+msgstr "ডকুমেন্টগুলো Notion পেজে সংযুক্ত করে সেখানে প্রকাশ করুন।"
+
 msgid "Link folders"
 msgstr "ফোল্ডার লিংক করুন"
+
+msgid "Link Notion page"
+msgstr "Notion পেজ সংযুক্ত করুন"
 
 msgid "Link preview settings not yet loaded — try again in a moment"
 msgstr "লিংক প্রাকদর্শনের সেটিং এখনও লোড হয়নি — একটু পরে আবার চেষ্টা করুন"
@@ -6009,6 +6033,12 @@ msgstr "লিংক-গ্রাফের সাড়া প্রত্যা
 
 msgid "Linked theme files aren’t supported"
 msgstr "লিঙ্ক করা থিম ফাইল সমর্থিত নয়"
+
+msgid "Linked to {0}"
+msgstr "{0}-এ সংযুক্ত হয়েছে"
+
+msgid "Linked to the Notion page"
+msgstr "Notion পেজে সংযুক্ত হয়েছে"
 
 msgid "Linking merges another folder into this one. This folder does not exist yet, so install a skill here first."
 msgstr "লিংক করলে অন্য একটি ফোল্ডার এই ফোল্ডারে মার্জ হয়ে যায়। এই ফোল্ডারটি এখনও নেই, তাই প্রথমে এখানে একটি স্কিল ইনস্টল করুন।"
@@ -6854,6 +6884,9 @@ msgstr "কোনও সাধারণ পূর্বসূরি নেই �
 msgid "No conflict is tracked for this path."
 msgstr "এই পাথের জন্য কোনো দ্বন্দ্ব ট্র্যাক করা হচ্ছে না।"
 
+msgid "No connected Notion workspace can open that page."
+msgstr "কোনো সংযুক্ত Notion ওয়ার্কস্পেস সেই পেজটি খুলতে পারে না।"
+
 msgid "No content changes at this version."
 msgstr "এই সংস্করণে বিষয়বস্তুর কোনো পরিবর্তন নেই।"
 
@@ -7197,6 +7230,9 @@ msgstr "কিছুই আপলোড করা হয়নি। আপন�
 
 msgid "Notion"
 msgstr "Notion"
+
+msgid "Notion page link"
+msgstr "Notion পেজের লিংক"
 
 msgid "Notion was not connected."
 msgstr "Notion সংযুক্ত হয়নি।"
@@ -7950,6 +7986,9 @@ msgstr "ছবির URL পেস্ট করুন বা আপলোডে 
 msgid "Paste link"
 msgstr "লিংক পেস্ট করুন"
 
+msgid "Paste the link of a page in a connected Notion workspace."
+msgstr "সংযুক্ত Notion ওয়ার্কস্পেসের একটি পেজের লিংক পেস্ট করুন।"
+
 msgid "Paste URL, owner/repo, or search your repos"
 msgstr "URL, owner/repo পেস্ট করুন, বা আপনার রিপোজিটরি খুঁজুন"
 
@@ -8287,11 +8326,23 @@ msgstr "প্রকাশ করুন"
 msgid "Publish to GitHub"
 msgstr "GitHub-এ প্রকাশ করুন"
 
+msgid "Publish to Notion"
+msgstr "Notion-এ প্রকাশ করুন"
+
 msgid "Published"
 msgstr "প্রকাশিত"
 
 msgid "Published by {publisher}"
 msgstr "{publisher} প্রকাশ করেছে"
+
+msgid "Published to Notion"
+msgstr "Notion-এ প্রকাশিত হয়েছে"
+
+msgid "Publishing replaces the page's current content with this document."
+msgstr "প্রকাশ করলে পেজের বর্তমান বিষয়বস্তু এই ডকুমেন্ট দিয়ে প্রতিস্থাপিত হবে।"
+
+msgid "Publishing to Notion…"
+msgstr "Notion-এ প্রকাশ করা হচ্ছে…"
 
 msgid "Publishing..."
 msgstr "প্রকাশ করা হচ্ছে…"
@@ -8782,6 +8833,9 @@ msgstr "ফিল্ড থেকে বর্তমান মিল বদল�
 
 msgid "Replace key"
 msgstr "কী বদলান"
+
+msgid "Replace Notion content"
+msgstr "Notion-এর বিষয়বস্তু প্রতিস্থাপন করুন"
 
 msgid "Replace the active match from the replace field."
 msgstr "বদলানোর ফিল্ড থেকে সক্রিয় মিলটি বদলান।"
@@ -9960,6 +10014,9 @@ msgstr "কিছু স্কিল সতর্কবার্তাসহ ম
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "কিছু টেমপ্লেট তালিকায় না-ও থাকতে পারে, কারণ এই জ্ঞানভাণ্ডারে স্ক্যান করার জন্য অনেক বেশি ফোল্ডার আছে। কোনো ফোল্ডারের টেমপ্লেট দেখতে, ফাইল ট্রিতে তার মেনু খুলে \"টেমপ্লেট থেকে নতুন\" বেছে নিন।"
 
+msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
+msgstr "আপনার শেষ প্রকাশের পর কেউ Notion-এ পেজটি সম্পাদনা করেছে। এখন প্রকাশ করলে তাদের পরিবর্তনগুলো এই ডকুমেন্ট দিয়ে প্রতিস্থাপিত হবে।"
+
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "হয়তো কেউ ইতিমধ্যেই {filePath}-এর দ্বন্দ্ব সমাধান করে ফেলেছেন — আপনার সম্পাদনা আবার করার আগে নথির বর্তমান বিষয়বস্তু দেখে নিন।"
 
@@ -10691,6 +10748,12 @@ msgstr "আপনার এন্ডপয়েন্ট যে মডেল id
 
 msgid "The Notion approval timed out. Try again."
 msgstr "Notion অনুমোদনের সময় শেষ হয়ে গেছে। আবার চেষ্টা করুন।"
+
+msgid "The Notion page already has content"
+msgstr "Notion পেজে ইতিমধ্যে বিষয়বস্তু আছে"
+
+msgid "The Notion page changed"
+msgstr "Notion পেজটি পরিবর্তিত হয়েছে"
 
 msgid "the open agent"
 msgstr "খোলা এজেন্ট"
