@@ -3207,6 +3207,9 @@ msgstr "Tidak dapat membaca {fileName}."
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "{fileName} tidak bisa dibaca. Mungkin ia sudah dipindahkan, dihapus, atau belum selesai diunduh. Coba tambahkan lagi."
 
+msgid "Couldn't read comments from Notion."
+msgstr "Tidak dapat membaca komentar dari Notion."
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "Tidak dapat membaca aturan {gitignorePath}: {previewError}"
 
@@ -3320,6 +3323,9 @@ msgstr "Tidak dapat menyimpan preferensi tema Anda."
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "Tidak dapat menggulir ke bagian teks itu. Coba lagi."
+
+msgid "Couldn't send the reply to Notion."
+msgstr "Tidak dapat mengirim balasan ke Notion."
 
 msgid "Couldn't send the report"
 msgstr "Laporannya tidak bisa dikirim"
@@ -7052,6 +7058,9 @@ msgstr "Tidak ada suntingan baru di Notion"
 msgid "No Notion workspaces connected yet."
 msgstr "Belum ada ruang kerja Notion yang terhubung."
 
+msgid "No open comments on the Notion page."
+msgstr "Tidak ada komentar terbuka di halaman Notion."
+
 msgid "No Outgoing"
 msgstr "Tidak Ada Keluar"
 
@@ -7270,6 +7279,12 @@ msgstr "Tidak ada yang diunggah. Laporan tetap di komputer ini sampai Anda mengi
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Komentar Notion"
+
+msgid "Notion discussion"
+msgstr "Diskusi Notion"
+
 msgid "Notion page link"
 msgstr "Tautan halaman Notion"
 
@@ -7332,6 +7347,9 @@ msgstr "Pada teks terpilih di <0>{address}</0>"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "Pada indeks root, okf_version ditulis sebagai string yang dikutip seperti \"0.2\". Tanpa tanda kutip, YAML membacanya sebagai angka dan 0.10 diam-diam menjadi 0.1."
+
+msgid "On the whole page"
+msgstr "Pada seluruh halaman"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "Satu pola per baris — ditambahkan ke <0>.okignore</0>."
@@ -7495,6 +7513,9 @@ msgstr "Buka di pengelola berkas"
 
 msgid "Open in New Window"
 msgstr "Buka di Jendela Baru"
+
+msgid "Open in Notion"
+msgstr "Buka di Notion"
 
 msgid "Open in Slidev"
 msgstr "Buka di Slidev"
@@ -8509,6 +8530,9 @@ msgstr "Salinan hanya-baca dari blok MirrorSource di dokumen lain. Sunting di su
 msgid "Read-only file in the {name} skill"
 msgstr "Berkas hanya-baca di keterampilan {name}"
 
+msgid "Reading comments from Notion"
+msgstr "Membaca komentar dari Notion"
+
 msgid "Reading the current languages…"
 msgstr "Membaca bahasa saat ini…"
 
@@ -8625,6 +8649,9 @@ msgstr "Referensi <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "Merenungkan…"
+
+msgid "Refresh Notion comments"
+msgstr "Muat ulang komentar Notion"
 
 msgid "Reinstall"
 msgstr "Pasang ulang"
@@ -8912,6 +8939,12 @@ msgstr "Mengganti entri OpenKnowledge yang ada di {0}"
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "Mengganti entri OpenKnowledge yang sudah dimiliki masing-masing."
 
+msgid "Reply"
+msgstr "Balas"
+
+msgid "Reply in Notion"
+msgstr "Balas di Notion"
+
 msgid "Report a bug"
 msgstr "Laporkan bug"
 
@@ -9002,6 +9035,9 @@ msgstr "Ubah ukuran panel dokumen"
 
 msgid "Resize skills panel"
 msgstr "Ubah ukuran panel Keterampilan"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "Selesaikan komentar di Notion; yang sudah selesai hilang dari sini."
 
 msgid "Resolve conflict in your terminal"
 msgstr "Selesaikan konfliknya di terminal Anda"
@@ -10817,6 +10853,9 @@ msgstr "Server OpenKnowledge terlalu lama merespons. Minta agen mencoba lagi."
 
 msgid "The original text was deleted."
 msgstr "Teks aslinya telah dihapus."
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "Halaman ini panjang; hanya komentar di 200 blok pertamanya yang ditampilkan."
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "Jalur tidak boleh keluar dari skill (tanpa . atau ..)"

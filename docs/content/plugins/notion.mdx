@@ -1,0 +1,67 @@
+---
+title: Notion
+icon: LuNotebookPen
+description: Keep one document in OpenKnowledge and its copy in a Notion page, review edits made in Notion like a merge, and answer Notion comments without leaving the editor.
+---
+
+The Notion plugin links a document to one Notion page. You write in OpenKnowledge and publish to the page; people who live in Notion read it, edit it, and comment on it there. Their edits come back as a merge you review, and their comments show up next to the document.
+
+<Callout>
+  **Beta.** One document maps to one Notion page. The Notion page is a copy: OpenKnowledge stays the place you write.
+</Callout>
+
+## Connect a workspace
+
+Open Settings → **Integrations → Notion** and click **Connect a workspace**. Notion opens its approval page in your browser: pick the workspace and the pages OpenKnowledge may use, then approve. The workspace appears in the list a few seconds later.
+
+Connections are per user and per workspace. Connect each workspace you publish to, for example a company one and a personal one. The access token is kept in the system keychain; **Disconnect** revokes it.
+
+## Turn on the plugin
+
+Open **Settings → This project → Plugins** and switch on **Notion**. It's a project plugin, so the setting lands in `.ok/config.yml`.
+
+## Link a document
+
+Click **Link Notion page** in the document toolbar and paste the page's link. The page must be in a connected workspace and shared with the connection. The link is written to the document's frontmatter:
+
+```yaml
+notion:
+  page: 41ca0a3f-aba4-81d7-a057-f24604be8c4a
+  workspace: 9f0b1774-9b78-4803-9aac-a4721aed53f2
+```
+
+The link follows the document when you rename or move it.
+
+## Publish
+
+**Publish to Notion** replaces the page's content with the document. Notion keeps the blocks that did not change, so comments on them survive.
+
+The first publish to a page that already has content asks before replacing it.
+
+## Edits made in Notion
+
+OpenKnowledge remembers what it last published. When the page has changed since then:
+
+- **Different lines changed on each side** — publishing merges the Notion edits into the document first, then publishes the result.
+- **The same lines changed on both sides** — publishing stops and the document opens as a conflict in the Conflicts view, with **Keep this document**, **Keep Notion** and a merged editor. **Apply and publish to Notion** resolves it and publishes.
+
+To take Notion's edits without publishing, choose **Take edits from Notion** from the menu beside **Publish to Notion**.
+
+## Notion comments
+
+Open discussions on the linked page appear in the **Comments** tab, under the document's own comments, in a **Notion** section:
+
+- Each discussion shows the text of the block it is on, or **On the whole page**. Click the quote to jump to that passage in the document.
+- Type in **Reply in Notion** and press **Reply** (or `Cmd+Enter` on macOS, `Ctrl+Enter` on Linux). The reply appears in Notion under your name.
+- **Refresh** reads the page again; the open-in-Notion button goes to the page.
+
+Notion comments stay in Notion. They are not copied into OpenKnowledge's own comments and are not sent to your agent.
+
+<Callout type="info">
+  Resolve discussions in Notion; Notion does not let other apps resolve them. Resolved discussions disappear from the section on the next refresh. Comments on a selected word show the whole block they belong to, because Notion reports only the block. On very long pages only the first 200 blocks are checked for comments, and the section says when that happens.
+</Callout>
+
+## See also
+
+- [Comments](/docs/features/comments) — OpenKnowledge's own comments, which you send to your agent.
+- [Configuration](/docs/reference/configuration) — the `notion.enabled` setting.

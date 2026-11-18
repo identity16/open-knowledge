@@ -3211,6 +3211,9 @@ msgstr "تعذّرت قراءة {fileName}."
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "تعذّرت قراءة {fileName}. ربما نُقل أو حُذف أو لم يكتمل تنزيله. حاول إضافته مرة أخرى."
 
+msgid "Couldn't read comments from Notion."
+msgstr "تعذّرت قراءة التعليقات من Notion."
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "تعذّرت قراءة قاعدة {gitignorePath}: {previewError}"
 
@@ -3324,6 +3327,9 @@ msgstr "تعذّر حفظ تفضيل السمة لديك."
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "تعذر التمرير إلى ذلك المقطع. حاول مرة أخرى."
+
+msgid "Couldn't send the reply to Notion."
+msgstr "تعذّر إرسال الرد إلى Notion."
 
 msgid "Couldn't send the report"
 msgstr "تعذّر إرسال التقرير"
@@ -7056,6 +7062,9 @@ msgstr "لا توجد تعديلات جديدة في Notion"
 msgid "No Notion workspaces connected yet."
 msgstr "لا توجد مساحات عمل Notion متصلة بعد."
 
+msgid "No open comments on the Notion page."
+msgstr "لا توجد تعليقات مفتوحة على صفحة Notion."
+
 msgid "No Outgoing"
 msgstr "لا روابط صادرة"
 
@@ -7274,6 +7283,12 @@ msgstr "لم يُرفع أي شيء. يبقى التقرير على هذا ال�
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "تعليقات Notion"
+
+msgid "Notion discussion"
+msgstr "نقاش Notion"
+
 msgid "Notion page link"
 msgstr "رابط صفحة Notion"
 
@@ -7336,6 +7351,9 @@ msgstr "على النص المحدد في <0>{address}</0>"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "في الفهرس الجذري، تتم كتابة okf_version كسلسلة مقتبسة مثل \"0.2\". بدون اقتباس، يقرأه YAML كرقم ويصبح 0.10 بصمت 0.1."
+
+msgid "On the whole page"
+msgstr "على الصفحة كلها"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "نمط واحد في كل سطر — يُلحق بـ <0>.okignore</0>."
@@ -7499,6 +7517,9 @@ msgstr "فتح في مدير الملفات"
 
 msgid "Open in New Window"
 msgstr "فتح في نافذة جديدة"
+
+msgid "Open in Notion"
+msgstr "فتح في Notion"
 
 msgid "Open in Slidev"
 msgstr "فتح في Slidev"
@@ -8513,6 +8534,9 @@ msgstr "نسخة للقراءة فقط من كتلة MirrorSource في مستن�
 msgid "Read-only file in the {name} skill"
 msgstr "ملف للقراءة فقط في مهارة {name}"
 
+msgid "Reading comments from Notion"
+msgstr "جارٍ قراءة التعليقات من Notion"
+
 msgid "Reading the current languages…"
 msgstr "جارٍ قراءة اللغات الحالية…"
 
@@ -8629,6 +8653,9 @@ msgstr "مرجع <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "يجري التأمل…"
+
+msgid "Refresh Notion comments"
+msgstr "تحديث تعليقات Notion"
 
 msgid "Reinstall"
 msgstr "إعادة التثبيت"
@@ -8916,6 +8943,12 @@ msgstr "سيستبدل إدخال OpenKnowledge الحالي في {0}"
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "يستبدل إدخال OpenKnowledge الموجود لدى كل منها."
 
+msgid "Reply"
+msgstr "رد"
+
+msgid "Reply in Notion"
+msgstr "الرد في Notion"
+
 msgid "Report a bug"
 msgstr "الإبلاغ عن علة"
 
@@ -9006,6 +9039,9 @@ msgstr "تغيير حجم لوحة المستند"
 
 msgid "Resize skills panel"
 msgstr "تغيير حجم لوحة المهارات"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "احسم التعليقات في Notion؛ تختفي المحسومة من هنا."
 
 msgid "Resolve conflict in your terminal"
 msgstr "حل التعارض في طرفيتك"
@@ -10821,6 +10857,9 @@ msgstr "استغرق خادم OpenKnowledge وقتا طويلا للرد. اطل
 
 msgid "The original text was deleted."
 msgstr "تم حذف النص الأصلي."
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "الصفحة طويلة؛ تُعرض تعليقات أول 200 كتلة فقط."
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "لا يمكن للمسار مغادرة المهارة (بدون . أو ..)"

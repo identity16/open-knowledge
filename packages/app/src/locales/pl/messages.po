@@ -3211,6 +3211,9 @@ msgstr "Nie udało się odczytać {fileName}."
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "Nie udało się odczytać {fileName}. Plik mógł zostać przeniesiony, usunięty lub jeszcze się nie pobrał. Spróbuj dodać go ponownie."
 
+msgid "Couldn't read comments from Notion."
+msgstr "Nie udało się odczytać komentarzy z Notion."
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "Nie udało się odczytać reguły {gitignorePath}: {previewError}"
 
@@ -3324,6 +3327,9 @@ msgstr "Nie udało się zapisać preferencji motywu."
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "Nie udało się przewinąć do tego fragmentu. Spróbuj ponownie."
+
+msgid "Couldn't send the reply to Notion."
+msgstr "Nie udało się wysłać odpowiedzi do Notion."
 
 msgid "Couldn't send the report"
 msgstr "Nie udało się wysłać zgłoszenia"
@@ -7056,6 +7062,9 @@ msgstr "Brak nowych zmian w Notion"
 msgid "No Notion workspaces connected yet."
 msgstr "Nie połączono jeszcze żadnego obszaru roboczego Notion."
 
+msgid "No open comments on the Notion page."
+msgstr "Brak otwartych komentarzy na stronie Notion."
+
 msgid "No Outgoing"
 msgstr "Brak wychodzących"
 
@@ -7274,6 +7283,12 @@ msgstr "Nic nie zostało przesłane. Zgłoszenie pozostaje na tym komputerze, do
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Komentarze z Notion"
+
+msgid "Notion discussion"
+msgstr "Dyskusja w Notion"
+
 msgid "Notion page link"
 msgstr "Link do strony Notion"
 
@@ -7336,6 +7351,9 @@ msgstr "Na zaznaczonym tekście w <0>{address}</0>"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "W głównym indeksie okf_version zapisuje się jako tekst w cudzysłowach, np. \"0.2\". Bez cudzysłowu YAML odczyta je jako liczbę i 0.10 po cichu stanie się 0.1."
+
+msgid "On the whole page"
+msgstr "Dotyczy całej strony"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "Jeden wzorzec na linię — dodawany do <0>.okignore</0>."
@@ -7499,6 +7517,9 @@ msgstr "Otwórz w menedżerze plików"
 
 msgid "Open in New Window"
 msgstr "Otwórz w nowym oknie"
+
+msgid "Open in Notion"
+msgstr "Otwórz w Notion"
 
 msgid "Open in Slidev"
 msgstr "Otwórz w Slidev"
@@ -8513,6 +8534,9 @@ msgstr "Kopia tylko do odczytu bloku MirrorSource z innego dokumentu. Edytuj w �
 msgid "Read-only file in the {name} skill"
 msgstr "Plik tylko do odczytu w umiejętności {name}"
 
+msgid "Reading comments from Notion"
+msgstr "Odczytywanie komentarzy z Notion"
+
 msgid "Reading the current languages…"
 msgstr "Odczytywanie bieżących języków…"
 
@@ -8629,6 +8653,9 @@ msgstr "Referencja <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "Rozważam…"
+
+msgid "Refresh Notion comments"
+msgstr "Odśwież komentarze z Notion"
 
 msgid "Reinstall"
 msgstr "Zainstaluj ponownie"
@@ -8916,6 +8943,12 @@ msgstr "Zastępuje istniejący wpis OpenKnowledge w {0}"
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "Zastępuje wpis OpenKnowledge, który każdy z nich już posiada."
 
+msgid "Reply"
+msgstr "Odpowiedz"
+
+msgid "Reply in Notion"
+msgstr "Odpowiedz w Notion"
+
 msgid "Report a bug"
 msgstr "Zgłoś błąd"
 
@@ -9006,6 +9039,9 @@ msgstr "Zmień rozmiar panelu dokumentu"
 
 msgid "Resize skills panel"
 msgstr "Zmień rozmiar panelu umiejętności"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "Rozwiązuj komentarze w Notion; rozwiązane znikają stąd."
 
 msgid "Resolve conflict in your terminal"
 msgstr "Rozwiąż konflikt w terminalu"
@@ -10821,6 +10857,9 @@ msgstr "Serwer OpenKnowledge zbyt długo nie odpowiedział. Poproś agenta o pon
 
 msgid "The original text was deleted."
 msgstr "Oryginalny tekst został usunięty."
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "Strona jest długa; pokazano tylko komentarze z pierwszych 200 bloków."
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "Ścieżka nie może wychodzić poza umiejętność (bez . i ..)"

@@ -3211,6 +3211,9 @@ msgstr "無法讀取 {fileName}。"
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "無法讀取 {fileName}。它可能已被移動、刪除，或還沒下載完。請試著重新加入。"
 
+msgid "Couldn't read comments from Notion."
+msgstr "無法從 Notion 讀取註解。"
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "無法讀取 {gitignorePath} 規則：{previewError}"
 
@@ -3324,6 +3327,9 @@ msgstr "無法儲存你的主題偏好。"
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "無法捲動到該段落。請重試。"
+
+msgid "Couldn't send the reply to Notion."
+msgstr "無法將回覆傳送到 Notion。"
 
 msgid "Couldn't send the report"
 msgstr "無法送出回報"
@@ -7056,6 +7062,9 @@ msgstr "Notion 中沒有新的編輯"
 msgid "No Notion workspaces connected yet."
 msgstr "尚未連接任何 Notion 工作區。"
 
+msgid "No open comments on the Notion page."
+msgstr "Notion 頁面上沒有未解決的註解。"
+
 msgid "No Outgoing"
 msgstr "沒有連出"
 
@@ -7274,6 +7283,12 @@ msgstr "未上傳任何內容。在你以電子郵件寄給我們之前，報告
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Notion 註解"
+
+msgid "Notion discussion"
+msgstr "Notion 討論"
+
 msgid "Notion page link"
 msgstr "Notion 頁面連結"
 
@@ -7336,6 +7351,9 @@ msgstr "在 <0>{address}</0> 中選取的文字上"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "在根索引上，okf_version 被寫為引號的字串，如 \"0.2\"。不加引號，YAML 將其讀為數字，0.10 默默地變成 0.1。"
+
+msgid "On the whole page"
+msgstr "針對整個頁面"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "每行一個模式——會附加到 <0>.okignore</0> 中。"
@@ -7499,6 +7517,9 @@ msgstr "在檔案管理程式中打開"
 
 msgid "Open in New Window"
 msgstr "在新視窗中開啟"
+
+msgid "Open in Notion"
+msgstr "在 Notion 中開啟"
 
 msgid "Open in Slidev"
 msgstr "在 Slidev 中開啟"
@@ -8513,6 +8534,9 @@ msgstr "來自另一份文件的 MirrorSource 區塊的唯讀副本。在來源�
 msgid "Read-only file in the {name} skill"
 msgstr "{name} 技能中的唯讀檔案"
 
+msgid "Reading comments from Notion"
+msgstr "正在從 Notion 讀取註解"
+
 msgid "Reading the current languages…"
 msgstr "正在讀取目前的語言…"
 
@@ -8629,6 +8653,9 @@ msgstr "參考 <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "回味中…"
+
+msgid "Refresh Notion comments"
+msgstr "重新整理 Notion 註解"
 
 msgid "Reinstall"
 msgstr "重新安裝"
@@ -8916,6 +8943,12 @@ msgstr "將取代 {0} 中既有的 OpenKnowledge 項目"
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "取代它們各自已有的 OpenKnowledge 項目。"
 
+msgid "Reply"
+msgstr "回覆"
+
+msgid "Reply in Notion"
+msgstr "在 Notion 中回覆"
+
 msgid "Report a bug"
 msgstr "回報問題"
 
@@ -9006,6 +9039,9 @@ msgstr "調整文件面板大小"
 
 msgid "Resize skills panel"
 msgstr "調整「技能」面板大小"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "請在 Notion 中解決註解；已解決的註解會從這裡消失。"
 
 msgid "Resolve conflict in your terminal"
 msgstr "在你的終端機中解決衝突"
@@ -10821,6 +10857,9 @@ msgstr "OpenKnowledge 伺服器回應逾時。請讓代理重試。"
 
 msgid "The original text was deleted."
 msgstr "原始文字已被刪除。"
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "頁面較長，僅顯示前 200 個區塊中的註解。"
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "路徑不能離開技能（不允許 . 或 ..）"

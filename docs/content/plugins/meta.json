@@ -1,5 +1,5 @@
 {
   "title": "Plugins",
   "icon": "LuBlocks",
-  "pages": ["overview", "okf", "slidev", "themes"]
+  "pages": ["overview", "notion", "okf", "slidev", "themes"]
 }

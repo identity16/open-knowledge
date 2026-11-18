@@ -77,6 +77,7 @@ export function CommentListPanel({
   testIdPrefix,
   scopeSwitch,
   onDestinationComplete,
+  after,
 }: {
   threads: readonly CommentThread[];
   groupByDocument?: boolean;
@@ -84,6 +85,7 @@ export function CommentListPanel({
   testIdPrefix: string;
   scopeSwitch?: ReactNode;
   onDestinationComplete?: (target: HTMLElement) => void;
+  after?: ReactNode;
 }) {
   const { t } = useLingui();
   const [showResolved, setShowResolved] = useState(false);
@@ -305,6 +307,7 @@ export function CommentListPanel({
         ) : (
           visible.map(card)
         )}
+        {after}
       </PanelBody>
       {active.length > 0 && (
         <CommentSendFooter

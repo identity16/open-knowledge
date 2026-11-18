@@ -3207,6 +3207,9 @@ msgstr "{fileName} পড়া যায়নি।"
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "{fileName} পড়া যায়নি। হয়তো সেটি সরানো হয়েছে, মুছে ফেলা হয়েছে, বা ডাউনলোড শেষ হয়নি। আবার যোগ করে দেখুন।"
 
+msgid "Couldn't read comments from Notion."
+msgstr "Notion থেকে মন্তব্য পড়া যায়নি।"
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "{gitignorePath} নিয়ম পড়া যায়নি: {previewError}"
 
@@ -3320,6 +3323,9 @@ msgstr "আপনার থিম পছন্দ সংরক্ষণ কর�
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "সেই অংশে স্ক্রল করা যায়নি। আবার চেষ্টা করুন।"
+
+msgid "Couldn't send the reply to Notion."
+msgstr "Notion-এ উত্তর পাঠানো যায়নি।"
 
 msgid "Couldn't send the report"
 msgstr "রিপোর্ট পাঠানো যায়নি"
@@ -7052,6 +7058,9 @@ msgstr "Notion-এ নতুন কোনো সম্পাদনা নেই"
 msgid "No Notion workspaces connected yet."
 msgstr "এখনও কোনো Notion ওয়ার্কস্পেস সংযুক্ত নেই।"
 
+msgid "No open comments on the Notion page."
+msgstr "Notion পেজে কোনো খোলা মন্তব্য নেই।"
+
 msgid "No Outgoing"
 msgstr "কোনো বহির্গামী নেই"
 
@@ -7270,6 +7279,12 @@ msgstr "কিছুই আপলোড করা হয়নি। আপন�
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Notion মন্তব্য"
+
+msgid "Notion discussion"
+msgstr "Notion আলোচনা"
+
 msgid "Notion page link"
 msgstr "Notion পেজের লিংক"
 
@@ -7332,6 +7347,9 @@ msgstr "<0>{address}</0>-এ নির্বাচিত লেখার উপ�
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "রুট ইনডেক্সে, okf_version একটি উদ্ধৃত স্ট্রিং হিসাবে লেখা হয় যেমন \"0.2\"। উদ্ধৃতিহীন, YAML এটিকে একটি সংখ্যা হিসাবে পড়ে এবং 0.10 নিঃশব্দে 0.1 হয়ে যায়।"
+
+msgid "On the whole page"
+msgstr "পুরো পেজে"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "প্রতি লাইনে একটি প্যাটার্ন — <0>.okignore</0>-এ যোগ করা হয়।"
@@ -7495,6 +7513,9 @@ msgstr "ফাইল ম্যানেজারে খুলুন"
 
 msgid "Open in New Window"
 msgstr "নতুন উইন্ডোতে খুলুন"
+
+msgid "Open in Notion"
+msgstr "Notion-এ খুলুন"
 
 msgid "Open in Slidev"
 msgstr "Slidev-এ খুলুন"
@@ -8509,6 +8530,9 @@ msgstr "অন্য নথির একটি MirrorSource ব্লকের �
 msgid "Read-only file in the {name} skill"
 msgstr "{name} স্কিলের শুধু-পড়ার ফাইল"
 
+msgid "Reading comments from Notion"
+msgstr "Notion থেকে মন্তব্য পড়া হচ্ছে"
+
 msgid "Reading the current languages…"
 msgstr "বর্তমান ভাষাগুলো পড়া হচ্ছে…"
 
@@ -8625,6 +8649,9 @@ msgstr "রেফারেন্স <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "ভেবে দেখা হচ্ছে…"
+
+msgid "Refresh Notion comments"
+msgstr "Notion মন্তব্য রিফ্রেশ করুন"
 
 msgid "Reinstall"
 msgstr "আবার ইনস্টল করুন"
@@ -8912,6 +8939,12 @@ msgstr "{0}-এ থাকা বিদ্যমান OpenKnowledge এন্ট
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "প্রত্যেকটিতে আগে থেকে থাকা OpenKnowledge এন্ট্রি প্রতিস্থাপন করে।"
 
+msgid "Reply"
+msgstr "উত্তর দিন"
+
+msgid "Reply in Notion"
+msgstr "Notion-এ উত্তর দিন"
+
 msgid "Report a bug"
 msgstr "একটি বাগ জানান"
 
@@ -9002,6 +9035,9 @@ msgstr "নথি প্যানেলের আকার পরিবর্ত
 
 msgid "Resize skills panel"
 msgstr "স্কিল প্যানেলের আকার পরিবর্তন করুন"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "মন্তব্যের সমাধান Notion-এ করুন; সমাধান হওয়া মন্তব্য এখান থেকে সরে যায়।"
 
 msgid "Resolve conflict in your terminal"
 msgstr "আপনার টার্মিনালে দ্বন্দ্ব মীমাংসা করুন"
@@ -10817,6 +10853,9 @@ msgstr "OpenKnowledge সার্ভার সাড়া দিতে অন�
 
 msgid "The original text was deleted."
 msgstr "মূল লেখাটি মুছে ফেলা হয়েছে।"
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "পেজটি দীর্ঘ; শুধু প্রথম ২০০টি ব্লকের মন্তব্য দেখানো হচ্ছে।"
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "পাথ স্কিলের বাইরে যেতে পারে না (. বা .. নয়)"

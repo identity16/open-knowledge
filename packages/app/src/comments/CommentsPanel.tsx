@@ -1,8 +1,10 @@
 import { Trans } from '@lingui/react/macro';
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
+import { useConfigContextOptional } from '@/lib/config-context';
 import { ProfilerBoundary } from '@/lib/perf';
 import { CommentListPanel } from './CommentListPanel';
+import { NotionDiscussionsSection } from './NotionDiscussionsSection';
 import { refresh, useCommentThreads } from './store';
 
 function CommentsPanelInner({
@@ -15,6 +17,7 @@ function CommentsPanelInner({
   onDestinationComplete?: (target: HTMLElement) => void;
 }) {
   const threads = useCommentThreads(docName);
+  const notionEnabled = useConfigContextOptional()?.projectConfig?.notion?.enabled === true;
 
   useEffect(() => {
     void refresh(docName).catch(() => undefined);
@@ -27,6 +30,7 @@ function CommentsPanelInner({
       testIdPrefix="comment-doc"
       scopeSwitch={scopeSwitch}
       onDestinationComplete={onDestinationComplete}
+      after={notionEnabled ? <NotionDiscussionsSection key={docName} docName={docName} /> : null}
     />
   );
 }

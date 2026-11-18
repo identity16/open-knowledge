@@ -3207,6 +3207,9 @@ msgstr "Não foi possível ler {fileName}."
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "Não deu para ler {fileName}. Ele pode ter sido movido, excluído ou não terminou de baixar. Tente adicioná-lo de novo."
 
+msgid "Couldn't read comments from Notion."
+msgstr "Não foi possível ler os comentários do Notion."
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "Não foi possível ler a regra de {gitignorePath}: {previewError}"
 
@@ -3320,6 +3323,9 @@ msgstr "Não foi possível salvar sua preferência de tema."
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "Não foi possível rolar até esse trecho. Tente novamente."
+
+msgid "Couldn't send the reply to Notion."
+msgstr "Não foi possível enviar a resposta ao Notion."
 
 msgid "Couldn't send the report"
 msgstr "Não deu para enviar o relatório"
@@ -7052,6 +7058,9 @@ msgstr "Nenhuma edição nova no Notion"
 msgid "No Notion workspaces connected yet."
 msgstr "Nenhum espaço de trabalho do Notion conectado ainda."
 
+msgid "No open comments on the Notion page."
+msgstr "Nenhum comentário aberto na página do Notion."
+
 msgid "No Outgoing"
 msgstr "Sem saída"
 
@@ -7270,6 +7279,12 @@ msgstr "Nada foi enviado. O relatório fica neste computador até você nos envi
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Comentários do Notion"
+
+msgid "Notion discussion"
+msgstr "Discussão do Notion"
+
 msgid "Notion page link"
 msgstr "Link da página do Notion"
 
@@ -7332,6 +7347,9 @@ msgstr "Sobre o texto selecionado em <0>{address}</0>"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "No índice raiz, okf_version é escrito como uma string entre aspas, como \"0.2\". Sem aspas, YAML lê-o como um número e 0.10 silenciosamente se torna 0.1."
+
+msgid "On the whole page"
+msgstr "Na página inteira"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "Um padrão por linha — acrescentados a <0>.okignore</0>."
@@ -7495,6 +7513,9 @@ msgstr "Abrir no gerenciador de arquivos"
 
 msgid "Open in New Window"
 msgstr "Abrir em nova janela"
+
+msgid "Open in Notion"
+msgstr "Abrir no Notion"
 
 msgid "Open in Slidev"
 msgstr "Abrir no Slidev"
@@ -8509,6 +8530,9 @@ msgstr "Cópia somente leitura de um bloco MirrorSource de outro documento. Edit
 msgid "Read-only file in the {name} skill"
 msgstr "Arquivo somente leitura na habilidade {name}"
 
+msgid "Reading comments from Notion"
+msgstr "Lendo comentários do Notion"
+
 msgid "Reading the current languages…"
 msgstr "Lendo os idiomas atuais…"
 
@@ -8625,6 +8649,9 @@ msgstr "Referência <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "Refletindo…"
+
+msgid "Refresh Notion comments"
+msgstr "Atualizar comentários do Notion"
 
 msgid "Reinstall"
 msgstr "Reinstalar"
@@ -8912,6 +8939,12 @@ msgstr "Substitui a entrada existente do OpenKnowledge em {0}"
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "Substitui a entrada do OpenKnowledge que cada um já tem."
 
+msgid "Reply"
+msgstr "Responder"
+
+msgid "Reply in Notion"
+msgstr "Responder no Notion"
+
 msgid "Report a bug"
 msgstr "Relatar um erro"
 
@@ -9002,6 +9035,9 @@ msgstr "Redimensionar o painel do documento"
 
 msgid "Resize skills panel"
 msgstr "Redimensionar o painel de Habilidades"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "Resolva os comentários no Notion; os resolvidos somem daqui."
 
 msgid "Resolve conflict in your terminal"
 msgstr "Resolva o conflito no seu terminal"
@@ -10817,6 +10853,9 @@ msgstr "O servidor do OpenKnowledge demorou demais para responder. Peca ao agent
 
 msgid "The original text was deleted."
 msgstr "O texto original foi excluído."
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "A página é longa; só os comentários dos primeiros 200 blocos são exibidos."
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "O caminho não pode sair da habilidade (sem . ou ..)"
