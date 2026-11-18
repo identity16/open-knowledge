@@ -415,10 +415,12 @@ function SettingsDialogFrame({
       label: t`Integrations`,
       enabled: true,
       hideOutsideProject: true,
-      items:
-        desktopPresent && SHOW_INSTALL_SKILL
+      items: [
+        ...(desktopPresent && SHOW_INSTALL_SKILL
           ? [{ id: 'claude-desktop', label: t`Claude Desktop` }]
-          : [],
+          : []),
+        { id: 'notion', label: t`Notion` },
+      ],
     },
     ...(isOkDesktopHost
       ? ([

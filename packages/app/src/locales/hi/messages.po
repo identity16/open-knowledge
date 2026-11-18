@@ -1588,6 +1588,9 @@ msgstr "स्वीकृति दें"
 msgid "Approve & proceed"
 msgstr "स्वीकृत करें और आगे बढ़ें"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "खुली हुई Notion विंडो में कनेक्शन स्वीकृत करें।"
+
 msgid "Approved"
 msgstr "स्वीकृत"
 
@@ -2593,6 +2596,9 @@ msgstr "जोड़ें"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "GitHub रिपॉज़िटरी ब्राउज़ और प्रकाशित करने के लिए कोई GitHub खाता जोड़ें।"
 
+msgid "Connect a workspace"
+msgstr "वर्कस्पेस कनेक्ट करें"
+
 msgid "Connect an existing repository"
 msgstr "किसी मौजूदा रिपॉज़िटरी से जोड़ें"
 
@@ -2601,6 +2607,9 @@ msgstr "GitHub जोड़ें"
 
 msgid "Connect GitHub to continue."
 msgstr "जारी रखने के लिए GitHub जोड़ें।"
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "Notion वर्कस्पेस कनेक्ट करें ताकि दस्तावेज़ Notion पेजों के साथ सिंक हो सकें।"
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "OpenKnowledge को अपने उपयोग के अन्य टूल से जोड़ें।"
@@ -2838,6 +2847,9 @@ msgstr "मर्ज को वर्गीकृत नहीं किया �
 msgid "Could not complete delete"
 msgstr "विलोपन पूरा नहीं हो सका"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "Notion से कनेक्ट नहीं हो सका। फिर से कोशिश करें।"
+
 msgid "Could not construct share URL."
 msgstr "साझा URL नहीं बनाया जा सका।"
 
@@ -2852,6 +2864,9 @@ msgstr "प्रोजेक्ट नहीं बनाया जा सक�
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "प्रोजेक्ट फ़ोल्डर नहीं बनाया जा सका। कोई दूसरा फ़ोल्डर चुनें।"
+
+msgid "Could not disconnect. Try again."
+msgstr "डिस्कनेक्ट नहीं हो सका। फिर से कोशिश करें।"
 
 msgid "Could not duplicate item"
 msgstr "आइटम की नकल नहीं बनाई जा सकी"
@@ -2876,6 +2891,9 @@ msgstr "{total} में से {0} फ़ाइलें ठीक नही�
 
 msgid "Could not initialize {0}."
 msgstr "{0} आरंभ नहीं किया जा सका।"
+
+msgid "Could not load Notion connections."
+msgstr "Notion कनेक्शन लोड नहीं हो सके।"
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "टेम्पलेट लोड नहीं हो सके: {templatesError}. आप फिर भी एक खाली नोट बना सकते हैं।"
@@ -6959,6 +6977,9 @@ msgstr "{docName} में इस फ़ील्ड के टेक्स्�
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName} में कोई मिरर स्रोत ब्लॉक नहीं है"
 
+msgid "No Notion workspaces connected yet."
+msgstr "अभी तक कोई Notion वर्कस्पेस कनेक्ट नहीं है।"
+
 msgid "No Outgoing"
 msgstr "कोई जाने वाला नहीं"
 
@@ -7173,6 +7194,12 @@ msgstr "कमिट करने को कुछ नहीं: वर्कि
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "कुछ भी अपलोड नहीं किया गया। जब तक आप हमें ईमेल नहीं करते, रिपोर्ट इसी कंप्यूटर पर रहती है।"
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "Notion कनेक्ट नहीं हुआ।"
 
 msgid "Number"
 msgstr "संख्या"
@@ -7441,6 +7468,9 @@ msgstr "लिंक नए टैब में खोलें"
 
 msgid "Open Navigator"
 msgstr "Navigator खोलें"
+
+msgid "Open Notion again"
+msgstr "Notion फिर से खोलें"
 
 msgid "Open or close visual-editor find."
 msgstr "दृश्य-संपादक की खोज खोलें या बंद करें।"
@@ -10658,6 +10688,9 @@ msgstr "वह मेन्यू लेबल जिससे एजेंट �
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "वह मॉडल id जो आपका एंडपॉइंट देता है। इसका वेक्टर आकार अपने आप पहचाना जाता है — {DEFAULT_EMBEDDINGS_MODEL} पर लौटने के लिए फ़ील्ड साफ़ करें।"
+
+msgid "The Notion approval timed out. Try again."
+msgstr "Notion स्वीकृति का समय समाप्त हो गया। फिर से कोशिश करें।"
 
 msgid "the open agent"
 msgstr "खुला हुआ एजेंट"

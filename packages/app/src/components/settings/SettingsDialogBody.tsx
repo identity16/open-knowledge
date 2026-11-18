@@ -30,6 +30,7 @@ const HotkeysSection = lazySection(async () => (await import('./HotkeysSection')
 const IntegrationsSection = lazySection(
   async () => (await import('./IntegrationsSection')).IntegrationsSection,
 );
+const NotionSection = lazySection(async () => (await import('./NotionSection')).NotionSection);
 const LinkPreviewsSection = lazySection(
   async () => (await import('./LinkPreviewsSection')).LinkPreviewsSection,
 );
@@ -258,6 +259,9 @@ export function SettingsDialogBody({
   }
   if (activeId === 'claude-desktop') {
     return <IntegrationsSection />;
+  }
+  if (activeId === 'notion') {
+    return <NotionSection />;
   }
   if (activeId === 'about') {
     return <AboutSection />;
