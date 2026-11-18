@@ -5766,6 +5766,19 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
       connections: notionConnections,
       bases: createNotionBaseStore(resolve(contentDir, OK_DIR, LOCAL_DIR, 'notion')),
       readDocSource,
+      writeDocSource: (docName, source) => {
+        const filePath = resolveDocPath(docName);
+        if (filePath === null) throw new Error(`no content path for ${docName}`);
+        writeFileIfContentDiffers(filePath, source);
+      },
+      isInConflict: (docName) => conflicts.findByDocName(docName) !== undefined,
+      raiseConflict: (docName, stages) =>
+        conflicts.raise({
+          kind: 'reconcile',
+          file: conflicts.fileOf(docName),
+          reason: 'notion-changed',
+          stages,
+        }),
     }),
   });
   const documentRefreshRoutes = createDocumentRefreshRoutes({

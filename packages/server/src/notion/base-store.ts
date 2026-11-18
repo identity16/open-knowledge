@@ -13,6 +13,7 @@ export interface NotionPublishBase {
   readonly docName: string;
   readonly markdown: string;
   readonly publishedAt: string;
+  readonly pendingTheirs?: string;
 }
 
 export interface NotionBaseStore {

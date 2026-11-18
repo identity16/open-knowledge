@@ -4,7 +4,11 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 import { createNotionBaseStore } from './base-store.ts';
 import type { NotionConnections } from './notion-connections.ts';
-import { createNotionPublisher, NotionPublishError } from './publisher.ts';
+import {
+  createNotionPublisher,
+  type NotionConflictStages,
+  NotionPublishError,
+} from './publisher.ts';
 
 const PAGE = '41ca0a3f-aba4-8150-aad5-c7e056948abe';
 const dirs: string[] = [];
@@ -42,8 +46,16 @@ function setup(doc: string, notion = fakeNotion()) {
   const dir = mkdtempSync(join(tmpdir(), 'ok-notion-publish-'));
   dirs.push(dir);
   const docs = new Map<string, string>([['notes/plan', doc]]);
+  const conflicts = new Map<string, NotionConflictStages>();
   const bases = createNotionBaseStore(join(dir, 'notion'));
   const publisher = createNotionPublisher({
+    writeDocSource: (name, source) => {
+      docs.set(name, source);
+    },
+    isInConflict: (name) => conflicts.has(name),
+    raiseConflict: (name, stages) => {
+      conflicts.set(name, stages);
+    },
     connections: {
       list: () => [
         { workspaceId: 'w0', workspaceName: 'Other', workspaceIcon: null, connectedAt: 'x' },
@@ -55,7 +67,7 @@ function setup(doc: string, notion = fakeNotion()) {
     readDocSource: (name) => docs.get(name) ?? null,
     now: () => Date.parse('2026-11-18T00:00:00.000Z'),
   });
-  return { publisher, bases, docs, notion };
+  return { publisher, bases, docs, notion, conflicts };
 }
 
 const linked = (body: string) =>
@@ -104,8 +116,10 @@ describe('publish', () => {
       docName: 'notes/plan',
       markdown: '# Plan\n\nShip <b>now</b>.',
       publishedAt: '2026-11-18T00:00:00.000Z',
+      mergedFromNotion: false,
     });
-    expect(bases.get(PAGE)).toEqual(base);
+    const { mergedFromNotion: _merged, ...stored } = base;
+    expect(bases.get(PAGE)).toEqual(stored);
   });
 
   test('a republish after only OK changed goes through, comparing against the Notion-normalized base', async () => {
@@ -125,11 +139,10 @@ describe('publish', () => {
     expect(notion.pages.get(PAGE)).toBe('Mine');
   });
 
-  test('refuses when the page changed in Notion since the last publish', async () => {
+  test('an overwrite replaces whatever Notion holds without comparing', async () => {
     const { publisher, notion } = setup(linked('Mine\n'));
     await publisher.publish('notes/plan');
     notion.pages.set(PAGE, 'Mine\n\nEdited in Notion');
-    expect(await failureOf(publisher.publish('notes/plan'))).toBe('changed-in-notion');
     await publisher.publish('notes/plan', { overwrite: true });
     expect(notion.pages.get(PAGE)).toBe('Mine');
   });
@@ -159,5 +172,92 @@ describe('publish', () => {
         : notion.request(workspace, path, init);
     const { publisher } = setup(linked('Mine\n'), { ...notion, request });
     expect(await failureOf(publisher.publish('notes/plan'))).toBe('page-unreadable');
+  });
+});
+
+describe('merging Notion edits', () => {
+  const doc = (body: string) => linked(body);
+
+  test('edits on different lines merge into the document and the merged text is published', async () => {
+    const { publisher, notion, docs } = setup(doc('Alpha\n\nBeta\n\nGamma\n'));
+    await publisher.publish('notes/plan');
+    notion.pages.set(PAGE, 'Alpha\n\nBeta\n\nGamma from Notion');
+    docs.set('notes/plan', doc('Alpha from OK\n\nBeta\n\nGamma\n'));
+
+    const result = await publisher.publish('notes/plan');
+
+    expect(result.mergedFromNotion).toBe(true);
+    expect(notion.pages.get(PAGE)).toBe('Alpha from OK\n\nBeta\n\nGamma from Notion');
+    expect(docs.get('notes/plan')).toBe(doc('Alpha from OK\n\nBeta\n\nGamma from Notion\n'));
+  });
+
+  test('bold read back as <b> is not mistaken for a Notion edit', async () => {
+    const { publisher, notion } = setup(doc('Ship **now**.\n'));
+    await publisher.publish('notes/plan');
+    expect(notion.pages.get(PAGE)).toBe('Ship <b>now</b>.');
+    const again = await publisher.publish('notes/plan');
+    expect(again.mergedFromNotion).toBe(false);
+  });
+
+  test('edits to the same line raise a Notion conflict with full-document stages and stop', async () => {
+    const { publisher, notion, docs, conflicts, bases } = setup(doc('Alpha\n'));
+    await publisher.publish('notes/plan');
+    notion.pages.set(PAGE, 'Alpha <b>from</b> Notion');
+    docs.set('notes/plan', doc('Alpha from OK\n'));
+
+    expect(await failureOf(publisher.publish('notes/plan'))).toBe('changed-in-notion');
+    expect(notion.pages.get(PAGE)).toBe('Alpha <b>from</b> Notion');
+    expect(conflicts.get('notes/plan')).toEqual({
+      base: doc('Alpha\n'),
+      ours: doc('Alpha from OK\n'),
+      theirs: doc('Alpha **from** Notion\n'),
+    });
+    expect(bases.get(PAGE)?.pendingTheirs).toBe('Alpha <b>from</b> Notion');
+  });
+
+  test('while the conflict is open, publish and pull refuse without raising it again', async () => {
+    const { publisher, notion, docs, conflicts } = setup(doc('Alpha\n'));
+    await publisher.publish('notes/plan');
+    notion.pages.set(PAGE, 'Alpha in Notion');
+    docs.set('notes/plan', doc('Alpha in OK\n'));
+    await failureOf(publisher.publish('notes/plan'));
+    conflicts.set('notes/plan', { base: 'x', ours: 'x', theirs: 'x' });
+    expect(await failureOf(publisher.publish('notes/plan'))).toBe('changed-in-notion');
+    expect(await failureOf(publisher.pull('notes/plan'))).toBe('changed-in-notion');
+    expect(conflicts.get('notes/plan')?.base).toBe('x');
+  });
+
+  test('after the conflict is resolved, publish sends the resolved text and clears the pending side', async () => {
+    const { publisher, notion, docs, conflicts, bases } = setup(doc('Alpha\n'));
+    await publisher.publish('notes/plan');
+    notion.pages.set(PAGE, 'Alpha in Notion');
+    docs.set('notes/plan', doc('Alpha in OK\n'));
+    await failureOf(publisher.publish('notes/plan'));
+
+    docs.set('notes/plan', doc('Alpha in OK and Notion\n'));
+    conflicts.delete('notes/plan');
+    const result = await publisher.publish('notes/plan');
+
+    expect(result.mergedFromNotion).toBe(false);
+    expect(notion.pages.get(PAGE)).toBe('Alpha in OK and Notion');
+    expect(bases.get(PAGE)?.pendingTheirs).toBeUndefined();
+  });
+
+  test('pull brings Notion edits into the document without publishing', async () => {
+    const { publisher, notion, docs, bases } = setup(doc('Alpha\n\nBeta\n'));
+    await publisher.publish('notes/plan');
+    notion.pages.set(PAGE, 'Alpha\n\nBeta\n\nAdded in Notion');
+
+    expect(await publisher.pull('notes/plan')).toEqual({ outcome: 'merged' });
+    expect(docs.get('notes/plan')).toBe(doc('Alpha\n\nBeta\n\nAdded in Notion\n'));
+    expect(bases.get(PAGE)?.markdown).toBe('Alpha\n\nBeta\n\nAdded in Notion');
+    expect(await publisher.pull('notes/plan')).toEqual({ outcome: 'unchanged' });
+    const next = await publisher.publish('notes/plan');
+    expect(next.mergedFromNotion).toBe(false);
+  });
+
+  test('pull refuses a document that was never published', async () => {
+    const { publisher } = setup(doc('Alpha\n'));
+    expect(await failureOf(publisher.pull('notes/plan'))).toBe('not-published');
   });
 });
