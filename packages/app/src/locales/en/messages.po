@@ -97,6 +97,9 @@ msgstr "(inline)"
 msgid "(no name)"
 msgstr "(no name)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(opens in new tab)"
 
@@ -114,6 +117,9 @@ msgstr "(some may already be hidden by other rules)"
 
 msgid "(symlink)"
 msgstr "(symlink)"
+
+msgid "(This document)"
+msgstr "(This document)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
@@ -1565,6 +1571,9 @@ msgstr "Applies to this project on this computer only. Stored in .ok/local, not 
 msgid "Applies when you pick this conversation back up"
 msgstr "Applies when you pick this conversation back up"
 
+msgid "Apply and publish to Notion"
+msgstr "Apply and publish to Notion"
+
 msgid "Apply and restart project server"
 msgstr "Apply and restart project server"
 
@@ -2054,6 +2063,9 @@ msgstr "Change the embeddings provider?"
 msgid "Changed"
 msgstr "Changed"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "Changed here and in Notion. Open it to choose what to keep."
+
 msgid "Changed here and on the remote"
 msgstr "Changed here and on the remote"
 
@@ -2144,6 +2156,9 @@ msgstr "Checking GitHub connection..."
 
 msgid "Checking links"
 msgstr "Checking links"
+
+msgid "Checking Notion…"
+msgstr "Checking Notion…"
 
 msgid "Checking out files"
 msgstr "Checking out files"
@@ -2931,6 +2946,9 @@ msgstr "Could not reach server"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "Could not read branch state for this project. Close this dialog and open the share link again."
+
+msgid "Could not read the Notion page."
+msgstr "Could not read the Notion page."
 
 msgid "Could not save sync preference: {detail}"
 msgstr "Could not save sync preference: {detail}"
@@ -5857,6 +5875,12 @@ msgstr "Keep mine"
 msgid "Keep my version"
 msgstr "Keep my version"
 
+msgid "Keep Notion"
+msgstr "Keep Notion"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "Keep Notion for conflict {0}"
+
 msgid "Keep open"
 msgstr "Keep open"
 
@@ -5868,6 +5892,12 @@ msgstr "Keep source"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "Keep the name to 64 characters or fewer."
+
+msgid "Keep this document"
+msgstr "Keep this document"
+
+msgid "Keep this document for conflict {0}"
+msgstr "Keep this document for conflict {0}"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
@@ -6336,6 +6366,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "Merged"
 
+msgid "Merged the Notion edits and published"
+msgstr "Merged the Notion edits and published"
+
 msgid "Mermaid diagram"
 msgstr "Mermaid diagram"
 
@@ -6428,6 +6461,9 @@ msgstr "More actions ({syncAttentionLabel})"
 
 msgid "More information"
 msgstr "More information"
+
+msgid "More Notion actions"
+msgstr "More Notion actions"
 
 msgid "More requests were blocked."
 msgstr "More requests were blocked."
@@ -7013,6 +7049,9 @@ msgstr "No Mirror Source block in {docName} matches the text in this field. Clea
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "No Mirror Source blocks in {docName}"
+
+msgid "No new edits in Notion"
+msgstr "No new edits in Notion"
 
 msgid "No Notion workspaces connected yet."
 msgstr "No Notion workspaces connected yet."
@@ -8983,6 +9022,12 @@ msgstr "Resolve the conflict on {files}, +{overflow} more before deleting."
 msgid "Resolved"
 msgstr "Resolved"
 
+msgid "Resolved and published to Notion"
+msgstr "Resolved and published to Notion"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+
 msgid "Resolving default location"
 msgstr "Resolving default location"
 
@@ -10018,9 +10063,6 @@ msgstr "Some skills were deleted with a warning"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 
@@ -10460,6 +10502,9 @@ msgstr "Take a look if you'd like. This exact file is what we receive."
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 
+msgid "Take edits from Notion"
+msgstr "Take edits from Notion"
+
 msgid "Take upstream"
 msgstr "Take upstream"
 
@@ -10755,9 +10800,6 @@ msgstr "The Notion approval timed out. Try again."
 
 msgid "The Notion page already has content"
 msgstr "The Notion page already has content"
-
-msgid "The Notion page changed"
-msgstr "The Notion page changed"
 
 msgid "the open agent"
 msgstr "the open agent"
@@ -11097,6 +11139,9 @@ msgstr "This doc hasn't synced to GitHub yet. The link will work after the next 
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "This doc isn't on GitHub yet. The link won't work until it's pushed."
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "This document and Notion changed the same part. Choose what to keep."
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "This document is already active in the editor. Use Open to collapse the graph."
 
@@ -11223,6 +11268,9 @@ msgstr "This option cannot be changed automatically."
 
 msgid "This pack is already set up here."
 msgstr "This pack is already set up here."
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
@@ -11489,6 +11537,9 @@ msgstr "Too many live references on this page. This board was not loaded."
 
 msgid "Too slow"
 msgstr "Too slow"
+
+msgid "Took the Notion edits into this document"
+msgstr "Took the Notion edits into this document"
 
 msgid "Tool call"
 msgstr "Tool call"

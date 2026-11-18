@@ -45,7 +45,9 @@ function fakePublisher(overrides: Partial<NotionPublisher> = {}): NotionPublishe
       docName,
       markdown: 'x',
       publishedAt: '2026-11-18T00:00:00.000Z',
+      mergedFromNotion: false,
     }),
+    pull: async () => ({ outcome: 'merged' }),
     ...overrides,
   };
 }
@@ -90,6 +92,7 @@ describe('createNotionRoutes table', () => {
         '/api/notion/connections/flow',
         '/api/notion/connections/start',
         '/api/notion/publish',
+        '/api/notion/pull',
         '/api/notion/resolve-page',
       ].sort(),
     );
@@ -190,10 +193,11 @@ describe('resolve-page and publish', () => {
       docName,
       markdown: 'x',
       publishedAt: 't',
+      mergedFromNotion: true,
     }));
     const { post } = await serve(fakeNotion(), true, fakePublisher({ publish }));
     const res = await post('/api/notion/publish', { docName: 'notes/plan', overwrite: true });
-    expect(await res.json()).toEqual({ page: 'p1', publishedAt: 't' });
+    expect(await res.json()).toEqual({ page: 'p1', publishedAt: 't', mergedFromNotion: true });
     expect(publish).toHaveBeenCalledWith('notes/plan', { overwrite: true });
   });
 
@@ -223,5 +227,35 @@ describe('resolve-page and publish', () => {
     });
     const { post } = await serve(fakeNotion(), true, publisher);
     expect((await post('/api/notion/publish', { docName: 'x' })).status).toBe(502);
+  });
+});
+
+describe('pull', () => {
+  test('answers the merge outcome', async () => {
+    const { post } = await serve(fakeNotion());
+    expect(await (await post('/api/notion/pull', { docName: 'notes/plan' })).json()).toEqual({
+      outcome: 'merged',
+    });
+  });
+
+  test('a conflict answers 409 notion-changed and a never-published doc 400', async () => {
+    const outcomes = ['changed-in-notion', 'not-published'] as const;
+    const publisher = fakePublisher({
+      pull: async () => {
+        throw new NotionPublishError({ kind: outcomes[0] });
+      },
+    });
+    const { post } = await serve(fakeNotion(), true, publisher);
+    const res = await post('/api/notion/pull', { docName: 'notes/plan' });
+    expect(res.status).toBe(409);
+    expect((await res.json()).type).toBe('urn:ok:error:notion-changed');
+
+    const never = fakePublisher({
+      pull: async () => {
+        throw new NotionPublishError({ kind: outcomes[1] });
+      },
+    });
+    const second = await serve(fakeNotion(), true, never);
+    expect((await second.post('/api/notion/pull', { docName: 'x' })).status).toBe(400);
   });
 });

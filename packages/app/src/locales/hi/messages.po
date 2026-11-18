@@ -97,6 +97,9 @@ msgstr "(इनलाइन)"
 msgid "(no name)"
 msgstr "(कोई नाम नहीं)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(नए टैब में खुलता है)"
 
@@ -114,6 +117,9 @@ msgstr "(कुछ पहले से ही अन्य नियमों �
 
 msgid "(symlink)"
 msgstr "(सिमलिंक)"
+
+msgid "(This document)"
+msgstr "(यह दस्तावेज़)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, one {# अनुलग्नक भेजने के लिए तैयार है} other {# अनुलग्नक भेजने के लिए तैयार हैं}}"
@@ -1561,6 +1567,9 @@ msgstr "केवल इस कंप्यूटर पर इस प्रो�
 msgid "Applies when you pick this conversation back up"
 msgstr "जब आप यह बातचीत फिर से शुरू करेंगे तब लागू होगा"
 
+msgid "Apply and publish to Notion"
+msgstr "लागू करें और Notion पर प्रकाशित करें"
+
 msgid "Apply and restart project server"
 msgstr "लागू करें और प्रोजेक्ट सर्वर पुनः प्रारंभ करें"
 
@@ -2050,6 +2059,9 @@ msgstr "एम्बेडिंग प्रदाता बदलें?"
 msgid "Changed"
 msgstr "बदला गया"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "यहाँ और Notion दोनों में बदला गया। क्या रखना है चुनने के लिए इसे खोलें।"
+
 msgid "Changed here and on the remote"
 msgstr "यहाँ और रिमोट दोनों पर बदले गए"
 
@@ -2140,6 +2152,9 @@ msgstr "GitHub कनेक्शन जाँचा जा रहा है…"
 
 msgid "Checking links"
 msgstr "लिंक की जाँच की जा रही है"
+
+msgid "Checking Notion…"
+msgstr "Notion जाँचा जा रहा है…"
 
 msgid "Checking out files"
 msgstr "फ़ाइलें चेक आउट की जा रही हैं"
@@ -2927,6 +2942,9 @@ msgstr "सर्वर तक नहीं पहुँचा जा सका"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "इस प्रोजेक्ट की ब्रांच स्थिति नहीं पढ़ी जा सकी। यह संवाद बंद करें और साझा लिंक फिर से खोलें।"
+
+msgid "Could not read the Notion page."
+msgstr "Notion पेज पढ़ा नहीं जा सका।"
 
 msgid "Could not save sync preference: {detail}"
 msgstr "सिंक वरीयता नहीं सहेजी जा सकी: {detail}"
@@ -5853,6 +5871,12 @@ msgstr "मेरा वाला रखें"
 msgid "Keep my version"
 msgstr "मेरा संस्करण रखें"
 
+msgid "Keep Notion"
+msgstr "Notion रखें"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "विरोध {0} के लिए Notion रखें"
+
 msgid "Keep open"
 msgstr "खुला रखें"
 
@@ -5864,6 +5888,12 @@ msgstr "स्रोत रखें"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "नाम 64 अक्षरों या उससे कम रखें।"
+
+msgid "Keep this document"
+msgstr "यह दस्तावेज़ रखें"
+
+msgid "Keep this document for conflict {0}"
+msgstr "विरोध {0} के लिए यह दस्तावेज़ रखें"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "इस प्रोजेक्ट को अपने git रिमोट के साथ सिंक में रखें। स्वचालित (केवल खींचें) बिना पुश किए अपडेट लाता है; स्वचालित (खींचें और भेजें) आपके संपादन भी भेजता है। स्वचालित सिंक चालू करने के लिए पुष्टि ज़रूरी है।"
@@ -6332,6 +6362,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "मर्ज किया गया"
 
+msgid "Merged the Notion edits and published"
+msgstr "Notion के बदलाव मिलाकर प्रकाशित किया गया"
+
 msgid "Mermaid diagram"
 msgstr "Mermaid आरेख"
 
@@ -6424,6 +6457,9 @@ msgstr "और क्रियाएँ ({syncAttentionLabel})"
 
 msgid "More information"
 msgstr "अधिक जानकारी"
+
+msgid "More Notion actions"
+msgstr "और Notion क्रियाएँ"
 
 msgid "More requests were blocked."
 msgstr "और अनुरोध रोके गए।"
@@ -7009,6 +7045,9 @@ msgstr "{docName} में इस फ़ील्ड के टेक्स्�
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName} में कोई मिरर स्रोत ब्लॉक नहीं है"
+
+msgid "No new edits in Notion"
+msgstr "Notion में कोई नया बदलाव नहीं"
 
 msgid "No Notion workspaces connected yet."
 msgstr "अभी तक कोई Notion वर्कस्पेस कनेक्ट नहीं है।"
@@ -8979,6 +9018,12 @@ msgstr "हटाने से पहले {files} और {overflow} अन्�
 msgid "Resolved"
 msgstr "सुलझ गया"
 
+msgid "Resolved and published to Notion"
+msgstr "हल करके Notion पर प्रकाशित किया गया"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "यहाँ हल हो गया, लेकिन Notion पर प्रकाशित नहीं हो सका। टूलबार से फिर प्रकाशित करें।"
+
 msgid "Resolving default location"
 msgstr "डिफ़ॉल्ट स्थान तय किया जा रहा है"
 
@@ -10014,9 +10059,6 @@ msgstr "कुछ स्किलें चेतावनी के साथ �
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "कुछ टेम्पलेट सूची में शायद न दिखें, क्योंकि इस ज्ञान आधार में स्कैन करने के लिए बहुत अधिक फ़ोल्डर हैं। किसी फ़ोल्डर के टेम्पलेट देखने के लिए, फ़ाइल ट्री में उसका मेनू खोलें और \"टेम्पलेट से नया\" चुनें।"
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "आपके पिछली बार प्रकाशित करने के बाद किसी ने Notion में पेज संपादित किया। अभी प्रकाशित करने पर उनके बदलाव इस दस्तावेज़ से बदल जाएँगे।"
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "हो सकता है किसी ने {filePath} का टकराव पहले ही सुलझा दिया हो — अपना संपादन दोबारा करने से पहले दस्तावेज़ की मौजूदा सामग्री देख लें।"
 
@@ -10456,6 +10498,9 @@ msgstr "चाहें तो देख लें। हमें ठीक य
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "किसी लेखन को एक कच्चे विचार से तैयार मसौदे तक और फिर साझा करने लायक चीज़ तक ले जाएँ। ब्लॉग पोस्ट, निबंध, या ऐसी किसी भी चीज़ के लिए अच्छा जिसे आप स्पष्ट चरणों से गुज़ारना चाहते हैं।"
 
+msgid "Take edits from Notion"
+msgstr "Notion से बदलाव लें"
+
 msgid "Take upstream"
 msgstr "अपस्ट्रीम वाला लें"
 
@@ -10751,9 +10796,6 @@ msgstr "Notion स्वीकृति का समय समाप्त ह�
 
 msgid "The Notion page already has content"
 msgstr "Notion पेज में पहले से सामग्री है"
-
-msgid "The Notion page changed"
-msgstr "Notion पेज बदल गया है"
 
 msgid "the open agent"
 msgstr "खुला हुआ एजेंट"
@@ -11093,6 +11135,9 @@ msgstr "यह दस्तावेज़ अभी GitHub पर सिंक 
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "यह दस्तावेज़ अभी GitHub पर नहीं है। जब तक इसे भेजा नहीं जाता तब तक लिंक काम नहीं करेगा।"
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "इस दस्तावेज़ और Notion ने एक ही हिस्सा बदला। क्या रखना है चुनें।"
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "यह दस्तावेज़ पहले से ही संपादक में सक्रिय है। ग्राफ़ समेटने के लिए Open का उपयोग करें।"
 
@@ -11219,6 +11264,9 @@ msgstr "इस विकल्प को अपने-आप नहीं बद
 
 msgid "This pack is already set up here."
 msgstr "यह पैक यहाँ पहले से सेट अप है।"
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "आपके पिछली बार प्रकाशित करने के बाद Notion में यह पेज बदला, और वही हिस्सा यहाँ भी बदला। क्या रखना है चुनें, फिर परिणाम प्रकाशित करने के लिए लागू करें।"
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "यह पेज अभी मौजूद नहीं है। संपादक में यह पेज बनाने और ग्राफ़ समेटने के लिए इसे खोलें।"
@@ -11485,6 +11533,9 @@ msgstr "इस पेज पर बहुत अधिक लाइव संद
 
 msgid "Too slow"
 msgstr "बहुत धीमा"
+
+msgid "Took the Notion edits into this document"
+msgstr "Notion के बदलाव इस दस्तावेज़ में लाए गए"
 
 msgid "Tool call"
 msgstr "टूल कॉल"

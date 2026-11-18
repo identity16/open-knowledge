@@ -97,6 +97,9 @@ msgstr "(en línea)"
 msgid "(no name)"
 msgstr "(sin nombre)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(se abre en una pestaña nueva)"
 
@@ -114,6 +117,9 @@ msgstr "(puede que otras reglas ya oculten algunos)"
 
 msgid "(symlink)"
 msgstr "(enlace simbólico)"
+
+msgid "(This document)"
+msgstr "(Este documento)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, one {# adjunto listo para enviar} many {# adjuntos listos para enviar} other {# adjuntos listos para enviar}}"
@@ -1565,6 +1571,9 @@ msgstr "Se aplica a este proyecto solo en este equipo. Se guarda en .ok/local y 
 msgid "Applies when you pick this conversation back up"
 msgstr "Se aplica cuando retomes esta conversación"
 
+msgid "Apply and publish to Notion"
+msgstr "Aplicar y publicar en Notion"
+
 msgid "Apply and restart project server"
 msgstr "Aplicar y reiniciar el servidor del proyecto"
 
@@ -2054,6 +2063,9 @@ msgstr "¿Cambiar el proveedor de embeddings?"
 msgid "Changed"
 msgstr "Modificado"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "Cambió aquí y en Notion. Ábrelo para elegir qué conservar."
+
 msgid "Changed here and on the remote"
 msgstr "Cambiados aquí y en el remoto"
 
@@ -2144,6 +2156,9 @@ msgstr "Comprobando la conexión con GitHub..."
 
 msgid "Checking links"
 msgstr "Comprobando enlaces"
+
+msgid "Checking Notion…"
+msgstr "Comprobando Notion…"
 
 msgid "Checking out files"
 msgstr "Extrayendo archivos"
@@ -2931,6 +2946,9 @@ msgstr "No se pudo contactar con el servidor"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "No se pudo leer el estado de las ramas de este proyecto. Cierra este diálogo y vuelve a abrir el enlace compartido."
+
+msgid "Could not read the Notion page."
+msgstr "No se pudo leer la página de Notion."
 
 msgid "Could not save sync preference: {detail}"
 msgstr "No se pudo guardar la preferencia de sincronización: {detail}"
@@ -5857,6 +5875,12 @@ msgstr "Conservar el mío"
 msgid "Keep my version"
 msgstr "Conservar mi versión"
 
+msgid "Keep Notion"
+msgstr "Conservar Notion"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "Conservar Notion en el conflicto {0}"
+
 msgid "Keep open"
 msgstr "Mantener abierto"
 
@@ -5868,6 +5892,12 @@ msgstr "Conservar el origen"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "El nombre debe tener 64 caracteres o menos."
+
+msgid "Keep this document"
+msgstr "Conservar este documento"
+
+msgid "Keep this document for conflict {0}"
+msgstr "Conservar este documento en el conflicto {0}"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "Mantén este proyecto sincronizado con tu remoto de git. Automático (solo Pull) trae actualizaciones sin hacer push; Automático (Pull y Push) también envía tus ediciones. Activar la sincronización automática requiere confirmación."
@@ -6336,6 +6366,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "Fusionada"
 
+msgid "Merged the Notion edits and published"
+msgstr "Se combinaron los cambios de Notion y se publicó"
+
 msgid "Mermaid diagram"
 msgstr "Diagrama de Mermaid"
 
@@ -6428,6 +6461,9 @@ msgstr "Más acciones ({syncAttentionLabel})"
 
 msgid "More information"
 msgstr "Más información"
+
+msgid "More Notion actions"
+msgstr "Más acciones de Notion"
 
 msgid "More requests were blocked."
 msgstr "Se bloquearon más solicitudes."
@@ -7013,6 +7049,9 @@ msgstr "Ningún bloque de origen del espejo en {docName} coincide con el texto d
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "No hay bloques de origen del espejo en {docName}"
+
+msgid "No new edits in Notion"
+msgstr "No hay cambios nuevos en Notion"
 
 msgid "No Notion workspaces connected yet."
 msgstr "Todavía no hay espacios de trabajo de Notion conectados."
@@ -8983,6 +9022,12 @@ msgstr "Resuelve el conflicto en {files} y en {overflow} más antes de eliminar.
 msgid "Resolved"
 msgstr "Resuelto"
 
+msgid "Resolved and published to Notion"
+msgstr "Resuelto y publicado en Notion"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "Resuelto aquí, pero no se pudo publicar en Notion. Vuelve a publicar desde la barra de herramientas."
+
 msgid "Resolving default location"
 msgstr "Resolviendo la ubicación por defecto"
 
@@ -10018,9 +10063,6 @@ msgstr "Algunas habilidades se eliminaron con una advertencia"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "Es posible que falten algunas plantillas en la lista porque esta base de conocimiento tiene demasiadas carpetas para explorarlas todas. Para ver las plantillas de una carpeta, abre su menú en el árbol de archivos y elige \"Nuevo desde plantilla\"."
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "Alguien editó la página en Notion desde tu última publicación. Publicar ahora reemplaza sus cambios por este documento."
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "Puede que alguien ya haya resuelto {filePath} — revisa el contenido actual del documento antes de rehacer tu edición."
 
@@ -10460,6 +10502,9 @@ msgstr "Échale un vistazo si quieres. Este archivo exacto es lo que recibimos."
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "Lleva un texto de una idea en bruto a un borrador terminado y luego a algo listo para compartir. Va bien para entradas de blog, ensayos o cualquier cosa que quieras mover por etapas claras."
 
+msgid "Take edits from Notion"
+msgstr "Traer cambios de Notion"
+
 msgid "Take upstream"
 msgstr "Aceptar la versión remota"
 
@@ -10755,9 +10800,6 @@ msgstr "Se agotó el tiempo de aprobación de Notion. Inténtalo de nuevo."
 
 msgid "The Notion page already has content"
 msgstr "La página de Notion ya tiene contenido"
-
-msgid "The Notion page changed"
-msgstr "La página de Notion cambió"
 
 msgid "the open agent"
 msgstr "el agente abierto"
@@ -11097,6 +11139,9 @@ msgstr "Este documento todavía no se ha sincronizado con GitHub. El enlace func
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "Este documento todavía no está en GitHub. El enlace no funcionará hasta que se suba."
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "Este documento y Notion cambiaron la misma parte. Elige qué conservar."
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "Este documento ya está activo en el editor. Usa Abrir para contraer el grafo."
 
@@ -11223,6 +11268,9 @@ msgstr "Esta opción no se puede cambiar automáticamente."
 
 msgid "This pack is already set up here."
 msgstr "Este paquete ya está configurado aquí."
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "Esta página cambió en Notion desde tu última publicación y la misma parte cambió aquí. Elige qué conservar y aplica para publicar el resultado."
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "Esta página todavía no existe. Ábrela para crearla en el editor y contraer el grafo."
@@ -11489,6 +11537,9 @@ msgstr "Demasiadas referencias en vivo en esta página. Esta pizarra no se carg�
 
 msgid "Too slow"
 msgstr "Demasiado lento"
+
+msgid "Took the Notion edits into this document"
+msgstr "Se trajeron los cambios de Notion a este documento"
 
 msgid "Tool call"
 msgstr "Llamada a herramienta"

@@ -1,8 +1,11 @@
 import {
   type NotionPageLink,
   NotionPageLinkSchema,
+  notionInlineHtmlToMarkdown,
   parseFrontmatterRecord,
+  prependFrontmatter,
   stripFrontmatter,
+  tryLineLevelCombine,
 } from '@inkeep/open-knowledge-core';
 import type { NotionBaseStore, NotionPublishBase } from './base-store.ts';
 import type { NotionConnections } from './notion-connections.ts';
@@ -15,6 +18,7 @@ export type NotionPublishFailure =
   | { readonly kind: 'page-not-empty' }
   | { readonly kind: 'changed-in-notion' }
   | { readonly kind: 'page-unreadable' }
+  | { readonly kind: 'not-published' }
   | { readonly kind: 'notion-error'; readonly status: number; readonly message: string };
 
 export class NotionPublishError extends Error {
@@ -27,17 +31,35 @@ export class NotionPublishError extends Error {
   }
 }
 
+export interface NotionConflictStages {
+  readonly base: string;
+  readonly ours: string;
+  readonly theirs: string;
+}
+
 export interface NotionPublisherDeps {
   readonly connections: Pick<NotionConnections, 'list' | 'request'>;
   readonly bases: NotionBaseStore;
   readonly readDocSource: (docName: string) => string | null;
+  readonly writeDocSource: (docName: string, source: string) => void;
+  readonly isInConflict: (docName: string) => boolean;
+  readonly raiseConflict: (docName: string, stages: NotionConflictStages) => void;
   readonly now?: () => number;
+}
+
+export interface NotionPublishResult extends NotionPublishBase {
+  readonly mergedFromNotion: boolean;
 }
 
 export interface NotionPublisher {
   resolvePage(url: string): Promise<{ page: string; workspace: string; title: string } | null>;
-  publish(docName: string, opts?: { overwrite?: boolean }): Promise<NotionPublishBase>;
+  publish(docName: string, opts?: { overwrite?: boolean }): Promise<NotionPublishResult>;
+  pull(docName: string): Promise<{ outcome: 'unchanged' | 'merged' }>;
 }
+
+type Reconciled =
+  | { readonly kind: 'unchanged' }
+  | { readonly kind: 'merged'; readonly source: string };
 
 interface PageMarkdown {
   readonly markdown: string;
@@ -45,7 +67,13 @@ interface PageMarkdown {
 }
 
 function normalize(markdown: string): string {
-  return markdown.replace(/[ \t]+$/gm, '').trim();
+  return notionInlineHtmlToMarkdown(markdown)
+    .replace(/[ \t]+$/gm, '')
+    .trim();
+}
+
+function withFrontmatter(frontmatter: string, body: string): string {
+  return prependFrontmatter(frontmatter, body === '' ? '' : `${body}\n`);
 }
 
 function pageTitle(page: unknown): string {
@@ -95,6 +123,42 @@ export function createNotionPublisher(deps: NotionPublisherDeps): NotionPublishe
     };
   }
 
+  function linkedSource(docName: string): { source: string; link: NotionPageLink } {
+    const source = deps.readDocSource(docName);
+    if (source === null) throw new NotionPublishError({ kind: 'doc-not-found' });
+    const link = readNotionLink(source);
+    if (link === null) throw new NotionPublishError({ kind: 'not-linked' });
+    return { source, link };
+  }
+
+  function reconcile(
+    docName: string,
+    source: string,
+    notionMarkdown: string,
+    base: NotionPublishBase,
+  ): Reconciled {
+    if (deps.isInConflict(docName)) throw new NotionPublishError({ kind: 'changed-in-notion' });
+    const theirs = normalize(notionMarkdown);
+    const baseBody = normalize(base.markdown);
+    const reviewed = base.pendingTheirs === undefined ? null : normalize(base.pendingTheirs);
+    if (theirs === baseBody || theirs === reviewed) return { kind: 'unchanged' };
+
+    const { frontmatter, body } = stripFrontmatter(source);
+    const merged = tryLineLevelCombine(baseBody, normalize(body), theirs);
+    if (merged.clean) {
+      const mergedSource = withFrontmatter(frontmatter, merged.merged);
+      deps.writeDocSource(docName, mergedSource);
+      return { kind: 'merged', source: mergedSource };
+    }
+    deps.raiseConflict(docName, {
+      base: withFrontmatter(frontmatter, baseBody),
+      ours: source,
+      theirs: withFrontmatter(frontmatter, theirs),
+    });
+    deps.bases.set({ ...base, docName, pendingTheirs: notionMarkdown });
+    throw new NotionPublishError({ kind: 'changed-in-notion' });
+  }
+
   return {
     async resolvePage(url) {
       const page = parseNotionPageId(url);
@@ -117,40 +181,56 @@ export function createNotionPublisher(deps: NotionPublisherDeps): NotionPublishe
     },
 
     async publish(docName, opts = {}) {
-      const source = deps.readDocSource(docName);
-      if (source === null) throw new NotionPublishError({ kind: 'doc-not-found' });
-      const link = readNotionLink(source);
-      if (link === null) throw new NotionPublishError({ kind: 'not-linked' });
-
+      const { source, link } = linkedSource(docName);
       const current = await readPage(link.workspace, link.page);
+      const base = deps.bases.get(link.page);
+      let body = stripFrontmatter(source).body;
+      let mergedFromNotion = false;
       if (!opts.overwrite) {
         if (!current.complete) throw new NotionPublishError({ kind: 'page-unreadable' });
-        const base = deps.bases.get(link.page);
         if (base === null && normalize(current.markdown) !== '')
           throw new NotionPublishError({ kind: 'page-not-empty' });
-        if (base !== null && normalize(current.markdown) !== normalize(base.markdown))
-          throw new NotionPublishError({ kind: 'changed-in-notion' });
+        if (base !== null) {
+          const reconciled = reconcile(docName, source, current.markdown, base);
+          if (reconciled.kind === 'merged') {
+            body = stripFrontmatter(reconciled.source).body;
+            mergedFromNotion = true;
+          }
+        }
       }
 
       await notionJson(link.workspace, `/v1/pages/${link.page}/markdown`, {
         method: 'PATCH',
         body: JSON.stringify({
           type: 'replace_content',
-          replace_content: { new_str: stripFrontmatter(source).body },
+          replace_content: { new_str: body },
           markdown_version: 'v2',
         }),
       });
 
       const published = await readPage(link.workspace, link.page);
-      const base: NotionPublishBase = {
+      const next: NotionPublishBase = {
         page: link.page,
         workspace: link.workspace,
         docName,
         markdown: published.markdown,
         publishedAt: new Date(now()).toISOString(),
       };
-      deps.bases.set(base);
-      return base;
+      deps.bases.set(next);
+      return { ...next, mergedFromNotion };
+    },
+
+    async pull(docName) {
+      const { source, link } = linkedSource(docName);
+      const base = deps.bases.get(link.page);
+      if (base === null) throw new NotionPublishError({ kind: 'not-published' });
+      const current = await readPage(link.workspace, link.page);
+      if (!current.complete) throw new NotionPublishError({ kind: 'page-unreadable' });
+      const reconciled = reconcile(docName, source, current.markdown, base);
+      if (reconciled.kind === 'unchanged') return { outcome: 'unchanged' };
+      const { pendingTheirs: _pending, ...rest } = base;
+      deps.bases.set({ ...rest, docName, markdown: current.markdown });
+      return { outcome: 'merged' };
     },
   };
 }

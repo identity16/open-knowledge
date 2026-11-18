@@ -22,7 +22,7 @@ import {
   NoConflictTrackedError,
   RESOLUTION_OPTIONS,
 } from '../conflict-errors.ts';
-import type { Conflict, ResolveStrategy } from '../conflict-kinds.ts';
+import type { Conflict, ReconcileReason, ResolveStrategy } from '../conflict-kinds.ts';
 import { strategiesFor } from '../conflict-kinds.ts';
 import { selectReconcileOurs } from '../conflict-resolution.ts';
 import { isShareableOkArtifact } from '../content-filter.ts';
@@ -61,6 +61,14 @@ export interface SyncRouteDeps {
   setBatchInProgress: ((value: boolean) => void) | undefined;
 }
 
+export function wireConflictKind(
+  reason: ReconcileReason | undefined,
+): 'git' | 'stale-external-write' | 'notion' {
+  if (reason === 'stale-external-write') return 'stale-external-write';
+  if (reason === 'notion-changed') return 'notion';
+  return 'git';
+}
+
 export function createSyncRoutes(deps: SyncRouteDeps): ApiRouteGroup {
   const {
     projectDir,
@@ -81,10 +89,7 @@ export function createSyncRoutes(deps: SyncRouteDeps): ApiRouteGroup {
       detectedAt: entry.detectedAt,
       conflict: entry.kind,
       docName: conflicts.docNameOf(entry),
-      conflictKind:
-        entry.kind === 'reconcile' && entry.reason === 'stale-external-write'
-          ? ('stale-external-write' as const)
-          : ('git' as const),
+      conflictKind: wireConflictKind(entry.kind === 'reconcile' ? entry.reason : undefined),
     };
     switch (entry.kind) {
       case 'merge-native':
@@ -444,10 +449,7 @@ export function createSyncRoutes(deps: SyncRouteDeps): ApiRouteGroup {
           file,
           ...payload,
           conflict: entry.kind,
-          conflictKind:
-            reason === 'stale-external-write'
-              ? ('stale-external-write' as const)
-              : ('git' as const),
+          conflictKind: wireConflictKind(reason),
           ...(reason === undefined ? {} : { reason }),
           resolutionOptions,
         },

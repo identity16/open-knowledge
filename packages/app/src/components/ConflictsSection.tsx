@@ -84,6 +84,10 @@ export function ConflictsSection() {
                         to keep.
                       </Trans>
                     </span>
+                  ) : entry.conflictKind === 'notion' ? (
+                    <span className="block text-pretty text-[11px] leading-4 text-muted-foreground">
+                      <Trans>Changed here and in Notion. Open it to choose what to keep.</Trans>
+                    </span>
                   ) : null}
                 </span>
               </Button>

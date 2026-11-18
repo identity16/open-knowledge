@@ -97,6 +97,9 @@ msgstr "(مضمَّن)"
 msgid "(no name)"
 msgstr "(بدون اسم)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(يفتح في تبويب جديد)"
 
@@ -114,6 +117,9 @@ msgstr "(قد يكون بعضها مخفيًا بالفعل بقواعد أخر�
 
 msgid "(symlink)"
 msgstr "(رابط رمزي)"
+
+msgid "(This document)"
+msgstr "(هذا المستند)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, zero {لا مرفقات جاهزة للإرسال} one {مرفق واحد جاهز للإرسال} two {مرفقان جاهزان للإرسال} few {# مرفقات جاهزة للإرسال} many {# مرفقًا جاهزًا للإرسال} other {# مرفق جاهز للإرسال}}"
@@ -1565,6 +1571,9 @@ msgstr "ينطبق على هذا المشروع على هذا الكمبيوتر
 msgid "Applies when you pick this conversation back up"
 msgstr "يسري عند استئناف هذه المحادثة"
 
+msgid "Apply and publish to Notion"
+msgstr "تطبيق والنشر على Notion"
+
 msgid "Apply and restart project server"
 msgstr "تطبيق وإعادة تشغيل خادم المشروع"
 
@@ -2054,6 +2063,9 @@ msgstr "هل تريد تغيير مزوّد التضمينات؟"
 msgid "Changed"
 msgstr "تغيّر"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "تغيّر هنا وفي Notion. افتحه لتختار ما تحتفظ به."
+
 msgid "Changed here and on the remote"
 msgstr "تغيّرت هنا وعلى المستودع البعيد"
 
@@ -2144,6 +2156,9 @@ msgstr "يجري التحقق من الاتصال بـ GitHub..."
 
 msgid "Checking links"
 msgstr "جارٍ التحقق من الروابط"
+
+msgid "Checking Notion…"
+msgstr "جارٍ التحقق من Notion…"
 
 msgid "Checking out files"
 msgstr "يجري سحب الملفات"
@@ -2931,6 +2946,9 @@ msgstr "تعذّر الوصول إلى الخادم"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "تعذّرت قراءة حالة الفرع لهذا المشروع. أغلق هذا الحوار وافتح رابط المشاركة مرة أخرى."
+
+msgid "Could not read the Notion page."
+msgstr "تعذّرت قراءة صفحة Notion."
 
 msgid "Could not save sync preference: {detail}"
 msgstr "تعذّر حفظ تفضيل المزامنة: {detail}"
@@ -5857,6 +5875,12 @@ msgstr "الاحتفاظ بنسختي"
 msgid "Keep my version"
 msgstr "الاحتفاظ بنسختي"
 
+msgid "Keep Notion"
+msgstr "الاحتفاظ بنسخة Notion"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "الاحتفاظ بنسخة Notion للتعارض {0}"
+
 msgid "Keep open"
 msgstr "إبقاؤه مفتوحًا"
 
@@ -5868,6 +5892,12 @@ msgstr "الاحتفاظ بالمصدر"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "اجعل الاسم 64 حرفًا أو أقل."
+
+msgid "Keep this document"
+msgstr "الاحتفاظ بهذا المستند"
+
+msgid "Keep this document for conflict {0}"
+msgstr "الاحتفاظ بهذا المستند للتعارض {0}"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "أبقِ هذا المشروع متزامنًا مع مستودعك البعيد. تلقائي (سحب فقط) يجلب التحديثات دون دفع؛ وتلقائي (سحب ودفع) يرسل تعديلاتك أيضًا. تشغيل المزامنة التلقائية يتطلب تأكيدًا."
@@ -6336,6 +6366,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "مدموج"
 
+msgid "Merged the Notion edits and published"
+msgstr "تم دمج تعديلات Notion والنشر"
+
 msgid "Mermaid diagram"
 msgstr "مخطط Mermaid"
 
@@ -6428,6 +6461,9 @@ msgstr "مزيد من الإجراءات ({syncAttentionLabel})"
 
 msgid "More information"
 msgstr "مزيد من المعلومات"
+
+msgid "More Notion actions"
+msgstr "المزيد من إجراءات Notion"
 
 msgid "More requests were blocked."
 msgstr "حُظرت طلبات إضافية."
@@ -7013,6 +7049,9 @@ msgstr "لا توجد كتلة مصدر مرآة في {docName} تطابق ال�
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "لا توجد كتل مصدر المرآة في {docName}"
+
+msgid "No new edits in Notion"
+msgstr "لا توجد تعديلات جديدة في Notion"
 
 msgid "No Notion workspaces connected yet."
 msgstr "لا توجد مساحات عمل Notion متصلة بعد."
@@ -8983,6 +9022,12 @@ msgstr "احسم التعارض في {files} و{overflow} ملفات أخرى ق
 msgid "Resolved"
 msgstr "محلول"
 
+msgid "Resolved and published to Notion"
+msgstr "تم الحل والنشر على Notion"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "تم الحل هنا، لكن فشل النشر على Notion. انشر مرة أخرى من شريط الأدوات."
+
 msgid "Resolving default location"
 msgstr "يجري تحديد الموقع الافتراضي"
 
@@ -10018,9 +10063,6 @@ msgstr "تم حذف بعض المهارات مع تحذير"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "قد لا تظهر بعض القوالب في القائمة لأن قاعدة المعرفة هذه تحتوي على عدد كبير جدًا من المجلدات يتعذر فحصها كلها. لعرض قوالب مجلد، افتح قائمته في شجرة الملفات واختر «جديد من قالب»."
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "عدّل شخص ما الصفحة في Notion منذ آخر نشر لك. النشر الآن يستبدل تغييراته بهذا المستند."
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "ربما يكون شخص ما قد حلّ التعارض في {filePath} بالفعل — تحقّق من المحتوى الحالي للمستند قبل إعادة تنفيذ تعديلك."
 
@@ -10460,6 +10502,9 @@ msgstr "ألقِ نظرة إن أردت. هذا الملف بعينه هو ما 
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "خذ نصًا من فكرة أولية إلى مسودة مكتملة إلى شيء جاهز للمشاركة. مناسب للتدوينات أو المقالات أو أي شيء تريد أن يمر بمراحل واضحة."
 
+msgid "Take edits from Notion"
+msgstr "جلب التعديلات من Notion"
+
 msgid "Take upstream"
 msgstr "أخذ نسخة المستودع البعيد"
 
@@ -10755,9 +10800,6 @@ msgstr "انتهت مهلة الموافقة على Notion. حاول مرة أخ
 
 msgid "The Notion page already has content"
 msgstr "صفحة Notion تحتوي على محتوى بالفعل"
-
-msgid "The Notion page changed"
-msgstr "تغيّرت صفحة Notion"
 
 msgid "the open agent"
 msgstr "الوكيل المفتوح"
@@ -11097,6 +11139,9 @@ msgstr "لم يُزامَن هذا المستند مع GitHub بعد. سيعمل
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "هذا المستند ليس على GitHub بعد. لن يعمل الرابط حتى يُدفع."
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "غيّر هذا المستند وNotion الجزء نفسه. اختر ما تحتفظ به."
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "هذا المستند نشط بالفعل في المحرر. استخدم «فتح» لطي الرسم البياني."
 
@@ -11223,6 +11268,9 @@ msgstr "لا يمكن تغيير هذا الخيار تلقائيًا."
 
 msgid "This pack is already set up here."
 msgstr "هذه الحزمة مُعدّة هنا بالفعل."
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "تغيّرت هذه الصفحة في Notion منذ آخر نشر، وتغيّر الجزء نفسه هنا. اختر ما تحتفظ به ثم طبّق لنشر النتيجة."
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "هذه الصفحة غير موجودة بعد. افتحها لإنشائها في المحرر وطي الرسم البياني."
@@ -11489,6 +11537,9 @@ msgstr "مراجع مباشرة كثيرة جدًا في هذه الصفحة. ل
 
 msgid "Too slow"
 msgstr "بطيء جدًا"
+
+msgid "Took the Notion edits into this document"
+msgstr "تم جلب تعديلات Notion إلى هذا المستند"
 
 msgid "Tool call"
 msgstr "استدعاء أداة"

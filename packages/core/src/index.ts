@@ -1131,6 +1131,7 @@ export {
   maskNonRenderingContexts,
   skipInlineCode,
 } from './markdown/non-rendering-contexts.ts';
+export { notionInlineHtmlToMarkdown } from './markdown/notion-inline-html.ts';
 export { isMutatingParserReservation } from './markdown/parser-reservations.ts';
 export { markdownToPlainText } from './markdown/plain-text.ts';
 export { normalizeReferenceLabel } from './markdown/reference-label.ts';
@@ -1920,6 +1921,10 @@ export {
   NotionPublishRequestSchema,
   type NotionPublishResponse,
   NotionPublishResponseSchema,
+  type NotionPullRequest,
+  NotionPullRequestSchema,
+  type NotionPullResponse,
+  NotionPullResponseSchema,
   type NotionResolvePageRequest,
   NotionResolvePageRequestSchema,
   type NotionResolvePageResponse,

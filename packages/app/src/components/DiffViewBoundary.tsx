@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useConflictFooterHeightVar } from '@/hooks/use-conflict-footer-height';
 import { useConflicts } from '@/hooks/use-conflicts';
+import { httpNotionPublishTransport } from '@/lib/transports/notion-publish-transport';
 import { ConflictFilePreview } from './ConflictFilePreview';
 import { ConflictView } from './ConflictView';
 import {
@@ -38,6 +39,7 @@ interface ConflictSides {
 }
 
 const CONFLICT_CONTENT_REQUEST_TIMEOUT_MS = 20_000;
+const notionPublishTransport = httpNotionPublishTransport();
 
 async function fetchConflictSides(file: string): Promise<ConflictSides | null> {
   try {
@@ -169,6 +171,22 @@ export function DiffViewBoundary({ docName, conflict }: DiffViewBoundaryProps) {
       t`Couldn't save the resolution for ${filePath}.`,
       t`Someone may have already resolved ${filePath} — check the document's current content before redoing your edit.`,
       'warning',
+    );
+    if (result.ok && sides.conflictKind === 'notion') await publishResolvedToNotion(docName);
+  }
+
+  async function publishResolvedToNotion(docName: string) {
+    const toastId = toast.loading(t`Publishing to Notion…`);
+    const outcome = await notionPublishTransport.publish(docName, false);
+    if (outcome.kind === 'published') {
+      toast.success(t`Resolved and published to Notion`, { id: toastId });
+      return;
+    }
+    toast.error(
+      outcome.kind === 'failed' && outcome.message
+        ? outcome.message
+        : t`Resolved here, but publishing to Notion failed. Publish again from the toolbar.`,
+      { id: toastId },
     );
   }
 

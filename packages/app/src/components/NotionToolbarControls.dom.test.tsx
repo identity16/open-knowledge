@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type {
   NotionPublishOutcome,
   NotionPublishTransport,
+  NotionPullOutcome,
 } from '@/lib/transports/notion-publish-transport';
 
 let currentLink: NotionPageLink | null = null;
@@ -25,6 +26,7 @@ vi.doMock('sonner', () => ({
       return 'id';
     },
     success: (m: string) => toasts.push(['success', m]),
+    warning: (m: string) => toasts.push(['warning', m]),
     error: (m: string) => toasts.push(['error', m]),
     dismiss: () => toasts.push(['dismiss', '']),
   },
@@ -40,12 +42,16 @@ vi.doMock('@/lib/use-notion-link', () => ({
 const { NotionToolbarControls } = await import('./NotionToolbarControls');
 const provider = {} as HocuspocusProvider;
 
-function transport(outcomes: NotionPublishOutcome[] = [{ kind: 'published', publishedAt: 't' }]) {
+function transport(
+  outcomes: NotionPublishOutcome[] = [{ kind: 'published', publishedAt: 't', merged: false }],
+  pulls: NotionPullOutcome[] = [{ kind: 'merged' }],
+) {
   return {
     resolvePage: vi.fn(async (url: string) =>
       url.includes('notion.so') ? { page: 'p1', workspace: 'w1', title: 'Plan' } : null,
     ),
     publish: vi.fn(async () => outcomes.shift() ?? { kind: 'failed' as const, message: null }),
+    pull: vi.fn(async () => pulls.shift() ?? { kind: 'failed' as const, message: null }),
   } satisfies NotionPublishTransport;
 }
 
@@ -91,23 +97,46 @@ describe('NotionToolbarControls', () => {
     expect(t.publish).toHaveBeenCalledWith('notes/plan', false);
   });
 
-  test.each([
-    ['page-not-empty', 'The Notion page already has content'],
-    ['changed-in-notion', 'The Notion page changed'],
-  ] as const)('%s asks before replacing, then publishes with overwrite', async (kind, title) => {
+  test('a non-empty page asks before replacing, then publishes with overwrite', async () => {
     currentLink = { page: 'p1', workspace: 'w1' };
-    const t = transport([{ kind }, { kind: 'published', publishedAt: 't' }]);
+    const t = transport([
+      { kind: 'page-not-empty' },
+      { kind: 'published', publishedAt: 't', merged: false },
+    ]);
     render(<NotionToolbarControls provider={provider} docName="notes/plan" transport={t} />);
     fireEvent.click(screen.getByTestId('notion-publish'));
-    expect(await screen.findByText(title)).not.toBeNull();
+    expect(await screen.findByText('The Notion page already has content')).not.toBeNull();
     fireEvent.click(screen.getByTestId('notion-overwrite-confirm'));
     await waitFor(() => expect(t.publish).toHaveBeenLastCalledWith('notes/plan', true));
-    await waitFor(() => expect(toasts).toContainEqual(['success', 'Published to Notion']));
+  });
+
+  test('a publish that merged Notion edits says so', async () => {
+    currentLink = { page: 'p1', workspace: 'w1' };
+    const t = transport([{ kind: 'published', publishedAt: 't', merged: true }]);
+    render(<NotionToolbarControls provider={provider} docName="notes/plan" transport={t} />);
+    fireEvent.click(screen.getByTestId('notion-publish'));
+    await waitFor(() =>
+      expect(toasts).toContainEqual(['success', 'Merged the Notion edits and published']),
+    );
+  });
+
+  test('a conflicting publish points to the conflict instead of offering to overwrite', async () => {
+    currentLink = { page: 'p1', workspace: 'w1' };
+    const t = transport([{ kind: 'changed-in-notion' }]);
+    render(<NotionToolbarControls provider={provider} docName="notes/plan" transport={t} />);
+    fireEvent.click(screen.getByTestId('notion-publish'));
+    await waitFor(() =>
+      expect(toasts).toContainEqual([
+        'warning',
+        'This document and Notion changed the same part. Choose what to keep.',
+      ]),
+    );
+    expect(screen.queryByTestId('notion-overwrite-confirm')).toBeNull();
   });
 
   test('cancelling the overwrite does not publish again', async () => {
     currentLink = { page: 'p1', workspace: 'w1' };
-    const t = transport([{ kind: 'changed-in-notion' }]);
+    const t = transport([{ kind: 'page-not-empty' }]);
     render(<NotionToolbarControls provider={provider} docName="notes/plan" transport={t} />);
     fireEvent.click(screen.getByTestId('notion-publish'));
     fireEvent.click(await screen.findByTestId('notion-overwrite-cancel'));

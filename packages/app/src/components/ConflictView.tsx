@@ -58,6 +58,17 @@ const CONFLICT_WORD_DIFF_CSS = `
 }
 `;
 
+function cssString(text: string): string {
+  return `"${text.replace(/[\\"]/g, '\\$&').replace(/\n/g, ' ')}"`;
+}
+
+function conflictCaptionCss(captions: { current: string; incoming: string }): string {
+  return `
+[data-merge-conflict="marker-start"]:after { content: ${cssString(captions.current)}; }
+[data-merge-conflict="marker-end"]:after { content: ${cssString(captions.incoming)}; }
+`;
+}
+
 let _nextId = 0;
 
 function remainingConflictCount(contents: string): number {
@@ -133,6 +144,12 @@ export function ConflictView({
     });
   });
 
+  const conflictCss =
+    conflictKind === 'notion'
+      ? CONFLICT_WORD_DIFF_CSS +
+        conflictCaptionCss({ current: t`(This document)`, incoming: t`(Notion)` })
+      : CONFLICT_WORD_DIFF_CSS;
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -172,7 +189,7 @@ export function ConflictView({
       theme: okPierreTheme(),
       overflow: 'wrap',
       lineDiffType: showBase ? 'none' : 'word-alt',
-      unsafeCSS: CONFLICT_WORD_DIFF_CSS,
+      unsafeCSS: conflictCss,
       onMergeConflictAction: (payload) => {
         handleActionRef.current?.(payload.conflict, payload.resolution);
       },
@@ -337,7 +354,7 @@ export function ConflictView({
       setAllResolved(false);
       setParseMismatch(false);
     };
-  }, [fileName, ours, base, theirs, showBase, conflictKind]);
+  }, [fileName, ours, base, theirs, showBase, conflictKind, conflictCss]);
 
   const absentStageBanner =
     conflictKind === 'stale-external-write'
@@ -360,6 +377,15 @@ export function ConflictView({
               {identicalStaleVersions
                 ? ` ${t`Both versions are identical. Choosing Accept current leaves OpenKnowledge's protection on, so another save of the older version is refused again. Choosing Accept incoming turns that protection off.`}`
                 : null}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+      {conflictKind === 'notion' && (
+        <div className="shrink-0 px-3 py-2">
+          <Alert role="status">
+            <AlertDescription>
+              {t`This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result.`}
             </AlertDescription>
           </Alert>
         </div>
@@ -448,7 +474,7 @@ export function ConflictView({
               });
             }}
           >
-            {t`Apply changes`}
+            {conflictKind === 'notion' ? t`Apply and publish to Notion` : t`Apply changes`}
           </Button>
         )}
       </div>
@@ -456,6 +482,7 @@ export function ConflictView({
         controls.map((control) =>
           createPortal(
             <ConflictActions
+              notion={conflictKind === 'notion'}
               conflictIndex={control.conflict.conflictIndex}
               onSelect={(selection) => handleActionRef.current?.(control.conflict, selection)}
             />,
@@ -469,9 +496,11 @@ export function ConflictView({
 
 function ConflictActions({
   conflictIndex,
+  notion = false,
   onSelect,
 }: {
   conflictIndex?: number;
+  notion?: boolean;
   onSelect: (selection: MergeConflictResolution) => void;
 }) {
   const { t } = useLingui();
@@ -484,11 +513,13 @@ function ConflictActions({
         aria-label={
           conflictIndex === undefined
             ? undefined
-            : t`Accept current version for conflict ${conflictIndex + 1}`
+            : notion
+              ? t`Keep this document for conflict ${conflictIndex + 1}`
+              : t`Accept current version for conflict ${conflictIndex + 1}`
         }
         onClick={() => onSelect('current')}
       >
-        {t`Accept current`}
+        {notion ? t`Keep this document` : t`Accept current`}
       </Button>
       <Button
         type="button"
@@ -497,11 +528,13 @@ function ConflictActions({
         aria-label={
           conflictIndex === undefined
             ? undefined
-            : t`Accept incoming version for conflict ${conflictIndex + 1}`
+            : notion
+              ? t`Keep Notion for conflict ${conflictIndex + 1}`
+              : t`Accept incoming version for conflict ${conflictIndex + 1}`
         }
         onClick={() => onSelect('incoming')}
       >
-        {t`Accept incoming`}
+        {notion ? t`Keep Notion` : t`Accept incoming`}
       </Button>
       {conflictIndex !== undefined && (
         <Button

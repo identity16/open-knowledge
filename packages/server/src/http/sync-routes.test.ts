@@ -12,7 +12,7 @@ import { makeCaptureRes, makeSyntheticReq } from '../composition-rig.test-helper
 import { createTestConflictAuthority } from '../conflict-authority.test-helper.ts';
 import type { ConflictAuthority } from '../conflict-authority.ts';
 import { loggerFactory } from '../logger.ts';
-import { createSyncRoutes } from './sync-routes.ts';
+import { createSyncRoutes, wireConflictKind } from './sync-routes.ts';
 
 const makeTempDir = createTempDirFactory(afterAll);
 
@@ -393,5 +393,14 @@ describe('conflict-content dispatches per conflict kind', () => {
     } finally {
       rmSync(projectDir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('wireConflictKind', () => {
+  test('labels Notion and stale-write reconcile conflicts and treats the rest as git', () => {
+    expect(wireConflictKind('notion-changed')).toBe('notion');
+    expect(wireConflictKind('stale-external-write')).toBe('stale-external-write');
+    expect(wireConflictKind('disk-markers')).toBe('git');
+    expect(wireConflictKind(undefined)).toBe('git');
   });
 });

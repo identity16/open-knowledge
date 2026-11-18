@@ -20,7 +20,7 @@ const OUR_CONTENT = 'Our version of the line.\n';
 const BASE_CONTENT = 'Original line.\n';
 const THEIR_CONTENT = 'Their version of the line.\n';
 
-async function renderConflictView(onResolve = vi.fn()) {
+async function renderConflictView(onResolve = vi.fn(), conflictKind?: 'git' | 'notion') {
   render(
     <ConflictView
       fileName="notes/sync-engine.md"
@@ -28,6 +28,7 @@ async function renderConflictView(onResolve = vi.fn()) {
       base={BASE_CONTENT}
       theirs={THEIR_CONTENT}
       onResolve={onResolve}
+      conflictKind={conflictKind}
     />,
   );
   await act(async () => {
@@ -139,6 +140,21 @@ describe('ConflictView', () => {
     expect(themeCSS).not.toContain('--diffs-addition-color');
     expect(themeCSS).not.toContain('--diffs-modified-color');
     expect(themeCSS).not.toContain('--diffs-deletion-color');
+  });
+
+  test.each([
+    ['notion', true],
+    ['git', false],
+  ] as const)('%s conflicts name their sides in the marker captions: %s', async (kind, named) => {
+    await renderConflictView(vi.fn(), kind);
+
+    const root = document.querySelector('diffs-container')?.shadowRoot;
+    const css = Array.from(root?.querySelectorAll('style') ?? [])
+      .map((node) => node.textContent ?? '')
+      .join('');
+
+    expect(css.includes('content: "(This document)"')).toBe(named);
+    expect(css.includes('content: "(Notion)"')).toBe(named);
   });
 });
 

@@ -97,6 +97,9 @@ msgstr "（行內）"
 msgid "(no name)"
 msgstr "（無名稱）"
 
+msgid "(Notion)"
+msgstr "（Notion）"
+
 msgid "(opens in new tab)"
 msgstr "（在新分頁中開啟）"
 
@@ -114,6 +117,9 @@ msgstr "（其中有些可能已被其他規則隱藏）"
 
 msgid "(symlink)"
 msgstr "（符號連結）"
+
+msgid "(This document)"
+msgstr "（此文件）"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, other {# 個附件已準備好傳送}}"
@@ -1565,6 +1571,9 @@ msgstr "只在這台電腦上對這個專案生效。存在 .ok/local 中，不�
 msgid "Applies when you pick this conversation back up"
 msgstr "繼續此對話時生效"
 
+msgid "Apply and publish to Notion"
+msgstr "套用並發布到 Notion"
+
 msgid "Apply and restart project server"
 msgstr "套用並重新啟動專案伺服器"
 
@@ -2054,6 +2063,9 @@ msgstr "要更換嵌入服務供應商嗎？"
 msgid "Changed"
 msgstr "已修改"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "此處和 Notion 都有變更。開啟它選擇要保留的內容。"
+
 msgid "Changed here and on the remote"
 msgstr "本機和遠端都有變更"
 
@@ -2144,6 +2156,9 @@ msgstr "正在檢查 GitHub 連線…"
 
 msgid "Checking links"
 msgstr "正在檢查連結"
+
+msgid "Checking Notion…"
+msgstr "正在檢查 Notion…"
 
 msgid "Checking out files"
 msgstr "正在簽出檔案"
@@ -2931,6 +2946,9 @@ msgstr "無法連上伺服器"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "無法讀取這個專案的分支狀態。請關閉這個對話方塊，再重新開啟分享連結。"
+
+msgid "Could not read the Notion page."
+msgstr "無法讀取 Notion 頁面。"
 
 msgid "Could not save sync preference: {detail}"
 msgstr "無法儲存同步偏好設定：{detail}"
@@ -5857,6 +5875,12 @@ msgstr "保留我的"
 msgid "Keep my version"
 msgstr "保留我的版本"
 
+msgid "Keep Notion"
+msgstr "保留 Notion"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "衝突 {0} 保留 Notion"
+
 msgid "Keep open"
 msgstr "保持開啟"
 
@@ -5868,6 +5892,12 @@ msgstr "保留來源"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "名稱請控制在 64 個字元以內。"
+
+msgid "Keep this document"
+msgstr "保留此文件"
+
+msgid "Keep this document for conflict {0}"
+msgstr "衝突 {0} 保留此文件"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "讓此專案與你的 git 遠端儲存庫保持同步。自動（僅拉取）只帶來更新而不推送；自動（拉取與推送）還會傳送你的編輯。開啟自動同步需要確認。"
@@ -6336,6 +6366,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "已合併"
 
+msgid "Merged the Notion edits and published"
+msgstr "已合併 Notion 的編輯並發布"
+
 msgid "Mermaid diagram"
 msgstr "Mermaid 圖表"
 
@@ -6428,6 +6461,9 @@ msgstr "更多動作（{syncAttentionLabel}）"
 
 msgid "More information"
 msgstr "更多資訊"
+
+msgid "More Notion actions"
+msgstr "更多 Notion 動作"
 
 msgid "More requests were blocked."
 msgstr "還有更多要求被攔截。"
@@ -7013,6 +7049,9 @@ msgstr "{docName} 中沒有與此欄位文字相符的鏡像來源區塊。清�
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName} 中沒有鏡像來源區塊"
+
+msgid "No new edits in Notion"
+msgstr "Notion 中沒有新的編輯"
 
 msgid "No Notion workspaces connected yet."
 msgstr "尚未連接任何 Notion 工作區。"
@@ -8983,6 +9022,12 @@ msgstr "刪除前請先解決 {files} 以及另外 {overflow} 個檔案上的衝
 msgid "Resolved"
 msgstr "已解決"
 
+msgid "Resolved and published to Notion"
+msgstr "已解決並發布到 Notion"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "已在此處解決，但發布到 Notion 失敗。請從工具列重新發布。"
+
 msgid "Resolving default location"
 msgstr "正在決定預設位置"
 
@@ -10018,9 +10063,6 @@ msgstr "部分技能刪除時帶有警告"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "部分範本可能未列出，因為此知識庫的資料夾太多，無法全部掃描。若要查看某個資料夾的範本，請在檔案樹中開啟該資料夾的選單，然後選擇「從範本新增」。"
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "自你上次發布以來，有人在 Notion 中編輯了該頁面。現在發布會以此文件取代他們的變更。"
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "可能已有人解決了 {filePath} 的衝突 — 請先查看文件的目前內容，再重做你的編輯。"
 
@@ -10460,6 +10502,9 @@ msgstr "想看的話可以看看。我們收到的就是這個檔案本身。"
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "把一段文字從粗略的想法帶到完成的初稿，再到可以拿出去分享的成品。適合部落格文章、隨筆，或任何你想分階段推進的寫作。"
 
+msgid "Take edits from Notion"
+msgstr "從 Notion 取得編輯"
+
 msgid "Take upstream"
 msgstr "採用上游版本"
 
@@ -10755,9 +10800,6 @@ msgstr "Notion 核准已逾時。請再試一次。"
 
 msgid "The Notion page already has content"
 msgstr "Notion 頁面已有內容"
-
-msgid "The Notion page changed"
-msgstr "Notion 頁面已變更"
 
 msgid "the open agent"
 msgstr "已開啟的代理"
@@ -11097,6 +11139,9 @@ msgstr "這份文件還沒有同步到 GitHub。下次同步之後連結就會�
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "這份文件還不在 GitHub 上。在推送之前連結不會生效。"
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "此文件和 Notion 修改了同一部分。請選擇要保留的內容。"
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "這份文件已經在編輯器中開啟了。請用「開啟」來摺疊關係圖。"
 
@@ -11223,6 +11268,9 @@ msgstr "無法自動變更此選項。"
 
 msgid "This pack is already set up here."
 msgstr "這個套件在這裡已經設定好了。"
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "自你上次發布以來，此頁面在 Notion 中有變更，且同一部分在此處也有變更。選擇要保留的內容，然後套用以發布結果。"
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "這個頁面還不存在。開啟它就能在編輯器中建立這個頁面並摺疊關係圖。"
@@ -11489,6 +11537,9 @@ msgstr "此頁面的即時引用過多。此畫板未載入。"
 
 msgid "Too slow"
 msgstr "太慢了"
+
+msgid "Took the Notion edits into this document"
+msgstr "已將 Notion 的編輯帶入此文件"
 
 msgid "Tool call"
 msgstr "工具呼叫"

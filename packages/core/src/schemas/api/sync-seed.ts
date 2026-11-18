@@ -157,6 +157,7 @@ export const RECONCILE_REASONS = [
   'refused-too-large',
   'disk-markers',
   'stale-external-write',
+  'notion-changed',
 ] as const;
 export const ReconcileReasonSchema = z.enum(RECONCILE_REASONS) satisfies StandardSchemaV1;
 export type ReconcileReasonWire = z.infer<typeof ReconcileReasonSchema>;
@@ -171,7 +172,7 @@ export const ConflictEntrySchema = z
     detectedAt: z.string().min(1),
     conflict: ConflictKindSchema,
     reason: ReconcileReasonSchema.optional().catch(undefined),
-    conflictKind: z.enum(['git', 'stale-external-write']).optional(),
+    conflictKind: z.enum(['git', 'stale-external-write', 'notion']).optional(),
     docName: z.string().nullable(),
     theirsSha: z.string().optional(),
     baseSha: z.string().optional(),
@@ -212,7 +213,7 @@ export const SyncConflictContentSuccessSchema = z
     kind: z.enum(['both-modified', 'delete-modify', 'modify-delete']),
     conflict: ConflictKindSchema,
     reason: ReconcileReasonSchema.optional().catch(undefined),
-    conflictKind: z.enum(['git', 'stale-external-write']).optional(),
+    conflictKind: z.enum(['git', 'stale-external-write', 'notion']).optional(),
     resolutionOptions: z.array(ResolveStrategySchema),
   })
   .loose() satisfies StandardSchemaV1;

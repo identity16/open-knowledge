@@ -8,6 +8,8 @@ import {
   NotionDisconnectResponseSchema,
   NotionPublishRequestSchema,
   NotionPublishResponseSchema,
+  NotionPullRequestSchema,
+  NotionPullResponseSchema,
   NotionResolvePageRequestSchema,
   NotionResolvePageResponseSchema,
   type ProblemType,
@@ -58,6 +60,12 @@ function publishProblem(failure: NotionPublishFailure): [HttpErrorStatus, Proble
       ];
     case 'page-unreadable':
       return [502, 'urn:ok:error:notion-unavailable', 'Notion returned only part of the page.'];
+    case 'not-published':
+      return [
+        400,
+        'urn:ok:error:invalid-request',
+        'Publish this document to Notion once before taking Notion edits.',
+      ];
     case 'notion-error':
       return [
         502,
@@ -222,7 +230,11 @@ export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
           res,
           200,
           NotionPublishResponseSchema,
-          { page: base.page, publishedAt: base.publishedAt },
+          {
+            page: base.page,
+            publishedAt: base.publishedAt,
+            mergedFromNotion: base.mergedFromNotion,
+          },
           { handler, extraHeaders: NO_STORE },
         );
       } catch (cause) {
@@ -244,7 +256,37 @@ export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
     },
   );
 
+  const handlePull = withValidation(
+    NotionPullRequestSchema,
+    async (_req, res, body) => {
+      const handler = 'notion-pull';
+      try {
+        const result = await deps.publisher.pull(body.docName);
+        successResponse(res, 200, NotionPullResponseSchema, result, {
+          handler,
+          extraHeaders: NO_STORE,
+        });
+      } catch (cause) {
+        if (cause instanceof NotionPublishError) {
+          const [status, type, title] = publishProblem(cause.failure);
+          errorResponse(res, status, type, title, { handler });
+          return;
+        }
+        errorResponse(res, 502, 'urn:ok:error:notion-unavailable', 'Notion could not be reached.', {
+          handler,
+          cause,
+        });
+      }
+    },
+    {
+      handler: 'notion-pull',
+      method: 'POST',
+      preBodyGate: (req, res) => checkLocalOpSecurity(req, res, { handler: 'notion-pull' }),
+    },
+  );
+
   const routes = {
+    '/api/notion/pull': handlePull,
     '/api/notion/resolve-page': handleResolvePage,
     '/api/notion/publish': handlePublish,
     '/api/notion/connections': handleList,
@@ -259,6 +301,7 @@ export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
       '/api/notion/connections/disconnect',
       '/api/notion/resolve-page',
       '/api/notion/publish',
+      '/api/notion/pull',
     ],
   });
 }
