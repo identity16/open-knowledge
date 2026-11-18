@@ -89,6 +89,21 @@ export const NotionPublishResponseSchema = z
   .object({
     page: z.string().min(1),
     publishedAt: z.string().min(1),
+    mergedFromNotion: z.boolean().optional(),
   })
   .loose() satisfies StandardSchemaV1;
 export type NotionPublishResponse = z.infer<typeof NotionPublishResponseSchema>;
+
+export const NotionPullRequestSchema = z
+  .object({
+    docName: z.string().min(1),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionPullRequest = z.infer<typeof NotionPullRequestSchema>;
+
+export const NotionPullResponseSchema = z
+  .object({
+    outcome: z.enum(['unchanged', 'merged']),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionPullResponse = z.infer<typeof NotionPullResponseSchema>;
