@@ -16,6 +16,13 @@ export function escapeGitPatternSegment(segment: string): string {
 
 export const PORCELAIN_STATUS_ARGS = ['status', '--porcelain', '-uall'];
 
+export const UNMERGED_PATHS_ARGS = ['diff-files', '--name-only', '--diff-filter=U'];
+
+export function nulTerminatedArgs(args: readonly string[]): string[] {
+  const [subcommand = '', ...rest] = args;
+  return [subcommand, '-z', ...rest];
+}
+
 export function splitNulSeparatedPaths(out: string): string[] {
   return out.split('\0').filter((path) => path.length > 0);
 }
@@ -114,8 +121,7 @@ export function parseTreeLongEntriesZ(out: string): TreeLongEntry[] {
 }
 
 function rawZ(git: SimpleGit, args: string[]): Promise<string> {
-  const [subcommand = '', ...rest] = args;
-  return git.raw([subcommand, '-z', ...rest]);
+  return git.raw(nulTerminatedArgs(args));
 }
 
 export async function listNames(git: SimpleGit, args: string[]): Promise<string[]> {

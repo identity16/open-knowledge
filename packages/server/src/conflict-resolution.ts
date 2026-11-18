@@ -4,7 +4,7 @@ import { pathspecArgs } from '@inkeep/open-knowledge-core';
 import type { Conflict, ConflictIo, ResolveStrategy } from './conflict-authority.ts';
 import { ConflictMarkersInContentError } from './conflict-errors.ts';
 import { isShareableOkArtifact } from './content-filter.ts';
-import { splitNulSeparatedPaths } from './git-paths.ts';
+import { nulTerminatedArgs, splitNulSeparatedPaths, UNMERGED_PATHS_ARGS } from './git-paths.ts';
 import { isWithinDir } from './path-utils.ts';
 import { containsUnresolvedConflictBlock } from './reconciliation.ts';
 import { assertRealpathWithinDir } from './symlink-guard.ts';
@@ -152,7 +152,7 @@ export async function commitMergeIfEmpty(
   } catch (cause) {
     try {
       const unmerged = splitNulSeparatedPaths(
-        await io.gitRaw(['diff', '-z', '--name-only', '--diff-filter=U']),
+        await io.gitRaw(nulTerminatedArgs(UNMERGED_PATHS_ARGS)),
       );
       return { ok: false, unmerged, cause };
     } catch (probeError) {

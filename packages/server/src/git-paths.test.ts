@@ -1,5 +1,13 @@
 import { execSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  utimesSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import simpleGit from 'simple-git';
@@ -17,6 +25,7 @@ import {
   parsePorcelainPaths,
   parseTreeLongEntriesZ,
   splitNulSeparatedPaths,
+  UNMERGED_PATHS_ARGS,
 } from './git-paths.ts';
 
 const NON_ASCII = 'hyvää yötä.md';
@@ -265,5 +274,84 @@ describe('path-listing wrappers (real git)', () => {
     expect(rows[0]?.status.startsWith('R')).toBe(true);
     expect(rows[0]?.from).toBe(NON_ASCII);
     expect(rows[0]?.to).toBe(renamed);
+  });
+});
+
+describe('unmerged-path reads leave the index alone', () => {
+  let projectDir: string;
+  const gitEnv = { PATH: process.env.PATH, HOME: process.env.HOME, GIT_OPTIONAL_LOCKS: '0' };
+
+  function run(cmd: string): string {
+    return execSync(cmd, { cwd: projectDir, encoding: 'utf8', env: { ...process.env, ...gitEnv } });
+  }
+
+  function indexSnapshot(): string {
+    const index = join(projectDir, '.git', 'index');
+    return `${statSync(index, { bigint: true }).mtimeNs}:${readFileSync(index).toString('base64')}`;
+  }
+
+  function makeStatDirty(file: string): void {
+    const future = new Date(Date.now() + 60_000);
+    utimesSync(join(projectDir, file), future, future);
+  }
+
+  beforeEach(() => {
+    projectDir = mkdtempSync(join(tmpdir(), 'ok-git-unmerged-test-'));
+    run('git init -q -b main');
+    configureTestGitRepository(projectDir);
+    run('git config user.email "test@example.com"');
+    run('git config user.name "Test"');
+    run('git config commit.gpgsign false');
+    writeFileSync(join(projectDir, 'clean.md'), 'clean\n');
+    writeFileSync(join(projectDir, 'conflict.md'), 'base\n');
+    run('git add -A');
+    run('git commit -q -m base');
+  });
+
+  afterEach(() => {
+    rmSync(projectDir, { recursive: true, force: true });
+  });
+
+  function startConflictingMerge(): void {
+    run('git switch -q -c theirs');
+    writeFileSync(join(projectDir, 'conflict.md'), 'theirs\n');
+    run('git commit -q -am theirs');
+    run('git switch -q main');
+    writeFileSync(join(projectDir, 'conflict.md'), 'ours\n');
+    run('git commit -q -am ours');
+    try {
+      run('git merge -q theirs');
+    } catch {}
+  }
+
+  test('the fixture is one the porcelain diff would rewrite', () => {
+    startConflictingMerge();
+    makeStatDirty('clean.md');
+    const before = indexSnapshot();
+
+    run('git diff --name-only --diff-filter=U');
+
+    expect(indexSnapshot()).not.toBe(before);
+  });
+
+  test('mid-merge: lists the conflicted path without writing the index', async () => {
+    startConflictingMerge();
+    makeStatDirty('clean.md');
+    const before = indexSnapshot();
+
+    const paths = await listNames(simpleGit(projectDir).env(gitEnv), UNMERGED_PATHS_ARGS);
+
+    expect(paths).toEqual(['conflict.md']);
+    expect(indexSnapshot()).toBe(before);
+  });
+
+  test('outside a merge: lists nothing without writing the index', async () => {
+    makeStatDirty('clean.md');
+    const before = indexSnapshot();
+
+    const paths = await listNames(simpleGit(projectDir).env(gitEnv), UNMERGED_PATHS_ARGS);
+
+    expect(paths).toEqual([]);
+    expect(indexSnapshot()).toBe(before);
   });
 });
