@@ -1,4 +1,4 @@
-import { NOTION_OAUTH_WORKER_ORIGIN } from '@inkeep/open-knowledge-core';
+import { NOTION_OAUTH_WORKER_URL } from '@inkeep/open-knowledge-core';
 import type { Dispatcher } from 'undici';
 
 const WORKER_TIMEOUT_MS = 15_000;
@@ -40,7 +40,7 @@ export function createNotionOAuthWorkerClient(opts: {
   origin?: string;
 }): NotionOAuthWorkerClient {
   const fetchImpl = opts.fetchImpl ?? fetch;
-  const origin = opts.origin ?? NOTION_OAUTH_WORKER_ORIGIN;
+  const origin = opts.origin ?? NOTION_OAUTH_WORKER_URL;
 
   async function post(path: string, body: unknown): Promise<{ status: number; json: unknown }> {
     const init = {

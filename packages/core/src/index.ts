@@ -547,12 +547,12 @@ export {
   type NativeMenuLabelKey,
 } from './constants/native-menu-labels.ts';
 export {
-  NOTION_API_ORIGIN,
+  NOTION_API_BASE_URL,
   NOTION_API_VERSION,
   NOTION_OAUTH_AUTHORIZE_URL,
   NOTION_OAUTH_CLIENT_ID,
   NOTION_OAUTH_REDIRECT_URI,
-  NOTION_OAUTH_WORKER_ORIGIN,
+  NOTION_OAUTH_WORKER_URL,
 } from './constants/notion.ts';
 export {
   LOCAL_DIR,

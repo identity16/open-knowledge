@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import {
-  NOTION_API_ORIGIN,
+  NOTION_API_BASE_URL,
   NOTION_API_VERSION,
   NOTION_OAUTH_AUTHORIZE_URL,
   NOTION_OAUTH_CLIENT_ID,
@@ -197,7 +197,7 @@ export function createNotionConnections(deps: NotionConnectionsDeps): NotionConn
         if (init.body !== undefined && !headers.has('Content-Type'))
           headers.set('Content-Type', 'application/json');
         const options = { ...init, headers, dispatcher: deps.dispatcher };
-        return fetchImpl(`${NOTION_API_ORIGIN}${path}`, options as RequestInit);
+        return fetchImpl(`${NOTION_API_BASE_URL}${path}`, options as RequestInit);
       };
       const stored = await deps.tokens.get(workspaceId);
       if (!stored) throw new NotionNotConnectedError(workspaceId);
