@@ -14,6 +14,7 @@ export * from './link-preview.ts';
 export * from './links-orphans.ts';
 export * from './local-op.ts';
 export * from './metrics.ts';
+export * from './notion.ts';
 export * from './pages.ts';
 export * from './saved-themes.ts';
 export * from './share.ts';

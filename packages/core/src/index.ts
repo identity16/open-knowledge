@@ -547,6 +547,14 @@ export {
   type NativeMenuLabelKey,
 } from './constants/native-menu-labels.ts';
 export {
+  NOTION_API_ORIGIN,
+  NOTION_API_VERSION,
+  NOTION_OAUTH_AUTHORIZE_URL,
+  NOTION_OAUTH_CLIENT_ID,
+  NOTION_OAUTH_REDIRECT_URI,
+  NOTION_OAUTH_WORKER_ORIGIN,
+} from './constants/notion.ts';
+export {
   LOCAL_DIR,
   OK_ACTIVE_MACHINE_LOCAL_ROOT_DIRS,
   OK_DIR,
@@ -1893,6 +1901,18 @@ export {
   type WriteWarningKind,
   WriteWarningSchema,
 } from './schemas/api/index.ts';
+export {
+  type NotionConnectFlowStatus,
+  NotionConnectFlowStatusSchema,
+  type NotionConnectionsResponse,
+  NotionConnectionsResponseSchema,
+  type NotionConnectStartResponse,
+  NotionConnectStartResponseSchema,
+  type NotionDisconnectResponse,
+  NotionDisconnectResponseSchema,
+  type NotionWorkspaceConnection,
+  NotionWorkspaceConnectionSchema,
+} from './schemas/api/notion.ts';
 export {
   CC1_CHANNEL_BRANCH_SWITCHED,
   CC1_CHANNEL_CONFIG_IGNORE_NESTED_ERROR,

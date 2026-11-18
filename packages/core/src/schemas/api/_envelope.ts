@@ -103,6 +103,7 @@ export const ProblemTypeSchema = z.enum([
   'urn:ok:error:host-not-allowed',
   'urn:ok:error:principal-not-available',
   'urn:ok:error:not-found',
+  'urn:ok:error:notion-unavailable',
   'urn:ok:error:auth-failed',
   'urn:ok:error:no-project-dir',
   'urn:ok:error:non-github-origin',
