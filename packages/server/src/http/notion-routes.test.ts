@@ -2,6 +2,7 @@ import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { NotionConnectFlowStatus } from '@inkeep/open-knowledge-core';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import type { NotionDiscussions } from '../notion/discussions.ts';
 import type { NotionConnections } from '../notion/notion-connections.ts';
 import { NotionPublishError, type NotionPublisher } from '../notion/publisher.ts';
 import { NotionTokenStoreError } from '../notion/token-store.ts';
@@ -52,10 +53,41 @@ function fakePublisher(overrides: Partial<NotionPublisher> = {}): NotionPublishe
   };
 }
 
-async function serve(notion: NotionConnections, allow = true, publisher = fakePublisher()) {
+function fakeDiscussions(overrides: Partial<NotionDiscussions> = {}): NotionDiscussions {
+  return {
+    list: async () => ({
+      page: 'p1',
+      complete: true,
+      discussions: [
+        {
+          id: 'd1',
+          anchor: { kind: 'block', blockId: 'b1', text: 'Beta line.' },
+          comments: [
+            { id: 'c1', author: 'Ann', createdAt: '2026-11-18T00:00:00.000Z', markdown: 'Why?' },
+          ],
+        },
+      ],
+    }),
+    reply: vi.fn(async (_doc: string, _discussion: string, markdown: string) => ({
+      id: 'c2',
+      author: 'Joon',
+      createdAt: '2026-11-19T00:00:00.000Z',
+      markdown,
+    })),
+    ...overrides,
+  };
+}
+
+async function serve(
+  notion: NotionConnections,
+  allow = true,
+  publisher = fakePublisher(),
+  discussions = fakeDiscussions(),
+) {
   const group = createNotionRoutes({
     notion,
     publisher,
+    discussions,
     checkLocalOpSecurity: (_req, res) => {
       if (allow) return true;
       res.writeHead(403).end();
@@ -91,12 +123,16 @@ describe('createNotionRoutes table', () => {
         '/api/notion/connections/disconnect',
         '/api/notion/connections/flow',
         '/api/notion/connections/start',
+        '/api/notion/discussions',
+        '/api/notion/discussions/reply',
         '/api/notion/publish',
         '/api/notion/pull',
         '/api/notion/resolve-page',
       ].sort(),
     );
     expect(group.table.isMutating('/api/notion/publish')).toBe(true);
+    expect(group.table.isMutating('/api/notion/discussions/reply')).toBe(true);
+    expect(group.table.isMutating('/api/notion/discussions')).toBe(false);
     expect(group.table.isMutating('/api/notion/resolve-page')).toBe(true);
     expect(group.table.isMutating('/api/notion/connections/start')).toBe(true);
     expect(group.table.isMutating('/api/notion/connections/disconnect')).toBe(true);
@@ -172,6 +208,16 @@ describe('handlers', () => {
     expect((await post('/api/notion/connections/disconnect', { workspaceId: 'w1' })).status).toBe(
       403,
     );
+    expect((await post('/api/notion/discussions', { docName: 'a' })).status).toBe(403);
+    expect(
+      (
+        await post('/api/notion/discussions/reply', {
+          docName: 'a',
+          discussionId: 'd',
+          markdown: 'x',
+        })
+      ).status,
+    ).toBe(403);
   });
 });
 
@@ -257,5 +303,69 @@ describe('pull', () => {
     });
     const second = await serve(fakeNotion(), true, never);
     expect((await second.post('/api/notion/pull', { docName: 'x' })).status).toBe(400);
+  });
+});
+
+describe('discussions', () => {
+  test('lists the discussions of the linked page', async () => {
+    const { post } = await serve(fakeNotion());
+    const res = await post('/api/notion/discussions', { docName: 'notes/plan' });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.page).toBe('p1');
+    expect(body.discussions[0].anchor).toEqual({
+      kind: 'block',
+      blockId: 'b1',
+      text: 'Beta line.',
+    });
+  });
+
+  test('a reply is trimmed, posted and answered with the new comment', async () => {
+    const discussions = fakeDiscussions();
+    const { post } = await serve(fakeNotion(), true, fakePublisher(), discussions);
+    const res = await post('/api/notion/discussions/reply', {
+      docName: 'notes/plan',
+      discussionId: 'd1',
+      markdown: '  Done  \n',
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).comment.markdown).toBe('Done');
+    expect(discussions.reply).toHaveBeenCalledWith('notes/plan', 'd1', 'Done');
+  });
+
+  test('a blank reply is a 400 and never reaches Notion', async () => {
+    const discussions = fakeDiscussions();
+    const { post } = await serve(fakeNotion(), true, fakePublisher(), discussions);
+    const res = await post('/api/notion/discussions/reply', {
+      docName: 'notes/plan',
+      discussionId: 'd1',
+      markdown: '   ',
+    });
+    expect(res.status).toBe(400);
+    expect(discussions.reply).not.toHaveBeenCalled();
+  });
+
+  test('an unlinked document is a 404 and a Notion refusal a 502', async () => {
+    const unlinked = fakeDiscussions({
+      list: async () => {
+        throw new NotionPublishError({ kind: 'not-linked' });
+      },
+    });
+    const first = await serve(fakeNotion(), true, fakePublisher(), unlinked);
+    expect((await first.post('/api/notion/discussions', { docName: 'x' })).status).toBe(404);
+
+    const refused = fakeDiscussions({
+      reply: async () => {
+        throw new NotionPublishError({ kind: 'notion-error', status: 404, message: 'gone' });
+      },
+    });
+    const second = await serve(fakeNotion(), true, fakePublisher(), refused);
+    const res = await second.post('/api/notion/discussions/reply', {
+      docName: 'x',
+      discussionId: 'd',
+      markdown: 'hi',
+    });
+    expect(res.status).toBe(502);
+    expect((await res.json()).type).toBe('urn:ok:error:notion-unavailable');
   });
 });

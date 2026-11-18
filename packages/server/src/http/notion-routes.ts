@@ -6,14 +6,19 @@ import {
   NotionConnectStartResponseSchema,
   NotionDisconnectRequestSchema,
   NotionDisconnectResponseSchema,
+  NotionDiscussionsRequestSchema,
+  NotionDiscussionsResponseSchema,
   NotionPublishRequestSchema,
   NotionPublishResponseSchema,
   NotionPullRequestSchema,
   NotionPullResponseSchema,
+  NotionReplyRequestSchema,
+  NotionReplyResponseSchema,
   NotionResolvePageRequestSchema,
   NotionResolvePageResponseSchema,
   type ProblemType,
 } from '@inkeep/open-knowledge-core';
+import type { NotionDiscussions } from '../notion/discussions.ts';
 import type { NotionConnections } from '../notion/notion-connections.ts';
 import {
   NotionPublishError,
@@ -29,6 +34,7 @@ import { successResponse } from './success-response.ts';
 export interface NotionRouteDeps {
   notion: NotionConnections;
   publisher: NotionPublisher;
+  discussions: NotionDiscussions;
   checkLocalOpSecurity: (
     req: IncomingMessage,
     res: ServerResponse,
@@ -285,7 +291,84 @@ export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
     },
   );
 
+  function notionFailure(res: ServerResponse, handler: string, cause: unknown): void {
+    if (cause instanceof NotionPublishError) {
+      const [status, type, title] = publishProblem(cause.failure);
+      errorResponse(res, status, type, title, { handler });
+      return;
+    }
+    errorResponse(res, 502, 'urn:ok:error:notion-unavailable', 'Notion could not be reached.', {
+      handler,
+      cause,
+    });
+  }
+
+  const handleDiscussions = withValidation(
+    NotionDiscussionsRequestSchema,
+    async (_req, res, body) => {
+      const handler = 'notion-discussions';
+      try {
+        const listed = await deps.discussions.list(body.docName);
+        successResponse(res, 200, NotionDiscussionsResponseSchema, listed, {
+          handler,
+          extraHeaders: NO_STORE,
+        });
+      } catch (cause) {
+        if (cause instanceof NotionPublishError && cause.failure.kind === 'not-linked') {
+          errorResponse(
+            res,
+            404,
+            'urn:ok:error:not-found',
+            'This document is not linked to a Notion page.',
+            { handler },
+          );
+          return;
+        }
+        notionFailure(res, handler, cause);
+      }
+    },
+    {
+      handler: 'notion-discussions',
+      method: 'POST',
+      preBodyGate: (req, res) => checkLocalOpSecurity(req, res, { handler: 'notion-discussions' }),
+    },
+  );
+
+  const handleReply = withValidation(
+    NotionReplyRequestSchema,
+    async (_req, res, body) => {
+      const handler = 'notion-discussion-reply';
+      try {
+        const comment = await deps.discussions.reply(
+          body.docName,
+          body.discussionId,
+          body.markdown.trim(),
+        );
+        successResponse(
+          res,
+          200,
+          NotionReplyResponseSchema,
+          { comment },
+          {
+            handler,
+            extraHeaders: NO_STORE,
+          },
+        );
+      } catch (cause) {
+        notionFailure(res, handler, cause);
+      }
+    },
+    {
+      handler: 'notion-discussion-reply',
+      method: 'POST',
+      preBodyGate: (req, res) =>
+        checkLocalOpSecurity(req, res, { handler: 'notion-discussion-reply' }),
+    },
+  );
+
   const routes = {
+    '/api/notion/discussions': handleDiscussions,
+    '/api/notion/discussions/reply': handleReply,
     '/api/notion/pull': handlePull,
     '/api/notion/resolve-page': handleResolvePage,
     '/api/notion/publish': handlePublish,
@@ -297,6 +380,7 @@ export function createNotionRoutes(deps: NotionRouteDeps): ApiRouteGroup {
 
   return createApiRouteGroup(routes, {
     mutating: [
+      '/api/notion/discussions/reply',
       '/api/notion/connections/start',
       '/api/notion/connections/disconnect',
       '/api/notion/resolve-page',

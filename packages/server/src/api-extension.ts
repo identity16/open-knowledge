@@ -158,6 +158,7 @@ import {
   createNotionConnectionRegistry,
   notionConnectionsPath,
 } from './notion/connection-registry.ts';
+import { createNotionDiscussions } from './notion/discussions.ts';
 import { createNotionConnections } from './notion/notion-connections.ts';
 import { createNotionOAuthWorkerClient } from './notion/oauth-worker-client.ts';
 import { createNotionPublisher } from './notion/publisher.ts';
@@ -5762,6 +5763,7 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
   const notionRoutes = createNotionRoutes({
     checkLocalOpSecurity,
     notion: notionConnections,
+    discussions: createNotionDiscussions({ connections: notionConnections, readDocSource }),
     publisher: createNotionPublisher({
       connections: notionConnections,
       bases: createNotionBaseStore(resolve(contentDir, OK_DIR, LOCAL_DIR, 'notion')),
