@@ -118,6 +118,12 @@ const WHOLESALE_STRATEGIES = [
   'delete',
 ] as const satisfies readonly ResolveStrategy[];
 
+const KEEP_DOCUMENT_STRATEGIES = [
+  'mine',
+  'theirs',
+  'content',
+] as const satisfies readonly ResolveStrategy[];
+
 export function holdsMarkersOnDisk(entry: Conflict): boolean {
   switch (entry.kind) {
     case 'merge-native':
@@ -139,5 +145,6 @@ export function strategiesFor(
   if (kind !== 'reconcile' || reason === undefined) return ALL_STRATEGIES;
   if (RECONCILE_MARKER_REASONS.has(reason)) return NO_THEIRS_STRATEGIES;
   if (reason === 'refused-too-large') return WHOLESALE_STRATEGIES;
+  if (reason === 'notion-changed') return KEEP_DOCUMENT_STRATEGIES;
   return ALL_STRATEGIES;
 }

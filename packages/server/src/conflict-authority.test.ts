@@ -735,6 +735,10 @@ describe('strategiesFor', () => {
     ]);
   });
 
+  test('a Notion conflict keeps the document: no delete strategy', () => {
+    expect(strategiesFor('reconcile', 'notion-changed')).toEqual(['mine', 'theirs', 'content']);
+  });
+
   test('a reconcile conflict with clean theirs bytes advertises theirs', () => {
     expect(strategiesFor('reconcile', 'merged-with-markers')).toContain('theirs');
     expect(strategiesFor('reconcile', 'refused-too-large')).toContain('theirs');
