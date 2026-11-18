@@ -58,6 +58,17 @@ const CONFLICT_WORD_DIFF_CSS = `
 }
 `;
 
+function cssString(text: string): string {
+  return `"${text.replace(/[\\"]/g, '\\$&').replace(/\n/g, ' ')}"`;
+}
+
+function conflictCaptionCss(captions: { current: string; incoming: string }): string {
+  return `
+[data-merge-conflict="marker-start"]:after { content: ${cssString(captions.current)}; }
+[data-merge-conflict="marker-end"]:after { content: ${cssString(captions.incoming)}; }
+`;
+}
+
 let _nextId = 0;
 
 function remainingConflictCount(contents: string): number {
@@ -133,6 +144,12 @@ export function ConflictView({
     });
   });
 
+  const conflictCss =
+    conflictKind === 'notion'
+      ? CONFLICT_WORD_DIFF_CSS +
+        conflictCaptionCss({ current: t`(This document)`, incoming: t`(Notion)` })
+      : CONFLICT_WORD_DIFF_CSS;
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -172,7 +189,7 @@ export function ConflictView({
       theme: okPierreTheme(),
       overflow: 'wrap',
       lineDiffType: showBase ? 'none' : 'word-alt',
-      unsafeCSS: CONFLICT_WORD_DIFF_CSS,
+      unsafeCSS: conflictCss,
       onMergeConflictAction: (payload) => {
         handleActionRef.current?.(payload.conflict, payload.resolution);
       },
@@ -337,7 +354,7 @@ export function ConflictView({
       setAllResolved(false);
       setParseMismatch(false);
     };
-  }, [fileName, ours, base, theirs, showBase, conflictKind]);
+  }, [fileName, ours, base, theirs, showBase, conflictKind, conflictCss]);
 
   const absentStageBanner =
     conflictKind === 'stale-external-write'

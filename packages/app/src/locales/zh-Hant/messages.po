@@ -97,6 +97,9 @@ msgstr "（行內）"
 msgid "(no name)"
 msgstr "（無名稱）"
 
+msgid "(Notion)"
+msgstr "（Notion）"
+
 msgid "(opens in new tab)"
 msgstr "（在新分頁中開啟）"
 
@@ -114,6 +117,9 @@ msgstr "（其中有些可能已被其他規則隱藏）"
 
 msgid "(symlink)"
 msgstr "（符號連結）"
+
+msgid "(This document)"
+msgstr "（此文件）"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, other {# 個附件已準備好傳送}}"

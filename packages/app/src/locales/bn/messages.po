@@ -97,6 +97,9 @@ msgstr "(ইনলাইন)"
 msgid "(no name)"
 msgstr "(কোনো নাম নেই)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(নতুন ট্যাবে খোলে)"
 
@@ -114,6 +117,9 @@ msgstr "(কিছু হয়তো অন্য নিয়মে আগে�
 
 msgid "(symlink)"
 msgstr "(সিমলিংক)"
+
+msgid "(This document)"
+msgstr "(এই ডকুমেন্ট)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, one {# সংযুক্তি পাঠানোর জন্য প্রস্তুত} other {# সংযুক্তি পাঠানোর জন্য প্রস্তুত}}"

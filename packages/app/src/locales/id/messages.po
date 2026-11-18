@@ -97,6 +97,9 @@ msgstr "(sebaris)"
 msgid "(no name)"
 msgstr "(tanpa nama)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(terbuka di tab baru)"
 
@@ -114,6 +117,9 @@ msgstr "(sebagian mungkin sudah disembunyikan oleh aturan lain)"
 
 msgid "(symlink)"
 msgstr "(symlink)"
+
+msgid "(This document)"
+msgstr "(Dokumen ini)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, other {# lampiran siap dikirim}}"

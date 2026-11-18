@@ -97,6 +97,9 @@ msgstr "(em linha)"
 msgid "(no name)"
 msgstr "(sem nome)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(abre em uma nova aba)"
 
@@ -114,6 +117,9 @@ msgstr "(outras regras podem já ocultar alguns)"
 
 msgid "(symlink)"
 msgstr "(link simbólico)"
+
+msgid "(This document)"
+msgstr "(Este documento)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, one {# anexo pronto para enviar} many {# anexos prontos para enviar} other {# anexos prontos para enviar}}"

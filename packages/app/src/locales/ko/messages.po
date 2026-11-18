@@ -97,6 +97,9 @@ msgstr "(인라인)"
 msgid "(no name)"
 msgstr "(이름 없음)"
 
+msgid "(Notion)"
+msgstr "(Notion)"
+
 msgid "(opens in new tab)"
 msgstr "(새 탭에서 열기)"
 
@@ -114,6 +117,9 @@ msgstr "(다른 규칙으로 이미 숨겨진 항목이 있을 수 있습니다)
 
 msgid "(symlink)"
 msgstr "(심볼릭 링크)"
+
+msgid "(This document)"
+msgstr "(이 문서)"
 
 msgid "{0, plural, one {# attachment is ready to send} other {# attachments are ready to send}}"
 msgstr "{0, plural, other {첨부 #개를 보낼 준비가 되었습니다}}"
