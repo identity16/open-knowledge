@@ -3211,6 +3211,9 @@ msgstr "No se pudo leer {fileName}."
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "No se pudo leer {fileName}. Puede que se haya movido, eliminado o que no haya terminado de descargarse. Prueba a añadirlo de nuevo."
 
+msgid "Couldn't read comments from Notion."
+msgstr "No se pudieron leer los comentarios de Notion."
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "No se pudo leer la regla de {gitignorePath}: {previewError}"
 
@@ -3324,6 +3327,9 @@ msgstr "No se pudo guardar tu preferencia de tema."
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "No se pudo desplazar hasta ese pasaje. Vuelve a intentarlo."
+
+msgid "Couldn't send the reply to Notion."
+msgstr "No se pudo enviar la respuesta a Notion."
 
 msgid "Couldn't send the report"
 msgstr "No se pudo enviar el informe"
@@ -7056,6 +7062,9 @@ msgstr "No hay cambios nuevos en Notion"
 msgid "No Notion workspaces connected yet."
 msgstr "Todavía no hay espacios de trabajo de Notion conectados."
 
+msgid "No open comments on the Notion page."
+msgstr "No hay comentarios abiertos en la página de Notion."
+
 msgid "No Outgoing"
 msgstr "Sin salientes"
 
@@ -7274,6 +7283,12 @@ msgstr "No se subió nada. El informe permanece en este equipo hasta que nos lo 
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Comentarios de Notion"
+
+msgid "Notion discussion"
+msgstr "Debate de Notion"
+
 msgid "Notion page link"
 msgstr "Enlace de la página de Notion"
 
@@ -7336,6 +7351,9 @@ msgstr "Sobre el texto seleccionado en <0>{address}</0>"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "En el índice raíz, okf_version se escribe como una cadena entrecomillada como \"0.2\". Sin comillas, YAML lo lee como un número y 0.10 silenciosamente se convierte en 0.1."
+
+msgid "On the whole page"
+msgstr "En toda la página"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "Un patrón por línea; se añaden a <0>.okignore</0>."
@@ -7499,6 +7517,9 @@ msgstr "Abrir en el gestor de archivos"
 
 msgid "Open in New Window"
 msgstr "Abrir en una ventana nueva"
+
+msgid "Open in Notion"
+msgstr "Abrir en Notion"
 
 msgid "Open in Slidev"
 msgstr "Abrir en Slidev"
@@ -8513,6 +8534,9 @@ msgstr "Copia de solo lectura de un bloque MirrorSource de otro documento. Edít
 msgid "Read-only file in the {name} skill"
 msgstr "Archivo de solo lectura en la habilidad {name}"
 
+msgid "Reading comments from Notion"
+msgstr "Leyendo comentarios de Notion"
+
 msgid "Reading the current languages…"
 msgstr "Leyendo los idiomas actuales…"
 
@@ -8629,6 +8653,9 @@ msgstr "Referencia <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "Reflexionando…"
+
+msgid "Refresh Notion comments"
+msgstr "Actualizar comentarios de Notion"
 
 msgid "Reinstall"
 msgstr "Reinstalar"
@@ -8916,6 +8943,12 @@ msgstr "Reemplaza la entrada de OpenKnowledge existente en {0}"
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "Reemplaza la entrada de OpenKnowledge que cada uno ya tiene."
 
+msgid "Reply"
+msgstr "Responder"
+
+msgid "Reply in Notion"
+msgstr "Responder en Notion"
+
 msgid "Report a bug"
 msgstr "Informar de un error"
 
@@ -9006,6 +9039,9 @@ msgstr "Redimensionar el panel del documento"
 
 msgid "Resize skills panel"
 msgstr "Redimensionar el panel de Habilidades"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "Resuelve los comentarios en Notion; los resueltos desaparecen de aquí."
 
 msgid "Resolve conflict in your terminal"
 msgstr "Resuelve el conflicto en tu terminal"
@@ -10821,6 +10857,9 @@ msgstr "El servidor de OpenKnowledge tardo demasiado en responder. Pide al agent
 
 msgid "The original text was deleted."
 msgstr "El texto original se eliminó."
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "La página es larga; solo se muestran los comentarios de sus primeros 200 bloques."
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "La ruta no puede salir de la habilidad (sin . ni ..)"

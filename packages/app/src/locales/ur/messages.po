@@ -3211,6 +3211,9 @@ msgstr "{fileName} پڑھا نہیں جا سکا۔"
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "{fileName} پڑھی نہیں جا سکی۔ ہو سکتا ہے یہ منتقل ہو گئی ہو، حذف ہو گئی ہو، یا مکمل ڈاؤن لوڈ نہ ہوئی ہو۔ اسے دوبارہ شامل کرنے کی کوشش کریں۔"
 
+msgid "Couldn't read comments from Notion."
+msgstr "Notion سے تبصرے نہیں پڑھے جا سکے۔"
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "{gitignorePath} قاعدہ نہیں پڑھا جا سکا: {previewError}"
 
@@ -3324,6 +3327,9 @@ msgstr "آپ کی تھیم ترجیح محفوظ نہیں ہو سکی۔"
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "اس اقتباس تک اسکرول نہیں ہو سکا۔ دوبارہ کوشش کریں۔"
+
+msgid "Couldn't send the reply to Notion."
+msgstr "Notion کو جواب نہیں بھیجا جا سکا۔"
 
 msgid "Couldn't send the report"
 msgstr "رپورٹ نہیں بھیجی جا سکی"
@@ -7056,6 +7062,9 @@ msgstr "Notion میں کوئی نئی ترمیم نہیں"
 msgid "No Notion workspaces connected yet."
 msgstr "ابھی تک کوئی Notion ورک اسپیس نہیں جڑی۔"
 
+msgid "No open comments on the Notion page."
+msgstr "Notion صفحے پر کوئی کھلا تبصرہ نہیں۔"
+
 msgid "No Outgoing"
 msgstr "کوئی جانے والا نہیں"
 
@@ -7274,6 +7283,12 @@ msgstr "کچھ بھی اپ لوڈ نہیں ہوا۔ جب تک آپ ہمیں ای
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Notion تبصرے"
+
+msgid "Notion discussion"
+msgstr "Notion بحث"
+
 msgid "Notion page link"
 msgstr "Notion صفحے کا لنک"
 
@@ -7336,6 +7351,9 @@ msgstr "<0>{address}</0> میں منتخب متن پر"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "روٹ انڈیکس پر، okf_version کو \"0.2\" کی طرح کوٹڈ سٹرنگ کے طور پر لکھا جاتا ہے۔ بغیر حوالہ، YAML اسے ایک نمبر کے طور پر پڑھتا ہے اور 0.10 خاموشی سے 0.1 بن جاتا ہے۔"
+
+msgid "On the whole page"
+msgstr "پورے صفحے پر"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "ہر سطر پر ایک پیٹرن — <0>.okignore</0> میں شامل ہوتا ہے۔"
@@ -7499,6 +7517,9 @@ msgstr "فائل مینیجر میں کھولیں"
 
 msgid "Open in New Window"
 msgstr "نئی ونڈو میں کھولیں"
+
+msgid "Open in Notion"
+msgstr "Notion میں کھولیں"
 
 msgid "Open in Slidev"
 msgstr "Slidev میں کھولیں"
@@ -8513,6 +8534,9 @@ msgstr "کسی دوسری دستاویز کے MirrorSource بلاک کی صرف 
 msgid "Read-only file in the {name} skill"
 msgstr "{name} مہارت میں صرف پڑھنے والی فائل"
 
+msgid "Reading comments from Notion"
+msgstr "Notion سے تبصرے پڑھے جا رہے ہیں"
+
 msgid "Reading the current languages…"
 msgstr "موجودہ زبانیں پڑھی جا رہی ہیں…"
 
@@ -8629,6 +8653,9 @@ msgstr "حوالہ <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "غور و فکر جاری ہے…"
+
+msgid "Refresh Notion comments"
+msgstr "Notion تبصرے ریفریش کریں"
 
 msgid "Reinstall"
 msgstr "دوبارہ نصب کریں"
@@ -8916,6 +8943,12 @@ msgstr "{0} میں موجودہ OpenKnowledge اندراج کو بدل دے گا
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "ہر ایک میں پہلے سے موجود OpenKnowledge اندراج کو بدل دیتا ہے۔"
 
+msgid "Reply"
+msgstr "جواب دیں"
+
+msgid "Reply in Notion"
+msgstr "Notion میں جواب دیں"
+
 msgid "Report a bug"
 msgstr "بگ رپورٹ کریں"
 
@@ -9006,6 +9039,9 @@ msgstr "دستاویز کے پینل کا سائز تبدیل کریں"
 
 msgid "Resize skills panel"
 msgstr "مہارتوں کے پینل کا سائز تبدیل کریں"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "تبصرے Notion میں حل کریں؛ حل شدہ تبصرے یہاں سے ہٹ جاتے ہیں۔"
 
 msgid "Resolve conflict in your terminal"
 msgstr "اپنے ٹرمینل میں تصادم حل کریں"
@@ -10821,6 +10857,9 @@ msgstr "OpenKnowledge سرور نے جواب دینے میں بہت وقت لی�
 
 msgid "The original text was deleted."
 msgstr "اصل متن حذف کر دیا گیا تھا۔"
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "صفحہ لمبا ہے؛ صرف پہلے 200 بلاکس کے تبصرے دکھائے گئے ہیں۔"
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "پاتھ اسکل سے باہر نہیں جا سکتا (. یا .. نہیں)"

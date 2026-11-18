@@ -3211,6 +3211,9 @@ msgstr "Couldn't read {fileName}."
 msgid "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 msgstr "Couldn't read {fileName}. It may have been moved, deleted, or not finished downloading. Try adding it again."
 
+msgid "Couldn't read comments from Notion."
+msgstr "Couldn't read comments from Notion."
+
 msgid "Couldn't read the {gitignorePath} rule: {previewError}"
 msgstr "Couldn't read the {gitignorePath} rule: {previewError}"
 
@@ -3324,6 +3327,9 @@ msgstr "Couldn't save your theme preference."
 
 msgid "Couldn't scroll to that passage. Try again."
 msgstr "Couldn't scroll to that passage. Try again."
+
+msgid "Couldn't send the reply to Notion."
+msgstr "Couldn't send the reply to Notion."
 
 msgid "Couldn't send the report"
 msgstr "Couldn't send the report"
@@ -7056,6 +7062,9 @@ msgstr "No new edits in Notion"
 msgid "No Notion workspaces connected yet."
 msgstr "No Notion workspaces connected yet."
 
+msgid "No open comments on the Notion page."
+msgstr "No open comments on the Notion page."
+
 msgid "No Outgoing"
 msgstr "No Outgoing"
 
@@ -7274,6 +7283,12 @@ msgstr "Nothing was uploaded. The report stays on this computer until you email 
 msgid "Notion"
 msgstr "Notion"
 
+msgid "Notion comments"
+msgstr "Notion comments"
+
+msgid "Notion discussion"
+msgstr "Notion discussion"
+
 msgid "Notion page link"
 msgstr "Notion page link"
 
@@ -7336,6 +7351,9 @@ msgstr "On selected text in <0>{address}</0>"
 
 msgid "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
 msgstr "On the root index, okf_version is written as a quoted string like \"0.2\". Unquoted, YAML reads it as a number and 0.10 silently becomes 0.1."
+
+msgid "On the whole page"
+msgstr "On the whole page"
 
 msgid "One pattern per line — appended to <0>.okignore</0>."
 msgstr "One pattern per line — appended to <0>.okignore</0>."
@@ -7499,6 +7517,9 @@ msgstr "Open in file manager"
 
 msgid "Open in New Window"
 msgstr "Open in New Window"
+
+msgid "Open in Notion"
+msgstr "Open in Notion"
 
 msgid "Open in Slidev"
 msgstr "Open in Slidev"
@@ -8513,6 +8534,9 @@ msgstr "Read-only copy of a MirrorSource block from another doc. Edit at the sou
 msgid "Read-only file in the {name} skill"
 msgstr "Read-only file in the {name} skill"
 
+msgid "Reading comments from Notion"
+msgstr "Reading comments from Notion"
+
 msgid "Reading the current languages…"
 msgstr "Reading the current languages…"
 
@@ -8629,6 +8653,9 @@ msgstr "Reference <0>{0}</0>"
 
 msgid "Reflecting…"
 msgstr "Reflecting…"
+
+msgid "Refresh Notion comments"
+msgstr "Refresh Notion comments"
 
 msgid "Reinstall"
 msgstr "Reinstall"
@@ -8916,6 +8943,12 @@ msgstr "Replaces the existing OpenKnowledge entry in {0}"
 msgid "Replaces the OpenKnowledge entry each of them already has."
 msgstr "Replaces the OpenKnowledge entry each of them already has."
 
+msgid "Reply"
+msgstr "Reply"
+
+msgid "Reply in Notion"
+msgstr "Reply in Notion"
+
 msgid "Report a bug"
 msgstr "Report a bug"
 
@@ -9006,6 +9039,9 @@ msgstr "Resize document panel"
 
 msgid "Resize skills panel"
 msgstr "Resize skills panel"
+
+msgid "Resolve comments in Notion; resolved ones disappear here."
+msgstr "Resolve comments in Notion; resolved ones disappear here."
 
 msgid "Resolve conflict in your terminal"
 msgstr "Resolve conflict in your terminal"
@@ -10821,6 +10857,9 @@ msgstr "The OpenKnowledge server took too long to answer. Ask the agent to try a
 
 msgid "The original text was deleted."
 msgstr "The original text was deleted."
+
+msgid "The page is long; only comments in its first 200 blocks are shown."
+msgstr "The page is long; only comments in its first 200 blocks are shown."
 
 msgid "The path can't leave the skill (no . or ..)"
 msgstr "The path can't leave the skill (no . or ..)"
