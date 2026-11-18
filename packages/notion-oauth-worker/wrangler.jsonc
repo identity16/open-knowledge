@@ -9,5 +9,6 @@
   "vars": {
     "NOTION_REDIRECT_URI": "https://ok-notion-oauth.identity16.workers.dev/oauth/notion/callback"
   },
-  "kv_namespaces": [{ "binding": "GRANTS", "id": "7592b50db1d54e9faf0a5cc0ffabb807" }]
+  "durable_objects": { "bindings": [{ "name": "GRANTS", "class_name": "GrantVault" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GrantVault"] }]
 }

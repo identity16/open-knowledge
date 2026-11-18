@@ -6,21 +6,21 @@ A Cloudflare Worker at `https://ok-notion-oauth.identity16.workers.dev` that hol
 
 | Route | Caller | What it does |
 |---|---|---|
-| `GET /oauth/notion/callback?code&state` | Notion, through the user's browser | Exchanges the code for a token and parks the result in KV under `state` for five minutes. `error=…` is parked as a refusal. |
+| `GET /oauth/notion/callback?code&state` | Notion, through the user's browser | Exchanges the code for a token and parks the result in a Durable Object named after `state` for five minutes. `error=…` is parked as a refusal. |
 | `POST /oauth/notion/redeem {state, verifier}` | Local server, polling | Answers `202 {"status":"pending"}` until the callback lands, then hands over the parked result once and deletes it. |
 | `POST /oauth/notion/refresh {refresh_token}` | Local server | Forwards the refresh to Notion with the client secret and relays Notion's answer. |
 | `POST /oauth/notion/revoke {token}` | Local server | Revokes an access token on Notion with the client secret, so disconnecting a workspace ends the grant. |
 
 `state` is `<nonce>.<challenge>`: two 43-character base64url parts, where `challenge` is the base64url SHA-256 of `verifier`. The local server keeps `verifier` to itself, so only the server that started the flow can redeem the token.
 
-KV is eventually consistent across locations, so a redeemed grant can stay readable elsewhere for up to a minute. Only the holder of `verifier` can read it in that window.
+Each `state` gets its own `GrantVault` Durable Object, so a grant written by the callback is readable on the next poll. Workers KV was used first, but it caches a missing key at the edge for about a minute, so a server polling before the user approved waited that long after approval. An alarm deletes the grant at its expiry, and reads past the expiry return nothing even before the alarm fires.
 
 ## Cloudflare resources
 
 All on the `joon-personal` account (`a89cb3cabef6bff4e68320d16e9af622`):
 
 - Worker `ok-notion-oauth` on the `identity16.workers.dev` subdomain
-- KV namespace `ok-notion-oauth-grants`, bound as `GRANTS`
+- Durable Object class `GrantVault` (SQLite storage), bound as `GRANTS`
 - Secrets `NOTION_CLIENT_ID` and `NOTION_CLIENT_SECRET`
 
 ## Deploy
