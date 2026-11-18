@@ -294,7 +294,8 @@ describe('ConflictAuthority per-kind closers', () => {
 describe('ConflictAuthority pruneMergeNativeAgainstGit (PRD-8318 ordering)', () => {
   function unmergedIo(unmerged: string[]): FakeIo {
     return makeIo({
-      gitRaw: async (args) => (args[0] === 'diff' ? unmerged.map((f) => `${f}\0`).join('') : ''),
+      gitRaw: async (args) =>
+        args[0] === 'diff-files' ? unmerged.map((f) => `${f}\0`).join('') : '',
     });
   }
 
@@ -889,7 +890,7 @@ describe('ConflictAuthority resolve', () => {
     const io = makeIo({
       gitRaw: async (args) => {
         if (args[0] === 'commit') throw new Error('nothing to commit');
-        if (args[0] === 'diff') return 'a.md\0';
+        if (args[0] === 'diff-files') return 'a.md\0';
         return '';
       },
     });
@@ -1271,7 +1272,7 @@ describe('ConflictAuthority merge-native resolve commits before it clears', () =
     const io = makeIo({
       gitRaw: async (args) => {
         if (args[0] === 'commit') throw new Error('nothing to commit');
-        if (args[0] === 'diff') return 'a.md\0b.md\0';
+        if (args[0] === 'diff-files') return 'a.md\0b.md\0';
         return '';
       },
     });
@@ -1558,7 +1559,7 @@ describe('ConflictAuthority tells a crashed unmerged probe from a clean index', 
     const io = makeIo({
       gitRaw: async (args) => {
         if (args[0] === 'commit') throw new Error('nothing to commit');
-        if (args[0] === 'diff') throw new Error('fatal: not a git repository');
+        if (args[0] === 'diff-files') throw new Error('fatal: not a git repository');
         return '';
       },
     });

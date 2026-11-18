@@ -54,6 +54,7 @@ import {
   listPorcelainEntries,
   PORCELAIN_STATUS_ARGS,
   type PorcelainEntry,
+  UNMERGED_PATHS_ARGS,
 } from './git-paths.ts';
 import {
   type CheckPushPermissionOptions,
@@ -2661,11 +2662,7 @@ export class SyncEngine {
 
   private async assertNoGitOperationInProgress(): Promise<void> {
     if (this.hasGitOperationInProgress()) throw new GitOperationInProgressError();
-    const unmerged = await listNames(this.gitHandle().git, [
-      'diff',
-      '--name-only',
-      '--diff-filter=U',
-    ]);
+    const unmerged = await listNames(this.gitHandle().git, UNMERGED_PATHS_ARGS);
     if (unmerged.length > 0 || this.hasGitOperationInProgress()) {
       throw new GitOperationInProgressError();
     }
@@ -3095,7 +3092,7 @@ export class SyncEngine {
     try {
       const { git } = this.gitHandle();
       entries = await listPorcelainEntries(git, PORCELAIN_STATUS_ARGS);
-      unmerged = new Set(await listNames(git, ['diff', '--name-only', '--diff-filter=U']));
+      unmerged = new Set(await listNames(git, UNMERGED_PATHS_ARGS));
     } catch (e) {
       log.warn(
         { event: 'snapshot-read-failed', err: e, branch: this.currentBranch },
@@ -3264,7 +3261,7 @@ export class SyncEngine {
 
     let conflictedFiles: string[] = [];
     try {
-      conflictedFiles = await listNames(handle.git, ['diff', '--name-only', '--diff-filter=U']);
+      conflictedFiles = await listNames(handle.git, UNMERGED_PATHS_ARGS);
     } catch (e) {
       log.error(
         { err: e },

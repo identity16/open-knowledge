@@ -32,7 +32,7 @@ import { isShareableOkArtifact } from './content-filter.ts';
 import { docNameToRelativePath } from './doc-extensions.ts';
 import { pathToDocName } from './file-watcher.ts';
 import { tracedMkdirSync, tracedRenameSync, tracedWriteFileSync } from './fs-traced.ts';
-import { splitNulSeparatedPaths } from './git-paths.ts';
+import { nulTerminatedArgs, splitNulSeparatedPaths, UNMERGED_PATHS_ARGS } from './git-paths.ts';
 import { errnoCode } from './http/handler-utils.ts';
 import { getLogger } from './logger.ts';
 import { toPosix } from './path-utils.ts';
@@ -503,9 +503,7 @@ export class ConflictAuthority implements ConflictReader {
       let stillUnmerged: Set<string>;
       try {
         stillUnmerged = new Set(
-          splitNulSeparatedPaths(
-            await this.io.gitRaw(['diff', '-z', '--name-only', '--diff-filter=U']),
-          ),
+          splitNulSeparatedPaths(await this.io.gitRaw(nulTerminatedArgs(UNMERGED_PATHS_ARGS))),
         );
       } catch (err) {
         log.warn({ err }, '[conflicts] git unmerged probe failed — leaving the ledger untouched');

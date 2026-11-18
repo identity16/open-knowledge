@@ -322,7 +322,7 @@ describe('PRD-8318: a merge-native conflict resolved with raw git unfreezes the 
       const opts = { cwd: tmpDir };
       const stillUnmerged = await execFileAsync(
         'git',
-        ['diff', '--name-only', '--diff-filter=U'],
+        ['diff-files', '--name-only', '--diff-filter=U'],
         opts,
       );
       expect(stillUnmerged.stdout).toContain(DOC_FILE);
