@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "ok-notion-oauth",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "account_id": "a89cb3cabef6bff4e68320d16e9af622",
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "NOTION_REDIRECT_URI": "https://ok-notion-oauth.identity16.workers.dev/oauth/notion/callback"
+  },
+  "kv_namespaces": [{ "binding": "GRANTS", "id": "7592b50db1d54e9faf0a5cc0ffabb807" }]
+}
