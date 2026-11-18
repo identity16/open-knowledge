@@ -55,6 +55,7 @@
     "measure:observer-a-drain": "pnpm --dir packages/server run measure:observer-a-drain",
 
     "prepare": "bash scripts/husky-prepare.sh",
+    "changelog:release": "node scripts/release/changelog.mjs release",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish",

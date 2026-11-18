@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { requireReleaseNotes } from './changelog.mjs';
 import {
   compareReleaseVersions,
   releaseFileDigest,
@@ -129,7 +130,20 @@ function publicationContext(version, sourceSha, env, invoke) {
   return { plan, api, checkSource, checkLatest, findRelease };
 }
 
+const PLAIN_VERSION = /^\d+\.\d+\.\d+$/;
+
+export function releaseNotesFor(version, env = process.env) {
+  return PLAIN_VERSION.test(version) ? requireReleaseNotes(version, env) : null;
+}
+
+export function releaseBody(version, sourceSha, env = process.env) {
+  const install = `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION.md`;
+  const notes = releaseNotesFor(version, env);
+  return notes === null ? install : `${notes}\n\n---\n\n${install}`;
+}
+
 export function preflightRelease(version, sourceSha, env = process.env, invoke = gh) {
+  releaseNotesFor(version, env);
   const context = publicationContext(version, sourceSha, env, invoke);
   const release = context.findRelease();
   context.checkSource(release);
@@ -175,7 +189,7 @@ export function stageRelease(
       '--title',
       `OpenKnowledge16 ${version}`,
       '--notes',
-      `OpenKnowledge16 for macOS 13+ on Apple Silicon, plus the web GUI and CLI. Installation and migration: https://github.com/${REPOSITORY}/blob/${sourceSha}/MIGRATION.md`,
+      releaseBody(version, sourceSha, env),
     ]);
     release = findRelease();
     for (let attempt = 1; !release && attempt < DRAFT_VISIBILITY_ATTEMPTS; attempt += 1) {
