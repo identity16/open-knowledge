@@ -15,10 +15,14 @@ This repository is the source of truth for OpenKnowledge16, a macOS-only product
 | One test | `pnpm test:file <path>` | Run specific test files; picks the config their suffix needs (`.dom.`, `.browser.`, `.node.`, `.uncached.`, `node:test`) |
 | Look | `pnpm preview` | UI changes: phone and desktop screenshots in `/tmp/ok-preview/latest` |
 | Ship locally | `pnpm deploy:local` | Run the change on this Mac's `ok` service at :8080 |
-| Release | `.github/workflows/release.yml` (`build_only` measures without publishing); read a run with `node scripts/release/watch-release.mjs <run id> [--wait]` | Batched changes; versions are plain semver tagged `vX.Y.Z` |
+| Release | `pnpm changelog:release <version>` and merge it, then `.github/workflows/release.yml` (`build_only` measures without publishing); read a run with `node scripts/release/watch-release.mjs <run id> [--wait]` | Batched changes; versions are plain semver tagged `vX.Y.Z`. A release refuses a version with no CHANGELOG.md section, and it waits for Verify to pass on that commit |
 | Full check | `pnpm run check` | Before a release only; it runs the integration tiers and takes tens of minutes |
 
 A red is yours when it is in a test you added or edited or names a file you changed: fix its cause. For any other red, run the same test on the base commit and report it as "also red on the base".
+
+## Change notes
+
+A pull request that changes what a user sees or does adds a note under [`changes/`](./changes/README.md); `pnpm changelog:release` turns the notes into the release's CHANGELOG.md section and Release body. Skip it for refactors, tests, CI and tooling.
 
 ## Layout
 
