@@ -33,6 +33,7 @@ test('bootstraps release recovery and preflight without installing workspace dep
     'release-checkpoint',
     'notarize-release',
     'publish-release',
+    'changelog',
     'verification',
   ])
     copyFileSync(new URL(`./${file}.mjs`, import.meta.url), join(scripts, `${file}.mjs`));
@@ -110,6 +111,7 @@ function workspace() {
     'release-checkpoint',
     'notarize-release',
     'publish-release',
+    'changelog',
     'verification',
   ])
     copyFileSync(new URL(`./${file}.mjs`, import.meta.url), join(scripts, `${file}.mjs`));

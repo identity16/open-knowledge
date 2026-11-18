@@ -7,6 +7,7 @@ import {
   preflightRelease,
   promoteRelease,
   publishRelease,
+  releaseBody,
   stagedReleaseInventory,
   stageRelease,
   verifyUploadedInventory,
@@ -292,5 +293,37 @@ describe('atomic publication', () => {
     expect(isNewerRelease('0.76.0-identity16.6', '0.76.0')).toBe(false);
     expect(isNewerRelease('0.77.1', '0.77.0')).toBe(true);
     expect(isNewerRelease('0.77.0', '0.77.0')).toBe(false);
+  });
+});
+
+describe('release notes from CHANGELOG.md', () => {
+  function changelog(text) {
+    const dir = mkdtempSync(join(tmpdir(), 'ok16-notes-'));
+    fixtures.push(dir);
+    const path = join(dir, 'CHANGELOG.md');
+    writeFileSync(path, text);
+    return { OK_CHANGELOG_PATH: path };
+  }
+  const sha = 'b'.repeat(40);
+
+  test('a plain release puts its CHANGELOG section above the install line', () => {
+    const env = changelog('# Changelog\n\n## 0.81.0 (2026-11-20)\n\n### Fixes\n\n- Fixed it.\n');
+    const body = releaseBody('0.81.0', sha, env);
+    expect(body.startsWith('### Fixes\n\n- Fixed it.\n\n---\n\n')).toBe(true);
+    expect(body).toContain(`identity16/open-knowledge/blob/${sha}/MIGRATION.md`);
+  });
+
+  test('a plain release without a CHANGELOG section is refused before anything is published', () => {
+    const env = changelog('# Changelog\n\n## 0.80.0 (2026-11-19)\n\n- Old.\n');
+    const invoke = vi.fn();
+    expect(() => preflightRelease('0.81.0', sha, env, invoke)).toThrow(
+      /pnpm changelog:release 0.81.0/,
+    );
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  test('a legacy identity16 version keeps the install line alone', () => {
+    const env = changelog('# Changelog\n');
+    expect(releaseBody('0.76.0-identity16.7', sha, env)).toMatch(/^OpenKnowledge16 for macOS/);
   });
 });
