@@ -2000,34 +2000,28 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
     return filePath;
   }
 
+  function readDocSource(docName: string): string | null {
+    try {
+      const doc = hocuspocus.documents.get(docName);
+      if (doc) return doc.getText('source').toString();
+    } catch {}
+    try {
+      const filePath = resolveDocPath(docName);
+      if (filePath && existsSync(filePath)) return readFileSync(filePath, 'utf-8');
+    } catch {}
+    return null;
+  }
+
   const commentService = new CommentService({
     store: new CommentThreadStore(resolve(contentDir, OK_DIR, LOCAL_DIR), log),
     index: new CommentIndex(),
     getDocBody: (docName) => {
-      try {
-        const doc = hocuspocus.documents.get(docName);
-        if (doc) return stripFrontmatter(doc.getText('source').toString()).body;
-      } catch {}
-      try {
-        const filePath = resolveDocPath(docName);
-        if (filePath && existsSync(filePath)) {
-          return stripFrontmatter(readFileSync(filePath, 'utf-8')).body;
-        }
-      } catch {}
-      return null;
+      const source = readDocSource(docName);
+      return source === null ? null : stripFrontmatter(source).body;
     },
     getDocFrontmatter: (docName: string): Record<string, unknown> | null => {
-      try {
-        const doc = hocuspocus.documents.get(docName);
-        if (doc) return parseFrontmatterRecord(doc.getText('source').toString()) ?? {};
-      } catch {}
-      try {
-        const filePath = resolveDocPath(docName);
-        if (filePath && existsSync(filePath)) {
-          return parseFrontmatterRecord(readFileSync(filePath, 'utf-8')) ?? {};
-        }
-      } catch {}
-      return null;
+      const source = readDocSource(docName);
+      return source === null ? null : (parseFrontmatterRecord(source) ?? {});
     },
   });
 
