@@ -364,6 +364,15 @@ export function ConflictView({
           </Alert>
         </div>
       )}
+      {conflictKind === 'notion' && (
+        <div className="shrink-0 px-3 py-2">
+          <Alert role="status">
+            <AlertDescription>
+              {t`This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result.`}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
       {absentStageBanner && (
         <p role="status" className="shrink-0 border-b px-3 py-2 text-xs text-muted-foreground">
           {absentStageBanner}
@@ -448,7 +457,7 @@ export function ConflictView({
               });
             }}
           >
-            {t`Apply changes`}
+            {conflictKind === 'notion' ? t`Apply and publish to Notion` : t`Apply changes`}
           </Button>
         )}
       </div>
@@ -456,6 +465,7 @@ export function ConflictView({
         controls.map((control) =>
           createPortal(
             <ConflictActions
+              notion={conflictKind === 'notion'}
               conflictIndex={control.conflict.conflictIndex}
               onSelect={(selection) => handleActionRef.current?.(control.conflict, selection)}
             />,
@@ -469,9 +479,11 @@ export function ConflictView({
 
 function ConflictActions({
   conflictIndex,
+  notion = false,
   onSelect,
 }: {
   conflictIndex?: number;
+  notion?: boolean;
   onSelect: (selection: MergeConflictResolution) => void;
 }) {
   const { t } = useLingui();
@@ -484,11 +496,13 @@ function ConflictActions({
         aria-label={
           conflictIndex === undefined
             ? undefined
-            : t`Accept current version for conflict ${conflictIndex + 1}`
+            : notion
+              ? t`Keep this document for conflict ${conflictIndex + 1}`
+              : t`Accept current version for conflict ${conflictIndex + 1}`
         }
         onClick={() => onSelect('current')}
       >
-        {t`Accept current`}
+        {notion ? t`Keep this document` : t`Accept current`}
       </Button>
       <Button
         type="button"
@@ -497,11 +511,13 @@ function ConflictActions({
         aria-label={
           conflictIndex === undefined
             ? undefined
-            : t`Accept incoming version for conflict ${conflictIndex + 1}`
+            : notion
+              ? t`Keep Notion for conflict ${conflictIndex + 1}`
+              : t`Accept incoming version for conflict ${conflictIndex + 1}`
         }
         onClick={() => onSelect('incoming')}
       >
-        {t`Accept incoming`}
+        {notion ? t`Keep Notion` : t`Accept incoming`}
       </Button>
       {conflictIndex !== undefined && (
         <Button

@@ -31,7 +31,7 @@ async function mount(props: {
   ours: string;
   base: string;
   theirs: string;
-  conflictKind?: 'git' | 'stale-external-write';
+  conflictKind?: 'git' | 'stale-external-write' | 'notion';
   onResolve?: (content: string) => void | Promise<void>;
 }) {
   const onResolve = props.onResolve ?? vi.fn();
@@ -373,4 +373,21 @@ test('the diff region is a named, keyboard-reachable landmark', async () => {
   const region = screen.getByRole('region', { name: /Conflict diff for/ });
   expect(region.getAttribute('tabindex')).toBe('0');
   expect(region.tagName).toBe('SECTION');
+});
+
+test('a Notion conflict names the sides "this document" and "Notion" and explains the publish', async () => {
+  await mount({
+    conflictKind: 'notion',
+    base: 'Alpha\n',
+    ours: 'Alpha in OK\n',
+    theirs: 'Alpha in Notion\n',
+  });
+
+  expect(screen.getByText(/This page changed in Notion since you last published/)).toBeTruthy();
+  expect(
+    screen.getAllByRole('button', { name: /Keep this document|Accept current version/ }).length,
+  ).toBeGreaterThan(0);
+  expect(screen.getAllByText('Keep this document').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Keep Notion').length).toBeGreaterThan(0);
+  expect(screen.queryByText('Accept current')).toBeNull();
 });

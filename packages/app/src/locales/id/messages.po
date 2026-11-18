@@ -1561,6 +1561,9 @@ msgstr "Berlaku untuk proyek ini hanya di komputer ini. Disimpan di .ok/local, t
 msgid "Applies when you pick this conversation back up"
 msgstr "Berlaku saat Anda melanjutkan percakapan ini"
 
+msgid "Apply and publish to Notion"
+msgstr "Terapkan dan terbitkan ke Notion"
+
 msgid "Apply and restart project server"
 msgstr "Terapkan dan mulai ulang server proyek"
 
@@ -2050,6 +2053,9 @@ msgstr "Ganti penyedia embedding?"
 msgid "Changed"
 msgstr "Diubah"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "Berubah di sini dan di Notion. Buka untuk memilih yang ingin disimpan."
+
 msgid "Changed here and on the remote"
 msgstr "Berubah di sini dan di remote"
 
@@ -2140,6 +2146,9 @@ msgstr "Memeriksa koneksi GitHub..."
 
 msgid "Checking links"
 msgstr "Memeriksa tautan"
+
+msgid "Checking Notion…"
+msgstr "Memeriksa Notion…"
 
 msgid "Checking out files"
 msgstr "Mengambil berkas"
@@ -2927,6 +2936,9 @@ msgstr "Server tidak dapat dihubungi"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "Keadaan cabang untuk proyek ini tidak dapat dibaca. Tutup dialog ini dan buka lagi tautan berbaginya."
+
+msgid "Could not read the Notion page."
+msgstr "Tidak dapat membaca halaman Notion."
 
 msgid "Could not save sync preference: {detail}"
 msgstr "Preferensi sinkronisasi tidak dapat disimpan: {detail}"
@@ -5853,6 +5865,12 @@ msgstr "Pakai punya saya"
 msgid "Keep my version"
 msgstr "Simpan versi saya"
 
+msgid "Keep Notion"
+msgstr "Simpan Notion"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "Simpan Notion untuk konflik {0}"
+
 msgid "Keep open"
 msgstr "Biarkan terbuka"
 
@@ -5864,6 +5882,12 @@ msgstr "Simpan sumbernya"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "Nama harus 64 karakter atau kurang."
+
+msgid "Keep this document"
+msgstr "Simpan dokumen ini"
+
+msgid "Keep this document for conflict {0}"
+msgstr "Simpan dokumen ini untuk konflik {0}"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "Jaga proyek ini tetap sinkron dengan remote git Anda. Otomatis (hanya Pull) membawa pembaruan tanpa push; Otomatis (Pull dan Push) juga mengirim suntingan Anda. Mengaktifkan sinkronisasi otomatis memerlukan konfirmasi."
@@ -6332,6 +6356,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "Di-merge"
 
+msgid "Merged the Notion edits and published"
+msgstr "Suntingan Notion digabungkan dan diterbitkan"
+
 msgid "Mermaid diagram"
 msgstr "Diagram Mermaid"
 
@@ -6424,6 +6451,9 @@ msgstr "Tindakan lainnya ({syncAttentionLabel})"
 
 msgid "More information"
 msgstr "Informasi selengkapnya"
+
+msgid "More Notion actions"
+msgstr "Tindakan Notion lainnya"
 
 msgid "More requests were blocked."
 msgstr "Lebih banyak permintaan diblokir."
@@ -7009,6 +7039,9 @@ msgstr "Tidak ada blok sumber cermin di {docName} yang cocok dengan teks di kolo
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "Tidak ada blok sumber cermin di {docName}"
+
+msgid "No new edits in Notion"
+msgstr "Tidak ada suntingan baru di Notion"
 
 msgid "No Notion workspaces connected yet."
 msgstr "Belum ada ruang kerja Notion yang terhubung."
@@ -8979,6 +9012,12 @@ msgstr "Selesaikan konflik pada {files} dan {overflow} berkas lainnya sebelum me
 msgid "Resolved"
 msgstr "Selesai"
 
+msgid "Resolved and published to Notion"
+msgstr "Diselesaikan dan diterbitkan ke Notion"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "Diselesaikan di sini, tetapi gagal menerbitkan ke Notion. Terbitkan lagi dari bilah alat."
+
 msgid "Resolving default location"
 msgstr "Menentukan lokasi bawaan"
 
@@ -10014,9 +10053,6 @@ msgstr "Beberapa keterampilan dihapus dengan peringatan"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "Beberapa templat mungkin tidak tercantum karena basis pengetahuan ini memiliki terlalu banyak folder untuk dipindai. Untuk melihat templat sebuah folder, buka menunya di pohon berkas lalu pilih \"Baru dari templat\"."
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "Seseorang mengedit halaman di Notion sejak terakhir kali Anda menerbitkan. Menerbitkan sekarang akan mengganti perubahan mereka dengan dokumen ini."
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "Mungkin seseorang sudah menyelesaikan {filePath} — periksa isi dokumen saat ini sebelum mengulangi suntingan Anda."
 
@@ -10456,6 +10492,9 @@ msgstr "Silakan lihat kalau mau. Berkas persis inilah yang kami terima."
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "Bawa sebuah tulisan dari ide kasar menjadi draf jadi lalu menjadi sesuatu yang siap Anda bagikan. Cocok untuk pos blog, esai, atau apa pun yang ingin Anda jalankan lewat tahapan yang jelas."
 
+msgid "Take edits from Notion"
+msgstr "Ambil suntingan dari Notion"
+
 msgid "Take upstream"
 msgstr "Ambil versi remote"
 
@@ -10751,9 +10790,6 @@ msgstr "Waktu persetujuan Notion habis. Coba lagi."
 
 msgid "The Notion page already has content"
 msgstr "Halaman Notion sudah memiliki konten"
-
-msgid "The Notion page changed"
-msgstr "Halaman Notion berubah"
 
 msgid "the open agent"
 msgstr "agen yang terbuka"
@@ -11093,6 +11129,9 @@ msgstr "Dokumen ini belum tersinkron ke GitHub. Tautannya akan berfungsi setelah
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "Dokumen ini belum ada di GitHub. Tautannya tidak akan berfungsi sampai ia dikirim."
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "Dokumen ini dan Notion mengubah bagian yang sama. Pilih yang ingin disimpan."
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "Dokumen ini sudah aktif di penyunting. Gunakan Buka untuk menciutkan graf."
 
@@ -11219,6 +11258,9 @@ msgstr "Opsi ini tidak dapat diubah secara otomatis."
 
 msgid "This pack is already set up here."
 msgstr "Paket ini sudah disiapkan di sini."
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "Halaman ini berubah di Notion sejak terakhir Anda terbitkan, dan bagian yang sama berubah di sini. Pilih yang ingin disimpan, lalu terapkan untuk menerbitkan hasilnya."
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "Halaman ini belum ada. Buka untuk membuat halamannya di penyunting dan menciutkan graf."
@@ -11485,6 +11527,9 @@ msgstr "Terlalu banyak referensi langsung di halaman ini. Papan ini tidak dimuat
 
 msgid "Too slow"
 msgstr "Terlalu lambat"
+
+msgid "Took the Notion edits into this document"
+msgstr "Suntingan Notion dimasukkan ke dokumen ini"
 
 msgid "Tool call"
 msgstr "Panggilan alat"

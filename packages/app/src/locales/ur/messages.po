@@ -1565,6 +1565,9 @@ msgstr "صرف اسی کمپیوٹر پر اس پروجیکٹ پر لاگو ہو
 msgid "Applies when you pick this conversation back up"
 msgstr "جب آپ یہ گفتگو دوبارہ شروع کریں گے تو لاگو ہوگا"
 
+msgid "Apply and publish to Notion"
+msgstr "لاگو کریں اور Notion پر شائع کریں"
+
 msgid "Apply and restart project server"
 msgstr "لاگو کریں اور پروجیکٹ سرور دوبارہ شروع کریں"
 
@@ -2054,6 +2057,9 @@ msgstr "ایمبیڈنگز فراہم کنندہ بدلیں؟"
 msgid "Changed"
 msgstr "تبدیل شدہ"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "یہاں اور Notion دونوں میں بدلا گیا۔ کیا رکھنا ہے چننے کے لیے کھولیں۔"
+
 msgid "Changed here and on the remote"
 msgstr "یہاں اور ریموٹ دونوں پر تبدیل ہوئیں"
 
@@ -2144,6 +2150,9 @@ msgstr "GitHub کنکشن جانچا جا رہا ہے..."
 
 msgid "Checking links"
 msgstr "لنکس کی جانچ ہو رہی ہے"
+
+msgid "Checking Notion…"
+msgstr "Notion چیک ہو رہا ہے…"
 
 msgid "Checking out files"
 msgstr "فائلیں چیک آؤٹ کی جا رہی ہیں"
@@ -2931,6 +2940,9 @@ msgstr "سرور تک رسائی نہیں ہو سکی"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "اس پروجیکٹ کی برانچ کی حالت پڑھی نہیں جا سکی۔ یہ ڈائیلاگ بند کریں اور شیئر لنک دوبارہ کھولیں۔"
+
+msgid "Could not read the Notion page."
+msgstr "Notion صفحہ پڑھا نہیں جا سکا۔"
 
 msgid "Could not save sync preference: {detail}"
 msgstr "مطابقت پذیری کی ترجیح محفوظ نہیں ہو سکی: {detail}"
@@ -5857,6 +5869,12 @@ msgstr "میری والی رکھیں"
 msgid "Keep my version"
 msgstr "میرا ورژن رکھیں"
 
+msgid "Keep Notion"
+msgstr "Notion رکھیں"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "تنازع {0} کے لیے Notion رکھیں"
+
 msgid "Keep open"
 msgstr "کھلا رکھیں"
 
@@ -5868,6 +5886,12 @@ msgstr "ماخذ رکھیں"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "نام کو 64 حروف یا اس سے کم رکھیں۔"
+
+msgid "Keep this document"
+msgstr "یہ دستاویز رکھیں"
+
+msgid "Keep this document for conflict {0}"
+msgstr "تنازع {0} کے لیے یہ دستاویز رکھیں"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "اس پروجیکٹ کو اپنے git ریموٹ کے ساتھ مطابقت میں رکھیں۔ خودکار (صرف کھینچیں) پُش کیے بغیر اپ ڈیٹس لاتا ہے؛ خودکار (کھینچیں اور پُش) آپ کی ترامیم بھی بھیجتا ہے۔ خودکار مطابقت پذیری آن کرنے کے لیے تصدیق درکار ہے۔"
@@ -6336,6 +6360,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "مرج ہو گیا"
 
+msgid "Merged the Notion edits and published"
+msgstr "Notion کی ترامیم ملا کر شائع کر دیا گیا"
+
 msgid "Mermaid diagram"
 msgstr "Mermaid خاکہ"
 
@@ -6428,6 +6455,9 @@ msgstr "مزید اعمال ({syncAttentionLabel})"
 
 msgid "More information"
 msgstr "مزید معلومات"
+
+msgid "More Notion actions"
+msgstr "Notion کے مزید اقدامات"
 
 msgid "More requests were blocked."
 msgstr "مزید درخواستیں روکی گئیں۔"
@@ -7013,6 +7043,9 @@ msgstr "{docName} میں اس فیلڈ کے متن سے ملتا ہوا مرر �
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName} میں مرر کے ماخذ کا کوئی بلاک نہیں ہے"
+
+msgid "No new edits in Notion"
+msgstr "Notion میں کوئی نئی ترمیم نہیں"
 
 msgid "No Notion workspaces connected yet."
 msgstr "ابھی تک کوئی Notion ورک اسپیس نہیں جڑی۔"
@@ -8983,6 +9016,12 @@ msgstr "حذف کرنے سے پہلے {files} اور مزید {overflow} فائ�
 msgid "Resolved"
 msgstr "حل شدہ"
 
+msgid "Resolved and published to Notion"
+msgstr "حل کر کے Notion پر شائع کر دیا گیا"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "یہاں حل ہو گیا، لیکن Notion پر شائع نہیں ہو سکا۔ ٹول بار سے دوبارہ شائع کریں۔"
+
 msgid "Resolving default location"
 msgstr "طے شدہ مقام معلوم کیا جا رہا ہے"
 
@@ -10018,9 +10057,6 @@ msgstr "کچھ مہارتیں انتباہ کے ساتھ حذف ہوئیں"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "کچھ ٹیمپلیٹس شاید فہرست میں نہ ہوں، کیونکہ اس نالج بیس میں اسکین کرنے کے لیے بہت زیادہ فولڈرز ہیں۔ کسی فولڈر کے ٹیمپلیٹس دیکھنے کے لیے، فائل ٹری میں اس کا مینو کھولیں اور «ٹیمپلیٹ سے نیا» منتخب کریں۔"
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "آپ کی آخری اشاعت کے بعد کسی نے Notion میں صفحہ ترمیم کیا۔ ابھی شائع کرنے سے ان کی تبدیلیاں اس دستاویز سے بدل جائیں گی۔"
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "ہو سکتا ہے کسی نے {filePath} کا تنازع پہلے ہی حل کر دیا ہو — اپنی ترمیم دوبارہ کرنے سے پہلے دستاویز کا موجودہ مواد دیکھ لیں۔"
 
@@ -10460,6 +10496,9 @@ msgstr "چاہیں تو دیکھ لیں۔ ہمیں بالکل یہی فائل م
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "کسی تحریر کو خام خیال سے مکمل مسودے تک اور پھر شیئر کرنے کے قابل چیز تک لے جائیں۔ بلاگ پوسٹس، مضامین، یا کسی بھی ایسی چیز کے لیے مفید جسے آپ واضح مراحل سے گزارنا چاہتے ہیں۔"
 
+msgid "Take edits from Notion"
+msgstr "Notion سے ترامیم لیں"
+
 msgid "Take upstream"
 msgstr "اپ سٹریم والا لیں"
 
@@ -10755,9 +10794,6 @@ msgstr "Notion منظوری کا وقت ختم ہو گیا۔ دوبارہ کوش
 
 msgid "The Notion page already has content"
 msgstr "Notion صفحے میں پہلے سے مواد موجود ہے"
-
-msgid "The Notion page changed"
-msgstr "Notion صفحہ بدل گیا"
 
 msgid "the open agent"
 msgstr "کھلا ہوا ایجنٹ"
@@ -11097,6 +11133,9 @@ msgstr "یہ دستاویز ابھی GitHub سے مطابق نہیں ہوئی۔ 
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "یہ دستاویز ابھی GitHub پر نہیں ہے۔ پُش ہونے تک لنک کام نہیں کرے گا۔"
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "اس دستاویز اور Notion نے ایک ہی حصہ بدلا۔ کیا رکھنا ہے چنیں۔"
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "یہ دستاویز ایڈیٹر میں پہلے ہی فعال ہے۔ گراف سکیڑنے کے لیے «کھولیں» استعمال کریں۔"
 
@@ -11223,6 +11262,9 @@ msgstr "یہ آپشن خودکار طور پر تبدیل نہیں کیا جا �
 
 msgid "This pack is already set up here."
 msgstr "یہ پیک یہاں پہلے سے ترتیب دیا جا چکا ہے۔"
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "آپ کی آخری اشاعت کے بعد Notion میں یہ صفحہ بدلا، اور یہی حصہ یہاں بھی بدلا۔ کیا رکھنا ہے چنیں، پھر نتیجہ شائع کرنے کے لیے لاگو کریں۔"
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "یہ صفحہ ابھی موجود نہیں۔ ایڈیٹر میں صفحہ بنانے اور گراف سکیڑنے کے لیے اسے کھولیں۔"
@@ -11489,6 +11531,9 @@ msgstr "اس صفحے پر بہت زیادہ لائیو حوالے ہیں۔ یہ
 
 msgid "Too slow"
 msgstr "بہت سست"
+
+msgid "Took the Notion edits into this document"
+msgstr "Notion کی ترامیم اس دستاویز میں لے آئی گئیں"
 
 msgid "Tool call"
 msgstr "ٹول کال"

@@ -1565,6 +1565,9 @@ msgstr "이 컴퓨터의 이 프로젝트에만 적용됩니다. .ok/local에 �
 msgid "Applies when you pick this conversation back up"
 msgstr "이 대화를 다시 시작할 때 적용됩니다"
 
+msgid "Apply and publish to Notion"
+msgstr "적용하고 Notion에 게시"
+
 msgid "Apply and restart project server"
 msgstr "적용하고 프로젝트 서버 재시작"
 
@@ -2054,6 +2057,9 @@ msgstr "임베딩 제공업체를 변경하시겠습니까?"
 msgid "Changed"
 msgstr "변경됨"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "여기와 Notion 양쪽에서 바뀌었습니다. 열어서 남길 내용을 고르세요."
+
 msgid "Changed here and on the remote"
 msgstr "여기와 원격 모두에서 변경됨"
 
@@ -2144,6 +2150,9 @@ msgstr "GitHub 연결 확인 중…"
 
 msgid "Checking links"
 msgstr "링크 확인 중"
+
+msgid "Checking Notion…"
+msgstr "Notion을 확인하는 중…"
 
 msgid "Checking out files"
 msgstr "파일 체크아웃 중"
@@ -2931,6 +2940,9 @@ msgstr "서버에 연결하지 못했습니다"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "이 프로젝트의 브랜치 상태를 읽을 수 없습니다. 이 대화 상자를 닫고 공유 링크를 다시 여세요."
+
+msgid "Could not read the Notion page."
+msgstr "Notion 페이지를 읽지 못했습니다."
 
 msgid "Could not save sync preference: {detail}"
 msgstr "동기화 환경설정을 저장할 수 없습니다: {detail}"
@@ -5857,6 +5869,12 @@ msgstr "내 것 유지"
 msgid "Keep my version"
 msgstr "내 버전 유지"
 
+msgid "Keep Notion"
+msgstr "Notion 버전 적용"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "충돌 {0}에 Notion 버전 적용"
+
 msgid "Keep open"
 msgstr "열어 두기"
 
@@ -5868,6 +5886,12 @@ msgstr "소스 유지"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "이름은 64자 이하로 유지하세요."
+
+msgid "Keep this document"
+msgstr "이 문서 버전 적용"
+
+msgid "Keep this document for conflict {0}"
+msgstr "충돌 {0}에 이 문서 버전 적용"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "이 프로젝트를 git 원격과 동기화 상태로 유지합니다. 자동(풀만)은 푸시 없이 업데이트를 가져오고, 자동(풀 및 푸시)은 편집 내용도 보냅니다. 자동 동기화를 켜려면 확인이 필요합니다."
@@ -6336,6 +6360,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "병합됨"
 
+msgid "Merged the Notion edits and published"
+msgstr "Notion 변경을 합쳐서 게시했습니다"
+
 msgid "Mermaid diagram"
 msgstr "Mermaid 다이어그램"
 
@@ -6428,6 +6455,9 @@ msgstr "추가 작업 ({syncAttentionLabel})"
 
 msgid "More information"
 msgstr "추가 정보"
+
+msgid "More Notion actions"
+msgstr "Notion 작업 더 보기"
 
 msgid "More requests were blocked."
 msgstr "더 많은 요청이 차단되었습니다."
@@ -7013,6 +7043,9 @@ msgstr "{docName}에 이 입력란의 텍스트와 일치하는 미러 소스 �
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName}에 미러 소스 블록이 없습니다"
+
+msgid "No new edits in Notion"
+msgstr "Notion에 새 변경이 없습니다"
 
 msgid "No Notion workspaces connected yet."
 msgstr "아직 연결된 Notion 워크스페이스가 없습니다."
@@ -8983,6 +9016,12 @@ msgstr "삭제하기 전에 {files}의 충돌을 해결하고, +{overflow}개 �
 msgid "Resolved"
 msgstr "해결됨"
 
+msgid "Resolved and published to Notion"
+msgstr "충돌을 해결하고 Notion에 게시했습니다"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "여기서는 해결했지만 Notion에 게시하지 못했습니다. 툴바에서 다시 게시하세요."
+
 msgid "Resolving default location"
 msgstr "기본 위치 확인 중"
 
@@ -10018,9 +10057,6 @@ msgstr "일부 스킬이 경고와 함께 삭제되었습니다"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "이 지식 베이스에는 폴더가 너무 많아 모두 스캔할 수 없으므로 일부 템플릿이 목록에 표시되지 않을 수 있습니다. 폴더의 템플릿을 보려면 파일 트리에서 해당 폴더의 메뉴를 열고 \"템플릿에서 새로 만들기\"를 선택하세요."
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "마지막으로 게시한 뒤 누군가 Notion에서 페이지를 수정했습니다. 지금 게시하면 그 변경 내용이 이 문서로 바뀝니다."
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "누군가 이미 {filePath}의 충돌을 해결했을 수 있습니다 — 편집을 다시 하기 전에 문서의 현재 내용을 확인하세요."
 
@@ -10460,6 +10496,9 @@ msgstr "원한다면 확인해 보세요. 수신하는 정확한 파일입니다
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "글을 거친 아이디어에서 완성된 초안으로, 공유할 준비가 된 결과물로 발전시킵니다. 블로그 게시물, 에세이 등 명확한 단계를 거쳐 발전시키고 싶은 글에 유용합니다."
 
+msgid "Take edits from Notion"
+msgstr "Notion에서 가져오기"
+
 msgid "Take upstream"
 msgstr "업스트림 가져오기"
 
@@ -10755,9 +10794,6 @@ msgstr "Notion 승인 시간이 지났습니다. 다시 시도하세요."
 
 msgid "The Notion page already has content"
 msgstr "Notion 페이지에 이미 내용이 있습니다"
-
-msgid "The Notion page changed"
-msgstr "Notion 페이지가 바뀌었습니다"
 
 msgid "the open agent"
 msgstr "열린 에이전트"
@@ -11097,6 +11133,9 @@ msgstr "이 문서는 아직 GitHub와 동기화되지 않았습니다. 다음 �
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "이 문서는 아직 GitHub에 없습니다. 푸시해야 링크가 작동합니다."
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "이 문서와 Notion이 같은 부분을 고쳤습니다. 남길 내용을 고르세요."
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "이 문서는 편집기에서 이미 활성 상태입니다. 열기를 사용해 그래프를 접습니다."
 
@@ -11223,6 +11262,9 @@ msgstr "이 옵션은 자동으로 변경할 수 없습니다."
 
 msgid "This pack is already set up here."
 msgstr "이 팩은 여기에서 이미 설정되어 있습니다."
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "마지막으로 게시한 뒤 Notion에서 페이지가 바뀌었고, 같은 부분이 여기서도 바뀌었습니다. 남길 내용을 고른 뒤 적용하면 그 결과가 게시됩니다."
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "이 페이지는 아직 존재하지 않습니다. 열어서 편집기에서 페이지를 만들고 그래프를 접습니다."
@@ -11489,6 +11531,9 @@ msgstr "이 페이지에 라이브 참조가 너무 많습니다. 이 보드는 
 
 msgid "Too slow"
 msgstr "너무 느림"
+
+msgid "Took the Notion edits into this document"
+msgstr "Notion 변경을 이 문서에 가져왔습니다"
 
 msgid "Tool call"
 msgstr "도구 호출"

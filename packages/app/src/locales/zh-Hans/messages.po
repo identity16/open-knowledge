@@ -1565,6 +1565,9 @@ msgstr "仅在这台电脑上对本项目生效。保存在 .ok/local 中，不�
 msgid "Applies when you pick this conversation back up"
 msgstr "继续此对话时生效"
 
+msgid "Apply and publish to Notion"
+msgstr "应用并发布到 Notion"
+
 msgid "Apply and restart project server"
 msgstr "应用并重启项目服务器"
 
@@ -2054,6 +2057,9 @@ msgstr "要更换嵌入服务提供方吗？"
 msgid "Changed"
 msgstr "已修改"
 
+msgid "Changed here and in Notion. Open it to choose what to keep."
+msgstr "此处和 Notion 都有更改。打开它选择要保留的内容。"
+
 msgid "Changed here and on the remote"
 msgstr "本地和远程都有改动"
 
@@ -2144,6 +2150,9 @@ msgstr "正在检查 GitHub 连接…"
 
 msgid "Checking links"
 msgstr "正在检查链接"
+
+msgid "Checking Notion…"
+msgstr "正在检查 Notion…"
 
 msgid "Checking out files"
 msgstr "正在检出文件"
@@ -2931,6 +2940,9 @@ msgstr "无法连接到服务器"
 
 msgid "Could not read branch state for this project. Close this dialog and open the share link again."
 msgstr "无法读取这个项目的分支状态。请关闭此对话框并重新打开共享链接。"
+
+msgid "Could not read the Notion page."
+msgstr "无法读取 Notion 页面。"
 
 msgid "Could not save sync preference: {detail}"
 msgstr "无法保存同步偏好：{detail}"
@@ -5857,6 +5869,12 @@ msgstr "保留我的"
 msgid "Keep my version"
 msgstr "保留我的版本"
 
+msgid "Keep Notion"
+msgstr "保留 Notion"
+
+msgid "Keep Notion for conflict {0}"
+msgstr "冲突 {0} 保留 Notion"
+
 msgid "Keep open"
 msgstr "保持打开"
 
@@ -5868,6 +5886,12 @@ msgstr "保留来源"
 
 msgid "Keep the name to 64 characters or fewer."
 msgstr "名称请控制在 64 个字符以内。"
+
+msgid "Keep this document"
+msgstr "保留此文档"
+
+msgid "Keep this document for conflict {0}"
+msgstr "冲突 {0} 保留此文档"
 
 msgid "Keep this project in sync with your git remote. Auto (Pull only) brings in updates without pushing; Auto (Pull and Push) sends your edits too. Turning auto-sync on requires confirmation."
 msgstr "让此项目与你的 git 远程仓库保持同步。自动（仅拉取）只带来更新而不推送；自动（拉取和推送）还会发送你的编辑。开启自动同步需要确认。"
@@ -6336,6 +6360,9 @@ msgctxt "GitHub pull request or issue state"
 msgid "Merged"
 msgstr "已合并"
 
+msgid "Merged the Notion edits and published"
+msgstr "已合并 Notion 的编辑并发布"
+
 msgid "Mermaid diagram"
 msgstr "Mermaid 图示"
 
@@ -6428,6 +6455,9 @@ msgstr "更多操作（{syncAttentionLabel}）"
 
 msgid "More information"
 msgstr "更多信息"
+
+msgid "More Notion actions"
+msgstr "更多 Notion 操作"
 
 msgid "More requests were blocked."
 msgstr "还有更多请求被拦截。"
@@ -7013,6 +7043,9 @@ msgstr "{docName} 中没有与此字段文本匹配的镜像来源块。清空�
 
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName} 中没有镜像来源块"
+
+msgid "No new edits in Notion"
+msgstr "Notion 中没有新的编辑"
 
 msgid "No Notion workspaces connected yet."
 msgstr "尚未连接任何 Notion 工作区。"
@@ -8983,6 +9016,12 @@ msgstr "删除前请先解决 {files} 以及另外 {overflow} 个文件上的冲
 msgid "Resolved"
 msgstr "已解决"
 
+msgid "Resolved and published to Notion"
+msgstr "已解决并发布到 Notion"
+
+msgid "Resolved here, but publishing to Notion failed. Publish again from the toolbar."
+msgstr "已在此处解决，但发布到 Notion 失败。请从工具栏重新发布。"
+
 msgid "Resolving default location"
 msgstr "正在确定默认位置"
 
@@ -10018,9 +10057,6 @@ msgstr "部分技能删除时带有警告"
 msgid "Some templates may not be listed because this knowledge base has too many folders to scan. To see a folder's templates, open its menu in the file tree and choose New from template."
 msgstr "部分模板可能未列出，因为此知识库的文件夹太多，无法全部扫描。要查看某个文件夹的模板，请在文件树中打开该文件夹的菜单，然后选择「从模板新建」。"
 
-msgid "Someone edited the page in Notion since you last published. Publishing now replaces their changes with this document."
-msgstr "自你上次发布以来，有人在 Notion 中编辑了该页面。现在发布会用此文档替换他们的更改。"
-
 msgid "Someone may have already resolved {filePath} — check the document's current content before redoing your edit."
 msgstr "可能已有人解决了 {filePath} 的冲突 — 请先查看文档的当前内容，再重做你的编辑。"
 
@@ -10460,6 +10496,9 @@ msgstr "愿意的话可以看看。我们收到的就是这个文件本身。"
 msgid "Take a piece of writing from a rough idea to a finished draft to something you're ready to share. Good for blog posts, essays, or anything you want to move through clear stages."
 msgstr "把一段文字从粗略的想法带到完成的初稿，再到可以拿出去分享的成品。适合博客文章、随笔，或者任何你想分阶段推进的写作。"
 
+msgid "Take edits from Notion"
+msgstr "从 Notion 获取编辑"
+
 msgid "Take upstream"
 msgstr "采用远程版本"
 
@@ -10755,9 +10794,6 @@ msgstr "Notion 批准已超时。请重试。"
 
 msgid "The Notion page already has content"
 msgstr "Notion 页面已有内容"
-
-msgid "The Notion page changed"
-msgstr "Notion 页面已更改"
 
 msgid "the open agent"
 msgstr "已打开的智能体"
@@ -11097,6 +11133,9 @@ msgstr "这个文档还没有同步到 GitHub。下次同步后链接就会生�
 msgid "This doc isn't on GitHub yet. The link won't work until it's pushed."
 msgstr "这个文档还不在 GitHub 上。在推送之前链接不会生效。"
 
+msgid "This document and Notion changed the same part. Choose what to keep."
+msgstr "此文档和 Notion 修改了同一部分。请选择要保留的内容。"
+
 msgid "This document is already active in the editor. Use Open to collapse the graph."
 msgstr "这个文档已经在编辑器中打开了。请用「打开」来折叠关系图。"
 
@@ -11223,6 +11262,9 @@ msgstr "无法自动更改此选项。"
 
 msgid "This pack is already set up here."
 msgstr "这个包在这里已经设置好了。"
+
+msgid "This page changed in Notion since you last published, and the same part changed here. Choose what to keep, then apply to publish the result."
+msgstr "自你上次发布以来，此页面在 Notion 中有更改，且同一部分在此处也有更改。选择要保留的内容，然后应用以发布结果。"
 
 msgid "This page doesn't exist yet. Open it to create the page in the editor and collapse the graph."
 msgstr "这个页面还不存在。打开它即可在编辑器中创建该页面并折叠关系图。"
@@ -11489,6 +11531,9 @@ msgstr "此页面的实时引用过多。此画板未加载。"
 
 msgid "Too slow"
 msgstr "太慢了"
+
+msgid "Took the Notion edits into this document"
+msgstr "已将 Notion 的编辑带入此文档"
 
 msgid "Tool call"
 msgstr "工具调用"

@@ -1,6 +1,6 @@
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 import { Trans, useLingui } from '@lingui/react/macro';
-import { Link2, Send } from 'lucide-react';
+import { ChevronDown, Download, Link2, Send } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -22,6 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   httpNotionPublishTransport,
@@ -31,7 +37,7 @@ import { useNotionLink, writeNotionLink } from '@/lib/use-notion-link';
 
 const defaultTransport = httpNotionPublishTransport();
 
-type OverwriteReason = 'page-not-empty' | 'changed-in-notion' | null;
+type OverwriteReason = 'page-not-empty' | null;
 
 export function NotionToolbarControls({
   provider,
@@ -73,15 +79,44 @@ export function NotionToolbarControls({
     setBusy(false);
     switch (outcome.kind) {
       case 'published':
-        toast.success(t`Published to Notion`, { id: toastId });
+        toast.success(
+          outcome.merged ? t`Merged the Notion edits and published` : t`Published to Notion`,
+          { id: toastId },
+        );
         return;
       case 'page-not-empty':
-      case 'changed-in-notion':
         toast.dismiss(toastId);
         setOverwrite(outcome.kind);
         return;
+      case 'changed-in-notion':
+        toast.warning(t`This document and Notion changed the same part. Choose what to keep.`, {
+          id: toastId,
+        });
+        return;
       case 'failed':
         toast.error(outcome.message ?? t`Could not publish to Notion.`, { id: toastId });
+    }
+  }
+
+  async function pull() {
+    setBusy(true);
+    const toastId = toast.loading(t`Checking Notion…`);
+    const outcome = await transport.pull(docName);
+    setBusy(false);
+    switch (outcome.kind) {
+      case 'merged':
+        toast.success(t`Took the Notion edits into this document`, { id: toastId });
+        return;
+      case 'unchanged':
+        toast.success(t`No new edits in Notion`, { id: toastId });
+        return;
+      case 'changed-in-notion':
+        toast.warning(t`This document and Notion changed the same part. Choose what to keep.`, {
+          id: toastId,
+        });
+        return;
+      case 'failed':
+        toast.error(outcome.message ?? t`Could not read the Notion page.`, { id: toastId });
     }
   }
 
@@ -98,16 +133,37 @@ export function NotionToolbarControls({
           <Trans>Link Notion page</Trans>
         </Button>
       ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={busy}
-          onClick={() => void publish(false)}
-          data-testid="notion-publish"
-        >
-          <Send aria-hidden className="size-4" />
-          <Trans>Publish to Notion</Trans>
-        </Button>
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={busy}
+            onClick={() => void publish(false)}
+            data-testid="notion-publish"
+          >
+            <Send aria-hidden className="size-4" />
+            <Trans>Publish to Notion</Trans>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                aria-label={t`More Notion actions`}
+                data-testid="notion-more"
+              >
+                <ChevronDown aria-hidden className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => void pull()} data-testid="notion-pull">
+                <Download aria-hidden className="size-4" />
+                <Trans>Take edits from Notion</Trans>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       )}
 
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
@@ -143,21 +199,10 @@ export function NotionToolbarControls({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {overwrite === 'changed-in-notion' ? (
-                <Trans>The Notion page changed</Trans>
-              ) : (
-                <Trans>The Notion page already has content</Trans>
-              )}
+              <Trans>The Notion page already has content</Trans>
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {overwrite === 'changed-in-notion' ? (
-                <Trans>
-                  Someone edited the page in Notion since you last published. Publishing now
-                  replaces their changes with this document.
-                </Trans>
-              ) : (
-                <Trans>Publishing replaces the page's current content with this document.</Trans>
-              )}
+              <Trans>Publishing replaces the page's current content with this document.</Trans>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
