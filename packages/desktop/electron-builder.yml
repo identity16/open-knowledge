@@ -9,7 +9,7 @@ copyright: Copyright © 2026 Inkeep
 # "electron" devDep in packages/desktop/package.json — that devDep is
 # pinned exact (no caret) so the packaged runtime and the version used by
 # electron-rebuild / native-module ABI compilation cannot drift.
-electronVersion: "44.9.1"
+electronVersion: "44.11.3"
 
 # This product builds macOS only. The release passes `-c.npmRebuild=false`
 # (scripts/release/build-desktop.mjs): every native module the app and its CLI load
@@ -331,7 +331,7 @@ mac:
   # spawned server process without a Dock tile — without this, the
   # re-exec into the parent's MacOS binary triggers LaunchServices to
   # pin a stuck "exec" Dock placeholder for the child's lifetime.
-  # UPSTREAM(electron@44.9.1): the helper binary afterPack clones into
+  # UPSTREAM(electron@44.11.3): the helper binary afterPack clones into
   #   `<productName> Server.app/Contents/MacOS` SIGTRAPs unless it is named
   #   `<productName> Helper`; see `build/helper-bundle/Info.plist`.
   extraFiles:
