@@ -7,9 +7,6 @@ import { markdownRewrites } from './src/lib/markdown-routes';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  reactCompiler: {
-    panicThreshold: 'all_errors',
-  },
   turbopack: {
     root: fileURLToPath(new URL('..', import.meta.url)),
   },
