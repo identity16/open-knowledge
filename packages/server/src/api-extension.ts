@@ -153,12 +153,14 @@ import { isAbsentPathError } from './lint/audit-scope.ts';
 import { unmatchedAppliesToProblems } from './lint/frontmatter-schemas.ts';
 import { resolveEffectiveLinterConfig } from './lint/resolve-config.ts';
 import { createProjectValidators } from './lint/validation-audit.ts';
+import { createNotionBaseStore } from './notion/base-store.ts';
 import {
   createNotionConnectionRegistry,
   notionConnectionsPath,
 } from './notion/connection-registry.ts';
 import { createNotionConnections } from './notion/notion-connections.ts';
 import { createNotionOAuthWorkerClient } from './notion/oauth-worker-client.ts';
+import { createNotionPublisher } from './notion/publisher.ts';
 import { createNotionTokenStore } from './notion/token-store.ts';
 import {
   extractPageTitle,
@@ -5750,14 +5752,20 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
   });
   const handoffInstallRoutes = createHandoffInstallRoutes({ checkLocalOpSecurity });
   const notionDispatcher = envProxyDispatcher(log, 'notion', 'Notion');
+  const notionConnections = createNotionConnections({
+    registry: createNotionConnectionRegistry(notionConnectionsPath(homeDirOverride)),
+    tokens: createNotionTokenStore(),
+    worker: createNotionOAuthWorkerClient({ dispatcher: notionDispatcher }),
+    log,
+    dispatcher: notionDispatcher,
+  });
   const notionRoutes = createNotionRoutes({
     checkLocalOpSecurity,
-    notion: createNotionConnections({
-      registry: createNotionConnectionRegistry(notionConnectionsPath(homeDirOverride)),
-      tokens: createNotionTokenStore(),
-      worker: createNotionOAuthWorkerClient({ dispatcher: notionDispatcher }),
-      log,
-      dispatcher: notionDispatcher,
+    notion: notionConnections,
+    publisher: createNotionPublisher({
+      connections: notionConnections,
+      bases: createNotionBaseStore(resolve(contentDir, OK_DIR, LOCAL_DIR, 'notion')),
+      readDocSource,
     }),
   });
   const documentRefreshRoutes = createDocumentRefreshRoutes({
