@@ -11,7 +11,7 @@ const dependents = {
   server: ['app', 'cli', 'desktop'],
   app: ['cli', 'desktop'],
 };
-const typecheckPackages = new Set(['app', 'cli', 'core', 'desktop', 'server']);
+const typecheckPackages = new Set(['app', 'cli', 'core', 'desktop', 'notion-oauth-worker', 'server']);
 const unitConfigs = { app: ['vitest.unit.config.ts', 'vitest.dom.config.ts'] };
 const lintable = /\.(?:[cm]?[jt]sx?|json|jsonc|css)$/;
 const oxlintable = /\.(?:[cm]?[jt]sx?)$/;

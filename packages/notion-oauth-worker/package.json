@@ -1,0 +1,13 @@
+{
+  "name": "@inkeep/open-knowledge-notion-oauth-worker",
+  "version": "0.0.0",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker that holds the Notion OAuth client secret and hands Notion tokens to a local OpenKnowledge server.",
+  "scripts": {
+    "typecheck": "tsrs --noEmit",
+    "test": "vitest run src/",
+    "deploy": "pnpm dlx wrangler@4 deploy"
+  }
+}
