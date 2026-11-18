@@ -1592,6 +1592,9 @@ msgstr "Approve"
 msgid "Approve & proceed"
 msgstr "Approve & proceed"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "Approve the connection in the Notion window that opened."
+
 msgid "Approved"
 msgstr "Approved"
 
@@ -2597,6 +2600,9 @@ msgstr "Connect"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "Connect a GitHub account to browse and publish GitHub repositories."
 
+msgid "Connect a workspace"
+msgstr "Connect a workspace"
+
 msgid "Connect an existing repository"
 msgstr "Connect an existing repository"
 
@@ -2605,6 +2611,9 @@ msgstr "Connect GitHub"
 
 msgid "Connect GitHub to continue."
 msgstr "Connect GitHub to continue."
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "Connect Notion workspaces so documents can sync with Notion pages."
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "Connect OpenKnowledge to other tools you use."
@@ -2842,6 +2851,9 @@ msgstr "Could not classify the merge — try again."
 msgid "Could not complete delete"
 msgstr "Could not complete delete"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "Could not connect to Notion. Try again."
+
 msgid "Could not construct share URL."
 msgstr "Could not construct share URL."
 
@@ -2856,6 +2868,9 @@ msgstr "Could not create project. Try again or pick a different location."
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "Could not create the project folder. Pick a different folder."
+
+msgid "Could not disconnect. Try again."
+msgstr "Could not disconnect. Try again."
 
 msgid "Could not duplicate item"
 msgstr "Could not duplicate item"
@@ -2880,6 +2895,9 @@ msgstr "Could not fix {0} of {total} files."
 
 msgid "Could not initialize {0}."
 msgstr "Could not initialize {0}."
+
+msgid "Could not load Notion connections."
+msgstr "Could not load Notion connections."
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "Could not load templates: {templatesError}. You can still create a blank note."
@@ -6963,6 +6981,9 @@ msgstr "No Mirror Source block in {docName} matches the text in this field. Clea
 msgid "No Mirror Source blocks in {docName}"
 msgstr "No Mirror Source blocks in {docName}"
 
+msgid "No Notion workspaces connected yet."
+msgstr "No Notion workspaces connected yet."
+
 msgid "No Outgoing"
 msgstr "No Outgoing"
 
@@ -7177,6 +7198,12 @@ msgstr "Nothing to commit — working tree clean."
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "Nothing was uploaded. The report stays on this computer until you email it to us."
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "Notion was not connected."
 
 msgid "Number"
 msgstr "Number"
@@ -7445,6 +7472,9 @@ msgstr "Open link in new tab"
 
 msgid "Open Navigator"
 msgstr "Open Navigator"
+
+msgid "Open Notion again"
+msgstr "Open Notion again"
 
 msgid "Open or close visual-editor find."
 msgstr "Open or close visual-editor find."
@@ -10662,6 +10692,9 @@ msgstr "The menu label agents pick this template by (required)."
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
+
+msgid "The Notion approval timed out. Try again."
+msgstr "The Notion approval timed out. Try again."
 
 msgid "the open agent"
 msgstr "the open agent"

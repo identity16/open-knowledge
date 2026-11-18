@@ -208,7 +208,8 @@ describe('SettingsDialogShell userBinding gating (Tier-3 mount)', () => {
     expect(screen.queryByTestId('settings-sidebar-item-ai-tools')).toBeNull();
     expect(screen.queryByTestId('settings-sidebar-item-project-ai-tools')).toBeNull();
     expect(screen.queryByTestId('settings-sidebar-item-attachments')).toBeNull();
-    expect(screen.queryByText('Integrations') === null).toBe(true);
+    expect(screen.queryByTestId('settings-sidebar-item-claude-desktop')).toBeNull();
+    expect(screen.getByTestId('settings-sidebar-item-notion')).toBeTruthy();
     expect(
       screen.getByTestId('settings-sidebar-item-preferences').getAttribute('aria-current'),
     ).toBe('page');

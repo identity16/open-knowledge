@@ -1592,6 +1592,9 @@ msgstr "승인"
 msgid "Approve & proceed"
 msgstr "승인하고 진행"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "열린 Notion 창에서 연결을 승인하세요."
+
 msgid "Approved"
 msgstr "승인됨"
 
@@ -2597,6 +2600,9 @@ msgstr "연결"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "GitHub 저장소를 찾아보고 게시하려면 GitHub 계정을 연결하세요."
 
+msgid "Connect a workspace"
+msgstr "워크스페이스 연결"
+
 msgid "Connect an existing repository"
 msgstr "기존 저장소 연결"
 
@@ -2605,6 +2611,9 @@ msgstr "GitHub 연결"
 
 msgid "Connect GitHub to continue."
 msgstr "계속하려면 GitHub에 연결하세요."
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "Notion 워크스페이스를 연결하면 문서를 Notion 페이지와 동기화할 수 있습니다."
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "OpenKnowledge를 사용하는 다른 도구에 연결합니다."
@@ -2842,6 +2851,9 @@ msgstr "병합을 분류할 수 없습니다. 다시 시도하세요."
 msgid "Could not complete delete"
 msgstr "삭제를 완료하지 못했습니다"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "Notion에 연결하지 못했습니다. 다시 시도하세요."
+
 msgid "Could not construct share URL."
 msgstr "공유 URL을 만들 수 없습니다."
 
@@ -2856,6 +2868,9 @@ msgstr "프로젝트를 만들지 못했습니다. 다시 시도하거나 다른
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "프로젝트 폴더를 만들지 못했습니다. 다른 폴더를 선택하세요."
+
+msgid "Could not disconnect. Try again."
+msgstr "연결을 해제하지 못했습니다. 다시 시도하세요."
 
 msgid "Could not duplicate item"
 msgstr "항목을 복제하지 못했습니다"
@@ -2880,6 +2895,9 @@ msgstr "{0}/{total}개 파일을 수정하지 못했습니다."
 
 msgid "Could not initialize {0}."
 msgstr "{0} 초기화에 실패했습니다."
+
+msgid "Could not load Notion connections."
+msgstr "Notion 연결 목록을 불러오지 못했습니다."
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "템플릿을 불러오지 못했습니다: {templatesError}. 빈 노트는 계속 만들 수 있습니다."
@@ -6963,6 +6981,9 @@ msgstr "{docName}에 이 입력란의 텍스트와 일치하는 미러 소스 �
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName}에 미러 소스 블록이 없습니다"
 
+msgid "No Notion workspaces connected yet."
+msgstr "아직 연결된 Notion 워크스페이스가 없습니다."
+
 msgid "No Outgoing"
 msgstr "나가는 링크 없음"
 
@@ -7177,6 +7198,12 @@ msgstr "커밋할 내용이 없습니다. 작업 트리가 깨끗합니다."
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "아무것도 업로드되지 않았습니다. 보고서는 이메일로 보내기 전까지 이 컴퓨터에 남아 있습니다."
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "Notion이 연결되지 않았습니다."
 
 msgid "Number"
 msgstr "숫자"
@@ -7445,6 +7472,9 @@ msgstr "새 탭에서 링크 열기"
 
 msgid "Open Navigator"
 msgstr "탐색기 열기"
+
+msgid "Open Notion again"
+msgstr "Notion 다시 열기"
 
 msgid "Open or close visual-editor find."
 msgstr "비주얼 편집기 찾기를 열거나 닫습니다."
@@ -10662,6 +10692,9 @@ msgstr "에이전트가 이 템플릿을 선택할 때 사용하는 메뉴 레�
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "엔드포인트가 제공하는 모델 ID입니다. 벡터 크기는 자동으로 감지됩니다. 필드를 지우면 {DEFAULT_EMBEDDINGS_MODEL}로 돌아갑니다."
+
+msgid "The Notion approval timed out. Try again."
+msgstr "Notion 승인 시간이 지났습니다. 다시 시도하세요."
 
 msgid "the open agent"
 msgstr "열린 에이전트"

@@ -1592,6 +1592,9 @@ msgstr "موافقة"
 msgid "Approve & proceed"
 msgstr "موافقة ومتابعة"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "وافق على الاتصال في نافذة Notion التي فُتحت."
+
 msgid "Approved"
 msgstr "موافق عليه"
 
@@ -2597,6 +2600,9 @@ msgstr "اتصال"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "اربط حساب GitHub لاستعراض مستودعات GitHub ونشرها."
 
+msgid "Connect a workspace"
+msgstr "ربط مساحة عمل"
+
 msgid "Connect an existing repository"
 msgstr "ربط مستودع موجود"
 
@@ -2605,6 +2611,9 @@ msgstr "ربط GitHub"
 
 msgid "Connect GitHub to continue."
 msgstr "اربط GitHub للمتابعة."
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "اربط مساحات عمل Notion لتتمكن المستندات من المزامنة مع صفحات Notion."
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "اربط OpenKnowledge بالأدوات الأخرى التي تستخدمها."
@@ -2842,6 +2851,9 @@ msgstr "تعذّر تصنيف الدمج — حاول مرة أخرى."
 msgid "Could not complete delete"
 msgstr "تعذّر إتمام الحذف"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "تعذّر الاتصال بـ Notion. حاول مرة أخرى."
+
 msgid "Could not construct share URL."
 msgstr "تعذّر إنشاء رابط المشاركة."
 
@@ -2856,6 +2868,9 @@ msgstr "تعذّر إنشاء المشروع. أعد المحاولة أو اخ�
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "تعذّر إنشاء مجلد المشروع. اختر مجلدًا مختلفًا."
+
+msgid "Could not disconnect. Try again."
+msgstr "تعذّر قطع الاتصال. حاول مرة أخرى."
 
 msgid "Could not duplicate item"
 msgstr "تعذّر تكرار العنصر"
@@ -2880,6 +2895,9 @@ msgstr "تعذّر إصلاح {0} من أصل {total} ملفًا."
 
 msgid "Could not initialize {0}."
 msgstr "تعذّرت تهيئة {0}."
+
+msgid "Could not load Notion connections."
+msgstr "تعذّر تحميل اتصالات Notion."
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "تعذّر تحميل القوالب: {templatesError}. لا يزال بإمكانك إنشاء ملاحظة فارغة."
@@ -6963,6 +6981,9 @@ msgstr "لا توجد كتلة مصدر مرآة في {docName} تطابق ال�
 msgid "No Mirror Source blocks in {docName}"
 msgstr "لا توجد كتل مصدر المرآة في {docName}"
 
+msgid "No Notion workspaces connected yet."
+msgstr "لا توجد مساحات عمل Notion متصلة بعد."
+
 msgid "No Outgoing"
 msgstr "لا روابط صادرة"
 
@@ -7177,6 +7198,12 @@ msgstr "لا شيء لإيداعه: شجرة العمل نظيفة."
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "لم يُرفع أي شيء. يبقى التقرير على هذا الجهاز حتى ترسله إلينا بالبريد الإلكتروني."
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "لم يتم ربط Notion."
 
 msgid "Number"
 msgstr "رقم"
@@ -7445,6 +7472,9 @@ msgstr "فتح الرابط في تبويب جديد"
 
 msgid "Open Navigator"
 msgstr "فتح المتصفح"
+
+msgid "Open Notion again"
+msgstr "افتح Notion مرة أخرى"
 
 msgid "Open or close visual-editor find."
 msgstr "افتح بحث المحرر المرئي أو أغلقه."
@@ -10662,6 +10692,9 @@ msgstr "تسمية القائمة التي يختار بها الوكلاء هذ
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "معرّف النموذج الذي تخدمه نقطة نهايتك. يُكتشف حجم متجهه تلقائيًا — امسح الحقل للعودة إلى {DEFAULT_EMBEDDINGS_MODEL}."
+
+msgid "The Notion approval timed out. Try again."
+msgstr "انتهت مهلة الموافقة على Notion. حاول مرة أخرى."
 
 msgid "the open agent"
 msgstr "الوكيل المفتوح"

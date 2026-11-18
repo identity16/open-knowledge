@@ -1588,6 +1588,9 @@ msgstr "Setujui"
 msgid "Approve & proceed"
 msgstr "Setujui dan lanjutkan"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "Setujui koneksi di jendela Notion yang terbuka."
+
 msgid "Approved"
 msgstr "Disetujui"
 
@@ -2593,6 +2596,9 @@ msgstr "Hubungkan"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "Hubungkan akun GitHub untuk menjelajahi dan menerbitkan repositori GitHub."
 
+msgid "Connect a workspace"
+msgstr "Hubungkan ruang kerja"
+
 msgid "Connect an existing repository"
 msgstr "Hubungkan repositori yang sudah ada"
 
@@ -2601,6 +2607,9 @@ msgstr "Hubungkan GitHub"
 
 msgid "Connect GitHub to continue."
 msgstr "Hubungkan GitHub untuk melanjutkan."
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "Hubungkan ruang kerja Notion agar dokumen dapat disinkronkan dengan halaman Notion."
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "Hubungkan OpenKnowledge dengan alat lain yang Anda pakai."
@@ -2838,6 +2847,9 @@ msgstr "Penggabungan tidak dapat diklasifikasikan — coba lagi."
 msgid "Could not complete delete"
 msgstr "Penghapusan tidak dapat diselesaikan"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "Tidak dapat terhubung ke Notion. Coba lagi."
+
 msgid "Could not construct share URL."
 msgstr "URL berbagi tidak dapat disusun."
 
@@ -2852,6 +2864,9 @@ msgstr "Proyek tidak dapat dibuat. Coba lagi atau pilih lokasi lain."
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "Folder proyek tidak dapat dibuat. Pilih folder lain."
+
+msgid "Could not disconnect. Try again."
+msgstr "Tidak dapat memutuskan koneksi. Coba lagi."
 
 msgid "Could not duplicate item"
 msgstr "Item tidak dapat digandakan"
@@ -2876,6 +2891,9 @@ msgstr "Tidak dapat memperbaiki {0} dari {total} berkas."
 
 msgid "Could not initialize {0}."
 msgstr "{0} tidak dapat diinisialisasi."
+
+msgid "Could not load Notion connections."
+msgstr "Tidak dapat memuat koneksi Notion."
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "Templat tidak dapat dimuat: {templatesError}. Anda tetap bisa membuat catatan kosong."
@@ -6959,6 +6977,9 @@ msgstr "Tidak ada blok sumber cermin di {docName} yang cocok dengan teks di kolo
 msgid "No Mirror Source blocks in {docName}"
 msgstr "Tidak ada blok sumber cermin di {docName}"
 
+msgid "No Notion workspaces connected yet."
+msgstr "Belum ada ruang kerja Notion yang terhubung."
+
 msgid "No Outgoing"
 msgstr "Tidak Ada Keluar"
 
@@ -7173,6 +7194,12 @@ msgstr "Tidak ada yang perlu di-commit: working tree bersih."
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "Tidak ada yang diunggah. Laporan tetap di komputer ini sampai Anda mengirimkannya kepada kami lewat email."
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "Notion tidak terhubung."
 
 msgid "Number"
 msgstr "Angka"
@@ -7441,6 +7468,9 @@ msgstr "Buka tautan di tab baru"
 
 msgid "Open Navigator"
 msgstr "Buka Navigator"
+
+msgid "Open Notion again"
+msgstr "Buka Notion lagi"
 
 msgid "Open or close visual-editor find."
 msgstr "Membuka atau menutup pencarian penyunting visual."
@@ -10658,6 +10688,9 @@ msgstr "Label menu yang dipakai agen untuk memilih templat ini (wajib)."
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "Id model yang dilayani endpoint Anda. Ukuran vektornya terdeteksi otomatis — kosongkan bidang ini untuk kembali ke {DEFAULT_EMBEDDINGS_MODEL}."
+
+msgid "The Notion approval timed out. Try again."
+msgstr "Waktu persetujuan Notion habis. Coba lagi."
 
 msgid "the open agent"
 msgstr "agen yang terbuka"

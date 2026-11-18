@@ -1592,6 +1592,9 @@ msgstr "منظوری دیں"
 msgid "Approve & proceed"
 msgstr "منظور کریں اور آگے بڑھیں"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "کھلنے والی Notion ونڈو میں کنکشن منظور کریں۔"
+
 msgid "Approved"
 msgstr "منظور شدہ"
 
@@ -2597,6 +2600,9 @@ msgstr "منسلک کریں"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "GitHub ریپازٹریز براؤز کرنے اور شائع کرنے کے لیے کوئی GitHub اکاؤنٹ جوڑیں۔"
 
+msgid "Connect a workspace"
+msgstr "ورک اسپیس جوڑیں"
+
 msgid "Connect an existing repository"
 msgstr "موجودہ ریپازٹری منسلک کریں"
 
@@ -2605,6 +2611,9 @@ msgstr "GitHub منسلک کریں"
 
 msgid "Connect GitHub to continue."
 msgstr "جاری رکھنے کے لیے GitHub منسلک کریں۔"
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "Notion ورک اسپیسز جوڑیں تاکہ دستاویزات Notion صفحات کے ساتھ ہم آہنگ ہو سکیں۔"
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "OpenKnowledge کو اپنے استعمال کے دیگر ٹولز سے منسلک کریں۔"
@@ -2842,6 +2851,9 @@ msgstr "ضم کی درجہ بندی نہیں ہو سکی — دوبارہ کوش
 msgid "Could not complete delete"
 msgstr "حذف مکمل نہیں ہو سکا"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "Notion سے کنیکٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔"
+
 msgid "Could not construct share URL."
 msgstr "شیئر URL نہیں بنایا جا سکا۔"
 
@@ -2856,6 +2868,9 @@ msgstr "پروجیکٹ نہیں بنایا جا سکا۔ دوبارہ کوشش �
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "پروجیکٹ کا فولڈر نہیں بنایا جا سکا۔ کوئی مختلف فولڈر منتخب کریں۔"
+
+msgid "Could not disconnect. Try again."
+msgstr "منقطع نہیں ہو سکا۔ دوبارہ کوشش کریں۔"
 
 msgid "Could not duplicate item"
 msgstr "آئٹم کی نقل نہیں بنائی جا سکی"
@@ -2880,6 +2895,9 @@ msgstr "{total} میں سے {0} فائلیں درست نہیں کی جا سکی�
 
 msgid "Could not initialize {0}."
 msgstr "{0} کا ابتدائیہ نہیں ہو سکا۔"
+
+msgid "Could not load Notion connections."
+msgstr "Notion کنکشنز لوڈ نہیں ہو سکے۔"
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "ٹیمپلیٹس لوڈ نہیں ہو سکے: {templatesError}۔ آپ اب بھی خالی نوٹ بنا سکتے ہیں۔"
@@ -6963,6 +6981,9 @@ msgstr "{docName} میں اس فیلڈ کے متن سے ملتا ہوا مرر �
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName} میں مرر کے ماخذ کا کوئی بلاک نہیں ہے"
 
+msgid "No Notion workspaces connected yet."
+msgstr "ابھی تک کوئی Notion ورک اسپیس نہیں جڑی۔"
+
 msgid "No Outgoing"
 msgstr "کوئی جانے والا نہیں"
 
@@ -7177,6 +7198,12 @@ msgstr "کمٹ کرنے کو کچھ نہیں: ورکنگ ٹری صاف ہے۔"
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "کچھ بھی اپ لوڈ نہیں ہوا۔ جب تک آپ ہمیں ای میل نہیں کرتے، رپورٹ اسی کمپیوٹر پر رہتی ہے۔"
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "Notion نہیں جڑا۔"
 
 msgid "Number"
 msgstr "عدد"
@@ -7445,6 +7472,9 @@ msgstr "لنک نئے ٹیب میں کھولیں"
 
 msgid "Open Navigator"
 msgstr "نیویگیٹر کھولیں"
+
+msgid "Open Notion again"
+msgstr "Notion دوبارہ کھولیں"
 
 msgid "Open or close visual-editor find."
 msgstr "بصری ایڈیٹر کی تلاش کھولیں یا بند کریں۔"
@@ -10662,6 +10692,9 @@ msgstr "وہ مینو لیبل جس سے ایجنٹس یہ ٹیمپلیٹ منت
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "وہ ماڈل شناخت جو آپ کا اینڈ پوائنٹ فراہم کرتا ہے۔ اس کا ویکٹر حجم خودکار طور پر معلوم ہو جاتا ہے — {DEFAULT_EMBEDDINGS_MODEL} پر واپس جانے کے لیے فیلڈ صاف کریں۔"
+
+msgid "The Notion approval timed out. Try again."
+msgstr "Notion منظوری کا وقت ختم ہو گیا۔ دوبارہ کوشش کریں۔"
 
 msgid "the open agent"
 msgstr "کھلا ہوا ایجنٹ"

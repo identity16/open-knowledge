@@ -27,6 +27,7 @@ export const URN_IPC_REGISTRY: Registry = RAW_REGISTRY;
 
 export const URN_HTTP_ONLY: ReadonlySet<ProblemType> = new Set<ProblemType>([
   'urn:ok:error:concurrent-overwrite-refused',
+  'urn:ok:error:notion-unavailable',
   'urn:ok:error:malformed-upload',
   'urn:ok:error:collision-exhaustion',
   'urn:ok:error:storage-full',

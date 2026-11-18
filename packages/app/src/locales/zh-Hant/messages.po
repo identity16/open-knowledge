@@ -1592,6 +1592,9 @@ msgstr "核准"
 msgid "Approve & proceed"
 msgstr "核准並繼續"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "請在開啟的 Notion 視窗中核准連線。"
+
 msgid "Approved"
 msgstr "已核准"
 
@@ -2597,6 +2600,9 @@ msgstr "連接"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "連接一個 GitHub 帳戶，以瀏覽和發布 GitHub 儲存庫。"
 
+msgid "Connect a workspace"
+msgstr "連接工作區"
+
 msgid "Connect an existing repository"
 msgstr "連接現有的儲存庫"
 
@@ -2605,6 +2611,9 @@ msgstr "連接 GitHub"
 
 msgid "Connect GitHub to continue."
 msgstr "請先連接 GitHub 再繼續。"
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "連接 Notion 工作區，讓文件可以與 Notion 頁面同步。"
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "把 OpenKnowledge 和你用的其他工具連接起來。"
@@ -2842,6 +2851,9 @@ msgstr "無法對合併進行分類，請再試一次。"
 msgid "Could not complete delete"
 msgstr "無法完成刪除"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "無法連線至 Notion。請再試一次。"
+
 msgid "Could not construct share URL."
 msgstr "無法組出分享 URL。"
 
@@ -2856,6 +2868,9 @@ msgstr "無法建立專案。請再試一次，或換一個位置。"
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "無法建立專案資料夾。請換一個資料夾。"
+
+msgid "Could not disconnect. Try again."
+msgstr "無法中斷連線。請再試一次。"
 
 msgid "Could not duplicate item"
 msgstr "無法複製這個項目"
@@ -2880,6 +2895,9 @@ msgstr "無法修復 {total} 個檔案中的 {0} 個。"
 
 msgid "Could not initialize {0}."
 msgstr "無法初始化 {0}。"
+
+msgid "Could not load Notion connections."
+msgstr "無法載入 Notion 連線。"
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "無法載入範本：{templatesError}。你仍然可以建立空白筆記。"
@@ -6963,6 +6981,9 @@ msgstr "{docName} 中沒有與此欄位文字相符的鏡像來源區塊。清�
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName} 中沒有鏡像來源區塊"
 
+msgid "No Notion workspaces connected yet."
+msgstr "尚未連接任何 Notion 工作區。"
+
 msgid "No Outgoing"
 msgstr "沒有連出"
 
@@ -7177,6 +7198,12 @@ msgstr "沒有需要提交的內容：工作區是乾淨的。"
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "未上傳任何內容。在你以電子郵件寄給我們之前，報告會保留在這台電腦上。"
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "未連接 Notion。"
 
 msgid "Number"
 msgstr "數字"
@@ -7445,6 +7472,9 @@ msgstr "在新分頁中開啟連結"
 
 msgid "Open Navigator"
 msgstr "開啟導覽器"
+
+msgid "Open Notion again"
+msgstr "重新開啟 Notion"
 
 msgid "Open or close visual-editor find."
 msgstr "開啟或關閉視覺化編輯器的尋找。"
@@ -10662,6 +10692,9 @@ msgstr "代理挑選這個範本時看到的選單標籤（必填）。"
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "你的端點提供的模型 id。它的向量維度會自動偵測——把欄位清空就會恢復成 {DEFAULT_EMBEDDINGS_MODEL}。"
+
+msgid "The Notion approval timed out. Try again."
+msgstr "Notion 核准已逾時。請再試一次。"
 
 msgid "the open agent"
 msgstr "已開啟的代理"

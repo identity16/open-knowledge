@@ -61,7 +61,7 @@ describe('SettingsDialogShell install-skill feature gate', () => {
     render(<SettingsDialogShell open={true} onOpenChange={() => {}} />);
 
     expect(screen.queryByTestId('settings-sidebar-item-claude-desktop')).toBeNull();
-    expect(screen.queryByText('Integrations')).toBeNull();
+    expect(screen.getByTestId('settings-sidebar-item-notion')).toBeTruthy();
   });
 
   test('the Claude Desktop integration is hidden because the feature-flag replacement serves the install-skill flag off', () => {

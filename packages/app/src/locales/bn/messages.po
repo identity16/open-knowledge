@@ -1588,6 +1588,9 @@ msgstr "অনুমোদন করুন"
 msgid "Approve & proceed"
 msgstr "অনুমোদন করুন ও এগিয়ে যান"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "খোলা Notion উইন্ডোতে সংযোগটি অনুমোদন করুন।"
+
 msgid "Approved"
 msgstr "অনুমোদিত"
 
@@ -2593,6 +2596,9 @@ msgstr "যুক্ত করুন"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "GitHub রিপোজিটরি ব্রাউজ ও প্রকাশ করতে একটি GitHub অ্যাকাউন্ট যুক্ত করুন।"
 
+msgid "Connect a workspace"
+msgstr "একটি ওয়ার্কস্পেস সংযুক্ত করুন"
+
 msgid "Connect an existing repository"
 msgstr "একটি বিদ্যমান রিপোজিটরি যুক্ত করুন"
 
@@ -2601,6 +2607,9 @@ msgstr "GitHub যুক্ত করুন"
 
 msgid "Connect GitHub to continue."
 msgstr "চালিয়ে যেতে GitHub যুক্ত করুন।"
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "Notion ওয়ার্কস্পেস সংযুক্ত করুন যাতে ডকুমেন্টগুলো Notion পেজের সাথে সিঙ্ক হতে পারে।"
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "OpenKnowledge-কে আপনার ব্যবহৃত অন্য টুলের সঙ্গে যুক্ত করুন।"
@@ -2838,6 +2847,9 @@ msgstr "মার্জটি শ্রেণিবদ্ধ করা যায
 msgid "Could not complete delete"
 msgstr "মুছে ফেলা সম্পূর্ণ করা যায়নি"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "Notion-এ সংযোগ করা যায়নি। আবার চেষ্টা করুন।"
+
 msgid "Could not construct share URL."
 msgstr "শেয়ার URL তৈরি করা যায়নি।"
 
@@ -2852,6 +2864,9 @@ msgstr "প্রকল্প তৈরি করা যায়নি। আ�
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "প্রকল্পের ফোল্ডার তৈরি করা যায়নি। অন্য ফোল্ডার বাছুন।"
+
+msgid "Could not disconnect. Try again."
+msgstr "সংযোগ বিচ্ছিন্ন করা যায়নি। আবার চেষ্টা করুন।"
 
 msgid "Could not duplicate item"
 msgstr "আইটেমের প্রতিলিপি বানানো যায়নি"
@@ -2876,6 +2891,9 @@ msgstr "{total}টির মধ্যে {0}টি ফাইল ঠিক কর
 
 msgid "Could not initialize {0}."
 msgstr "{0} চালু করা যায়নি।"
+
+msgid "Could not load Notion connections."
+msgstr "Notion সংযোগগুলো লোড করা যায়নি।"
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "টেমপ্লেট লোড করা যায়নি: {templatesError}। আপনি তবুও একটি খালি নোট তৈরি করতে পারেন।"
@@ -6959,6 +6977,9 @@ msgstr "{docName}-এ এই ঘরের লেখার সাথে মেল
 msgid "No Mirror Source blocks in {docName}"
 msgstr "{docName}-এ কোনো মিরর উৎস ব্লক নেই"
 
+msgid "No Notion workspaces connected yet."
+msgstr "এখনও কোনো Notion ওয়ার্কস্পেস সংযুক্ত নেই।"
+
 msgid "No Outgoing"
 msgstr "কোনো বহির্গামী নেই"
 
@@ -7173,6 +7194,12 @@ msgstr "কমিট করার কিছু নেই: ওয়ার্ক�
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "কিছুই আপলোড করা হয়নি। আপনি আমাদের ইমেল না করা পর্যন্ত রিপোর্টটি এই কম্পিউটারেই থাকে।"
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "Notion সংযুক্ত হয়নি।"
 
 msgid "Number"
 msgstr "সংখ্যা"
@@ -7441,6 +7468,9 @@ msgstr "লিংক নতুন ট্যাবে খুলুন"
 
 msgid "Open Navigator"
 msgstr "Navigator খুলুন"
+
+msgid "Open Notion again"
+msgstr "আবার Notion খুলুন"
 
 msgid "Open or close visual-editor find."
 msgstr "দৃশ্য-সম্পাদকের খোঁজা খুলুন বা বন্ধ করুন।"
@@ -10658,6 +10688,9 @@ msgstr "যে মেনু লেবেল দিয়ে এজেন্ট�
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "আপনার এন্ডপয়েন্ট যে মডেল id দেয়। এর ভেক্টরের আকার নিজে থেকেই শনাক্ত হয় — {DEFAULT_EMBEDDINGS_MODEL}-এ ফিরতে ফিল্ডটি খালি করুন।"
+
+msgid "The Notion approval timed out. Try again."
+msgstr "Notion অনুমোদনের সময় শেষ হয়ে গেছে। আবার চেষ্টা করুন।"
 
 msgid "the open agent"
 msgstr "খোলা এজেন্ট"

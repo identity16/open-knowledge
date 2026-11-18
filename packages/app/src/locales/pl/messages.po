@@ -1592,6 +1592,9 @@ msgstr "Zatwierdź"
 msgid "Approve & proceed"
 msgstr "Zatwierdź i przejdź dalej"
 
+msgid "Approve the connection in the Notion window that opened."
+msgstr "Zatwierdź połączenie w oknie Notion, które się otworzyło."
+
 msgid "Approved"
 msgstr "Zatwierdzone"
 
@@ -2597,6 +2600,9 @@ msgstr "Połącz"
 msgid "Connect a GitHub account to browse and publish GitHub repositories."
 msgstr "Połącz konto GitHub, aby przeglądać i publikować repozytoria GitHub."
 
+msgid "Connect a workspace"
+msgstr "Połącz obszar roboczy"
+
 msgid "Connect an existing repository"
 msgstr "Połącz istniejące repozytorium"
 
@@ -2605,6 +2611,9 @@ msgstr "Połącz GitHub"
 
 msgid "Connect GitHub to continue."
 msgstr "Połącz GitHub, aby kontynuować."
+
+msgid "Connect Notion workspaces so documents can sync with Notion pages."
+msgstr "Połącz obszary robocze Notion, aby dokumenty mogły synchronizować się ze stronami Notion."
 
 msgid "Connect OpenKnowledge to other tools you use."
 msgstr "Połącz OpenKnowledge z innymi używanymi narzędziami."
@@ -2842,6 +2851,9 @@ msgstr "Nie udało się sklasyfikować scalenia — spróbuj ponownie."
 msgid "Could not complete delete"
 msgstr "Nie udało się zakończyć usuwania"
 
+msgid "Could not connect to Notion. Try again."
+msgstr "Nie udało się połączyć z Notion. Spróbuj ponownie."
+
 msgid "Could not construct share URL."
 msgstr "Nie udało się utworzyć adresu URL udostępniania."
 
@@ -2856,6 +2868,9 @@ msgstr "Nie udało się utworzyć projektu. Spróbuj ponownie albo wybierz inną
 
 msgid "Could not create the project folder. Pick a different folder."
 msgstr "Nie udało się utworzyć folderu projektu. Wybierz inny folder."
+
+msgid "Could not disconnect. Try again."
+msgstr "Nie udało się rozłączyć. Spróbuj ponownie."
 
 msgid "Could not duplicate item"
 msgstr "Nie udało się zduplikować elementu"
@@ -2880,6 +2895,9 @@ msgstr "Nie udało się naprawić {0} z {total} plików."
 
 msgid "Could not initialize {0}."
 msgstr "Nie udało się zainicjować {0}."
+
+msgid "Could not load Notion connections."
+msgstr "Nie udało się wczytać połączeń Notion."
 
 msgid "Could not load templates: {templatesError}. You can still create a blank note."
 msgstr "Nie udało się wczytać szablonów: {templatesError}. Nadal możesz utworzyć pustą notatkę."
@@ -6963,6 +6981,9 @@ msgstr "Żaden blok źródła lustra w {docName} nie pasuje do tekstu w tym polu
 msgid "No Mirror Source blocks in {docName}"
 msgstr "Brak bloków źródła lustra w {docName}"
 
+msgid "No Notion workspaces connected yet."
+msgstr "Nie połączono jeszcze żadnego obszaru roboczego Notion."
+
 msgid "No Outgoing"
 msgstr "Brak wychodzących"
 
@@ -7177,6 +7198,12 @@ msgstr "Nic do zapisania — drzewo robocze czyste."
 
 msgid "Nothing was uploaded. The report stays on this computer until you email it to us."
 msgstr "Nic nie zostało przesłane. Zgłoszenie pozostaje na tym komputerze, dopóki nie prześlesz go e-mailem."
+
+msgid "Notion"
+msgstr "Notion"
+
+msgid "Notion was not connected."
+msgstr "Notion nie został połączony."
 
 msgid "Number"
 msgstr "Liczba"
@@ -7445,6 +7472,9 @@ msgstr "Otwórz link w nowej karcie"
 
 msgid "Open Navigator"
 msgstr "Otwórz Nawigator"
+
+msgid "Open Notion again"
+msgstr "Otwórz Notion ponownie"
 
 msgid "Open or close visual-editor find."
 msgstr "Otwórz lub zamknij wyszukiwanie w edytorze wizualnym."
@@ -10662,6 +10692,9 @@ msgstr "Etykieta w menu, po której agenty wybierają ten szablon (wymagana)."
 
 msgid "The model id your endpoint serves. Its vector size is detected automatically — clear the field to go back to {DEFAULT_EMBEDDINGS_MODEL}."
 msgstr "Identyfikator modelu udostępniany przez Twój punkt końcowy. Jego wymiar wektora jest wykrywany automatycznie — wyczyść pole, aby wrócić do {DEFAULT_EMBEDDINGS_MODEL}."
+
+msgid "The Notion approval timed out. Try again."
+msgstr "Upłynął czas na zatwierdzenie w Notion. Spróbuj ponownie."
 
 msgid "the open agent"
 msgstr "otwarty agent"
