@@ -107,3 +107,60 @@ export const NotionPullResponseSchema = z
   })
   .loose() satisfies StandardSchemaV1;
 export type NotionPullResponse = z.infer<typeof NotionPullResponseSchema>;
+
+export const NotionCommentSchema = z
+  .object({
+    id: z.string().min(1),
+    author: z.string(),
+    createdAt: z.string().min(1),
+    markdown: z.string(),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionComment = z.infer<typeof NotionCommentSchema>;
+
+export const NotionDiscussionAnchorSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('page') }),
+  z.object({ kind: z.literal('block'), blockId: z.string().min(1), text: z.string() }),
+]);
+export type NotionDiscussionAnchor = z.infer<typeof NotionDiscussionAnchorSchema>;
+
+export const NotionDiscussionSchema = z
+  .object({
+    id: z.string().min(1),
+    anchor: NotionDiscussionAnchorSchema,
+    comments: z.array(NotionCommentSchema),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionDiscussion = z.infer<typeof NotionDiscussionSchema>;
+
+export const NotionDiscussionsRequestSchema = z
+  .object({
+    docName: z.string().min(1),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionDiscussionsRequest = z.infer<typeof NotionDiscussionsRequestSchema>;
+
+export const NotionDiscussionsResponseSchema = z
+  .object({
+    page: z.string().min(1),
+    discussions: z.array(NotionDiscussionSchema),
+    complete: z.boolean(),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionDiscussionsResponse = z.infer<typeof NotionDiscussionsResponseSchema>;
+
+export const NotionReplyRequestSchema = z
+  .object({
+    docName: z.string().min(1),
+    discussionId: z.string().min(1),
+    markdown: z.string().trim().min(1),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionReplyRequest = z.infer<typeof NotionReplyRequestSchema>;
+
+export const NotionReplyResponseSchema = z
+  .object({
+    comment: NotionCommentSchema,
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionReplyResponse = z.infer<typeof NotionReplyResponseSchema>;
