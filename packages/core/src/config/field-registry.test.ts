@@ -216,6 +216,7 @@ describe('ConfigSchema coverage (NR3 — every leaf has fieldRegistry metadata)'
       'contentRules.okf.rules',
       'lossCapture.enabled',
       'lossCapture.maxBytes',
+      'notion.enabled',
       'server.externalUrl',
       'server.port',
       'telemetry.localSink.attributeDenylist',

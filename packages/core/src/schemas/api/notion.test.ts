@@ -19,3 +19,11 @@ describe('NotionConnectFlowStatusSchema', () => {
     expect(NotionConnectFlowStatusSchema.safeParse({ status: 'connected' }).success).toBe(false);
   });
 });
+
+describe('NotionPageLinkSchema', () => {
+  test('accepts the frontmatter link shape and rejects an empty page id', async () => {
+    const { NotionPageLinkSchema } = await import('./notion.ts');
+    expect(NotionPageLinkSchema.safeParse({ page: 'p1', workspace: 'w1' }).success).toBe(true);
+    expect(NotionPageLinkSchema.safeParse({ page: '', workspace: 'w1' }).success).toBe(false);
+  });
+});

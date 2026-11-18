@@ -52,3 +52,43 @@ export const NotionDisconnectRequestSchema = z
   })
   .loose() satisfies StandardSchemaV1;
 export type NotionDisconnectRequest = z.infer<typeof NotionDisconnectRequestSchema>;
+
+export const NotionPageLinkSchema = z
+  .object({
+    page: z.string().min(1),
+    workspace: z.string().min(1),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionPageLink = z.infer<typeof NotionPageLinkSchema>;
+
+export const NotionResolvePageRequestSchema = z
+  .object({
+    url: z.string().min(1),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionResolvePageRequest = z.infer<typeof NotionResolvePageRequestSchema>;
+
+export const NotionResolvePageResponseSchema = z
+  .object({
+    page: z.string().min(1),
+    workspace: z.string().min(1),
+    title: z.string(),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionResolvePageResponse = z.infer<typeof NotionResolvePageResponseSchema>;
+
+export const NotionPublishRequestSchema = z
+  .object({
+    docName: z.string().min(1),
+    overwrite: z.boolean().optional(),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionPublishRequest = z.infer<typeof NotionPublishRequestSchema>;
+
+export const NotionPublishResponseSchema = z
+  .object({
+    page: z.string().min(1),
+    publishedAt: z.string().min(1),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionPublishResponse = z.infer<typeof NotionPublishResponseSchema>;
