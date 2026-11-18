@@ -118,6 +118,7 @@ import {
 import { toContentDivergenceWarning } from './content-divergence-gate.ts';
 import { recordContributor } from './contributor-tracker.ts';
 import type { ResolvedSemanticConfig, SemanticSearchService } from './embeddings/index.ts';
+import { envProxyDispatcher } from './env-proxy-dispatcher.ts';
 import {
   FrontmatterMalformedError,
   frontmatterRefusalDetail,
@@ -136,6 +137,7 @@ import {
   type InstalledAgentScheme,
 } from './handoff-api.ts';
 import { createHandoffInstallRoutes } from './http/handoff-install-routes.ts';
+import { createNotionRoutes } from './http/notion-routes.ts';
 import { createSkillsDocumentRoutes } from './http/skills-document-routes.ts';
 import { createSkillsFileRoutes } from './http/skills-file-routes.ts';
 import { createSkillsImportRoutes } from './http/skills-import-routes.ts';
@@ -151,6 +153,13 @@ import { isAbsentPathError } from './lint/audit-scope.ts';
 import { unmatchedAppliesToProblems } from './lint/frontmatter-schemas.ts';
 import { resolveEffectiveLinterConfig } from './lint/resolve-config.ts';
 import { createProjectValidators } from './lint/validation-audit.ts';
+import {
+  createNotionConnectionRegistry,
+  notionConnectionsPath,
+} from './notion/connection-registry.ts';
+import { createNotionConnections } from './notion/notion-connections.ts';
+import { createNotionOAuthWorkerClient } from './notion/oauth-worker-client.ts';
+import { createNotionTokenStore } from './notion/token-store.ts';
 import {
   extractPageTitle,
   type FrontmatterMetadata,
@@ -5746,6 +5755,17 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
     agentIntegrations,
   });
   const handoffInstallRoutes = createHandoffInstallRoutes({ checkLocalOpSecurity });
+  const notionDispatcher = envProxyDispatcher(log, 'notion', 'Notion');
+  const notionRoutes = createNotionRoutes({
+    checkLocalOpSecurity,
+    notion: createNotionConnections({
+      registry: createNotionConnectionRegistry(notionConnectionsPath(homeDirOverride)),
+      tokens: createNotionTokenStore(),
+      worker: createNotionOAuthWorkerClient({ dispatcher: notionDispatcher }),
+      log,
+      dispatcher: notionDispatcher,
+    }),
+  });
   const documentRefreshRoutes = createDocumentRefreshRoutes({
     refreshDocumentsFromDisk: options.refreshDocumentsFromDisk,
   });
@@ -5881,6 +5901,7 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
     skillsRecoveryRoutes,
     skillsInstallRoutes,
     handoffInstallRoutes,
+    notionRoutes,
     skillsImportRoutes,
     skillsFileRoutes,
     linkGraphRoutes,

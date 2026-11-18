@@ -42,3 +42,13 @@ export const NotionDisconnectResponseSchema = z
   })
   .loose() satisfies StandardSchemaV1;
 export type NotionDisconnectResponse = z.infer<typeof NotionDisconnectResponseSchema>;
+
+export const NotionConnectStartRequestSchema = z.object({}).loose() satisfies StandardSchemaV1;
+export type NotionConnectStartRequest = z.infer<typeof NotionConnectStartRequestSchema>;
+
+export const NotionDisconnectRequestSchema = z
+  .object({
+    workspaceId: z.string().min(1),
+  })
+  .loose() satisfies StandardSchemaV1;
+export type NotionDisconnectRequest = z.infer<typeof NotionDisconnectRequestSchema>;
