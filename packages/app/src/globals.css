@@ -1290,6 +1290,11 @@ section[data-editor-pane-id] {
     }
   }
 }
+@media (pointer: coarse) and (width < 48rem) {
+  .editor-doc-scroll :is(.ProseMirror, .cm-content) {
+    transition: none;
+  }
+}
 
 /* Content-column children. The `.tiptap-editor` wrapper is a 3-column named
  * grid ([full-start] margin [content-start] content [content-end] margin
