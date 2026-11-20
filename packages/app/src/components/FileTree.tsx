@@ -1039,6 +1039,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       return 'non-doc';
     }
     if (action.kind === 'folder') {
+      if (filesCover) return 'none';
       navigateWithPulse({ kind: 'folder', folderPath: action.path });
       return 'non-doc';
     }
@@ -2476,8 +2477,11 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
         pendingExactFileSelectionRef.current = null;
         queueMicrotask(() => {
           const renderedTreePath = hasPendingExactFileSelection ? null : selectedRenderedTreePath();
+          const renderedMatchesSelection =
+            renderedTreePath !== null &&
+            treeFilePathToDocName(renderedTreePath) === treeFilePathToDocName(targetTreePath);
           activateTreePath(
-            normalizeSelectionPath(renderedTreePath ?? targetTreePath),
+            normalizeSelectionPath(renderedMatchesSelection ? renderedTreePath : targetTreePath),
             documentsRef.current,
           );
         });
@@ -3224,6 +3228,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       item.dataset.itemType === 'folder' ? folderPathToTreeDirectoryPath(rawPath) : rawPath;
 
     if (item.dataset.itemType === 'folder') {
+      if (filesCover) return;
       const folderPath = treeDirectoryPathToFolderPath(path);
       if (wasSelected) {
         if (model.getSelectedPaths().length !== 1) return;
