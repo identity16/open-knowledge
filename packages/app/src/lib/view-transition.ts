@@ -3,13 +3,16 @@ import { flushSync } from 'react-dom';
 export const MASCOT_VIEW_TRANSITION_NAME = 'ok-blob-mascot';
 
 type ViewTransitionDocument = Document & {
-  startViewTransition?: (callback: () => void) => { finished: Promise<void> };
+  startViewTransition?: (callback: () => void) => {
+    finished: Promise<void>;
+    updateCallbackDone: Promise<void>;
+  };
 };
 
-export function withViewTransition(update: () => void): void {
+export function withViewTransition(update: () => void): Promise<void> {
   if (typeof document === 'undefined') {
     update();
-    return;
+    return Promise.resolve();
   }
   const start = (document as ViewTransitionDocument).startViewTransition;
   const prefersReducedMotion =
@@ -19,9 +22,10 @@ export function withViewTransition(update: () => void): void {
 
   if (typeof start !== 'function' || prefersReducedMotion) {
     update();
-    return;
+    return Promise.resolve();
   }
-  start.call(document, () => {
+  const transition = start.call(document, () => {
     flushSync(update);
   });
+  return transition.updateCallbackDone.catch(() => {});
 }

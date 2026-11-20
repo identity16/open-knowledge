@@ -1121,8 +1121,7 @@ function EditorAreaInner({
 
   function dismissDocPanelCover() {
     setPendingDocPanelDestination(null);
-    setDocPanelCover(false);
-    returnFocusFromDocPanelCover();
+    void withViewTransition(() => setDocPanelCover(false)).then(returnFocusFromDocPanelCover);
   }
 
   function requestDocPanelDestination(
@@ -1226,7 +1225,7 @@ function EditorAreaInner({
     docPanelCoverOpenerRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     pinDocPanel(true);
-    setDocPanelCover(true);
+    void withViewTransition(() => setDocPanelCover(true));
   }
 
   function togglePanel() {
@@ -2145,6 +2144,7 @@ function EditorAreaInner({
         <section
           aria-label={t`Files`}
           data-files-cover=""
+          data-cover-side={fileSidebarSide}
           className={cn(
             'absolute inset-0 z-20 flex min-h-0 min-w-0 flex-col',
             SECONDARY_PANEL_SURFACE_CLASS,
@@ -2158,6 +2158,7 @@ function EditorAreaInner({
           id="doc-panel-cover"
           aria-label={t`Document panel`}
           data-doc-panel-cover=""
+          data-cover-side={docPanelSide}
           className={cn(
             'absolute inset-0 z-20 flex min-h-0 min-w-0 flex-col',
             SECONDARY_PANEL_SURFACE_CLASS,

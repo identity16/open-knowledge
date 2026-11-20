@@ -7124,3 +7124,44 @@ html:not([data-color-theme]):not(.dark) [data-slot="kbd"] {
     min-height: 2.25rem;
   }
 }
+
+[data-cover-side="start"]:is([data-files-cover], [data-doc-panel-cover]) {
+  view-transition-name: ok-cover-start;
+}
+[data-cover-side="end"]:is([data-files-cover], [data-doc-panel-cover]) {
+  view-transition-name: ok-cover-end;
+}
+
+@keyframes ok-cover-from-start {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes ok-cover-to-start {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes ok-cover-from-end {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes ok-cover-to-end {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+::view-transition-new(ok-cover-start):only-child {
+  animation: ok-cover-from-start 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(ok-cover-start):only-child {
+  animation: ok-cover-to-start 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+::view-transition-new(ok-cover-end):only-child {
+  animation: ok-cover-from-end 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-old(ok-cover-end):only-child {
+  animation: ok-cover-to-end 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
