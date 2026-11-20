@@ -156,3 +156,55 @@ describe('Tooltip runtime contracts', () => {
     expectVisualClassTokensAbsent(className, SNAPPY_TOKENS);
   });
 });
+
+describe('Tooltip focus after touch input', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  async function renderFocusableTooltip() {
+    const { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } = await import('./tooltip');
+    render(
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button">Target</button>
+          </TooltipTrigger>
+          <TooltipContent>Tooltip body</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>,
+    );
+    return screen.getByRole('button', { name: 'Target' });
+  }
+
+  function dispatchPointerDown(pointerType: string) {
+    const event = new Event('pointerdown', { bubbles: true });
+    Object.defineProperty(event, 'pointerType', { value: pointerType });
+    document.body.dispatchEvent(event);
+  }
+
+  test('programmatic focus right after a touch does not open the tooltip', async () => {
+    const target = await renderFocusableTooltip();
+    dispatchPointerDown('touch');
+
+    await act(async () => {
+      target.focus();
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  test('keyboard focus still opens the tooltip after an earlier touch', async () => {
+    const target = await renderFocusableTooltip();
+    dispatchPointerDown('touch');
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+
+    await act(async () => {
+      target.focus();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(screen.getByRole('tooltip')).toBeTruthy());
+  });
+});
