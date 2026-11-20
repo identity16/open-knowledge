@@ -31,6 +31,8 @@ import {
   AgentWriteSuccessSchema,
   asTargetNamespace,
   type BatchEntryError,
+  BridgeInvariantViolationError,
+  BridgeMergeContentLossError,
   type ConfigDiagnosticsReport,
   changedBlockRange,
   colorFromSeed,
@@ -266,9 +268,11 @@ import {
 } from './document-durability-state.ts';
 import type { RefreshDocumentsFromDisk } from './document-refresh.ts';
 import {
+  applyExternalChange,
   buildReconcileWarning,
   type ReconcileBeforeWriteResult,
   reconcileDiskBeforeAgentWrite,
+  redactedErrorSummary,
   reviveFrozenResidentDoc,
 } from './external-change.ts';
 import { extractActorIdentity } from './extract-actor-identity.ts';
@@ -1767,6 +1771,62 @@ export function respondPersistenceFailure(
   );
 }
 
+function isBridgeSignalError(err: unknown): boolean {
+  return (
+    err instanceof BridgeMergeContentLossError ||
+    err instanceof BridgeInvariantViolationError ||
+    (err instanceof Error && err.name === 'BridgeMergeContentLossError')
+  );
+}
+
+export function adoptMovedContentIntoResidentDoc(
+  durabilityState: DocumentDurabilityState,
+  hocuspocus: Hocuspocus,
+  docName: string,
+  content: string,
+  resolveEmbed?: (basename: string, sourcePath: string) => string | null,
+  resolveSize?: (basename: string, sourcePath: string) => number | null,
+  bridgeLossReporter?: BridgeDeriveLossReporter,
+): Document | undefined {
+  const revival = reviveFrozenResidentDoc(
+    durabilityState,
+    hocuspocus,
+    docName,
+    content,
+    resolveEmbed,
+    resolveSize,
+    bridgeLossReporter,
+  );
+  const resident = hocuspocus.documents.get(docName);
+  if (revival === 'revived') return resident;
+  if (revival === 'failed' || !resident || isPersistenceExcludedDoc(docName)) return undefined;
+  if (resident.getText('source').toString() === content) return undefined;
+  const reconcileLog = getLogger('reconcile');
+  try {
+    applyExternalChange(
+      durabilityState,
+      hocuspocus,
+      docName,
+      content,
+      resolveEmbed,
+      resolveSize,
+      bridgeLossReporter,
+    );
+  } catch (err) {
+    if (isBridgeSignalError(err)) throw err;
+    reconcileLog.error(
+      { err: redactedErrorSummary(err), docName },
+      `[reconcile] could not adopt moved content into ${docName}`,
+    );
+    return undefined;
+  }
+  reconcileLog.info(
+    { docName, replacedInMemoryContent: true },
+    `[reconcile] adopted moved content into ${docName}: its open editor now shows the moved page`,
+  );
+  return resident;
+}
+
 export function createApiExtension(options: ApiExtensionOptions): Extension & {
   nativeApi: NativeApiHandle;
   localApi: LocalApiDispatch;
@@ -2715,9 +2775,8 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
     return liveContents;
   }
 
-  function reviveFrozenResident(docName: string, content: string): void {
-    const document = hocuspocus.documents.get(docName);
-    const result = reviveFrozenResidentDoc(
+  function adoptMovedContentIntoResident(docName: string, content: string): void {
+    const adopted = adoptMovedContentIntoResidentDoc(
       durabilityState,
       hocuspocus,
       docName,
@@ -2726,7 +2785,7 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
       undefined,
       getBridgeLossReporter?.(),
     );
-    if (result === 'revived' && document) onResidentAdopted?.(document, docName);
+    if (adopted) onResidentAdopted?.(adopted, docName);
   }
 
   function syncRenamedDocsToDisk(
@@ -2749,7 +2808,7 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
 
       if (typeof finalContent === 'string') {
         registerWrite(filePath, contentHash(finalContent));
-        reviveFrozenResident(toDocName, finalContent);
+        adoptMovedContentIntoResident(toDocName, finalContent);
       }
     }
   }
@@ -3611,11 +3670,11 @@ export function createApiExtension(options: ApiExtensionOptions): Extension & {
                 wikiContext,
               );
 
+              durabilityState.setReconciledBase(toDocName, renamedSource.markdown);
               syncRenamedDocsToDisk(
                 [{ fromDocName, toDocName }],
                 new Map([[fromDocName, renamedSource.markdown]]),
               );
-              durabilityState.setReconciledBase(toDocName, renamedSource.markdown);
 
               mutateFileIndex?.({
                 kind: 'rename',
