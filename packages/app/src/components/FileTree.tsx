@@ -90,7 +90,11 @@ import {
   treePathToAppPath,
   uploadedPathForSidebarDrop,
 } from '@/components/file-tree-adapter';
-import { createFileTreeStyle, FILE_TREE_DENSITY_OPTIONS } from '@/components/file-tree-density';
+import {
+  createFileTreeStyle,
+  fileTreeDensityOptions,
+  primaryPointerIsCoarse,
+} from '@/components/file-tree-density';
 import { applyExtensionBadges } from '@/components/file-tree-extension-badge';
 import {
   AGENT_DECORATION_ICON_ID,
@@ -1104,6 +1108,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   );
   const appliedSortSignatureRef = useRef<string | null>(null);
   const fileTreeHostRef = useRef<HTMLDivElement | null>(null);
+  const [touchDensity] = useState(primaryPointerIsCoarse);
   const handleSelectionChangeRef = useRef<(selectedPaths: readonly string[]) => void>(() => {});
   const handleRenameRef = useRef<(event: FileTreeRenameEvent) => void>(() => {});
   const handleRenameErrorRef = useRef<(message: string) => void>((message) => toast.error(message));
@@ -1262,7 +1267,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     fileTreeSearchMode: 'hide-non-matches',
     initialVisibleRowCount: 18,
     stickyFolders: true,
-    ...FILE_TREE_DENSITY_OPTIONS,
+    ...fileTreeDensityOptions(touchDensity),
     icons: {
       set: 'complete',
       spriteSheet: FILE_TREE_DECORATION_SPRITE_SHEET,
@@ -3387,7 +3392,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
             )
           }
           model={model}
-          style={createFileTreeStyle(resolvedTheme)}
+          style={createFileTreeStyle(resolvedTheme, touchDensity)}
           {...{ [FILE_TREE_CREATION_CLEARED_ATTR]: creationDirCleared ? '' : undefined }}
           data-state={anyActionBusy ? 'busy' : 'idle'}
           onClickCapture={handleTreeClickCapture}

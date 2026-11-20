@@ -7113,7 +7113,13 @@ html:not([data-color-theme]):not(.dark) [data-slot="kbd"] {
     font-size: max(1rem, 1em);
   }
 
-  [data-app-header] button[data-size] {
+  [data-app-header] button[data-size],
+  [data-editor-pane-tabs] button[data-size],
+  [data-sidebar="trigger"],
+  [data-testid="sidebar-toolbar"] button[data-size],
+  [data-testid="skills-dock-toolbar"] button,
+  [data-files-back],
+  [data-doc-panel-back] {
     min-width: 2.25rem;
     min-height: 2.25rem;
   }

@@ -51,7 +51,7 @@ export function EditorModeToggle({
               aria-label={wysiwygName}
               aria-describedby={describeWysiwyg ? wysiwygReasonId : undefined}
               disabled={wysiwygDisabled}
-              className="size-7 px-0 dark:data-[state=on]:bg-foreground/15"
+              className="size-7 px-0 pointer-coarse:size-9 dark:data-[state=on]:bg-foreground/15"
             >
               <Textbox className="size-4" />
             </ToggleGroupItem>
@@ -79,7 +79,7 @@ export function EditorModeToggle({
               value="source"
               aria-label={sourceName}
               disabled={sourceDisabled}
-              className="size-7 px-0 dark:data-[state=on]:bg-foreground/15"
+              className="size-7 px-0 pointer-coarse:size-9 dark:data-[state=on]:bg-foreground/15"
             >
               <Markdown className="size-4" />
             </ToggleGroupItem>
