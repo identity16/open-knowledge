@@ -4414,6 +4414,9 @@ msgstr "Développer le diagramme"
 msgid "Expand graph"
 msgstr "Développer le graphe"
 
+msgid "Expand image"
+msgstr "Agrandir l’image"
+
 msgid "Expanded graph mode"
 msgstr "Mode graphe développé"
 
@@ -5433,6 +5436,9 @@ msgstr "Motifs d'exclusion (texte brut)"
 
 msgid "Ignored"
 msgstr "Ignoré"
+
+msgid "Image"
+msgstr "Image"
 
 msgid "Image {identity}. Go to reference."
 msgstr "Image {identity}. Accéder à la référence."
@@ -8251,6 +8257,9 @@ msgstr "Appuyez sur Espace pour saisir un onglet. Utilisez les touches fléchée
 
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "Appuyez sur le soleil ou la lune de « Custom » ci-dessus pour utiliser ce thème."
+
+msgid "Preview"
+msgstr "Aperçu"
 
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "Les navigateurs d'aperçu ne peuvent pas copier automatiquement. Faites Cmd/Ctrl+C sur l'URL ci-dessus, ou ouvrez OK dans l'application de bureau."

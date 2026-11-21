@@ -2,6 +2,16 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.84.0 (2026-11-21)
+
+### Features
+
+- SVG files open as a picture you can zoom and pan, and a toggle above the file switches to its source and back. Each SVG remembers its own choice until the app restarts, and switching does not change how your Markdown files open.
+
+### Changes
+
+- Clicking an image in a document opens it in a viewer where trackpad pinch, Cmd/Ctrl-scroll and the corner buttons zoom, and scrolling or dragging pans. Press Escape or the close button to return.
+
 ## 0.83.0 (2026-11-21)
 
 ### Changes

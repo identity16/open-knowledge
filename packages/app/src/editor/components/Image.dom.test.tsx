@@ -4,10 +4,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { expectVisualClassTokens } from '@/test-utils/visual-contract';
 
-vi.doMock('react-medium-image-zoom', () => ({
-  default: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 type StubPageList = { assetPaths: Set<string>; filePaths: Set<string>; loading: boolean };
 let currentPageList: StubPageList | null = null;
 vi.doMock('@/components/PageListContext', async (importOriginal) => {

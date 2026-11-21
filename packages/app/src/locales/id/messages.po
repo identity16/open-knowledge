@@ -4410,6 +4410,9 @@ msgstr "Bentangkan diagram"
 msgid "Expand graph"
 msgstr "Bentangkan graf"
 
+msgid "Expand image"
+msgstr "Perbesar gambar"
+
 msgid "Expanded graph mode"
 msgstr "Mode graf terbentang"
 
@@ -5429,6 +5432,9 @@ msgstr "Pola abaikan (teks mentah)"
 
 msgid "Ignored"
 msgstr "Diabaikan"
+
+msgid "Image"
+msgstr "Gambar"
 
 msgid "Image {identity}. Go to reference."
 msgstr "Gambar {identity}. Buka referensi."
@@ -8247,6 +8253,9 @@ msgstr "Tekan Spasi untuk mengambil tab. Gunakan tombol panah untuk memindahkann
 
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "Tekan ikon matahari atau bulan pada “Custom” di atas untuk memakai tema ini."
+
+msgid "Preview"
+msgstr "Pratinjau"
 
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "Peramban pratinjau tidak bisa menyalin otomatis. Gunakan Cmd/Ctrl+C pada URL di atas, atau buka OK di aplikasi desktop."

@@ -36,6 +36,7 @@ import {
   scrollFraction,
   scrollSuppressionHolder,
 } from '@/editor/scroll-restore-coordination';
+import { isSvgDocFile } from '@/editor/svg-view-mode';
 import { TiptapEditor } from '@/editor/TiptapEditor';
 import type { EditorModeValue } from '@/editor/use-editor-mode';
 import { useDocConflict } from '@/hooks/use-conflicts';
@@ -50,6 +51,7 @@ import { DocumentErrorBoundary } from './DocumentErrorBoundary';
 import { EditorSkeleton } from './EditorSkeleton';
 import { PageHeader } from './PageHeader';
 import { PropertyPanel } from './PropertyPanel';
+import { SvgDocView } from './SvgDocView';
 import {
   clampTargetToContent,
   computeRestoreTarget,
@@ -893,7 +895,11 @@ function ActivityEntry({
                       <ExcalidrawDocEditor provider={entry.provider} />
                     </Suspense>
                   ) : isTextDoc ? (
-                    <TextDocEditor docName={entry.docName} provider={entry.provider} />
+                    isSvgDocFile(entry.docName) ? (
+                      <SvgDocView docName={entry.docName} provider={entry.provider} />
+                    ) : (
+                      <TextDocEditor docName={entry.docName} provider={entry.provider} />
+                    )
                   ) : (
                     <div className="flex h-full flex-col">
                       {!effectiveIsSourceMode &&

@@ -4414,6 +4414,9 @@ msgstr "Rozwiń diagram"
 msgid "Expand graph"
 msgstr "Rozwiń graf"
 
+msgid "Expand image"
+msgstr "Powiększ obraz"
+
 msgid "Expanded graph mode"
 msgstr "Tryb rozszerzonego grafu"
 
@@ -5433,6 +5436,9 @@ msgstr "Wzorce ignorowania (tekst surowy)"
 
 msgid "Ignored"
 msgstr "Zignorowane"
+
+msgid "Image"
+msgstr "Obraz"
 
 msgid "Image {identity}. Go to reference."
 msgstr "Obraz {identity}. Przejdź do odnośnika."
@@ -8251,6 +8257,9 @@ msgstr "Naciśnij Spację, aby podnieść kartę. Użyj klawiszy strzałek, aby 
 
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "Naciśnij słońce lub księżyc przy opcji „Własny” powyżej, aby użyć tego motywu."
+
+msgid "Preview"
+msgstr "Podgląd"
 
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "Przeglądarka podglądu nie obsługuje automatycznego kopiowania. Użyj Cmd/Ctrl+C na powyższym adresie URL albo otwórz OK w aplikacji desktopowej."

@@ -4414,6 +4414,9 @@ msgstr "展開圖表"
 msgid "Expand graph"
 msgstr "展開關係圖"
 
+msgid "Expand image"
+msgstr "放大圖片"
+
 msgid "Expanded graph mode"
 msgstr "關係圖展開模式"
 
@@ -5433,6 +5436,9 @@ msgstr "忽略模式（純文字）"
 
 msgid "Ignored"
 msgstr "已忽略"
+
+msgid "Image"
+msgstr "圖片"
 
 msgid "Image {identity}. Go to reference."
 msgstr "圖片 {identity}。前往引用位置。"
@@ -8251,6 +8257,9 @@ msgstr "按空白鍵拾取分頁。使用方向鍵在分頁列內移動，然後
 
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "按上方「自訂」中的太陽或月亮圖示以使用這個主題。"
+
+msgid "Preview"
+msgstr "預覽"
 
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "預覽用的瀏覽器無法自動複製。請對上面的 URL 按 Cmd/Ctrl+C，或在桌面應用程式中開啟 OK。"

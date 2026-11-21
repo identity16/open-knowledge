@@ -1,27 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-vi.doMock('react-medium-image-zoom', () => ({
-  default: ({
-    children,
-    wrapElement,
-    zoomMargin,
-    zoomImg,
-  }: {
-    children: React.ReactNode;
-    wrapElement?: string;
-    zoomMargin?: number;
-    zoomImg?: { sizes?: string };
-  }) => (
-    <span
-      data-zoom-mock
-      data-wrap-element={wrapElement}
-      data-zoom-margin={String(zoomMargin)}
-      data-zoom-img-sizes={zoomImg !== undefined ? String(zoomImg.sizes) : 'ABSENT'}
-    >
-      {children}
-    </span>
-  ),
+vi.doMock('@/components/ImageViewer', () => ({
+  ImageViewer: ({ src }: { src: string }) => <div data-testid="lightbox-viewer" data-src={src} />,
 }));
 
 const { ImageInlineZoomView } = await import('./ImageInlineZoomView');
@@ -44,13 +25,13 @@ describe('ImageInlineZoomView — inline-image lightbox wrap', () => {
     cleanup();
   });
 
-  test('wraps the inline `<img>` in `<Zoom>` with descriptor-side parity args (wrapElement / zoomMargin / zoomImg.sizes)', () => {
+  test('clicking the inline image opens it in the zoomable lightbox viewer', () => {
     render(<ImageInlineZoomView {...makeNode({ src: '/a.png', alt: 'A', title: 't' })} />);
-    const zoom = document.querySelector('[data-zoom-mock]');
-    expect(zoom).not.toBeNull();
-    expect(zoom?.getAttribute('data-wrap-element')).toBe('span');
-    expect(zoom?.getAttribute('data-zoom-margin')).toBe('20');
-    expect(zoom?.getAttribute('data-zoom-img-sizes')).toBe('undefined');
+    expect(screen.queryByTestId('lightbox-viewer')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand image' }));
+
+    expect(screen.getByTestId('lightbox-viewer').getAttribute('data-src')).toContain('/a.png');
   });
 
   test('outer NodeViewWrapper renders as `<span>` so inline images fit inside a `<p>` (HTML spec compliance)', () => {
