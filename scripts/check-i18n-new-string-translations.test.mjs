@@ -11,6 +11,7 @@ import {
   formatReport,
   parsePoCatalog,
   pluralSelectorsIn,
+  REQUIRED_LOCALES,
   readSupportedLocales,
   requiredPluralCategories,
   SOURCE_LOCALE,
@@ -273,6 +274,12 @@ describe('wiring', () => {
     expect(pkg.scripts['check:drift:guards']).toContain(
       'node scripts/check-i18n-new-string-translations.mjs',
     );
+  });
+
+  test('only Korean must be translated, and it is a supported locale', () => {
+    expect(REQUIRED_LOCALES).toEqual(['ko']);
+    const supported = readSupportedLocales(readFileSync(LOCALES_TS, 'utf8'));
+    for (const locale of REQUIRED_LOCALES) expect(supported).toContain(locale);
   });
 
   test('the source locale is the one Lingui extracts from', () => {

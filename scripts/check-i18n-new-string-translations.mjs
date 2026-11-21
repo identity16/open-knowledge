@@ -9,6 +9,7 @@ import { gitCleanEnv } from './git-clean-env.mjs';
 const OK_ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 export const SOURCE_LOCALE = 'en';
+export const REQUIRED_LOCALES = ['ko'];
 const LOCALES_TS = 'packages/core/src/i18n/locales.ts';
 const CATALOG_REL = (locale) => `packages/app/src/locales/${locale}/messages.po`;
 
@@ -211,7 +212,7 @@ function main(argv) {
   }
 
   const locales = readSupportedLocales(readFileSync(join(OK_ROOT, LOCALES_TS), 'utf8'));
-  const targetLocales = locales.filter((locale) => locale !== SOURCE_LOCALE);
+  const targetLocales = REQUIRED_LOCALES.filter((locale) => locales.includes(locale));
 
   const catalogs = new Map();
   for (const locale of targetLocales) {
@@ -229,7 +230,7 @@ function main(argv) {
 
   if (result.gaps.length === 0 && result.missingCatalogs.length === 0) {
     console.log(
-      `i18n: ${result.newMessageCount} new message(s) since ${baseRef}, translated in all ${targetLocales.length} locales.`,
+      `i18n: ${result.newMessageCount} new message(s) since ${baseRef}, translated in ${targetLocales.join(', ')}.`,
     );
     return 0;
   }
@@ -238,7 +239,8 @@ function main(argv) {
   console.error('');
   console.error(formatReport(result));
   console.error('');
-  console.error('  A message added in a change lands translated in that same change.');
+  console.error('  A message added in a change lands translated into Korean in that same change;');
+  console.error('  other locales may stay empty and show the English source.');
   console.error('  Fill the msgstr in each locale listed, then re-run:');
   console.error('    cd packages/app && pnpm run i18n');
   console.error('  Locked terminology: packages/app/src/locales/GLOSSARY.md');
