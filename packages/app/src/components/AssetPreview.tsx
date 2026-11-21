@@ -2,11 +2,11 @@ import type { InlineAssetMediaKind } from '@inkeep/open-knowledge-core/constants
 import { toDesktopAssetHref } from '@inkeep/open-knowledge-core/utils/asset-href';
 import { Trans } from '@lingui/react/macro';
 import { useState } from 'react';
+import { ImageViewer } from '@/components/ImageViewer';
 import { MermaidFileViewer } from '@/components/MermaidFileViewer';
 import { NotInSidebarIndicator } from '@/components/NotInSidebarIndicator';
 import { TextViewer } from '@/components/TextViewer';
 import { Button } from '@/components/ui/button';
-import { LoadingImage } from '@/components/ui/loading-image';
 import { dispatchAssetClick } from '@/editor/asset-dispatch';
 import { Pdf } from '@/editor/components/Pdf';
 
@@ -80,19 +80,18 @@ function AssetPreviewBody({ assetPath, mediaKind }: AssetPreviewProps) {
     );
   }
 
+  if (effectiveMediaKind === 'image') {
+    return (
+      <section className="flex h-full min-h-0 flex-col bg-background" aria-label={fileName}>
+        <ImageViewer key={assetPath} src={src} fileName={fileName} />
+      </section>
+    );
+  }
+
   return (
     <section className="flex h-full min-h-0 flex-col bg-background" aria-label={fileName}>
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
-        {effectiveMediaKind === 'image' ? (
-          <LoadingImage
-            src={src}
-            alt={fileName}
-            draggable={false}
-            targetExistence="exists"
-            slotClassName="flex h-full w-full items-center justify-center"
-            className="max-h-full max-w-full"
-          />
-        ) : effectiveMediaKind === 'video' ? (
+        {effectiveMediaKind === 'video' ? (
           // biome-ignore lint/a11y/useMediaCaption: local preview files do not have sidecar captions.
           <video src={src} controls className="max-h-full max-w-full" />
         ) : effectiveMediaKind === 'audio' ? (

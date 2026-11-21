@@ -5433,6 +5433,9 @@ msgstr "উপেক্ষিত"
 msgid "Image {identity}. Go to reference."
 msgstr "ছবি {identity}। রেফারেন্সে যান।"
 
+msgid "Image controls"
+msgstr "ছবির নিয়ন্ত্রণ"
+
 msgid "Image couldn't be displayed"
 msgstr "ছবি দেখানো যায়নি"
 

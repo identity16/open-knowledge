@@ -5437,6 +5437,9 @@ msgstr "Ignorado"
 msgid "Image {identity}. Go to reference."
 msgstr "Imagen {identity}. Ir a la referencia."
 
+msgid "Image controls"
+msgstr "Controles de imagen"
+
 msgid "Image couldn't be displayed"
 msgstr "No se pudo mostrar la imagen"
 

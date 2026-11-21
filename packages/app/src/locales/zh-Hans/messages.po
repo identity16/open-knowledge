@@ -5437,6 +5437,9 @@ msgstr "已忽略"
 msgid "Image {identity}. Go to reference."
 msgstr "图片 {identity}。转到引用位置。"
 
+msgid "Image controls"
+msgstr "图片控件"
+
 msgid "Image couldn't be displayed"
 msgstr "无法显示图片"
 

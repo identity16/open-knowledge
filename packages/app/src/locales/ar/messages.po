@@ -5437,6 +5437,9 @@ msgstr "متجاهَل"
 msgid "Image {identity}. Go to reference."
 msgstr "الصورة {identity}. انتقل إلى المرجع."
 
+msgid "Image controls"
+msgstr "عناصر التحكم في الصورة"
+
 msgid "Image couldn't be displayed"
 msgstr "تعذّر إظهار الصورة"
 
