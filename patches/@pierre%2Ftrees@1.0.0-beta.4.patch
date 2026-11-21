@@ -69,6 +69,44 @@ index 84a7e2d14f67c1aad8230f19a3426ab7403f378e..17572c31914547893712e6cfa53f09c0
    canDrop?: (event: FileTreeDropContext) => boolean;
    onDropComplete?: (event: FileTreeDropResult) => void;
    onDropError?: (error: string, event: FileTreeDropContext) => void;
+diff --git a/dist/path-store/src/store.js b/dist/path-store/src/store.js
+index 9dc5225312bad2fe59a2478c4117f51a5a586f6c..ec160c1c350a5298c3fbc5c96ebab07a0bb30fcf 100644
+--- a/dist/path-store/src/store.js
++++ b/dist/path-store/src/store.js
+@@ -1,7 +1,6 @@
+ import { PATH_STORE_CHILD_INDEX_CHUNK_THRESHOLD_EXTERNAL, rebuildVisibleChildChunks } from "./child-index.js";
+ import { getNodeDepth, isDirectoryNode } from "./internal-types.js";
+ import { getBenchmarkInstrumentation, withBenchmarkPhase } from "./internal/benchmarkInstrumentation.js";
+-import { compareSegmentSortKeys, createSegmentSortKey, getSegmentSortKey } from "./sort.js";
+ import { PathStoreBuilder, getPreparedInputEntries, getPreparedInputPresortedPaths, getPreparedInputPresortedPathsContainDirectories, prepareInput, preparePathEntries, preparePaths, preparePresortedInput } from "./builder.js";
+ import { beginDirectoryLoad, completeDirectoryLoad, createPathStoreState, failDirectoryLoad, getDirectoryLoadState, isDirectoryExpanded, isDirectoryLoadAttemptCurrent, markDirectoryUnloadedState, setDirectoryExpanded } from "./state.js";
+ import { batchEvents, createApplyChildPatchEvent, createBeginChildLoadEvent, createCleanupEvent, createCompleteChildLoadEvent, createFailChildLoadEvent, createMarkDirectoryUnloadedEvent, finalizeEvent, recordEvent, subscribe } from "./events.js";
+@@ -334,7 +333,6 @@ var PathStore = class PathStore {
+ 		const segmentTable = this.#state.snapshot.segmentTable;
+ 		const segmentValues = segmentTable.valueById;
+ 		const nodes = this.#state.snapshot.nodes;
+-		const targetSegmentSortKeyCache = /* @__PURE__ */ new Map();
+ 		for (const path of expandedPaths) {
+ 			if (previousPath != null && path < previousPath) {
+ 				previousPath = null;
+@@ -389,8 +387,6 @@ var PathStore = class PathStore {
+ 				const searchStartIndex = resolvedDepth === sharedDepth ? previousChildOffsets[resolvedDepth] ?? 0 : 0;
+ 				let nextChildOffset = searchStartIndex;
+ 				let nextNodeId;
+-				const targetSegmentSortKey = targetSegmentSortKeyCache.get(segment) ?? createSegmentSortKey(segment);
+-				targetSegmentSortKeyCache.set(segment, targetSegmentSortKey);
+ 				const searchForSegment = (startIndex, endIndex$1) => {
+ 					for (nextChildOffset = startIndex; nextChildOffset < endIndex$1; nextChildOffset += 1) {
+ 						const candidateNodeId = childIds[nextChildOffset];
+@@ -400,8 +396,6 @@ var PathStore = class PathStore {
+ 							nextNodeId = candidateNodeId;
+ 							return true;
+ 						}
+-						const orderComparison = compareSegmentSortKeys(getSegmentSortKey(segmentTable, candidateNode.nameId), targetSegmentSortKey);
+-						if (orderComparison > 0 || orderComparison === 0 && candidateSegment > segment) return false;
+ 					}
+ 					return false;
+ 				};
 diff --git a/dist/render/FileTreeView.js b/dist/render/FileTreeView.js
 index 648639b4b65c1dd797434e3afe189848426f4d53..6e1f98edf655aadf2cb7776a31e2d22fc134f1fa 100644
 --- a/dist/render/FileTreeView.js
