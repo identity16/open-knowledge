@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 interface EditorBreadcrumbProps {
   docName: string | null;
   includeCurrentPage?: boolean;
+  prioritizeCurrentPage?: boolean;
   className?: string;
 }
 
@@ -32,6 +33,7 @@ type BreadcrumbNode =
 export function EditorBreadcrumb({
   docName,
   includeCurrentPage = false,
+  prioritizeCurrentPage = false,
   className,
 }: EditorBreadcrumbProps) {
   if (!docName) return null;
@@ -54,11 +56,15 @@ export function EditorBreadcrumb({
     key: segments.slice(0, absoluteIndex + 1).join('/'),
   });
 
-  const collapsed = segments.length > COLLAPSE_THRESHOLD;
+  const leadingVisible = prioritizeCurrentPage ? 0 : LEADING_VISIBLE;
+  const collapsed = prioritizeCurrentPage
+    ? segments.length > TRAILING_VISIBLE
+    : segments.length > COLLAPSE_THRESHOLD;
+  const hiddenWhenNarrow = prioritizeCurrentPage && '@max-md/toolbar:hidden';
   const nodes: BreadcrumbNode[] = collapsed
     ? [
-        ...segments.slice(0, LEADING_VISIBLE).map((value, i) => segmentNode(value, i)),
-        { kind: 'ellipsis', hidden: segments.slice(LEADING_VISIBLE, -TRAILING_VISIBLE) },
+        ...segments.slice(0, leadingVisible).map((value, i) => segmentNode(value, i)),
+        { kind: 'ellipsis', hidden: segments.slice(leadingVisible, -TRAILING_VISIBLE) },
         ...segments
           .slice(-TRAILING_VISIBLE)
           .map((value, i) => segmentNode(value, segments.length - TRAILING_VISIBLE + i)),
@@ -79,10 +85,15 @@ export function EditorBreadcrumb({
           return (
             <Fragment key={key}>
               {index > 0 && (
-                <BreadcrumbSeparator className="shrink-0 text-muted-foreground/70 [&>svg]:size-3" />
+                <BreadcrumbSeparator
+                  className={cn(
+                    'shrink-0 text-muted-foreground/70 [&>svg]:size-3',
+                    hiddenWhenNarrow,
+                  )}
+                />
               )}
               {node.kind === 'ellipsis' ? (
-                <BreadcrumbItem className="shrink-0">
+                <BreadcrumbItem className={cn('shrink-0', hiddenWhenNarrow)}>
                   <span
                     aria-hidden="true"
                     title={node.hidden.join(' / ')}
@@ -95,12 +106,22 @@ export function EditorBreadcrumb({
                   </span>
                 </BreadcrumbItem>
               ) : (
-                <BreadcrumbItem className="min-w-0">
+                <BreadcrumbItem
+                  className={cn(
+                    'min-w-0',
+                    prioritizeCurrentPage &&
+                      (isCurrentPage ? 'shrink' : cn('min-w-12 shrink-[1000]', hiddenWhenNarrow)),
+                  )}
+                >
                   <BreadcrumbPage
                     current={isCurrentPage}
                     className={cn(
                       'min-w-0 truncate font-normal',
-                      isCurrentPage ? 'font-medium text-foreground' : 'text-muted-foreground/70',
+                      isCurrentPage
+                        ? prioritizeCurrentPage
+                          ? 'text-base font-semibold text-foreground'
+                          : 'font-medium text-foreground'
+                        : 'text-muted-foreground/70',
                     )}
                     title={node.value}
                   >

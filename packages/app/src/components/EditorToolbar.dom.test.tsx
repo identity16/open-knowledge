@@ -15,8 +15,22 @@ vi.doMock('@lingui/react/macro', () => ({
 }));
 
 vi.doMock('./EditorBreadcrumb', () => ({
-  EditorBreadcrumb: ({ docName }: { docName: string | null }) => (
-    <span data-testid="editor-breadcrumb-probe">{docName}</span>
+  EditorBreadcrumb: ({
+    docName,
+    includeCurrentPage,
+    prioritizeCurrentPage,
+  }: {
+    docName: string | null;
+    includeCurrentPage?: boolean;
+    prioritizeCurrentPage?: boolean;
+  }) => (
+    <span
+      data-testid="editor-breadcrumb-probe"
+      data-include-current-page={includeCurrentPage ? 'true' : undefined}
+      data-prioritize-current-page={prioritizeCurrentPage ? 'true' : undefined}
+    >
+      {docName}
+    </span>
   ),
 }));
 
@@ -105,15 +119,23 @@ describe('EditorToolbar runtime layout', () => {
     expectVisualClassTokens(breadcrumbCell?.className, ['pointer-events-auto']);
   });
 
-  test('content-column wrapper encloses the three-column toolbar grid', async () => {
+  test('content-column wrapper encloses a grid whose side cells share the width around the mode toggle', async () => {
     await renderToolbar();
 
     const toolbar = screen.getByTestId('editor-toolbar');
     const alignedWrapper = toolbar.querySelector('.editor-content-aligned');
     expect(alignedWrapper).toBeTruthy();
 
-    const grid = alignedWrapper?.querySelector('.grid.grid-cols-3');
-    expect(grid).toBeTruthy();
+    const grid = alignedWrapper?.querySelector('.grid');
+    expectVisualClassTokens(grid?.className, ['grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]']);
+  });
+
+  test('breadcrumb names the open file and gives it priority over its folders', async () => {
+    await renderToolbar();
+
+    const breadcrumb = screen.getByTestId('editor-breadcrumb-probe');
+    expect(breadcrumb.dataset.includeCurrentPage).toBe('true');
+    expect(breadcrumb.dataset.prioritizeCurrentPage).toBe('true');
   });
 
   test('mode toggle stays centered in the middle toolbar cell', async () => {

@@ -88,14 +88,14 @@ export function EditorToolbar({
       className="pointer-events-none absolute inset-x-0 top-0 z-10 @container/toolbar"
     >
       <div className="editor-content-aligned bg-background py-2">
-        <div className="grid grid-cols-3 items-center">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
           <div className="pointer-events-auto flex min-w-0 items-center gap-2">
             {activeSkill ? (
               <Suspense fallback={null}>
                 <SkillOriginInline scope={activeSkill.scope} name={activeSkill.name} />
               </Suspense>
             ) : externalSkill ? null : (
-              <EditorBreadcrumb docName={activeDocName} />
+              <EditorBreadcrumb docName={activeDocName} includeCurrentPage prioritizeCurrentPage />
             )}
             {activeDocName === null ? null : (
               <NotInSidebarIndicator
