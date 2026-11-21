@@ -31,7 +31,8 @@ const MIXED_PATHS = [
   'file09.md',
   'image.png',
   '_index.md',
-  '한글.md',
+  '1-intro.md',
+  '-draft.md',
 ];
 
 function sortWith(state: FileTreeSortState, paths: readonly string[]): readonly string[] {
@@ -40,14 +41,36 @@ function sortWith(state: FileTreeSortState, paths: readonly string[]): readonly 
   }).paths;
 }
 
+const NAME_ORDER: FileTreeSortState = {
+  order: 'name',
+  modifiedMsByTreePath: new Map(),
+  manualRanksByFolderKey: EMPTY_MANUAL_RANKS,
+};
+
 describe('compareFileTreeSortEntries', () => {
-  test('name order matches the tree library default order', () => {
-    const state: FileTreeSortState = {
-      order: 'name',
-      modifiedMsByTreePath: new Map(),
-      manualRanksByFolderKey: EMPTY_MANUAL_RANKS,
-    };
-    expect(sortWith(state, MIXED_PATHS)).toEqual(prepareFileTreeInput(MIXED_PATHS).paths);
+  test('name order puts folders first, then symbols, digits and letters in natural order', () => {
+    expect(sortWith(NAME_ORDER, MIXED_PATHS)).toEqual([
+      'a/b/',
+      'a/b/c/deep.md',
+      'a/B.md',
+      'a/z.md',
+      'notes/',
+      'notes/archive/',
+      'notes/archive/old.md',
+      'notes/Day1.md',
+      'notes/day2.md',
+      'notes/day10.md',
+      'Notes2/',
+      '_index.md',
+      '-draft.md',
+      '1-intro.md',
+      'file09.md',
+      'file9.md',
+      'file10.md',
+      'image.png',
+      'README.md',
+      'readme.MD',
+    ]);
   });
 
   test('modified order puts newer files first and keeps folders on top by name', () => {
@@ -116,7 +139,7 @@ describe('compareFileTreeSortEntries', () => {
       modifiedMsByTreePath: new Map(),
       manualRanksByFolderKey: manualRanksByFolderKey({}),
     };
-    expect(sortWith(state, MIXED_PATHS)).toEqual(prepareFileTreeInput(MIXED_PATHS).paths);
+    expect(sortWith(state, MIXED_PATHS)).toEqual(sortWith(NAME_ORDER, MIXED_PATHS));
   });
 });
 

@@ -81,54 +81,13 @@ export function manualRanksByFolderKey(
   return ranks;
 }
 
-type NaturalToken = string | number;
-
-function isDigitCode(code: number): boolean {
-  return code >= 48 && code <= 57;
-}
-
-function naturalTokens(value: string): NaturalToken[] {
-  const tokens: NaturalToken[] = [];
-  let tokenStart = 0;
-  let index = 0;
-  while (index < value.length) {
-    while (index < value.length && !isDigitCode(value.charCodeAt(index))) index += 1;
-    if (index >= value.length) break;
-    if (index > tokenStart) tokens.push(value.slice(tokenStart, index));
-    let numberValue = 0;
-    while (index < value.length && isDigitCode(value.charCodeAt(index))) {
-      numberValue = numberValue * 10 + (value.charCodeAt(index) - 48);
-      index += 1;
-    }
-    tokens.push(numberValue);
-    tokenStart = index;
-  }
-  if (tokenStart < value.length || tokens.length === 0) tokens.push(value.slice(tokenStart));
-  return tokens;
-}
-
-function compareNaturalTokens(left: NaturalToken[], right: NaturalToken[]): number {
-  const count = Math.min(left.length, right.length);
-  for (let index = 0; index < count; index++) {
-    const leftToken = left[index];
-    const rightToken = right[index];
-    if (leftToken === rightToken) continue;
-    if (typeof leftToken === 'number' && typeof rightToken === 'number') {
-      return leftToken < rightToken ? -1 : 1;
-    }
-    const leftString = String(leftToken);
-    const rightString = String(rightToken);
-    if (leftString !== rightString) return leftString < rightString ? -1 : 1;
-  }
-  if (left.length !== right.length) return left.length < right.length ? -1 : 1;
-  return 0;
-}
+const segmentNameCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 export function compareSegmentNames(left: string, right: string): number {
+  const collated = segmentNameCollator.compare(left, right);
+  if (collated !== 0) return collated;
   const leftLower = left.toLowerCase();
   const rightLower = right.toLowerCase();
-  const tokenComparison = compareNaturalTokens(naturalTokens(leftLower), naturalTokens(rightLower));
-  if (tokenComparison !== 0) return tokenComparison;
   if (leftLower !== rightLower) return leftLower < rightLower ? -1 : 1;
   if (left === right) return 0;
   return left < right ? -1 : 1;
