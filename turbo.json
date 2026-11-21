@@ -7,7 +7,8 @@
     "CARGO_HOME",
     "CARGO_TARGET_DIR",
     "OPENKNOWLEDGE16_HOME",
-    "OPENKNOWLEDGE16_OFFLINE"
+    "OPENKNOWLEDGE16_OFFLINE",
+    "OK_I18N_BASE_REF"
   ],
   "futureFlags": {
     "experimentalTaskCommand": true
