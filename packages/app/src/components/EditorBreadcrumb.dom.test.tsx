@@ -4,7 +4,10 @@
 
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
-import { expectVisualClassTokens } from '@/test-utils/visual-contract';
+import {
+  expectVisualClassTokens,
+  expectVisualClassTokensAbsent,
+} from '@/test-utils/visual-contract';
 import { EditorBreadcrumb } from './EditorBreadcrumb';
 
 describe('EditorBreadcrumb (Tier-3 mount)', () => {
@@ -112,6 +115,58 @@ describe('EditorBreadcrumb (Tier-3 mount)', () => {
       'two / three / four',
     );
     expect(ellipsis?.querySelector('.sr-only')?.textContent).toBe('two / three / four');
+  });
+
+  test('a prioritized current page keeps only its parent folder beside it', () => {
+    render(
+      <EditorBreadcrumb
+        docName="projects/2026/q4/interviews/customer-call"
+        includeCurrentPage
+        prioritizeCurrentPage
+      />,
+    );
+
+    const nav = screen.getByRole('navigation', { name: /breadcrumb/i });
+    const itemEls = Array.from(
+      nav.querySelectorAll<HTMLLIElement>('li[data-slot="breadcrumb-item"]'),
+    );
+    expect(itemEls.map((li) => li.textContent)).toEqual([
+      'projects / 2026 / q4',
+      'interviews',
+      'customer-call',
+    ]);
+  });
+
+  test('a prioritized current page is not collapsed when it has one folder', () => {
+    render(<EditorBreadcrumb docName="guides/setup" includeCurrentPage prioritizeCurrentPage />);
+
+    const pages = [...document.querySelectorAll('[data-slot="breadcrumb-page"]')];
+    expect(pages.map((page) => page.textContent)).toEqual(['guides', 'setup']);
+  });
+
+  test('a prioritized current page is larger and its folders give way first, hidden when narrow', () => {
+    render(
+      <EditorBreadcrumb
+        docName="team/onboarding/checklist"
+        includeCurrentPage
+        prioritizeCurrentPage
+      />,
+    );
+
+    const nav = screen.getByRole('navigation', { name: /breadcrumb/i });
+    const items = [...nav.querySelectorAll<HTMLLIElement>('li[data-slot="breadcrumb-item"]')];
+    const current = items.at(-1);
+    const folder = items.at(-2);
+    expectVisualClassTokens(current?.querySelector('[data-slot="breadcrumb-page"]')?.className, [
+      'text-base',
+      'font-semibold',
+      'text-foreground',
+    ]);
+    expectVisualClassTokensAbsent(current?.className, ['@max-md/toolbar:hidden']);
+    expectVisualClassTokens(folder?.className, ['shrink-[1000]', '@max-md/toolbar:hidden']);
+    for (const separator of nav.querySelectorAll('[data-slot="breadcrumb-separator"]')) {
+      expectVisualClassTokens(separator.getAttribute('class'), ['@max-md/toolbar:hidden']);
+    }
   });
 
   test('reactivity: changing docName re-renders with new segments', () => {
