@@ -2,6 +2,17 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.81.0 (2026-11-21)
+
+### Fixes
+
+- On a phone, tapping a folder in the Files sidebar now expands or collapses it instead of closing the sidebar.
+
+### Changes
+
+- On phones, buttons, tabs and file tree rows are easier to tap, and the Files and document panels slide in and close with a swipe. Long-press a file or folder to open its actions. Inputs no longer zoom the page, and pulling down no longer reloads the app.
+- Each release now comes with notes on its GitHub release page and in the docs changelog, which lists OpenKnowledge16 releases instead of upstream ones.
+
 ## 0.80.0 (2026-11-18)
 
 ### Features
