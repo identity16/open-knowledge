@@ -4410,6 +4410,9 @@ msgstr "Bentangkan diagram"
 msgid "Expand graph"
 msgstr "Bentangkan graf"
 
+msgid "Expand image"
+msgstr "Perbesar gambar"
+
 msgid "Expanded graph mode"
 msgstr "Mode graf terbentang"
 
@@ -5429,6 +5432,9 @@ msgstr "Pola abaikan (teks mentah)"
 
 msgid "Ignored"
 msgstr "Diabaikan"
+
+msgid "Image"
+msgstr "Gambar"
 
 msgid "Image {identity}. Go to reference."
 msgstr "Gambar {identity}. Buka referensi."

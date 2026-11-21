@@ -4414,6 +4414,9 @@ msgstr "展開圖表"
 msgid "Expand graph"
 msgstr "展開關係圖"
 
+msgid "Expand image"
+msgstr "放大圖片"
+
 msgid "Expanded graph mode"
 msgstr "關係圖展開模式"
 
@@ -5433,6 +5436,9 @@ msgstr "忽略模式（純文字）"
 
 msgid "Ignored"
 msgstr "已忽略"
+
+msgid "Image"
+msgstr "圖片"
 
 msgid "Image {identity}. Go to reference."
 msgstr "圖片 {identity}。前往引用位置。"

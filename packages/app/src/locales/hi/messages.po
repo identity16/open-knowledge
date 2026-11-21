@@ -4410,6 +4410,9 @@ msgstr "आरेख फैलाएँ"
 msgid "Expand graph"
 msgstr "ग्राफ़ फैलाएँ"
 
+msgid "Expand image"
+msgstr "छवि बड़ी करें"
+
 msgid "Expanded graph mode"
 msgstr "फैला हुआ ग्राफ़ मोड"
 
@@ -5429,6 +5432,9 @@ msgstr "अनदेखा करने के पैटर्न (कच्च�
 
 msgid "Ignored"
 msgstr "अनदेखा किया गया"
+
+msgid "Image"
+msgstr "छवि"
 
 msgid "Image {identity}. Go to reference."
 msgstr "चित्र {identity}। संदर्भ पर जाएँ।"

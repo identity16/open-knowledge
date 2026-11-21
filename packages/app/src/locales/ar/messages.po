@@ -4414,6 +4414,9 @@ msgstr "توسيع المخطط"
 msgid "Expand graph"
 msgstr "توسيع الرسم البياني"
 
+msgid "Expand image"
+msgstr "تكبير الصورة"
+
 msgid "Expanded graph mode"
 msgstr "وضع الرسم البياني الموسّع"
 
@@ -5433,6 +5436,9 @@ msgstr "أنماط التجاهل (نص خام)"
 
 msgid "Ignored"
 msgstr "متجاهَل"
+
+msgid "Image"
+msgstr "صورة"
 
 msgid "Image {identity}. Go to reference."
 msgstr "الصورة {identity}. انتقل إلى المرجع."

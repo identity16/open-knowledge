@@ -651,9 +651,6 @@ importers:
       react-lite-youtube-embed:
         specifier: 3.5.1
         version: 3.5.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      react-medium-image-zoom:
-        specifier: 5.4.3
-        version: 5.4.3(patch_hash=d59ed459a6ae570e843d0829f844dde24c0697b883351b198034f47606766517)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react-resizable-panels:
         specifier: ^4.9.0
         version: 4.12.1(patch_hash=bd17d922d19720e50c1805aeb59f56599bf2b15eefbb6e93fc84f7a548793f77)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -1290,6 +1287,8 @@ importers:
       '@napi-rs/cli':
         specifier: ^3.7.2
         version: 3.7.3(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)(node-addon-api@8.9.0)(supports-color@7.2.0)
+
+  packages/notion-oauth-worker: {}
 
   packages/plugin: {}
 

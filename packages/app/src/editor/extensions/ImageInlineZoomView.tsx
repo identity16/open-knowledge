@@ -1,8 +1,8 @@
 import { normalizeDocRelativeAssetUrl } from '@inkeep/open-knowledge-core/markdown/resolve-image-url';
 import type { NodeViewProps } from '@tiptap/core';
 import { NodeViewWrapper } from '@tiptap/react';
-import Zoom from 'react-medium-image-zoom';
 import { BareImg } from '../components/Image';
+import { ZoomableImage } from '../components/ImageLightbox';
 import { getEditorDocName } from './doc-context.ts';
 
 export function ImageInlineZoomView({ node, editor }: NodeViewProps) {
@@ -16,9 +16,9 @@ export function ImageInlineZoomView({ node, editor }: NodeViewProps) {
   const title = typeof rawTitle === 'string' ? rawTitle : undefined;
   return (
     <NodeViewWrapper as="span" data-image-inline-zoom data-clipboard-inline-leaf="image">
-      <Zoom wrapElement="span" zoomMargin={20} zoomImg={{ sizes: undefined }}>
+      <ZoomableImage src={src} alt={alt}>
         <BareImg src={src} alt={alt} title={title} />
-      </Zoom>
+      </ZoomableImage>
     </NodeViewWrapper>
   );
 }

@@ -1,7 +1,7 @@
 import { toDesktopAssetHref } from '@inkeep/open-knowledge-core/utils/asset-href';
 import type { ImgHTMLAttributes } from 'react';
-import Zoom from 'react-medium-image-zoom';
 import { LoadingImage } from '@/components/ui/loading-image';
+import { ZoomableImage } from './ImageLightbox';
 import { useImageTargetExistence } from './image-target-existence';
 
 export interface ImageProps {
@@ -52,8 +52,8 @@ export function BareImg(props: ImageProps) {
 
 export function Image(props: ImageProps) {
   return (
-    <Zoom wrapElement="span" zoomMargin={20} zoomImg={{ sizes: undefined }}>
+    <ZoomableImage src={props.src} alt={props.alt ?? ''}>
       <BareImg {...props} />
-    </Zoom>
+    </ZoomableImage>
   );
 }

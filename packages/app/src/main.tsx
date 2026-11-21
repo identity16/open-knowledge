@@ -48,7 +48,6 @@ import { installSubscribeCardStore } from '@/lib/subscribe-card-store';
 import { installUpdateNoticesBridge } from '@/lib/update-notices-store';
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
-import 'react-medium-image-zoom/dist/styles.css';
 import 'katex/dist/katex.min.css';
 import './globals.css';
 

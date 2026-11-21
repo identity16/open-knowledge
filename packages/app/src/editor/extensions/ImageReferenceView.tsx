@@ -3,8 +3,8 @@ import { normalizeDocRelativeAssetUrl } from '@inkeep/open-knowledge-core/markdo
 import type { NodeViewProps } from '@tiptap/core';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { NodeViewWrapper, useEditorState } from '@tiptap/react';
-import Zoom from 'react-medium-image-zoom';
 import { BareImg } from '../components/Image';
+import { ZoomableImage } from '../components/ImageLightbox';
 import { getEditorDocName } from './doc-context.ts';
 
 export function resolveImageReferenceHref(
@@ -69,9 +69,9 @@ export function ImageReferenceView({ node, editor, extension }: NodeViewProps) {
       data-image-reference-view
       data-clipboard-inline-leaf="imageReference"
     >
-      <Zoom wrapElement="span" zoomMargin={20} zoomImg={{ sizes: undefined }}>
+      <ZoomableImage src={src} alt={alt}>
         <ImageReferenceLeaf src={src} alt={alt} />
-      </Zoom>
+      </ZoomableImage>
     </NodeViewWrapper>
   );
 }

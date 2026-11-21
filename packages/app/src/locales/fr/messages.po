@@ -4414,6 +4414,9 @@ msgstr "Développer le diagramme"
 msgid "Expand graph"
 msgstr "Développer le graphe"
 
+msgid "Expand image"
+msgstr "Agrandir l’image"
+
 msgid "Expanded graph mode"
 msgstr "Mode graphe développé"
 
@@ -5433,6 +5436,9 @@ msgstr "Motifs d'exclusion (texte brut)"
 
 msgid "Ignored"
 msgstr "Ignoré"
+
+msgid "Image"
+msgstr "Image"
 
 msgid "Image {identity}. Go to reference."
 msgstr "Image {identity}. Accéder à la référence."

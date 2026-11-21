@@ -4410,6 +4410,9 @@ msgstr "Expandir o diagrama"
 msgid "Expand graph"
 msgstr "Expandir o grafo"
 
+msgid "Expand image"
+msgstr "Ampliar imagem"
+
 msgid "Expanded graph mode"
 msgstr "Modo de grafo expandido"
 
@@ -5429,6 +5432,9 @@ msgstr "Padrões de exclusão (texto puro)"
 
 msgid "Ignored"
 msgstr "Ignorado"
+
+msgid "Image"
+msgstr "Imagem"
 
 msgid "Image {identity}. Go to reference."
 msgstr "Imagem {identity}. Ir para a referência."

@@ -6556,11 +6556,6 @@ Homepage: https://github.com/ljharb/qs
 
 Copyright (c) 2014, Nathan LaFreniere and other [contributors](https://github.com/ljharb/qs/graphs/contributors)
 
-### `react-medium-image-zoom@5.4.3`
-Homepage: https://github.com/rpearce/react-medium-image-zoom
-
-Copyright (c) 2020, Robert Pearce
-
 ### `rw@1.3.3`
 Homepage: https://github.com/mbostock/rw
 

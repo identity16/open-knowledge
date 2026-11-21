@@ -4410,6 +4410,9 @@ msgstr "চিত্র মেলে ধরুন"
 msgid "Expand graph"
 msgstr "গ্রাফ মেলে ধরুন"
 
+msgid "Expand image"
+msgstr "ছবি বড় করুন"
+
 msgid "Expanded graph mode"
 msgstr "মেলে ধরা গ্রাফ মোড"
 
@@ -5429,6 +5432,9 @@ msgstr "উপেক্ষার প্যাটার্ন (কাঁচা �
 
 msgid "Ignored"
 msgstr "উপেক্ষিত"
+
+msgid "Image"
+msgstr "ছবি"
 
 msgid "Image {identity}. Go to reference."
 msgstr "ছবি {identity}। রেফারেন্সে যান।"
