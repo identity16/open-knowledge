@@ -8248,6 +8248,9 @@ msgstr "একটি ট্যাব তুলতে Space চাপুন। �
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "এই থিম ব্যবহার করতে উপরের “কাস্টম”-এ সূর্য বা চাঁদ চাপুন।"
 
+msgid "Preview"
+msgstr "প্রিভিউ"
+
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "প্রাকদর্শন ব্রাউজার নিজে থেকে কপি করতে পারে না। উপরের URL-এ Cmd/Ctrl+C ব্যবহার করুন, নয়তো OK ডেস্কটপ অ্যাপে খুলুন।"
 

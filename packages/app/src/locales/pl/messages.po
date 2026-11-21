@@ -8252,6 +8252,9 @@ msgstr "Naciśnij Spację, aby podnieść kartę. Użyj klawiszy strzałek, aby 
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "Naciśnij słońce lub księżyc przy opcji „Własny” powyżej, aby użyć tego motywu."
 
+msgid "Preview"
+msgstr "Podgląd"
+
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "Przeglądarka podglądu nie obsługuje automatycznego kopiowania. Użyj Cmd/Ctrl+C na powyższym adresie URL albo otwórz OK w aplikacji desktopowej."
 

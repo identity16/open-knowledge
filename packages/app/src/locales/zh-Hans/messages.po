@@ -8252,6 +8252,9 @@ msgstr "按空格键拾取标签页。使用方向键在标签栏内移动，然
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "按上方“自定义”中的太阳或月亮图标以使用此主题。"
 
+msgid "Preview"
+msgstr "预览"
+
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "预览浏览器无法自动复制。请对上方的 URL 使用 Cmd/Ctrl+C，或在桌面应用中打开 OK。"
 

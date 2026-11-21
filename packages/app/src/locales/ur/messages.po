@@ -8252,6 +8252,9 @@ msgstr "ٹیب اٹھانے کے لیے Space دبائیں۔ اسے ٹیب پٹ�
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "اس تھیم کو استعمال کرنے کے لیے اوپر “حسبِ ضرورت” پر سورج یا چاند دبائیں۔"
 
+msgid "Preview"
+msgstr "پیش نظارہ"
+
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "پیش منظر کے براؤزر خودکار نقل نہیں کر سکتے۔ اوپر دیے گئے URL پر Cmd/Ctrl+C استعمال کریں، یا OK کو ڈیسک ٹاپ ایپ میں کھولیں۔"
 

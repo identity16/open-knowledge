@@ -11,6 +11,7 @@ import type { LintDiagnostic } from '@inkeep/open-knowledge-core/markdown/lint';
 import type { SkillScope } from '@inkeep/open-knowledge-core/schemas/api';
 import { lazy, Suspense } from 'react';
 import { AddPropertiesButton } from '@/components/AddPropertiesButton';
+import { isSvgDocFile } from '@/editor/svg-view-mode';
 import type { EditorModeValue } from '@/editor/use-editor-mode.ts';
 import { useConfigContextOptional } from '@/lib/config-context';
 import { parseProjectSkillContentDocName } from '@/lib/managed-artifact-doc-name';
@@ -22,6 +23,7 @@ import {
 import { EditorBreadcrumb } from './EditorBreadcrumb';
 import { EditorModeToggle } from './EditorModeToggle';
 import { NotInSidebarIndicator } from './NotInSidebarIndicator';
+import { SvgViewModeToggle } from './SvgViewModeToggle';
 import { isSlidesHost } from './slides-host-gate';
 
 const NotionToolbarControls = lazy(async () => ({
@@ -105,8 +107,11 @@ export function EditorToolbar({
             )}
           </div>
           <div className="pointer-events-auto flex justify-center">
-            {activeDocName !== null &&
-            (isEditableTextDocFile(activeDocName) || isExcalidrawDocFile(activeDocName)) ? null : (
+            {activeDocName !== null && isSvgDocFile(activeDocName) ? (
+              <SvgViewModeToggle docName={activeDocName} />
+            ) : activeDocName !== null &&
+              (isEditableTextDocFile(activeDocName) ||
+                isExcalidrawDocFile(activeDocName)) ? null : (
               <EditorModeToggle
                 isSourceMode={isSourceMode}
                 onModeChange={onModeChange}

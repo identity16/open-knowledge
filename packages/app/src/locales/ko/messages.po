@@ -8252,6 +8252,9 @@ msgstr "스페이스를 눌러 탭을 집습니다. 화살표 키로 탭 스트�
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "위의 사용자 지정에서 태양 또는 달을 눌러 이 테마를 사용합니다."
 
+msgid "Preview"
+msgstr "미리보기"
+
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "미리보기 브라우저에서는 자동 복사가 지원되지 않습니다. 위 URL에서 Cmd/Ctrl+C를 사용하거나 데스크톱 앱에서 OK를 여세요."
 

@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro';
-import { useId } from 'react';
+import { type ReactNode, useId } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { EditorModeValue } from '@/editor/use-editor-mode';
@@ -14,6 +14,8 @@ interface EditorModeToggleProps {
   wysiwygLabel?: string;
   sourceLabel?: string;
   wysiwygDisabledReason?: string;
+  wysiwygIcon?: ReactNode;
+  sourceIcon?: ReactNode;
 }
 
 export function EditorModeToggle({
@@ -24,6 +26,8 @@ export function EditorModeToggle({
   wysiwygLabel,
   sourceLabel,
   wysiwygDisabledReason,
+  wysiwygIcon,
+  sourceIcon,
 }: EditorModeToggleProps) {
   const { t } = useLingui();
   const wysiwygName = wysiwygLabel ?? t`Visual editor`;
@@ -53,7 +57,7 @@ export function EditorModeToggle({
               disabled={wysiwygDisabled}
               className="size-7 px-0 pointer-coarse:size-9 dark:data-[state=on]:bg-foreground/15"
             >
-              <Textbox className="size-4" />
+              {wysiwygIcon ?? <Textbox className="size-4" />}
             </ToggleGroupItem>
             {describeWysiwyg ? (
               <span id={wysiwygReasonId} className="sr-only">
@@ -81,7 +85,7 @@ export function EditorModeToggle({
               disabled={sourceDisabled}
               className="size-7 px-0 pointer-coarse:size-9 dark:data-[state=on]:bg-foreground/15"
             >
-              <Markdown className="size-4" />
+              {sourceIcon ?? <Markdown className="size-4" />}
             </ToggleGroupItem>
           </div>
         </TooltipTrigger>

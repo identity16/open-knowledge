@@ -8252,6 +8252,9 @@ msgstr "Pulsa Espacio para tomar una pestaña. Usa las teclas de flecha para mov
 msgid "Press the sun or moon on “Custom” above to use this theme."
 msgstr "Pulsa el sol o la luna de “Custom” arriba para usar este tema."
 
+msgid "Preview"
+msgstr "Vista previa"
+
 msgid "Preview browsers can't auto-copy. Use Cmd/Ctrl+C on the URL above, or open OK in the desktop app."
 msgstr "Los navegadores de vista previa no pueden copiar automáticamente. Usa Cmd/Ctrl+C sobre la URL de arriba, o abre OK en la aplicación de escritorio."
 

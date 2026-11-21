@@ -159,6 +159,22 @@ describe('EditorToolbar runtime layout', () => {
     expect(screen.getByRole('radio', { name: 'Markdown source' })).toBeTruthy();
   });
 
+  test('an SVG file gets a Preview/Source toggle that switches only that file', async () => {
+    const { getSvgViewMode, setSvgViewMode } = await import('@/editor/svg-view-mode');
+    await renderToolbar('art/logo.svg');
+
+    const preview = screen.getByRole('radio', { name: 'Preview' });
+    const source = screen.getByRole('radio', { name: 'Source' });
+    expect(preview.getAttribute('data-state')).toBe('on');
+    expect(screen.queryByRole('radio', { name: 'Markdown source' })).toBeNull();
+
+    await userEvent.click(source);
+    expect(getSvgViewMode('art/logo.svg')).toBe('source');
+    expect(getSvgViewMode('art/other.svg')).toBe('preview');
+    expect(source.getAttribute('data-state')).toBe('on');
+    setSvgViewMode('art/logo.svg', 'preview');
+  });
+
   test.each(['glossary.csv', 'settings.json'])(
     '%s omits the Markdown-only Add properties affordance',
     async (docName) => {
