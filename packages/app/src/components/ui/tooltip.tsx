@@ -3,7 +3,10 @@
 import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import type * as React from 'react';
 
+import { lastInputWasTouch, listenForInputModality } from '@/lib/last-input-modality';
 import { cn } from '@/lib/utils';
+
+listenForInputModality();
 
 function TooltipProvider({
   delayDuration = 0,
@@ -25,6 +28,7 @@ function Tooltip({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Root
 function TooltipTrigger({
   asChild,
   type,
+  onFocus,
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
   return (
@@ -32,6 +36,10 @@ function TooltipTrigger({
       data-slot="tooltip-trigger"
       asChild={asChild}
       type={asChild ? type : (type ?? 'button')}
+      onFocus={(event) => {
+        onFocus?.(event);
+        if (lastInputWasTouch()) event.preventDefault();
+      }}
       {...props}
     />
   );

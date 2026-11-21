@@ -29,7 +29,7 @@ import { useTheme } from 'next-themes';
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { AgentBrandIcon } from '@/components/AgentIconCluster';
-import { createFileTreeStyle } from '@/components/file-tree-density';
+import { createFileTreeStyle, primaryPointerIsCoarse } from '@/components/file-tree-density';
 import { revealActiveRow } from '@/components/file-tree-reveal';
 import {
   buildOkFileTreeOptions,
@@ -313,6 +313,7 @@ export function SkillsTree({
   const hostRef = useRef<HTMLDivElement | null>(null);
   const iconPoolRef = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(false);
+  const [touchDensity] = useState(primaryPointerIsCoarse);
   useEffect(() => setReady(true), []);
   const [installMenu, setInstallMenu] = useState<{
     skill: SkillsListEntry;
@@ -541,6 +542,7 @@ export function SkillsTree({
 
   const { model } = useFileTree({
     ...buildOkFileTreeOptions({
+      touch: touchDensity,
       paths,
       initialExpansion: 'closed',
       initialExpandedPaths,
@@ -1203,7 +1205,7 @@ export function SkillsTree({
         hostRef={hostRef}
         ready={ready}
         className="min-h-0"
-        style={createFileTreeStyle(resolvedTheme)}
+        style={createFileTreeStyle(resolvedTheme, touchDensity)}
         sizeToContent
         titleForPath={titleForPath}
         renderContextMenu={(item, context) => {

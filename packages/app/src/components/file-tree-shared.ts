@@ -8,9 +8,9 @@ import {
   MARKDOWN_FILE_ICON_VIEWBOX,
 } from '@/components/file-entry-icon';
 import {
-  FILE_TREE_DENSITY_OPTIONS,
   FILE_TREE_INDENT_GUIDE_CSS,
   FILE_TREE_STICKY_HEADER_CSS,
+  fileTreeDensityOptions,
 } from '@/components/file-tree-density';
 import { FILE_TREE_EXT_BADGE_CSS } from '@/components/file-tree-extension-badge';
 
@@ -77,6 +77,7 @@ export interface OkFileTreeOptionsInput {
   readonly extraSpriteSymbols?: string;
   readonly enableContextMenu?: boolean;
   readonly unsafeCSS?: string;
+  readonly touch?: boolean;
 }
 
 export function buildOkFileTreeOptions(input: OkFileTreeOptionsInput): FileTreeOptions {
@@ -88,7 +89,7 @@ export function buildOkFileTreeOptions(input: OkFileTreeOptionsInput): FileTreeO
     fileTreeSearchMode: 'hide-non-matches',
     initialVisibleRowCount: input.initialVisibleRowCount,
     stickyFolders: input.stickyFolders ?? false,
-    ...FILE_TREE_DENSITY_OPTIONS,
+    ...fileTreeDensityOptions(input.touch ?? false),
     icons: {
       set: 'complete',
       spriteSheet,

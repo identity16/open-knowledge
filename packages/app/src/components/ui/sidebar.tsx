@@ -21,6 +21,7 @@ import {
   resolveEffectiveState,
 } from '@/lib/sidebar-pin-store';
 import { cn } from '@/lib/utils';
+import { withViewTransition } from '@/lib/view-transition';
 
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = '18rem';
@@ -134,28 +135,30 @@ function SidebarProvider({
   const open = openProp ?? _open;
 
   function dismissCover(restoreFocus = true) {
-    setCover(false);
+    const applied = withViewTransition(() => setCover(false));
     if (!restoreFocus) return;
     const opener = coverOpenerRef.current;
-    requestAnimationFrame(() => {
-      const candidates = [
-        opener,
-        document.querySelector<HTMLElement>('[data-sidebar="trigger"]'),
-        document.querySelector<HTMLElement>('[data-header-pane-button="editor"]'),
-      ];
-      for (const candidate of candidates) {
-        if (
-          candidate?.isConnected &&
-          candidate.tabIndex >= 0 &&
-          !candidate.matches(':disabled') &&
-          candidate.closest('[inert]') == null &&
-          candidate.getClientRects().length > 0
-        ) {
-          candidate.focus();
-          if (document.activeElement === candidate) return;
+    void applied.then(() =>
+      requestAnimationFrame(() => {
+        const candidates = [
+          opener,
+          document.querySelector<HTMLElement>('[data-sidebar="trigger"]'),
+          document.querySelector<HTMLElement>('[data-header-pane-button="editor"]'),
+        ];
+        for (const candidate of candidates) {
+          if (
+            candidate?.isConnected &&
+            candidate.tabIndex >= 0 &&
+            !candidate.matches(':disabled') &&
+            candidate.closest('[inert]') == null &&
+            candidate.getClientRects().length > 0
+          ) {
+            candidate.focus();
+            if (document.activeElement === candidate) return;
+          }
         }
-      }
-    });
+      }),
+    );
   }
   const dismissCoverEvent = React.useEffectEvent(dismissCover);
 
@@ -164,19 +167,22 @@ function SidebarProvider({
     const requestedCanDock =
       openRequestHandlerRef.current == null ? canDock : openRequestHandlerRef.current(openState);
     if (requestedCanDock == null) return false;
-    if (setOpenProp) {
-      setOpenProp(openState);
-    } else {
-      _setOpen(openState);
-    }
-    applyToggleAtEveryWidth('left', openState ? 'open' : 'collapsed');
-    if (openState && !requestedCanDock) {
+    const nextCover = openState && !requestedCanDock;
+    if (nextCover) {
       coverOpenerRef.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      setCover(true);
-    } else {
-      setCover(false);
     }
+    const apply = () => {
+      if (setOpenProp) {
+        setOpenProp(openState);
+      } else {
+        _setOpen(openState);
+      }
+      setCover(nextCover);
+    };
+    if (nextCover === cover) apply();
+    else void withViewTransition(apply);
+    applyToggleAtEveryWidth('left', openState ? 'open' : 'collapsed');
     return true;
   };
 
@@ -350,7 +356,7 @@ function Sidebar({
       <div
         data-slot="sidebar-gap"
         className={cn(
-          'relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear',
+          'relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear motion-reduce:transition-none',
           'group-data-[collapsible=offcanvas]:w-0',
           'group-data-[side=right]:rotate-180',
           variant === 'floating' || variant === 'inset'

@@ -4,6 +4,8 @@ import {
   FILE_TREE_DENSITY_OPTIONS,
   FILE_TREE_INDENT_GUIDE_CSS,
   FILE_TREE_STICKY_HEADER_CSS,
+  FILE_TREE_TOUCH_ITEM_HEIGHT,
+  fileTreeDensityOptions,
 } from './file-tree-density';
 
 describe('FileTree density configuration', () => {
@@ -121,5 +123,15 @@ describe('FileTree sticky-header CSS', () => {
   test('forced-colors fallback paints a CanvasText border-bottom (box-shadow + color-mix tints both suppressed in HCM)', () => {
     expect(FILE_TREE_STICKY_HEADER_CSS).toMatch(/@media \(forced-colors: active\)/);
     expect(FILE_TREE_STICKY_HEADER_CSS).toMatch(/border-bottom:[^;]*CanvasText/);
+  });
+
+  test('touch density raises the row to a tappable height and keeps CSS and virtualizer in step', () => {
+    expect(FILE_TREE_TOUCH_ITEM_HEIGHT).toBeGreaterThanOrEqual(36);
+    expect(fileTreeDensityOptions(true).itemHeight).toBe(FILE_TREE_TOUCH_ITEM_HEIGHT);
+    expect(fileTreeDensityOptions(false)).toBe(FILE_TREE_DENSITY_OPTIONS);
+    for (const theme of ['light', 'dark'] as const) {
+      const style = createFileTreeStyle(theme, true) as Record<string, string>;
+      expect(style['--trees-item-height']).toBe(`${FILE_TREE_TOUCH_ITEM_HEIGHT}px`);
+    }
   });
 });

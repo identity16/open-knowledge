@@ -90,7 +90,11 @@ import {
   treePathToAppPath,
   uploadedPathForSidebarDrop,
 } from '@/components/file-tree-adapter';
-import { createFileTreeStyle, FILE_TREE_DENSITY_OPTIONS } from '@/components/file-tree-density';
+import {
+  createFileTreeStyle,
+  fileTreeDensityOptions,
+  primaryPointerIsCoarse,
+} from '@/components/file-tree-density';
 import { applyExtensionBadges } from '@/components/file-tree-extension-badge';
 import {
   AGENT_DECORATION_ICON_ID,
@@ -253,6 +257,7 @@ import {
 } from '@/lib/sidebar-drag';
 import { useSidebarSortSettings } from '@/lib/sidebar-sort-settings';
 import { useSortOrderLabels } from '@/lib/sort-order-labels';
+import { attachTouchLongPressContextMenu } from '@/lib/touch-long-press-menu';
 import { cn } from '@/lib/utils';
 import { getValidationSnapshot, subscribeToValidationStore } from '@/lib/validation-store';
 import { joinWorkspacePath } from '@/lib/workspace-paths';
@@ -472,6 +477,19 @@ const FILE_TREE_REORDER_DROP_CSS = `
   }
 `;
 
+const FILE_TREE_TOUCH_CSS = `
+  @media (pointer: coarse) {
+    [data-item-path] {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    input {
+      font-size: max(16px, 1em);
+    }
+  }
+`;
+
 const FILE_TREE_UNSAFE_CSS = [
   OK_FILE_TREE_READONLY_UNSAFE_CSS,
   FILE_TREE_NAME_FOREGROUND_CSS,
@@ -481,6 +499,7 @@ const FILE_TREE_UNSAFE_CSS = [
   FILE_TREE_REORDER_DROP_CSS,
   FILE_TREE_EXTERNAL_FILE_DROP_CSS,
   FILE_TREE_CREATION_CLEARED_CSS,
+  FILE_TREE_TOUCH_CSS,
 ].join('\n');
 
 interface PendingCreate {
@@ -1039,6 +1058,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       return 'non-doc';
     }
     if (action.kind === 'folder') {
+      if (filesCover) return 'none';
       navigateWithPulse({ kind: 'folder', folderPath: action.path });
       return 'non-doc';
     }
@@ -1103,6 +1123,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
   );
   const appliedSortSignatureRef = useRef<string | null>(null);
   const fileTreeHostRef = useRef<HTMLDivElement | null>(null);
+  const [touchDensity] = useState(primaryPointerIsCoarse);
   const handleSelectionChangeRef = useRef<(selectedPaths: readonly string[]) => void>(() => {});
   const handleRenameRef = useRef<(event: FileTreeRenameEvent) => void>(() => {});
   const handleRenameErrorRef = useRef<(message: string) => void>((message) => toast.error(message));
@@ -1261,7 +1282,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     fileTreeSearchMode: 'hide-non-matches',
     initialVisibleRowCount: 18,
     stickyFolders: true,
-    ...FILE_TREE_DENSITY_OPTIONS,
+    ...fileTreeDensityOptions(touchDensity),
     icons: {
       set: 'complete',
       spriteSheet: FILE_TREE_DECORATION_SPRITE_SHEET,
@@ -1279,22 +1300,24 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       contextMenu: {
         enabled: true,
         triggerMode: 'both',
-        buttonVisibility: 'when-needed',
+        buttonVisibility: touchDensity ? 'always' : 'when-needed',
       },
     },
-    dragAndDrop: {
-      canDrag: isAvailable,
-      canDrop: isAvailable,
-      canReorder: (parentDirectoryPath) =>
-        effectiveSortOrder(
-          sortStateRef.current,
-          parentDirectoryPath ?? FILE_TREE_MANUAL_ORDER_ROOT_KEY,
-        ) === 'manual',
-      onDropComplete: (event) => handleDropCompleteRef.current(event),
-      onDropError: (message) => {
-        toast.error(message);
-      },
-    },
+    dragAndDrop: touchDensity
+      ? false
+      : {
+          canDrag: isAvailable,
+          canDrop: isAvailable,
+          canReorder: (parentDirectoryPath) =>
+            effectiveSortOrder(
+              sortStateRef.current,
+              parentDirectoryPath ?? FILE_TREE_MANUAL_ORDER_ROOT_KEY,
+            ) === 'manual',
+          onDropComplete: (event) => handleDropCompleteRef.current(event),
+          onDropError: (message) => {
+            toast.error(message);
+          },
+        },
     renaming: {
       canRename: isAvailable,
       onRename: (event) => handleRenameRef.current(event),
@@ -2476,8 +2499,11 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
         pendingExactFileSelectionRef.current = null;
         queueMicrotask(() => {
           const renderedTreePath = hasPendingExactFileSelection ? null : selectedRenderedTreePath();
+          const renderedMatchesSelection =
+            renderedTreePath !== null &&
+            treeFilePathToDocName(renderedTreePath) === treeFilePathToDocName(targetTreePath);
           activateTreePath(
-            normalizeSelectionPath(renderedTreePath ?? targetTreePath),
+            normalizeSelectionPath(renderedMatchesSelection ? renderedTreePath : targetTreePath),
             documentsRef.current,
           );
         });
@@ -2625,6 +2651,13 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
     });
     return () => observer.disconnect();
   }, [loading, documents.length]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loading and documents.length gate whether the tree host is mounted, as in the effects above
+  useEffect(() => {
+    const host = fileTreeHostRef.current;
+    if (!touchDensity || host == null) return;
+    return attachTouchLongPressContextMenu(host, '[data-item-path]');
+  }, [touchDensity, loading, documents.length]);
 
   const problemIndicatorsEnabled = merged?.validation?.fileTreeIndicators !== false;
   const openProblemsForTreePath = useEffectEvent(
@@ -3224,6 +3257,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
       item.dataset.itemType === 'folder' ? folderPathToTreeDirectoryPath(rawPath) : rawPath;
 
     if (item.dataset.itemType === 'folder') {
+      if (filesCover) return;
       const folderPath = treeDirectoryPathToFolderPath(path);
       if (wasSelected) {
         if (model.getSelectedPaths().length !== 1) return;
@@ -3382,7 +3416,7 @@ export function FileTree({ ref }: { ref?: Ref<FileTreeHandle | null> }) {
             )
           }
           model={model}
-          style={createFileTreeStyle(resolvedTheme)}
+          style={createFileTreeStyle(resolvedTheme, touchDensity)}
           {...{ [FILE_TREE_CREATION_CLEARED_ATTR]: creationDirCleared ? '' : undefined }}
           data-state={anyActionBusy ? 'busy' : 'idle'}
           onClickCapture={handleTreeClickCapture}

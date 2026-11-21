@@ -28,6 +28,8 @@ const DOCUMENTS = [
 ];
 
 let previewTabsEnabled = true;
+let filesCover = false;
+let fileTreeOptions: { onSelectionChange?: (selectedPaths: string[]) => void } = {};
 const openTargetMock = vi.fn(() => {});
 const notifySidebarFileSelectedMock = vi.fn(() => {});
 
@@ -182,7 +184,10 @@ vi.doMock('@/components/PageListContext', () => ({
   }),
 }));
 vi.doMock('./ui/sidebar', () => ({
-  useSidebar: () => ({ notifySidebarFileSelected: notifySidebarFileSelectedMock }),
+  useSidebar: () => ({
+    notifySidebarFileSelected: notifySidebarFileSelectedMock,
+    cover: filesCover,
+  }),
 }));
 vi.doMock('@/lib/config-provider', () => ({
   useConfigContext: () => ({
@@ -249,7 +254,10 @@ vi.doMock('@pierre/trees', () => ({
   themeToTreeStyles: () => ({}),
 }));
 vi.doMock('@pierre/trees/react', () => ({
-  useFileTree: () => ({ model }),
+  useFileTree: (options: typeof fileTreeOptions) => {
+    fileTreeOptions = options;
+    return { model };
+  },
   FileTree: ({
     onClickCapture,
     onDoubleClickCapture,
@@ -310,6 +318,7 @@ describe('FileTree preview-tab activation', () => {
 
   beforeEach(() => {
     previewTabsEnabled = true;
+    filesCover = false;
     model.items.clear();
     model.selectedPaths = [];
     openTargetMock.mockClear();
@@ -376,6 +385,87 @@ describe('FileTree preview-tab activation', () => {
     expect(openTargetMock).not.toHaveBeenCalled();
     expect(window.location.hash).toBe('');
   });
+});
+
+function renderStaleSelectedRow(path: string) {
+  const tree = screen.getByTestId('fake-pierre-tree');
+  const host = document.createElement('ok-file-tree');
+  const shadow = host.attachShadow({ mode: 'open' });
+  const row = document.createElement('div');
+  row.dataset.itemPath = path;
+  row.setAttribute('aria-selected', 'true');
+  shadow.append(row);
+  tree.append(host);
+}
+
+describe('FileTree folder rows in the phone files cover', () => {
+  beforeEach(() => {
+    previewTabsEnabled = true;
+    filesCover = false;
+    model.items.clear();
+    model.selectedPaths = [];
+    openTargetMock.mockClear();
+    notifySidebarFileSelectedMock.mockClear();
+    window.location.hash = '';
+    globalThis.fetch = makeFetchMock() as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  test('tapping a folder row leaves the cover open instead of opening the folder page', async () => {
+    filesCover = true;
+    render(<FileTree />);
+
+    await screen.findByTestId('fake-pierre-tree');
+    await waitFor(() => expect(model.getItem('docs/')).not.toBeNull());
+
+    fireEvent.click(screen.getByRole('treeitem', { name: 'docs/' }));
+    fileTreeOptions.onSelectionChange?.(['docs/']);
+
+    await new Promise((settle) => setTimeout(settle, 0));
+    expect(openTargetMock).not.toHaveBeenCalled();
+    expect(notifySidebarFileSelectedMock).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe('');
+  });
+
+  test('tapping a file row in the cover still opens it and reports the selection', async () => {
+    filesCover = true;
+    render(<FileTree />);
+
+    await screen.findByTestId('fake-pierre-tree');
+    await waitFor(() => expect(model.getItem('docs/')).not.toBeNull());
+
+    fireEvent.click(screen.getByRole('treeitem', { name: 'note.md' }));
+
+    await waitFor(() => expect(window.location.hash).toBe('#/note'));
+    expect(notifySidebarFileSelectedMock).toHaveBeenCalledTimes(1);
+  });
+
+  test.each([
+    ['in the cover', true],
+    ['when docked', false],
+  ] as const)(
+    'a folder selection does not reopen the row the tree has not re-rendered yet (%s)',
+    async (_state, cover) => {
+      filesCover = cover;
+      render(<FileTree />);
+
+      await screen.findByTestId('fake-pierre-tree');
+      await waitFor(() => expect(model.getItem('docs/')).not.toBeNull());
+      renderStaleSelectedRow('note.md');
+
+      model.selectedPaths = ['docs/'];
+      fileTreeOptions.onSelectionChange?.(['docs/']);
+
+      await new Promise((settle) => setTimeout(settle, 0));
+      expect(openTargetMock).not.toHaveBeenCalledWith(
+        expect.objectContaining({ kind: 'doc' }),
+        expect.anything(),
+      );
+    },
+  );
 });
 
 describe('FileTree double-click promotes the previewed row', () => {

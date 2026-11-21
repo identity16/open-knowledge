@@ -7,13 +7,28 @@ export const FILE_TREE_DENSITY_OPTIONS = {
   flattenEmptyDirectories: false,
 } as const;
 
-const FILE_TREE_DENSITY_STYLE = {
-  '--trees-level-gap-override': '4px',
-  '--trees-item-row-gap-override': '4px',
-  '--trees-icon-width-override': '14px',
-  '--trees-item-height': `${FILE_TREE_DENSITY_OPTIONS.itemHeight}px`,
-  '--trees-indent-guide-bg-override': 'color-mix(in oklab, var(--trees-fg-muted) 30%, transparent)',
-} as const;
+export const FILE_TREE_TOUCH_ITEM_HEIGHT = 36;
+
+export function fileTreeDensityOptions(touch: boolean) {
+  return touch
+    ? { ...FILE_TREE_DENSITY_OPTIONS, itemHeight: FILE_TREE_TOUCH_ITEM_HEIGHT }
+    : FILE_TREE_DENSITY_OPTIONS;
+}
+
+export function primaryPointerIsCoarse(): boolean {
+  return typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+}
+
+function fileTreeDensityStyle(touch: boolean) {
+  return {
+    '--trees-level-gap-override': '4px',
+    '--trees-item-row-gap-override': '4px',
+    '--trees-icon-width-override': '14px',
+    '--trees-item-height': `${fileTreeDensityOptions(touch).itemHeight}px`,
+    '--trees-indent-guide-bg-override':
+      'color-mix(in oklab, var(--trees-fg-muted) 30%, transparent)',
+  } as const;
+}
 
 export const FILE_TREE_INDENT_GUIDE_CSS = `
   [data-item-section='spacing-item'] {
@@ -40,7 +55,10 @@ export const FILE_TREE_STICKY_HEADER_CSS = `
   }
 `;
 
-export function createFileTreeStyle(resolvedTheme: string | undefined): CSSProperties {
+export function createFileTreeStyle(
+  resolvedTheme: string | undefined,
+  touch = false,
+): CSSProperties {
   return {
     ...themeToTreeStyles({
       type: resolvedTheme === 'dark' ? 'dark' : 'light',
@@ -65,6 +83,6 @@ export function createFileTreeStyle(resolvedTheme: string | undefined): CSSPrope
     '--truncate-marker-fade-in-duration': '0s',
     '--trees-file-icon-color-markdown': 'var(--color-tree-muted)',
     '--trees-fg-muted': 'var(--color-tree-muted)',
-    ...FILE_TREE_DENSITY_STYLE,
+    ...fileTreeDensityStyle(touch),
   } as CSSProperties;
 }

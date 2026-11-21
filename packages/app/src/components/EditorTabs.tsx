@@ -83,7 +83,7 @@ import { scrollTabStripOnWheel } from './tab-strip-wheel';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 const TAB_BASE_CLASS =
-  'group @container/tab relative flex h-7 min-w-32 max-w-48 grow-0 basis-36 shrink cursor-grab items-center overflow-hidden border border-transparent font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset active:cursor-grabbing';
+  'group @container/tab relative flex h-7 pointer-coarse:h-9 min-w-32 max-w-48 grow-0 basis-36 shrink cursor-grab items-center overflow-hidden border border-transparent font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset active:cursor-grabbing';
 const TAB_ACTIVE_CLASS = `z-10 rounded-md ${TAB_SELECTED_SURFACE_CLASS}`;
 const TAB_ACTIVE_UNFOCUSED_CLASS =
   'z-10 rounded-md bg-sidebar-hover text-sidebar-hover-muted-foreground';

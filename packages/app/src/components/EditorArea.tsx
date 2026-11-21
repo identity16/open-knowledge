@@ -104,6 +104,7 @@ import {
   resolveEffectiveState,
 } from '@/lib/sidebar-pin-store';
 import { documentPanelSide, useFileSidebarSide } from '@/lib/sidebar-side-store';
+import { attachSwipeToDismiss } from '@/lib/swipe-to-dismiss';
 import { closeTimelineDiff, useTimelineDiffView } from '@/lib/timeline-diff-store';
 import { EditorContentOnScreenContext } from '@/lib/use-editor-pane-on-screen';
 import { useSettingsRoute } from '@/lib/use-settings-route';
@@ -1121,8 +1122,7 @@ function EditorAreaInner({
 
   function dismissDocPanelCover() {
     setPendingDocPanelDestination(null);
-    setDocPanelCover(false);
-    returnFocusFromDocPanelCover();
+    void withViewTransition(() => setDocPanelCover(false)).then(returnFocusFromDocPanelCover);
   }
 
   function requestDocPanelDestination(
@@ -1226,7 +1226,7 @@ function EditorAreaInner({
     docPanelCoverOpenerRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
     pinDocPanel(true);
-    setDocPanelCover(true);
+    void withViewTransition(() => setDocPanelCover(true));
   }
 
   function togglePanel() {
@@ -1240,6 +1240,19 @@ function EditorAreaInner({
     }
     expandDocPanel(true);
   }
+
+  const [filesCoverEl, setFilesCoverEl] = useState<HTMLElement | null>(null);
+  const [docPanelCoverEl, setDocPanelCoverEl] = useState<HTMLElement | null>(null);
+  const dismissFilesCoverBySwipe = useEffectEvent(() => dismissFilesCover());
+  const dismissDocPanelCoverBySwipe = useEffectEvent(() => dismissDocPanelCover());
+  useEffect(() => {
+    if (filesCoverEl == null) return;
+    return attachSwipeToDismiss(filesCoverEl, fileSidebarSide, dismissFilesCoverBySwipe);
+  }, [filesCoverEl, fileSidebarSide]);
+  useEffect(() => {
+    if (docPanelCoverEl == null) return;
+    return attachSwipeToDismiss(docPanelCoverEl, docPanelSide, dismissDocPanelCoverBySwipe);
+  }, [docPanelCoverEl, docPanelSide]);
 
   const attemptObservedDocWidth = useEffectEvent((): RailLayoutRetryOutcome => {
     if (!editorVisibleRef.current) return 'applied';
@@ -2143,8 +2156,10 @@ function EditorAreaInner({
       {fileSidebarSide === 'end' ? fileListSlot : null}
       {filesCover && fileListHost != null ? (
         <section
+          ref={setFilesCoverEl}
           aria-label={t`Files`}
           data-files-cover=""
+          data-cover-side={fileSidebarSide}
           className={cn(
             'absolute inset-0 z-20 flex min-h-0 min-w-0 flex-col',
             SECONDARY_PANEL_SURFACE_CLASS,
@@ -2156,8 +2171,10 @@ function EditorAreaInner({
       {docPanelCover && docSlotPresent ? (
         <section
           id="doc-panel-cover"
+          ref={setDocPanelCoverEl}
           aria-label={t`Document panel`}
           data-doc-panel-cover=""
+          data-cover-side={docPanelSide}
           className={cn(
             'absolute inset-0 z-20 flex min-h-0 min-w-0 flex-col',
             SECONDARY_PANEL_SURFACE_CLASS,
