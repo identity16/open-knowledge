@@ -5433,6 +5433,9 @@ msgstr "अनदेखा किया गया"
 msgid "Image {identity}. Go to reference."
 msgstr "चित्र {identity}। संदर्भ पर जाएँ।"
 
+msgid "Image controls"
+msgstr "इमेज नियंत्रण"
+
 msgid "Image couldn't be displayed"
 msgstr "छवि दिखाई नहीं जा सकी"
 

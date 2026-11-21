@@ -81,6 +81,19 @@ describe('AssetPreview — image loading-state placeholder (PRD-6638)', () => {
     expectVisualClassTokensAbsent(slotAfterLoad?.className, ['aspect-[16/9]']);
   });
 
+  test('renders zoom and pan controls for mediaKind="image"', () => {
+    render(<AssetPreview assetPath="assets/cat.png" mediaKind="image" />);
+    const toolbar = screen.getByRole('toolbar', { name: 'Image controls' });
+    for (const name of ['Zoom in', 'Zoom out', 'Reset view', 'Pan up']) {
+      expect(toolbar.querySelector(`button[aria-label="${name}"]`)).not.toBeNull();
+    }
+  });
+
+  test('renders no zoom controls for mediaKind="audio"', () => {
+    render(<AssetPreview assetPath="assets/song.mp3" mediaKind="audio" />);
+    expect(screen.queryByTestId('image-viewer-actions')).toBeNull();
+  });
+
   test('renders an <audio> player for mediaKind="audio"', () => {
     const { container } = render(<AssetPreview assetPath="assets/song.mp3" mediaKind="audio" />);
     expect(container.querySelector('audio')).not.toBeNull();

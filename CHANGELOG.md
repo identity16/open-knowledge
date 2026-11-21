@@ -2,6 +2,12 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.82.0 (2026-11-21)
+
+### Features
+
+- Images opened in their own tab can be zoomed and moved: pinch or Cmd/Ctrl-scroll to zoom, drag or scroll to pan, and use the zoom, pan and reset buttons in the corner.
+
 ## 0.81.1 (2026-11-21)
 
 ### Changes

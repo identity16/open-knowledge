@@ -5437,6 +5437,9 @@ msgstr "نظر انداز شدہ"
 msgid "Image {identity}. Go to reference."
 msgstr "تصویر {identity}۔ حوالہ پر جائیں۔"
 
+msgid "Image controls"
+msgstr "تصویر کے کنٹرولز"
+
 msgid "Image couldn't be displayed"
 msgstr "تصویر دکھائی نہیں جا سکی"
 
