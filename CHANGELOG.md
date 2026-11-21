@@ -2,6 +2,12 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.81.1 (2026-11-21)
+
+### Changes
+
+- Sorting the file tree by name now follows Finder: names starting with `_` or another symbol come before names starting with a digit, accented letters sit next to their base letter, and scripts are ordered by your system language (on a Korean system, Hangul names come before English ones).
+
 ## 0.81.0 (2026-11-21)
 
 ### Fixes
