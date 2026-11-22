@@ -5812,7 +5812,7 @@ html [data-editor-file-list-slot] [data-slot="sidebar-inner"] {
     :has(.component-children .jsx-component-wrapper:hover)
   )
   > .jsx-component-chrome
-  > button:not([aria-label*="properties"]) {
+  > button:not([data-jsx-gear]) {
   display: none;
 }
 
