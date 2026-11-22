@@ -2,6 +2,12 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.84.2 (2026-11-22)
+
+### Fixes
+
+- In non-English languages, the properties panel of an image or other block that still needs a setting no longer jumps to the corner of the window when you move the mouse into it.
+
 ## 0.84.1 (2026-11-21)
 
 ### Fixes
