@@ -2,6 +2,12 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.84.4 (2026-11-23)
+
+### Fixes
+
+- Terminal text in the desktop app draws in the terminal's monospace font again, instead of tiny, widely spaced letters.
+
 ## 0.84.3 (2026-11-23)
 
 ### Fixes

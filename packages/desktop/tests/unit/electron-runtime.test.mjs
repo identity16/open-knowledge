@@ -15,6 +15,6 @@ describe('desktop Electron runtime', () => {
     const config = await getConfig(desktopRoot, resolve(desktopRoot, 'electron-builder.yml'), null);
     const version = await getElectronVersion(desktopRoot, config);
 
-    expect(satisfies(version, '^44.11.2'), `selected Electron ${version}`).toBe(true);
+    expect(satisfies(version, '^44.11.4'), `selected Electron ${version}`).toBe(true);
   });
 });
