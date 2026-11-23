@@ -1216,6 +1216,7 @@ let desktopProcessObservability: DesktopProcessObservability | null = null;
 let crashSentinelHeartbeat: NodeJS.Timeout | null = null;
 let osShutdownNoted = false;
 let sessionEnding = false;
+let appQuitting = false;
 
 let serverExitRecorder: ServerExitRecorder | null = null;
 function getServerExitRecorder(): ServerExitRecorder {
@@ -6254,6 +6255,7 @@ function bootPrimaryInstance(): void {
     defer: (fn) => {
       setImmediate(fn);
     },
+    isAppShuttingDown: () => appQuitting || sessionEnding,
     promptManualRecovery: (contents, info) => {
       const log = getLogger('renderer-recovery');
       const target = BrowserWindow.fromWebContents(contents as unknown as WebContents);
@@ -7078,6 +7080,7 @@ function bootPrimaryInstance(): void {
     });
 
   app.on('before-quit', () => {
+    appQuitting = true;
     getLogger('lifecycle').info({ cause: announcedShutdownCause }, 'before-quit');
     terminalReaper?.noteAppShutdown(announcedShutdownCause);
     freezeFocusTracking('before-quit');
@@ -7088,6 +7091,7 @@ function bootPrimaryInstance(): void {
     flushDesktopLogger();
   });
   electronAutoUpdater.on('before-quit-for-update', () => {
+    appQuitting = true;
     getLogger('updater').info({}, 'before-quit-for-update — update install will relaunch the app');
     freezeFocusTracking('before-quit-for-update');
     captureWindowRestoreSnapshot('before-quit-for-update');

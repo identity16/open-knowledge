@@ -41,6 +41,7 @@ interface Rig {
   prompts: CapturedPrompt[];
   logs: LogLine[];
   advance: (ms: number) => void;
+  beginShutdown: () => void;
   drainDeferred: () => void;
   settlePrompts: () => Promise<void>;
 }
@@ -50,6 +51,7 @@ function makeRig(opts?: {
   maxAutoReloads?: number;
   maxLifetimeAutoReloads?: number;
 }): Rig {
+  let shuttingDown = false;
   let clockMs = Date.parse('2026-08-03T17:54:19.000Z');
   const prompts: CapturedPrompt[] = [];
   const logs: LogLine[] = [];
@@ -64,6 +66,7 @@ function makeRig(opts?: {
     defer: (fn) => {
       deferred.push(fn);
     },
+    isAppShuttingDown: () => shuttingDown,
     promptManualRecovery: (contents, info) => {
       prompts.push({ contents, info: info as unknown as Record<string, unknown> });
       return new Promise<void>((resolve) => {
@@ -78,6 +81,9 @@ function makeRig(opts?: {
     logs,
     advance: (ms: number) => {
       clockMs += ms;
+    },
+    beginShutdown: () => {
+      shuttingDown = true;
     },
     drainDeferred: () => {
       for (const fn of deferred.splice(0)) fn();
@@ -141,25 +147,64 @@ describe('renderer crash recovery', () => {
     },
   );
 
-  test.each([
-    ['clean-exit' as const],
-    ['killed' as const],
-    ['abnormal-exit' as const],
-    ['memory-eviction' as const],
-  ])('ignores non-crash exit reason %s, but logs it', (reason) => {
+  test.each([['clean-exit' as const], ['killed' as const]])(
+    'reloads a renderer that exited with %s while the app keeps running',
+    (reason) => {
+      const rig = makeRig();
+      const contents = makeContents();
+
+      rig.recovery.handleRenderProcessGone(contents, { reason, exitCode: 0 });
+      rig.drainDeferred();
+
+      expect(contents.reload).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  test.each([['clean-exit' as const], ['killed' as const], ['crashed' as const]])(
+    'does not reload a renderer gone with %s while the app shuts down',
+    (reason) => {
+      const rig = makeRig();
+      const contents = makeContents();
+      rig.beginShutdown();
+
+      rig.recovery.handleRenderProcessGone(contents, { reason, exitCode: 0 });
+      rig.drainDeferred();
+
+      expect(contents.reload).not.toHaveBeenCalled();
+      expect(rig.prompts).toHaveLength(0);
+      const ignored = rig.logs.find((l) => l.obj.event === 'renderer-recovery.ignored');
+      expect(ignored).toMatchObject({ level: 'info', obj: { reason, shuttingDown: true } });
+    },
+  );
+
+  test('a shutdown that begins during the reload deferral abandons the reload', () => {
     const rig = makeRig();
     const contents = makeContents();
 
-    rig.recovery.handleRenderProcessGone(contents, { reason, exitCode: 0 });
+    rig.recovery.handleRenderProcessGone(contents, { reason: 'clean-exit', exitCode: 0 });
+    rig.beginShutdown();
     rig.drainDeferred();
 
     expect(contents.reload).not.toHaveBeenCalled();
-    expect(rig.prompts).toHaveLength(0);
-    const ignored = rig.logs.find((l) => l.obj.event === 'renderer-recovery.ignored');
-    expect(ignored?.obj).toMatchObject({ reason, contentsId: contents.id });
-    const routine = reason === 'clean-exit' || reason === 'killed';
-    expect(ignored?.level).toBe(routine ? 'info' : 'warn');
+    const abandoned = rig.logs.find((l) => l.obj.event === 'renderer-recovery.reload-abandoned');
+    expect(abandoned?.obj).toMatchObject({ reason: 'clean-exit', shuttingDown: true });
   });
+
+  test.each([['abnormal-exit' as const], ['memory-eviction' as const]])(
+    'ignores exit reason %s, but warns that the window is left blank',
+    (reason) => {
+      const rig = makeRig();
+      const contents = makeContents();
+
+      rig.recovery.handleRenderProcessGone(contents, { reason, exitCode: 0 });
+      rig.drainDeferred();
+
+      expect(contents.reload).not.toHaveBeenCalled();
+      expect(rig.prompts).toHaveLength(0);
+      const ignored = rig.logs.find((l) => l.obj.event === 'renderer-recovery.ignored');
+      expect(ignored).toMatchObject({ level: 'warn', obj: { reason, contentsId: contents.id } });
+    },
+  );
 
   test('an async prompt rejection clears the flag and leaves a log line', async () => {
     const logs: LogLine[] = [];
@@ -174,6 +219,7 @@ describe('renderer crash recovery', () => {
       defer: (fn) => {
         fn();
       },
+      isAppShuttingDown: () => false,
       promptManualRecovery: () => {
         calls += 1;
         return Promise.reject(new Error('dialog subsystem unavailable'));
@@ -375,6 +421,7 @@ describe('renderer crash recovery', () => {
       defer: (fn) => {
         fn();
       },
+      isAppShuttingDown: () => false,
       promptManualRecovery: () => {
         calls += 1;
         throw new Error('dialog subsystem unavailable');

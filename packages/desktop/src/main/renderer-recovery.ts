@@ -29,6 +29,7 @@ export interface RendererRecoveryDeps {
   logger: RecoveryLogger;
   defer: (fn: () => void) => void;
   promptManualRecovery: (contents: RecoverableWebContents, info: PromptInfo) => Promise<void>;
+  isAppShuttingDown: () => boolean;
   loopWindowMs?: number;
   maxAutoReloads?: number;
   maxLifetimeAutoReloads?: number;
@@ -51,13 +52,13 @@ export interface RendererRecovery {
 }
 
 const RECOVERABLE_REASONS = new Set<RenderProcessGoneReason>([
+  'clean-exit',
+  'killed',
   'crashed',
   'oom',
   'launch-failed',
   'integrity-failure',
 ]);
-
-const ROUTINE_TEARDOWN_REASONS = new Set<RenderProcessGoneReason>(['clean-exit', 'killed']);
 
 const DEFAULT_LOOP_WINDOW_MS = 60_000;
 const DEFAULT_MAX_AUTO_RELOADS = 1;
@@ -79,17 +80,23 @@ export function createRendererRecovery(deps: RendererRecoveryDeps): RendererReco
 
   return {
     handleRenderProcessGone(contents, details) {
+      const goneFields = {
+        reason: details.reason,
+        ...(details.exitCode !== undefined ? { exitCode: details.exitCode } : {}),
+        contentsId: contents.id,
+      };
+      if (deps.isAppShuttingDown()) {
+        deps.logger.info(
+          { event: 'renderer-recovery.ignored', ...goneFields, shuttingDown: true },
+          'renderer process gone while the app is shutting down',
+        );
+        return;
+      }
       if (!RECOVERABLE_REASONS.has(details.reason)) {
-        const leavesBlankWindow = !ROUTINE_TEARDOWN_REASONS.has(details.reason);
-        const line = {
-          event: 'renderer-recovery.ignored',
-          reason: details.reason,
-          ...(details.exitCode !== undefined ? { exitCode: details.exitCode } : {}),
-          contentsId: contents.id,
-        };
-        const msg = 'renderer process gone for a reason recovery does not act on';
-        if (leavesBlankWindow) deps.logger.warn(line, msg);
-        else deps.logger.info(line, msg);
+        deps.logger.warn(
+          { event: 'renderer-recovery.ignored', ...goneFields },
+          'renderer process gone for a reason recovery does not act on',
+        );
         return;
       }
 
@@ -188,6 +195,13 @@ export function createRendererRecovery(deps: RendererRecoveryDeps): RendererReco
             deps.logger.info(
               { event: 'renderer-recovery.reload-abandoned', ...crashFields },
               'window closed during the reload deferral — nothing left to reload',
+            );
+            return;
+          }
+          if (deps.isAppShuttingDown()) {
+            deps.logger.info(
+              { event: 'renderer-recovery.reload-abandoned', ...crashFields, shuttingDown: true },
+              'the app began shutting down during the reload deferral — not reloading',
             );
             return;
           }
