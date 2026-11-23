@@ -2,6 +2,12 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.84.3 (2026-11-23)
+
+### Fixes
+
+- A window left open for days no longer turns into a blank gray window when its page process exits on its own; OpenKnowledge reloads the window instead.
+
 ## 0.84.2 (2026-11-22)
 
 ### Fixes
