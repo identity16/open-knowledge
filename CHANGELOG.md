@@ -2,6 +2,12 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.84.6 (2026-11-25)
+
+### Fixes
+
+- After an update, the desktop app restarts a project's server that is still running the previous version, so fixes in the update take effect without restarting the server by hand.
+
 ## 0.84.5 (2026-11-25)
 
 ### Fixes
