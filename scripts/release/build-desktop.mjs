@@ -192,6 +192,8 @@ export function appUpdateConfigProblem(text) {
   return null;
 }
 
+const VERSIONED_PACKAGES = ['cli', 'core', 'server', 'app', 'desktop'];
+
 export async function verifyPackagedApp(app, version, env = process.env, notarized = true) {
   const plist = join(app, 'Contents/Info.plist');
   const values = {
@@ -231,6 +233,16 @@ export async function verifyPackagedApp(app, version, env = process.env, notariz
   const cli = spawnSync(wrapper, ['--version'], { encoding: 'utf8', env });
   if (cli.status !== 0 || cli.stdout.split(/\r?\n/, 1)[0].trim() !== version)
     throw new Error('The bundled CLI did not report the release version.');
+  const server = spawnSync(
+    binary,
+    [
+      '-p',
+      `require(${JSON.stringify(join(app, 'Contents/Resources/app.asar/node_modules/@inkeep/open-knowledge-server/package.json'))}).version`,
+    ],
+    { encoding: 'utf8', env: { ...env, ELECTRON_RUN_AS_NODE: '1' }, timeout: 60_000 },
+  );
+  if (server.status !== 0 || server.stdout.trim() !== version)
+    throw new Error('The desktop app does not report the release version as its own.');
   console.log(
     `Verified ${notarized ? 'signed, notarized' : 'signed'} arm64 application and bundled CLI: ${version}`,
   );
@@ -256,9 +268,7 @@ export async function buildDesktop(
   );
   if (packedManifest.version !== version)
     throw new Error('Build the matching web release before the desktop application.');
-  const manifests = ['packages/cli/package.json', 'packages/desktop/package.json'].map((path) =>
-    join(root, path),
-  );
+  const manifests = VERSIONED_PACKAGES.map((name) => join(root, 'packages', name, 'package.json'));
   const originals = new Map(manifests.map((path) => [path, readFileSync(path, 'utf8')]));
   const temp = mkdtempSync(join(tmpdir(), 'openknowledge16-signing-'));
   const scratchRoot = join(root, '.release');
