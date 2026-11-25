@@ -2,6 +2,12 @@
 
 User-facing changes in each OpenKnowledge16 release, newest first.
 
+## 0.84.5 (2026-11-25)
+
+### Fixes
+
+- Moving or renaming a page to a name already open in an editor now shows the moved page there instead of an empty one, and a later edit no longer replaces the moved file with an empty body.
+
 ## 0.84.4 (2026-11-23)
 
 ### Fixes
